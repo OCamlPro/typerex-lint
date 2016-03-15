@@ -1,6 +1,5 @@
 open Ast_mapper
-
-(* open Ast_helper *)
+open Ast_helper
 open Asttypes
 open Parsetree
 
@@ -59,15 +58,28 @@ let add_arg_fun fname arg_name =
       binding
   in
   {
+    default_mapper with
+    expr =
+      fun mapper expr ->
+        match expr with
+        | { pexp_desc = Pexp_let (isrec, bindings, e) } ->
+          { expr with
+            pexp_desc = Pexp_let (isrec, List.map transform_if_matches bindings, e)
+          }
+        | e -> default_mapper.expr mapper e
+  }
+
+(* TODO: understand what I'm doing and remove the ugly "@guard" annotation *)
+let make_fun var_name default_arg = {
   default_mapper with
-  expr =
-    fun mapper expr ->
-      match expr with
-      | { pexp_desc = Pexp_let (isrec, bindings, e) } ->
-        { expr with
-          pexp_desc = Pexp_let (isrec, List.map transform_if_matches bindings, e)
-        }
-      | e -> default_mapper.expr mapper e
+  expr = fun mapper expr ->
+    match expr with
+    | { pexp_desc = Pexp_ident i; pexp_attributes = attrs } when txt_is i (Longident.Lident var_name) && not (List.exists (fun (x, _) -> txt_is x "@guard") attrs) ->
+      let new_attrs = (Location.mkloc "@guard" expr.pexp_loc, PStr []) in
+      { expr with
+        pexp_desc = Pexp_apply (Exp.ident ~attrs:[new_attrs] (Location.mkloc (Longident.Lident var_name) expr.pexp_loc), [ "", default_arg ]);
+      }
+    | e -> default_mapper.expr mapper e
 }
 
 let () =
@@ -76,4 +88,5 @@ let () =
     >> add_arg_fun "f" "x"
     >> rename_var "f" "z"
     >> rename_var "z" "k"
+    >> make_fun "k" (Exp.constant (Const_int 2))
   in register "patch" (to_ppx patch)
