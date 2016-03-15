@@ -35,7 +35,7 @@ let rename_var old_name new_name = {
 let add_arg_fun fname arg_name =
   let matches_pattern = function
     | { ppat_desc = Ppat_var loc } when txt_is loc fname -> true
-    | _ -> false (* TODO: complete pattern-matching *)
+    | _ -> false (* TODO: Is there another pattern to look at ? *)
   in
   let matches_binding = function
     | { pvb_pat = pat } when matches_pattern pat -> true
