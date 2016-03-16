@@ -10,12 +10,12 @@ type t = Ast_mapper.mapper
 let (>>) patch1 patch2 =
   let (@!) f g x y = (f x) (g default_mapper y) in (* composition of mapper items -- TODO: Is this really what I wanna do ? *)
   {
-  patch1 with (* TODO: write the rest *)
-  expr = patch2.expr @! patch1.expr;
-  pat = patch2.pat @! patch1.pat;
-  value_binding = patch2.value_binding @! patch1.value_binding;
-  structure_item = patch2.structure_item @! patch1.structure_item;
-}
+    patch1 with (* TODO: write the rest *)
+    expr = patch2.expr @! patch1.expr;
+    pat = patch2.pat @! patch1.pat;
+    value_binding = patch2.value_binding @! patch1.value_binding;
+    structure_item = patch2.structure_item @! patch1.structure_item;
+  }
 
 let txt_is loc = (=) loc.txt
 
@@ -33,69 +33,47 @@ let binds_id binder id =
 
 let rename_var ?(rename_def=true) old_name new_name =
   {
-  default_mapper with
-  expr =
-    begin
-    fun mapper expr ->
-      match expr with
-      | { pexp_desc = Pexp_ident desc; }
-        when txt_is desc (Longident.Lident old_name) ->
-        { expr with
-          pexp_desc = Pexp_ident { desc with txt = Longident.Lident new_name };
-        }
-      | p -> default_mapper.expr mapper p
-    end;
-  pat =
-    begin
-      fun mapper pat ->
-        match pat.ppat_desc with
-        | Ppat_var { txt = id; loc; } when id = old_name ->
-          { pat with
-            ppat_desc = Ppat_var { txt = new_name; loc }
-          }
-        | p -> default_mapper.pat mapper pat
-    end;
-}
-
-let add_arg_fun fname arg_name =
-  let matches_binding binding = binds_id binding fname
-  in
-  let transform_if_matches binding =
-    if matches_binding binding then
-      let pattern =
-        Pat.mk ~loc:binding.pvb_loc (Ppat_var { txt = arg_name; loc = binding.pvb_loc })
-      in
-      { binding with
-        pvb_expr =
-          { binding.pvb_expr with
-            pexp_desc = Pexp_fun ("", None, pattern, binding.pvb_expr);
-          }
-      }
-    else
-      binding
-  in
-  {
     default_mapper with
     expr =
       begin
         fun mapper expr ->
           match expr with
-          | { pexp_desc = Pexp_let (isrec, bindings, e) } ->
+          | { pexp_desc = Pexp_ident desc; }
+            when txt_is desc (Longident.Lident old_name) ->
             { expr with
-              pexp_desc = Pexp_let (isrec, List.map transform_if_matches bindings, default_mapper.expr mapper e)
+              pexp_desc = Pexp_ident { desc with txt = Longident.Lident new_name };
             }
-          | e -> default_mapper.expr mapper e
+          | p -> default_mapper.expr mapper p
       end;
-    structure_item =
+    pat =
       begin
-        fun mapper item ->
-          match item with
-          | { pstr_desc = Pstr_value (isrec, bindings) } ->
-            { item with
-              pstr_desc = Pstr_value (isrec, List.map transform_if_matches bindings)
+        fun mapper pat ->
+          match pat.ppat_desc with
+          | Ppat_var { txt = id; loc; } when id = old_name ->
+            { pat with
+              ppat_desc = Ppat_var { txt = new_name; loc }
             }
-          | i -> default_mapper.structure_item mapper i
+          | p -> default_mapper.pat mapper pat
       end;
+  }
+
+let add_arg_fun fname arg_name =
+  {
+    default_mapper with
+    value_binding =
+      fun mapper binding ->
+        if binds_id binding fname then
+          let pattern =
+            Pat.mk ~loc:binding.pvb_loc (Ppat_var { txt = arg_name; loc = binding.pvb_loc })
+          in
+          { binding with
+            pvb_expr =
+              { binding.pvb_expr with
+                pexp_desc = Pexp_fun ("", None, pattern, binding.pvb_expr);
+              }
+          }
+        else
+          default_mapper.value_binding mapper binding
   }
 
 (* TODO: understand what I'm doing and remove the ugly "@guard" annotation *)
@@ -119,6 +97,6 @@ let () =
     default_mapper
     >> add_arg_fun "f" "x"
     >> rename_var ">>" ">>!"
-    >> make_fun_call "z" (Exp.constant (Const_int 2))
+    >> make_fun_call ">>!" (Exp.constant (Const_int 2))
     >> rename_var "z" "y"
   in register "patch" (to_ppx patch)
