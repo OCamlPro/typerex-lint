@@ -6,21 +6,29 @@ open Parsetree
 
 type t = Ast_mapper.mapper
 
-let apply_and_compose f g x y = (f x) (g default_mapper y) (* TODO: Is this really what I wanna do ? *)
-let (@!) = apply_and_compose
-
-let compose patch1 patch2 = {
+(** Mapper composition *)
+let (>>) patch1 patch2 =
+  let (@!) f g x y = (f x) (g default_mapper y) in (* composition of mapper items -- TODO: Is this really what I wanna do ? *)
+  {
   patch1 with (* TODO: write the rest *)
   expr = patch2.expr @! patch1.expr;
   pat = patch2.pat @! patch1.pat;
   structure_item = patch2.structure_item @! patch1.structure_item;
 }
 
-let (>>) = compose
+let txt_is loc = (=) loc.txt
 
-let to_ppx m = fun _ -> m
+let pattern_is_id pattern id =
+  match pattern with
+  | { ppat_desc = Ppat_var loc } when txt_is loc id -> true
+  | _ -> false (* TODO: Is there another pattern to look at ? *)
 
-let txt_is loc txt = loc.txt = txt
+let binds_id binder id =
+  match binder with
+  | { pvb_pat = pat } when pattern_is_id pat id -> true
+  | _ -> false
+
+(** {2 Patches definition} *)
 
 let rename_var old_name new_name = {
   default_mapper with
@@ -36,21 +44,12 @@ let rename_var old_name new_name = {
 }
 
 let add_arg_fun fname arg_name =
-  let matches_pattern = function
-    | { ppat_desc = Ppat_var loc } when txt_is loc fname -> true
-    | _ -> false (* TODO: Is there another pattern to look at ? *)
-  in
-  let matches_binding = function
-    | { pvb_pat = pat } when matches_pattern pat -> true
-    | _ -> false
+  let matches_binding binding = binds_id binding fname
   in
   let transform_if_matches binding =
     if matches_binding binding then
-      let pattern = {
-        ppat_desc = Ppat_var { txt = arg_name; loc = binding.pvb_loc };
-        ppat_loc = binding.pvb_loc;
-        ppat_attributes = [];
-      }
+      let pattern =
+        Pat.mk ~loc:binding.pvb_loc (Ppat_var { txt = arg_name; loc = binding.pvb_loc })
       in
       { binding with
         pvb_expr =
@@ -98,11 +97,14 @@ let make_fun_call var_name default_arg = {
     | e -> default_mapper.expr mapper e
 }
 
+(** Just discard the argv argument *)
+let to_ppx m = fun _ -> m
+
 let () =
   let patch =
     default_mapper
     >> add_arg_fun "f" "x"
-    >> rename_var "f" "z"
+    >> rename_var ">>" ">>!"
     >> make_fun_call "z" (Exp.constant (Const_int 2))
     >> rename_var "z" "y"
   in register "patch" (to_ppx patch)
