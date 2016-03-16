@@ -86,7 +86,7 @@ let add_arg_fun fname arg_name =
   }
 
 (* TODO: understand what I'm doing and remove the ugly "@guard" annotation *)
-let make_fun var_name default_arg = {
+let make_fun_call var_name default_arg = {
   default_mapper with
   expr = fun mapper expr ->
     match expr with
@@ -103,6 +103,6 @@ let () =
     default_mapper
     >> add_arg_fun "f" "x"
     >> rename_var "f" "z"
-    >> make_fun "z" (Exp.constant (Const_int 2))
+    >> make_fun_call "z" (Exp.constant (Const_int 2))
     >> rename_var "z" "y"
   in register "patch" (to_ppx patch)
