@@ -46,15 +46,17 @@ let rename_var ?(rename_def=true) old_name new_name =
           | p -> default_mapper.expr mapper p
       end;
     pat =
-      begin
-        fun mapper pat ->
-          match pat.ppat_desc with
-          | Ppat_var { txt = id; loc; } when id = old_name ->
-            { pat with
-              ppat_desc = Ppat_var { txt = new_name; loc }
-            }
-          | p -> default_mapper.pat mapper pat
-      end;
+      if rename_def then
+        begin
+          fun mapper pat ->
+            match pat.ppat_desc with
+            | Ppat_var { txt = id; loc; } when id = old_name ->
+              { pat with
+                ppat_desc = Ppat_var { txt = new_name; loc }
+              }
+            | p -> default_mapper.pat mapper pat
+        end
+      else default_mapper.pat
   }
 
 let add_arg_fun fname arg_name =
