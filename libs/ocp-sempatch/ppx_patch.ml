@@ -13,6 +13,7 @@ let (>>) patch1 patch2 =
   patch1 with (* TODO: write the rest *)
   expr = patch2.expr @! patch1.expr;
   pat = patch2.pat @! patch1.pat;
+  value_binding = patch2.value_binding @! patch1.value_binding;
   structure_item = patch2.structure_item @! patch1.structure_item;
 }
 
@@ -30,9 +31,11 @@ let binds_id binder id =
 
 (** {2 Patches definition} *)
 
-let rename_var old_name new_name = {
+let rename_var ?(rename_def=true) old_name new_name =
+  {
   default_mapper with
   expr =
+    begin
     fun mapper expr ->
       match expr with
       | { pexp_desc = Pexp_ident desc; }
@@ -41,6 +44,17 @@ let rename_var old_name new_name = {
           pexp_desc = Pexp_ident { desc with txt = Longident.Lident new_name };
         }
       | p -> default_mapper.expr mapper p
+    end;
+  pat =
+    begin
+      fun mapper pat ->
+        match pat.ppat_desc with
+        | Ppat_var { txt = id; loc; } when id = old_name ->
+          { pat with
+            ppat_desc = Ppat_var { txt = new_name; loc }
+          }
+        | p -> default_mapper.pat mapper pat
+    end;
 }
 
 let add_arg_fun fname arg_name =
@@ -68,7 +82,7 @@ let add_arg_fun fname arg_name =
           match expr with
           | { pexp_desc = Pexp_let (isrec, bindings, e) } ->
             { expr with
-              pexp_desc = Pexp_let (isrec, List.map transform_if_matches bindings, e)
+              pexp_desc = Pexp_let (isrec, List.map transform_if_matches bindings, default_mapper.expr mapper e)
             }
           | e -> default_mapper.expr mapper e
       end;
