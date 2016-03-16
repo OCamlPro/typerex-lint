@@ -64,13 +64,25 @@ let add_arg_fun fname arg_name =
   {
     default_mapper with
     expr =
-      fun mapper expr ->
-        match expr with
-        | { pexp_desc = Pexp_let (isrec, bindings, e) } ->
-          { expr with
-            pexp_desc = Pexp_let (isrec, List.map transform_if_matches bindings, e)
-          }
-        | e -> default_mapper.expr mapper e
+      begin
+        fun mapper expr ->
+          match expr with
+          | { pexp_desc = Pexp_let (isrec, bindings, e) } ->
+            { expr with
+              pexp_desc = Pexp_let (isrec, List.map transform_if_matches bindings, e)
+            }
+          | e -> default_mapper.expr mapper e
+      end;
+    structure_item =
+      begin
+        fun mapper item ->
+          match item with
+          | { pstr_desc = Pstr_value (isrec, bindings) } ->
+            { item with
+              pstr_desc = Pstr_value (isrec, List.map transform_if_matches bindings)
+            }
+          | i -> default_mapper.structure_item mapper i
+      end;
   }
 
 (* TODO: understand what I'm doing and remove the ugly "@guard" annotation *)
@@ -91,6 +103,6 @@ let () =
     default_mapper
     >> add_arg_fun "f" "x"
     >> rename_var "f" "z"
-    >> rename_var "z" "k"
-    >> make_fun "k" (Exp.constant (Const_int 2))
+    >> make_fun "z" (Exp.constant (Const_int 2))
+    >> rename_var "z" "y"
   in register "patch" (to_ppx patch)
