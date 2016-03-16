@@ -6,10 +6,14 @@ open Parsetree
 
 type t = Ast_mapper.mapper
 
-let compose m1 m2 = {
-  m1 with (* TODO: write the rest *)
-  expr = (fun mapper expr -> m1.expr mapper expr |> m2.expr mapper);
-  pat = (fun mapper pat -> m1.pat mapper pat |> m2.pat mapper);
+let apply_and_compose f g x y = (f x) (g default_mapper y) (* TODO: Is this really what I wanna do ? *)
+let (@!) = apply_and_compose
+
+let compose patch1 patch2 = {
+  patch1 with (* TODO: write the rest *)
+  expr = patch2.expr @! patch1.expr;
+  pat = patch2.pat @! patch1.pat;
+  structure_item = patch2.structure_item @! patch1.structure_item;
 }
 
 let (>>) = compose
