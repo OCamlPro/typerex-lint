@@ -1,1 +1,2 @@
 PKG ppx_tools
+B _build/**
