@@ -6,52 +6,8 @@ open Parsetree
 
 type t = Ast_mapper.mapper
 
-let identity_mapper =
-  let discard_first = fun _ x -> x in
-  {
-    attribute = discard_first;
-    attributes = discard_first;
-    case = discard_first;
-    cases = discard_first;
-    class_declaration = discard_first;
-    class_description = discard_first;
-    class_expr = discard_first;
-    class_field = discard_first;
-    class_signature = discard_first;
-    class_structure = discard_first;
-    class_type = discard_first;
-    class_type_declaration = discard_first;
-    class_type_field = discard_first;
-    constructor_declaration = discard_first;
-    expr = discard_first;
-    extension = discard_first;
-    extension_constructor = discard_first;
-    include_declaration = discard_first;
-    include_description = discard_first;
-    label_declaration = discard_first;
-    location = discard_first;
-    module_binding = discard_first;
-    module_declaration = discard_first;
-    module_expr = discard_first;
-    module_type = discard_first;
-    module_type_declaration = discard_first;
-    open_description = discard_first;
-    pat = discard_first;
-    payload = discard_first;
-    signature = discard_first;
-    signature_item = discard_first;
-    structure = discard_first;
-    structure_item = discard_first;
-    typ = discard_first;
-    type_declaration = discard_first;
-    type_extension = discard_first;
-    type_kind = discard_first;
-    value_binding = discard_first;
-    value_description = discard_first;
-    with_constraint = discard_first;
-  }
-
 (** Mapper composition *)
+
 let (>>) patch1 patch2 = patch2 :: patch1
 
 let txt_is loc = (=) loc.txt

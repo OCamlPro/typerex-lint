@@ -5,8 +5,6 @@ open Parsetree
 
 type t = mapper list
 
-let compose patch1 patch2 = patch1 @ patch2
-
 let mkppx patch = {
   default_mapper with
   structure = (
