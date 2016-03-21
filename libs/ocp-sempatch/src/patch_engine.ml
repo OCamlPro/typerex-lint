@@ -1,9 +1,6 @@
 open Ast_mapper
-open Ast_helper
-open Asttypes
-open Parsetree
 
-type t = mapper list
+type t = mapper
 
 let mkppx patch = {
   default_mapper with
@@ -17,3 +14,5 @@ let mkppx patch = {
       List.fold_left (fun iter elt -> elt.signature elt iter) signature (List.rev patch)
   );
 }
+
+let register name m = Ast_mapper.register name (fun _ -> mkppx m)

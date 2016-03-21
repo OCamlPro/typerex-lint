@@ -82,14 +82,12 @@ let make_fun_call var_name default_arg = {
     | e -> default_mapper.expr mapper e
 }
 
-let register name m = Ast_mapper.register name (fun _ -> Patch_engine.mkppx m)
-
 let () =
   let patch =
     []
-    >> add_arg_fun "f" "x"
-    >> rename_var ">>" ">>!"
+    (* >> add_arg_fun "f" "x" *)
+    (* >> rename_var ">>" ">>!" *)
     >> make_fun_call "f" (Exp.constant (Const_int 2))
     >> rename_var "x" "y"
     >> rename_var "y" "z"
-  in register "patch" patch
+  in Patch_engine.register "patch" patch
