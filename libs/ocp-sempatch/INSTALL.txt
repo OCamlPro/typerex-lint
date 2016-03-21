@@ -1,5 +1,5 @@
-<!--- OASIS_START --->
-<!--- DO NOT EDIT (digest: 6707b52271aed22f3c105961d9f0f667) --->
+(* OASIS_START *)
+(* DO NOT EDIT (digest: 03d5f3be071a6866018e24b005ee78cd) *)
 
 This is the INSTALL file for the foo distribution.
 
@@ -13,8 +13,8 @@ In order to compile this package, you will need:
 
 * ocaml
 * findlib
-* ppx_tools for executable ppx_patch
 * compiler-libs for executable ppx_patch
+* ppx_tools for executable ppx_patch
 
 Installing
 ==========
@@ -37,4 +37,4 @@ OASIS is a program that generates a setup.ml file using a simple '_oasis'
 configuration file. The generated setup only depends on the standard OCaml
 installation: no additional library is required.
 
-<!--- OASIS_STOP --->
+(* OASIS_STOP *)

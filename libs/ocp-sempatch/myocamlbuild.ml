@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: bb7d8306c1cba69720f488040305b78e) *)
+(* DO NOT EDIT (digest: ad67ad9faa0c9daa8c099a09c56edca1) *)
 module OASISGettext = struct
 (* # 22 "src/oasis/OASISGettext.ml" *)
 
@@ -612,17 +612,17 @@ let package_default =
      flags =
        [
           (["oasis_executable_test_byte"; "ocaml"; "link"; "byte"],
-            [(OASISExpr.EBool true, S [A "-ppx"; A "src/ppx_patch.byte"])]);
+            [(OASISExpr.EBool true, S [A "-ppx"; A "patch/ppx_patch.byte"])]);
           (["oasis_executable_test_native"; "ocaml"; "link"; "native"],
-            [(OASISExpr.EBool true, S [A "-ppx"; A "src/ppx_patch.byte"])]);
+            [(OASISExpr.EBool true, S [A "-ppx"; A "patch/ppx_patch.byte"])]);
           (["oasis_executable_test_byte"; "ocaml"; "ocamldep"; "byte"],
-            [(OASISExpr.EBool true, S [A "-ppx"; A "src/ppx_patch.byte"])]);
+            [(OASISExpr.EBool true, S [A "-ppx"; A "patch/ppx_patch.byte"])]);
           (["oasis_executable_test_native"; "ocaml"; "ocamldep"; "native"],
-            [(OASISExpr.EBool true, S [A "-ppx"; A "src/ppx_patch.byte"])]);
+            [(OASISExpr.EBool true, S [A "-ppx"; A "patch/ppx_patch.byte"])]);
           (["oasis_executable_test_byte"; "ocaml"; "compile"; "byte"],
-            [(OASISExpr.EBool true, S [A "-ppx"; A "src/ppx_patch.byte"])]);
+            [(OASISExpr.EBool true, S [A "-ppx"; A "patch/ppx_patch.byte"])]);
           (["oasis_executable_test_native"; "ocaml"; "compile"; "native"],
-            [(OASISExpr.EBool true, S [A "-ppx"; A "src/ppx_patch.byte"])])
+            [(OASISExpr.EBool true, S [A "-ppx"; A "patch/ppx_patch.byte"])])
        ];
      includes = []
   }

@@ -3,7 +3,6 @@ open Ast_helper
 open Asttypes
 open Parsetree
 
-
 type t = Ast_mapper.mapper
 
 (** Mapper composition *)

@@ -11,17 +11,18 @@ AlphaFeatures: stdfiles_markdown, ocamlbuild_more_args
 XOCamlbuildExtraArgs: -tag safe_string
 
 Executable "ppx_patch"
-  Path: src
+  Path: patch
   Install: false
-  MainIs:       ppx_patch.ml
+  MainIs: ppx_patch.ml
   BuildDepends:
-    compiler-libs,
-    ppx_tools
+    ppx_tools,
+    compiler-libs
 
 Executable "test"
   Path: src
+  Install: true
   MainIs: test.ml
+  ByteOpt: -ppx patch/ppx_patch.byte
+  NativeOpt: -ppx patch/ppx_patch.byte
   BuildTools:
     ppx_patch
-  ByteOpt: -ppx src/ppx_patch.byte
-  NativeOpt: -ppx src/ppx_patch.byte
