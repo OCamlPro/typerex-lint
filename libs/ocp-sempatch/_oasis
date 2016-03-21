@@ -1,0 +1,27 @@
+Name: foo
+Version: 0.1
+Synopsis: test
+Authors: regnat <regnat@regnat.ovh>
+License: wtfpl with OCaml linking exception
+
+OasisFormat: 0.4
+BuildTools: ocamlbuild
+Plugins: META (0.4), DevFiles (0.4), StdFiles(0.4)
+AlphaFeatures: stdfiles_markdown, ocamlbuild_more_args
+XOCamlbuildExtraArgs: -tag safe_string
+
+Executable "ppx_patch"
+  Path: src
+  Install: false
+  MainIs:       ppx_patch.ml
+  BuildDepends:
+    compiler-libs,
+    ppx_tools
+
+Executable "test"
+  Path: src
+  MainIs: test.ml
+  BuildTools:
+    ppx_patch
+  ByteOpt: -ppx src/ppx_patch.byte
+  NativeOpt: -ppx src/ppx_patch.byte

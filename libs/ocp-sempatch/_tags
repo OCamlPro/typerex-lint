@@ -1,0 +1,30 @@
+# OASIS_START
+# DO NOT EDIT (digest: ab6777435cb0c22cb201f6c36a8b79d3)
+# Ignore VCS directories, you can use the same kind of rule outside
+# OASIS_START/STOP if you want to exclude directories that contains
+# useless stuff for the build process
+true: annot, bin_annot
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
+# Executable ppx_patch
+"src/ppx_patch.byte": pkg_compiler-libs
+"src/ppx_patch.byte": pkg_ppx_tools
+# Executable test
+"src/test.byte": oasis_executable_test_byte
+<src/*.ml{,i,y}>: oasis_executable_test_byte
+"src/test.byte": oasis_executable_test_native
+<src/*.ml{,i,y}>: oasis_executable_test_native
+"src/test.byte": pkg_compiler-libs
+"src/test.byte": pkg_ppx_tools
+<src/*.ml{,i,y}>: pkg_compiler-libs
+<src/*.ml{,i,y}>: pkg_ppx_tools
+# OASIS_STOP
+# <src/test.ml>: ppx(src/ppx_patch.byte)
