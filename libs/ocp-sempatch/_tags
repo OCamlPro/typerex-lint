@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: c8f81d27a1978b72aa93f01c7678a22b)
+# DO NOT EDIT (digest: 6f53472c84c1af153ca8625dcde8d27b)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -14,18 +14,20 @@ true: annot, bin_annot
 ".git": not_hygienic
 "_darcs": -traverse
 "_darcs": not_hygienic
-# Executable ppx_patch
-"patch/ppx_patch.byte": pkg_compiler-libs
-"patch/ppx_patch.byte": pkg_ppx_tools
+# Library ppx_patch
+"lib/ppx_patch.cmxs": use_ppx_patch
+<lib/*.ml{,i,y}>: pkg_compiler-libs
+<lib/*.ml{,i,y}>: pkg_ppx_tools
+# Executable test_patch
+"patch/test_patch.byte": pkg_compiler-libs
+"patch/test_patch.byte": pkg_ppx_tools
+"patch/test_patch.byte": use_ppx_patch
 <patch/*.ml{,i,y}>: pkg_compiler-libs
 <patch/*.ml{,i,y}>: pkg_ppx_tools
+<patch/*.ml{,i,y}>: use_ppx_patch
 # Executable test
 "src/test.byte": oasis_executable_test_byte
 <src/*.ml{,i,y}>: oasis_executable_test_byte
 "src/test.byte": oasis_executable_test_native
 <src/*.ml{,i,y}>: oasis_executable_test_native
-"src/test.byte": pkg_compiler-libs
-"src/test.byte": pkg_ppx_tools
-<src/*.ml{,i,y}>: pkg_compiler-libs
-<src/*.ml{,i,y}>: pkg_ppx_tools
 # OASIS_STOP

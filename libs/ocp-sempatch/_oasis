@@ -10,10 +10,18 @@ Plugins: META (0.4), DevFiles (0.4), StdFiles(0.4)
 AlphaFeatures: stdfiles_markdown, ocamlbuild_more_args
 XOCamlbuildExtraArgs: -tag safe_string
 
-Executable "ppx_patch"
+Executable "test_patch"
   Path: patch
   Install: false
-  MainIs: ppx_patch.ml
+  MainIs: test_patch.ml
+  BuildDepends:
+    ppx_patch
+
+Library "ppx_patch"
+  Path: lib
+  Modules:
+    Ppx_patch,
+    Patch_engine
   BuildDepends:
     ppx_tools,
     compiler-libs
@@ -22,7 +30,7 @@ Executable "test"
   Path: src
   Install: true
   MainIs: test.ml
-  ByteOpt: -ppx patch/ppx_patch.byte
-  NativeOpt: -ppx patch/ppx_patch.byte
+  ByteOpt: -ppx patch/test_patch.byte
+  NativeOpt: -ppx patch/test_patch.byte
   BuildTools:
     ppx_patch
