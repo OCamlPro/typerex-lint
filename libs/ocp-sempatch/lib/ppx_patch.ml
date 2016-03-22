@@ -3,11 +3,15 @@ open Ast_helper
 open Asttypes
 open Parsetree
 
-type t = Ast_mapper.mapper
+type t = Ast_filter.t * Ast_mapper.mapper list
 
 (** Mapper composition *)
 
-let (>>) patch1 patch2 = patch2 :: patch1
+let (>>) (filter, patches) mapper = filter, mapper::patches
+
+let (>>|) p1 p2 = p2 :: p1
+
+let filter f = (f, [])
 
 let txt_is loc = (=) loc.txt
 

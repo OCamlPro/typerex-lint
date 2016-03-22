@@ -1,1 +1,2 @@
 x 2016-03-22 2016-03-22 Completer les cas manquants dans les records +feature +bug
+x 2016-03-22 2016-03-22 Monadifier l'api

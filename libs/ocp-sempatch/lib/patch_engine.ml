@@ -2,7 +2,12 @@ open Ast_mapper
 
 type t = mapper
 
-let mkppx patches = {
+let flatten patches =
+  List.map (fun (f, p) -> List.map (Ast_filter.limit_range f) p) patches |> List.flatten
+
+let mkppx patches =
+  let patches = flatten patches in
+  {
   (* The resulting mapper basically applies all the patches in (reverse) order *)
   (* Overriding the structure and signature fields should be enough if we assume that we always apply ppxes to entire ASTs *)
   default_mapper with
