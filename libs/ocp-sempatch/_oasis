@@ -21,6 +21,7 @@ Library "ppx_patch"
   Path: lib
   Modules:
     Ppx_patch,
+    Range_limiter,
     Patch_engine
   BuildDepends:
     ppx_tools,
