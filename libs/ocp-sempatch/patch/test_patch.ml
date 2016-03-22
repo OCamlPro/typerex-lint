@@ -9,8 +9,7 @@ let () =
   let patch =
     []
     >> (add_arg_fun "f" "x" |> Range_limiter.limit_range limit_to_f)
-    (* >> rename_var ">>" ">>!" *)
-    (* >> (make_fun_call "f" (Ast_helper.Exp.constant (Asttypes.Const_int 2)) |> Range_limiter.limit_range limit_to_f) *)
-    (* >> rename_var "x" "y" *)
     >> (rename_var "x" "z" |> Range_limiter.limit_range limit_to_f)
+    >> rename_var "x" "y"
+    >> insert_open "Unix"
   in Patch_engine.register "patch" patch
