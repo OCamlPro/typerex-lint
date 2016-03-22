@@ -43,6 +43,11 @@ type node_chooser = {
   test_with_constraint: with_constraint -> bool;
 }
 
+type recursion =
+  | Recurse_apply
+  | Recurse_reject
+  | No_recursion
+
 let always_allow = {
   test_attribute = (fun _ -> true);
   test_attributes = (fun _ -> true);
@@ -129,12 +134,7 @@ let always_reject ={
   test_with_constraint = (fun _ -> false);
 }
 
-type recursion =
-  | Recurse_apply
-  | Recurse_reject
-  | No_recursion
-
-let rec limit_range condition ?(recursion=Recurse_apply) patch = let open Ast_mapper in
+let rec limit_range condition ?(recursion=No_recursion) patch = let open Ast_mapper in
   let choose_apply
       cond
       trans
@@ -150,23 +150,165 @@ let rec limit_range condition ?(recursion=Recurse_apply) patch = let open Ast_ma
       node
     else
       default_trans parent_mapper node
-  in
-  {
-    patch with (* TODO: complete all fields and remove this line *)
-    structure = choose_apply
-        condition.test_structure
-        patch.structure
-        default_mapper.structure;
-    value_binding = choose_apply
-        condition.test_value_binding
-        patch.value_binding
-        default_mapper.value_binding;
-    pat = choose_apply
-        condition.test_pat
-        patch.pat
-        default_mapper.pat;
+  in {
+    attribute = choose_apply
+        condition.test_attribute
+        patch.attribute
+        default_mapper.attribute;
+    attributes = choose_apply
+        condition.test_attributes
+        patch.attributes
+        default_mapper.attributes;
+    case = choose_apply
+        condition.test_case
+        patch.case
+        default_mapper.case;
+    cases = choose_apply
+        condition.test_cases
+        patch.cases
+        default_mapper.cases;
+    class_declaration = choose_apply
+        condition.test_class_declaration
+        patch.class_declaration
+        default_mapper.class_declaration;
+    class_description = choose_apply
+        condition.test_class_description
+        patch.class_description
+        default_mapper.class_description;
+    class_expr = choose_apply
+        condition.test_class_expr
+        patch.class_expr
+        default_mapper.class_expr;
+    class_field = choose_apply
+        condition.test_class_field
+        patch.class_field
+        default_mapper.class_field;
+    class_signature = choose_apply
+        condition.test_class_signature
+        patch.class_signature
+        default_mapper.class_signature;
+    class_structure = choose_apply
+        condition.test_class_structure
+        patch.class_structure
+        default_mapper.class_structure;
+    class_type = choose_apply
+        condition.test_class_type
+        patch.class_type
+        default_mapper.class_type;
+    class_type_declaration = choose_apply
+        condition.test_class_type_declaration
+        patch.class_type_declaration
+        default_mapper.class_type_declaration;
+    class_type_field = choose_apply
+        condition.test_class_type_field
+        patch.class_type_field
+        default_mapper.class_type_field;
+    constructor_declaration = choose_apply
+        condition.test_constructor_declaration
+        patch.constructor_declaration
+        default_mapper.constructor_declaration;
     expr = choose_apply
         condition.test_expr
         patch.expr
         default_mapper.expr;
+    extension = choose_apply
+        condition.test_extension
+        patch.extension
+        default_mapper.extension;
+    extension_constructor = choose_apply
+        condition.test_extension_constructor
+        patch.extension_constructor
+        default_mapper.extension_constructor;
+    include_declaration = choose_apply
+        condition.test_include_declaration
+        patch.include_declaration
+        default_mapper.include_declaration;
+    include_description = choose_apply
+        condition.test_include_description
+        patch.include_description
+        default_mapper.include_description;
+    label_declaration = choose_apply
+        condition.test_label_declaration
+        patch.label_declaration
+        default_mapper.label_declaration;
+    location = choose_apply
+        condition.test_location
+        patch.location
+        default_mapper.location;
+    module_binding = choose_apply
+        condition.test_module_binding
+        patch.module_binding
+        default_mapper.module_binding;
+    module_declaration = choose_apply
+        condition.test_module_declaration
+        patch.module_declaration
+        default_mapper.module_declaration;
+    module_expr = choose_apply
+        condition.test_module_expr
+        patch.module_expr
+        default_mapper.module_expr;
+    module_type = choose_apply
+        condition.test_module_type
+        patch.module_type
+        default_mapper.module_type;
+    module_type_declaration = choose_apply
+        condition.test_module_type_declaration
+        patch.module_type_declaration
+        default_mapper.module_type_declaration;
+    open_description = choose_apply
+        condition.test_open_description
+        patch.open_description
+        default_mapper.open_description;
+    pat = choose_apply
+        condition.test_pat
+        patch.pat
+        default_mapper.pat;
+    payload = choose_apply
+        condition.test_payload
+        patch.payload
+        default_mapper.payload;
+    signature = choose_apply
+        condition.test_signature
+        patch.signature
+        default_mapper.signature;
+    signature_item = choose_apply
+        condition.test_signature_item
+        patch.signature_item
+        default_mapper.signature_item;
+    structure = choose_apply
+        condition.test_structure
+        patch.structure
+        default_mapper.structure;
+    structure_item = choose_apply
+        condition.test_structure_item
+        patch.structure_item
+        default_mapper.structure_item;
+    typ = choose_apply
+        condition.test_typ
+        patch.typ
+        default_mapper.typ;
+    type_declaration = choose_apply
+        condition.test_type_declaration
+        patch.type_declaration
+        default_mapper.type_declaration;
+    type_extension = choose_apply
+        condition.test_type_extension
+        patch.type_extension
+        default_mapper.type_extension;
+    type_kind = choose_apply
+        condition.test_type_kind
+        patch.type_kind
+        default_mapper.type_kind;
+    value_binding = choose_apply
+        condition.test_value_binding
+        patch.value_binding
+        default_mapper.value_binding;
+    value_description = choose_apply
+        condition.test_value_description
+        patch.value_description
+        default_mapper.value_description;
+    with_constraint = choose_apply
+        condition.test_with_constraint
+        patch.with_constraint
+        default_mapper.with_constraint;
   }

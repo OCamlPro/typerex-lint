@@ -1,4 +1,3 @@
-(B) 2016-03-22 Portage ocaml 4.01 +compat id:1
+(B) 2016-03-22 Portage ocaml 4.01 +compat
 (C) 2016-03-22 Intégration décente dans un système de build
-(B) 2016-03-22 Completer les cas manquants dans les records +feature +bug p:1
 (D) 2016-03-22 Monadifier l'api
