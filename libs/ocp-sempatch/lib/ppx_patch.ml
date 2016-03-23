@@ -83,13 +83,20 @@ let make_fun_call var_name default_arg = {
     | e -> default_mapper.expr mapper e
 }
 
-let insert_open module_name = {
+let insert_at_structure_toplevel (elt_gen : ?loc:Location.t -> unit -> structure_item) = {
   default_mapper with
   structure = (fun _ s ->
       match s with
-      | [] -> Str.open_ (Opn.mk ~override:Fresh (Location.mknoloc (Longident.Lident module_name))) :: s
-      | hd::s' -> Str.open_ ~loc:hd.pstr_loc (Opn.mk ~loc:hd.pstr_loc ~override:Fresh (Location.mkloc (Longident.Lident module_name) hd.pstr_loc)) :: s
+      | [] -> elt_gen () :: s
+      | hd::s' -> elt_gen ~loc:hd.pstr_loc () :: s
     );
 }
+
+let insert_open module_name = insert_at_structure_toplevel
+    (fun ?loc () ->
+       match loc with
+       | Some l -> Str.open_ ~loc:l (Opn.mk ~loc:l ~override:Fresh (Location.mkloc (Longident.Lident module_name) l))
+       | None -> Str.open_ (Opn.mk ~override:Fresh (Location.mknoloc (Longident.Lident module_name)))
+    )
 
 let raw_change x = x
