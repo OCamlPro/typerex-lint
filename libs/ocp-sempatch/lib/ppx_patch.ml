@@ -7,9 +7,9 @@ type t = Ast_filter.t * Ast_mapper.mapper list
 
 (** Mapper composition *)
 
-let (>>) (filter, patches) mapper = filter, mapper::patches
+let (->>) (filter, patches) mapper = filter, mapper::patches
 
-let (>>|) p1 p2 = p2 :: p1
+let (>>) p1 p2 = p2 :: p1
 
 let filter f = (f, [])
 

@@ -16,10 +16,11 @@ let rec limit_to_f = let open Ast_filter in {
 let () =
   let patch =
     []
-    >>|
-    (filter limit_to_f
-    >> add_arg_fun "f" "x"
-    >> rename_var "x" "y")
-    >>| (filter limit_to_toplevel_expr >> rename_var "x" "z")
-    >>| (filter Ast_filter.all >> insert_open "Unix")
+    >> filter limit_to_f
+       ->> add_arg_fun "f" "x"
+       ->> rename_var "x" "y"
+    >> filter limit_to_toplevel_expr
+       ->> rename_var "x" "z"
+    >> filter Ast_filter.all
+       ->> insert_open "Unix"
   in Patch_engine.register "patch" patch

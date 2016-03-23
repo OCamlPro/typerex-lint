@@ -1,7 +1,7 @@
 type t = Ast_filter.t * Ast_mapper.mapper list
 
-val ( >> ) : t -> Ast_mapper.mapper -> t
-val ( >>| ) : t list -> t -> t list
+val ( ->> ) : t -> Ast_mapper.mapper -> t
+val ( >> ) : t list -> t -> t list
 
 val filter : Ast_filter.t -> t
 
