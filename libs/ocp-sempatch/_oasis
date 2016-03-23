@@ -27,11 +27,6 @@ Library "ppx_patch"
     ppx_tools,
     compiler-libs
 
-Executable "test"
-  Path: src
-  Install: true
-  MainIs: test.ml
-  ByteOpt: -ppx patch/test_patch.byte
-  NativeOpt: -ppx patch/test_patch.byte
-  BuildTools:
-    ppx_patch
+Test "test"
+  TestTools: sh
+  Command: sh ./test.sh
