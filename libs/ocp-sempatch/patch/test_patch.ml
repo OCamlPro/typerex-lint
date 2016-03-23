@@ -24,10 +24,11 @@ let () =
     []
     >> filter (limit_to_scope_of "test1")
        ->> make_fun_call "f" (Ast_helper.Exp.constant ( Asttypes.Const_int 1))
-       (* ->> add_arg_fun "f" "x" *)
-       (* ->> rename_var "x" "y" *)
-    (* >> filter limit_to_toplevel_expr *)
-    (*    ->> rename_var "x" "z" *)
-    (* >> filter not_at_toplevel *)
-    (*    ->> insert_open "Unix" *)
+    >> filter (limit_to_scope_of "test2")
+       ->> rename_var "y" "x"
+    >> filter (limit_to_scope_of "test3")
+       ->> add_arg_fun "f" "x"
+       ->> make_fun_call "f" (Ast_helper.Exp.constant ( Asttypes.Const_int 2))
+    >> filter (limit_to_scope_of "test4")
+       ->> insert_open "List"
   in Patch_engine.register "patch" patch
