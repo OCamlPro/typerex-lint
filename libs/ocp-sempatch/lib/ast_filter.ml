@@ -43,7 +43,7 @@ type t = {
   test_with_constraint: t -> with_constraint -> bool * t;
 }
 
-let rec all = {
+let all = {
   test_attribute = (fun f _ -> true, f);
   test_attributes = (fun f _ -> true, f);
   test_case = (fun f _ -> true, f);
@@ -86,7 +86,7 @@ let rec all = {
   test_with_constraint = (fun f _ -> true, f);
 }
 
-let rec nothing = {
+let nothing = {
   test_attribute = (fun f _ -> false, f);
   test_attributes = (fun f _ -> false, f);
   test_case = (fun f _ -> false, f);
