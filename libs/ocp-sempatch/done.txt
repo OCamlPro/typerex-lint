@@ -1,2 +1,3 @@
 x 2016-03-22 2016-03-22 Completer les cas manquants dans les records +feature +bug
 x 2016-03-22 2016-03-22 Monadifier l'api
+x 2016-03-24 2016-03-23 Rendre le système de filter composable

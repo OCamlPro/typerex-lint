@@ -4,6 +4,7 @@ val ( ->> ) : t -> Ast_mapper.mapper -> t
 val ( >> ) : t list -> t -> t list
 
 val filter : Ast_filter.t -> t
+val filter_simple : Ast_filter.filter_leaf -> t
 
 val txt_is : string Asttypes.loc -> string -> bool
 val pattern_is_id : Parsetree.pattern -> string -> bool

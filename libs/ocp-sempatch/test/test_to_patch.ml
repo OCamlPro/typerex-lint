@@ -11,3 +11,8 @@ let test4 =
     let l = [1; 2] in assert (map ((+) 1) l = [2; 3]);;
   end
   in ()
+
+let not_test_5 = let y=1 in assert (y=1)
+let test5 =
+  let y = 1 in assert (y=1);
+  let x = 1 in assert (y=1)

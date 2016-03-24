@@ -13,6 +13,8 @@ let (>>) p1 p2 = p2 :: p1
 
 let filter f = (f, [])
 
+let filter_simple f = (Ast_filter.Test f, [])
+
 let txt_is loc = (=) loc.txt
 
 let pattern_is_id pattern id =
