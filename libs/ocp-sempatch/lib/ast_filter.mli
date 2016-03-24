@@ -53,5 +53,6 @@ type t =
 val all : filter_leaf
 val nothing : filter_leaf
 val (&@): t -> t -> t
+val (|@): t -> t -> t
 
 val limit_range : t -> Ast_mapper.mapper -> Ast_mapper.mapper

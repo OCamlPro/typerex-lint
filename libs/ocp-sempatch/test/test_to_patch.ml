@@ -16,3 +16,9 @@ let not_test_5 = let y=1 in assert (y=1)
 let test5 =
   let y = 1 in assert (y=1);
   let x = 1 in assert (y=1)
+
+let test6 =
+  let x = 1 in
+  (let foo = () in ignore foo; assert (y=1));
+  (let bar = () in ignore bar; assert (y=1));
+  (let not_matched = () in let y=2 in ignore not_matched, assert (y=2));

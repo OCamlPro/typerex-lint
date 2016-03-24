@@ -2,6 +2,7 @@ open Ppx_patch
 open Ast_helper
 
 let (&@) = Ast_filter.(&@)
+let (|@) = Ast_filter.(|@)
 
 let rec limit_to_toplevel_expr = let open Ast_filter in let open Parsetree in {
     nothing with
@@ -44,7 +45,12 @@ let () =
        ->> make_fun_call "f" (Ast_helper.Exp.constant ( Asttypes.Const_int 2))
     >> filter_simple (limit_to_def_of "test4")
        ->> insert_open "List"
-    >> filter Ast_filter.(Test (limit_to_def_of "test5") &@
-                          Test(limit_to_scope_of "x"))
+    >> filter Ast_filter.(Test (limit_to_def_of "test5")
+                          &@ Test(limit_to_scope_of "x")
+                         )
+       ->> rename_var ~rename_def:false "y" "x"
+    >> filter Ast_filter.(Test (limit_to_scope_of "foo")
+                          |@ Test(limit_to_scope_of "bar")
+                         )
        ->> rename_var ~rename_def:false "y" "x"
   in Patch_engine.register "patch" patch
