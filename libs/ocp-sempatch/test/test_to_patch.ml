@@ -21,4 +21,8 @@ let test6 =
   let x = 1 in
   (let foo = () in ignore foo; assert (y=1));
   (let bar = () in ignore bar; assert (y=1));
-  (let not_matched = () in let y=2 in ignore not_matched, assert (y=2));
+  (let not_matched = () in let y=2 in ignore not_matched, assert (y=2))
+
+let test7 =
+  let x = 1 in
+  assert (y + (let y=2 in y) = 3)

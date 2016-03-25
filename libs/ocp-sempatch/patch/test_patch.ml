@@ -53,4 +53,9 @@ let () =
                           |@ Test(limit_to_scope_of "bar")
                          )
        ->> rename_var ~rename_def:false "y" "x"
+    >> filter Ast_filter.((Test (limit_to_def_of "test7")
+                            &@ Test(limit_to_scope_of "x")
+                            &@ (not_ @@ Test(limit_to_scope_of "y"))
+                          ))
+       ->> rename_var ~rename_def:false "y" "x"
   in Patch_engine.register "patch" patch

@@ -49,10 +49,13 @@ type t =
   | Test of filter_leaf
   | And of t * t
   | Or of t * t
+  | Not of t
 
 val all : filter_leaf
 val nothing : filter_leaf
 val (&@): t -> t -> t
 val (|@): t -> t -> t
+val (~@): t -> t
+val not_: t -> t
 
 val limit_range : t -> Ast_mapper.mapper -> Ast_mapper.mapper

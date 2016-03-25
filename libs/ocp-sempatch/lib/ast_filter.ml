@@ -216,10 +216,12 @@ type t =
   | Test of filter_leaf
   | And of t*t
   | Or of t*t
+  | Not of t
 
 let test_ t = Test t
 let and_ t1 t2 = And (t1, t2)
 let or_ t1 t2 = Or (t1, t2)
+let not_ t = Not t
 
 let all = {
   test_attribute = (fun f _ -> true, f);
@@ -309,6 +311,7 @@ let nothing = {
 
 let ( &@ ) = and_
 let ( |@ ) = or_
+let ( ~@ ) = not_
 
 let rec apply_filter self getter node =
   let binop l r op combinator =
@@ -323,6 +326,9 @@ let rec apply_filter self getter node =
     binop l r (&&) and_
   | Or (l, r) ->
     binop l r (||) or_
+  | Not t -> let (res, new_self) = apply_filter t getter node in
+    not res, Not new_self
+
 
 let rec limit_range condition patch = let open Ast_mapper in
   (* TODO: reprendre pour ne pas pourrir l'open recursion ? *)
