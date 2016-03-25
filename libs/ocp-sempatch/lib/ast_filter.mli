@@ -58,4 +58,13 @@ val (|@): t -> t -> t
 val (~@): t -> t
 val not_: t -> t
 
+val txt_is : 'a Asttypes.loc -> 'a -> bool
+(* val pattern_is_id : Parsetree.pattern -> string -> bool *)
+val binds_id : Parsetree.value_binding -> string -> bool
+
+val limit_to_def_of : string -> filter_leaf
+val limit_to_scope_of : string -> filter_leaf
+val limit_to_toplevel_expr : filter_leaf
+val not_at_toplevel : filter_leaf
+
 val limit_range : t -> Ast_mapper.mapper -> Ast_mapper.mapper

@@ -309,6 +309,49 @@ let nothing = {
   test_with_constraint = (fun f _ -> false, f);
 }
 
+let txt_is loc = (=) loc.Asttypes.txt
+
+let pattern_is_id pattern id =
+  match pattern with
+  | { ppat_desc = Ppat_var loc } when txt_is loc id -> true
+  | _ -> false (* TODO: Is there another pattern to look at ? *)
+
+let binds_id binder id =
+  match binder with
+  | { pvb_pat = pat } when pattern_is_id pat id -> true
+  | _ -> false
+
+
+let rec limit_to_toplevel_expr = {
+    nothing with
+    test_structure_item = (fun f stri ->
+        match stri with
+        | { pstr_desc = Pstr_eval _ } -> true, all
+        | _ -> false, limit_to_toplevel_expr);
+  }
+
+let rec limit_to_def_of var = {
+    nothing with
+    test_value_binding = (fun mapper binding ->
+        if binds_id binding var then true, all else false, mapper);
+  }
+
+let rec limit_to_scope_of var = {
+    nothing with
+    test_expr = (fun mapper exp ->
+        match exp with
+        | { pexp_desc = Pexp_let (_, bindings, _) }
+          when List.exists (fun b -> binds_id b var) bindings ->
+          true, all
+        | _ -> false, mapper);
+  }
+
+let not_at_toplevel = {
+    all with
+    test_structure = (fun f _ -> false, all)
+  }
+
+
 let ( &@ ) = and_
 let ( |@ ) = or_
 let ( ~@ ) = not_
