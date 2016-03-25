@@ -27,4 +27,4 @@ let () =
                             &@ (not_ @@ Test(limit_to_scope_of "y"))
                           ))
        ->> rename_var ~rename_def:false "y" "x"
-  in Patch_engine.register "patch" patch
+  in register "patch" patch

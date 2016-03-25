@@ -21,8 +21,7 @@ Library "ppx_patch"
   Path: lib
   Modules:
     Ppx_patch,
-    Ast_filter,
-    Patch_engine
+    Ast_filter
   BuildDepends:
     ppx_tools,
     compiler-libs
