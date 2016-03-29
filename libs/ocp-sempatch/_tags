@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 4916a6e9d30a63929843aa7042f78d35)
+# DO NOT EDIT (digest: 60febcae6413c839dabf7f41b921c074)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -18,6 +18,17 @@ true: annot, bin_annot
 "lib/ppx_patch.cmxs": use_ppx_patch
 <lib/*.ml{,i,y}>: pkg_compiler-libs
 <lib/*.ml{,i,y}>: pkg_ppx_tools
+# Executable patch_engine
+"src/patch_engine.byte": pkg_compiler-libs
+"src/patch_engine.byte": pkg_compiler-libs.toplevel
+"src/patch_engine.byte": pkg_findlib
+"src/patch_engine.byte": pkg_ppx_tools
+"src/patch_engine.byte": use_ppx_patch
+<src/*.ml{,i,y}>: pkg_compiler-libs
+<src/*.ml{,i,y}>: pkg_compiler-libs.toplevel
+<src/*.ml{,i,y}>: pkg_findlib
+<src/*.ml{,i,y}>: pkg_ppx_tools
+<src/*.ml{,i,y}>: use_ppx_patch
 # Executable test_patch
 "patch/test_patch.byte": pkg_compiler-libs
 "patch/test_patch.byte": pkg_ppx_tools

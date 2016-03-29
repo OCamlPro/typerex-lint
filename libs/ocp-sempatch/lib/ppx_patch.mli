@@ -13,3 +13,4 @@ val insert_at_structure_toplevel: (?loc:Location.t -> unit -> Parsetree.structur
 val insert_open : string -> Ast_mapper.mapper
 
 val register : string -> t list -> unit
+val run_main : t list -> unit

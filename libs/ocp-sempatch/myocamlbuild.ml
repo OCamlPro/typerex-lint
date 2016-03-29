@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 862b2ba865d48af1e57238ee809f0450) *)
+(* DO NOT EDIT (digest: ef6db0138519d9767af34f229147dc7e) *)
 module OASISGettext = struct
 (* # 22 "src/oasis/OASISGettext.ml" *)
 
@@ -610,7 +610,7 @@ let package_default =
      MyOCamlbuildBase.lib_ocaml = [("ppx_patch", ["lib"], [])];
      lib_c = [];
      flags = [];
-     includes = [("patch", ["lib"])]
+     includes = [("src", ["lib"]); ("patch", ["lib"])]
   }
   ;;
 

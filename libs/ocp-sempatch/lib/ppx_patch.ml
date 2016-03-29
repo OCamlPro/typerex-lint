@@ -112,3 +112,4 @@ let mkppx patches =
 }
 
 let register name m = Ast_mapper.register name (fun _ -> mkppx m)
+let run_main m = Ast_mapper.run_main (fun _ -> mkppx m)

@@ -17,6 +17,14 @@ Executable "test_patch"
   BuildDepends:
     ppx_patch
 
+Executable "patch_engine"
+  Path: src
+  MainIs: patch_engine.ml
+  BuildDepends:
+    findlib,
+    ppx_patch,
+    compiler-libs.toplevel
+
 Library "ppx_patch"
   Path: lib
   Modules:
