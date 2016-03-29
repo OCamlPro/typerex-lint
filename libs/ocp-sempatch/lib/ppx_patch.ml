@@ -91,6 +91,8 @@ let insert_open module_name = insert_at_structure_toplevel
 
 let raw_change x = x
 
+let cst x = Ast_helper.Exp.constant x
+
 let flatten patches =
   List.map (fun (f, p) -> List.map (Ast_filter.limit_range f) p) patches |> List.flatten
 

@@ -1,9 +1,6 @@
 open Ppx_patch
-open Ast_helper
 open Ast_filter
 open Asttypes
-
-let cst = Ast_helper.Exp.constant
 
 let (||) = (|@)
 let (&&) = (&@)
@@ -41,5 +38,4 @@ let () =
               )
        ->> rename_var ~rename_def:false "y" "x"
 
-  (* in register "patch" patch *)
   in run_main patch
