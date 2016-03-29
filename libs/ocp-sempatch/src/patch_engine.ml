@@ -24,8 +24,15 @@ let eval () =
   in
 
   T.initialize_toplevel_env ();
-  Topdirs.dir_directory (Filename.dirname (Findlib.package_directory "findlib"));
-  Topdirs.dir_use void_formatter "topfind";
+  begin
+  let findlib_dir = Findlib.package_directory "findlib" in
+  Topdirs.dir_directory findlib_dir;
+  Topdirs.dir_load Format.err_formatter (findlib_dir ^ Filename.dir_sep ^ "findlib.cma");
+  Topdirs.dir_load Format.err_formatter (findlib_dir ^ Filename.dir_sep ^ "findlib_top.cma");
+  T.execute_phrase false void_formatter (!T.parse_toplevel_phrase (Lexing.from_string "Topfind.log := fun _ -> ();;")) |> ignore;
+  end;
+  T.execute_phrase false void_formatter (!T.parse_toplevel_phrase (Lexing.from_string "Topfind.add_predicates [ \"byte\"; \"toploop\" ]; Topfind.don't_load [\"findlib\"];;")) |> ignore;
+
   T.execute_phrase false void_formatter (!T.parse_toplevel_phrase (Lexing.from_string "#require \"compiler-libs\";;")) |> ignore;
   T.execute_phrase false void_formatter (!T.parse_toplevel_phrase (Lexing.from_string "#require \"ppx_patch\";;")) |> ignore;
   List.map (T.execute_phrase false Format.std_formatter) (!T.parse_use_file (Lexing.from_channel file_in)) |> ignore;
