@@ -1,4 +1,3 @@
-(A) 2016-03-22 Portage ocaml 4.01 +compat
-(C) 2016-03-22 Intégration décente dans un système de build
+(D) 2016-03-22 Portage ocaml 4.01 +compat
 (B) 2016-03-22 Développer l'api
 (C) 2016-03-22 documentation
