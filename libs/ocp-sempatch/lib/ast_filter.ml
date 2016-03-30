@@ -213,12 +213,12 @@ struct
 end
 
 type t =
-  | Test of filter_leaf
+  | F of filter_leaf
   | And of t*t
   | Or of t*t
   | Not of t
 
-let test_ t = Test t
+let test_ t = F t
 let and_ t1 t2 = And (t1, t2)
 let or_ t1 t2 = Or (t1, t2)
 let not_ t = Not t
@@ -367,7 +367,7 @@ let rec apply_filter self getter node =
     op res_l res_r, combinator self_l self_r
   in
   match self with
-  | Test t -> let res, new_self = (getter t) t node in res, Test new_self
+  | F t -> let res, new_self = (getter t) t node in res, F new_self
   | And (l, r) ->
     binop l r (&&) and_
   | Or (l, r) ->

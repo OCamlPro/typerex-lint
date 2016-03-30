@@ -46,7 +46,7 @@ type filter_leaf = {
 }
 
 type t =
-  | Test of filter_leaf
+  | F of filter_leaf
   | And of t * t
   | Or of t * t
   | Not of t

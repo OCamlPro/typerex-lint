@@ -19,19 +19,19 @@ let () =
     >> filter_simple (limit_to_def_of "test4")
        ->> insert_open "List"
 
-    >> filter (Test (limit_to_def_of "test5")
-               && Test(limit_to_scope_of "x")
+    >> filter (F (limit_to_def_of "test5")
+               && F(limit_to_scope_of "x")
               )
        ->> rename_var ~rename_def:false "y" "x"
 
-    >> filter (Test (limit_to_scope_of "foo")
-               || Test(limit_to_scope_of "bar")
+    >> filter (F (limit_to_scope_of "foo")
+               || F(limit_to_scope_of "bar")
               )
        ->> rename_var ~rename_def:false "y" "x"
 
-    >> filter (Test (limit_to_def_of "test7")
-               && Test(limit_to_scope_of "x")
-               && !(Test(limit_to_scope_of "y"))
+    >> filter (F (limit_to_def_of "test7")
+               && F(limit_to_scope_of "x")
+               && !(F(limit_to_scope_of "y"))
               )
        ->> rename_var ~rename_def:false "y" "x"
 
