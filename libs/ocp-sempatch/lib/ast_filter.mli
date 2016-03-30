@@ -53,9 +53,12 @@ type t =
 
 val all : filter_leaf
 val nothing : filter_leaf
-val (&@): t -> t -> t
-val (|@): t -> t -> t
-val (~@): t -> t
+
+module Infix : sig
+  val (&&): t -> t -> t
+  val (||): t -> t -> t
+  val (!): t -> t
+end
 val not_: t -> t
 
 val txt_is : 'a Asttypes.loc -> 'a -> bool

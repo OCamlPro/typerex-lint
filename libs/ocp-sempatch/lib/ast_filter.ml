@@ -352,9 +352,12 @@ let not_at_toplevel = {
   }
 
 
-let ( &@ ) = and_
-let ( |@ ) = or_
-let ( ~@ ) = not_
+module Infix =
+struct
+  let ( && ) = and_
+  let ( || ) = or_
+  let ( ! ) = not_
+end
 
 let rec apply_filter self getter node =
   let binop l r op combinator =

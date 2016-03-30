@@ -1,10 +1,7 @@
 open Ppx_patch
 open Ast_filter
+open Ast_filter.Infix
 open Asttypes
-
-let (||) = (|@)
-let (&&) = (&@)
-let (!) = not_
 
 let () =
   let patch =
