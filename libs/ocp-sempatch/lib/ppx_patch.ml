@@ -32,49 +32,40 @@ let rename_vars_ vars = {
   default_mapper with
   expr =
     begin
+      let rename_last oldv cond new_name = let open Longident in match oldv with
+        | Lident i when cond i -> Lident new_name
+        | Ldot (modules, i) when cond i -> Ldot (modules, new_name)
+        | id -> id
+      in
       fun mapper expr ->
-        match expr with
-        | { pexp_desc = Pexp_ident desc; } ->
-          begin
-            try
-              let
-                (_, _, newv) = List.find (fun (_, oldv, _) -> Ast_filter.txt_is desc (Longident.Lident oldv)) vars
-              in
-              { expr with
-                pexp_desc = Pexp_ident { desc with txt = Longident.Lident newv };
-              }
-            with Not_found -> default_mapper.expr mapper expr
-          end
-        | p -> default_mapper.expr mapper p
+        let new_expr = match expr with
+          | { pexp_desc = Pexp_ident ({ txt = var; } as desc); } ->
+            let new_var = List.fold_left (fun expr (_, oldv, newv) -> rename_last expr ((=) oldv) newv) var vars in
+            { expr with
+              pexp_desc = Pexp_ident { desc with txt = new_var; };
+            }
+          | p -> p
+        in default_mapper.expr mapper new_expr
     end;
   pat =
     begin
-      fun mapper pat ->
-        match pat.ppat_desc with
+      let rename_pattern_desc oldv cond new_name = match oldv with
         (* TODO: check the other patterns to look at *)
-        | Ppat_var { txt = id; loc; } ->
-          begin
-            try
-              let
-                (_, _, newv) = List.find (fun (replace_def, oldv, _) -> replace_def && id = oldv) vars
-              in
-              { pat with
-                ppat_desc = Ppat_var { txt = newv; loc }
-              }
-            with Not_found -> default_mapper.pat mapper pat
-          end
-        | Ppat_alias (alias_pat, { txt = id; loc; }) ->
-          begin
-            try
-              let
-                (_, _, newv) = List.find (fun (replace_def, oldv, _) -> replace_def && id = oldv) vars
-              in
-              { pat with
-                ppat_desc = Ppat_alias (alias_pat, { txt = newv; loc })
-              }
-            with Not_found -> default_mapper.pat mapper pat
-          end
-        | p -> default_mapper.pat mapper pat
+        | Ppat_var v when cond v.txt -> Ppat_var { v with txt = new_name }
+        | Ppat_alias (al_pat, v) when cond v.txt -> Ppat_alias (al_pat, { v with txt = new_name; })
+        | p -> p
+      in
+      fun mapper pat ->
+        let new_pattern =
+          { pat with
+            ppat_desc = List.fold_left
+                (fun pdesc (rename_def, oldv, newv) ->
+                   if rename_def then rename_pattern_desc pdesc ((=) oldv) newv
+                   else pdesc
+                ) pat.ppat_desc vars;
+          }
+        in
+        default_mapper.pat mapper new_pattern
     end
 }
 
