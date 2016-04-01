@@ -1,0 +1,8 @@
+
+begin library "reports"
+  files = [
+    "info.ml"
+    "reports.ml"
+  ]
+  requires = [ "compiler-libs" ]
+end
