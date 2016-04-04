@@ -1,5 +1,5 @@
 <!--- OASIS_START --->
-<!--- DO NOT EDIT (digest: 98755ba405e1fcfa9746c1c4e2bd655f) --->
+<!--- DO NOT EDIT (digest: 913987e490597a6d01879764532e8d5c) --->
 
 This is the INSTALL file for the foo distribution.
 
@@ -14,7 +14,9 @@ In order to compile this package, you will need:
 * ocaml for all, test test
 * findlib
 * ppx_tools for library ppx_patch
-* compiler-libs for library ppx_patch, executable patch_engine
+* compiler-libs for library ppx_patch, executable parser_test,
+  executable patch_engine
+* camlp5 for executable parser_test
 * sh for test test
 
 Installing
