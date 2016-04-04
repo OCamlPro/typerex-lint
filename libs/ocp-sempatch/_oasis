@@ -41,7 +41,8 @@ Executable "parser_test"
   Path: lib/parsing
   MainIs: test.ml
   BuildDepends:
-    compiler-libs
+    compiler-libs,
+    compiler-libs.common
 
 Test "test"
   TestTools: sh

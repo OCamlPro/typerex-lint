@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 85ebf93bdd6867d3715af2f157544a60)
+# DO NOT EDIT (digest: 6cbb0a541f22b2b87b511d2d2aff3c03)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -38,8 +38,8 @@ true: annot, bin_annot
 <patch/*.ml{,i,y}>: pkg_ppx_tools
 <patch/*.ml{,i,y}>: use_ppx_patch
 # Executable parser_test
-"lib/parsing/test.byte": pkg_camlp5
 "lib/parsing/test.byte": pkg_compiler-libs
-<lib/parsing/*.ml{,i,y}>: pkg_camlp5
+"lib/parsing/test.byte": pkg_compiler-libs.common
 <lib/parsing/*.ml{,i,y}>: pkg_compiler-libs
+<lib/parsing/*.ml{,i,y}>: pkg_compiler-libs.common
 # OASIS_STOP

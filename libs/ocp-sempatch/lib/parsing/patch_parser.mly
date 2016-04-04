@@ -4,33 +4,29 @@
 %token COMMA
 %token<string> ID
 
-(* %token CODE_DELIM *)
-(* %token MINUS *)
-(* %token PLUS *)
-%token <Raw_patch.body> OCAML_CODE
+%token <string list> OCAML_CODE
 
 %token HASH
 %token VARIABLE_KW
 
-%start <Raw_patch.t list> patches
-%start <Raw_patch.body> patch_body
+%start <Parsed_patches.t list> sempatch
+%start <Parsed_patches.body> patch_body
 %%
 
-patches:
-  | patches = separated_list(EOL, patch) EOF { patches }
-  (* | patches = patch EOF { [patches] } *)
+sempatch:
+  | patches = list(patch) EOF { patches }
 
 patch:
-  | name = patch_name header = patch_header body = patch_body { (name, header, body) }
+  | name = patch_name; header = patch_header; body = patch_body { (name, header, body) }
 
 patch_name:
   | HASH name = ID EOL { name }
 
 patch_header:
-  | vars = loption(vars_def) { { Raw_patch.expr_variables = vars } }
+  |  vars = loption(vars_def) { { Parsed_patches.expr_variables = vars } }
 
 vars_def:
   | VARIABLE_KW COLON vars = separated_nonempty_list(COMMA, ID) EOL { vars }
 
 patch_body:
-  | code = OCAML_CODE EOL { code }(* TODO *)
+  | code = OCAML_CODE EOL { Raw_patch.to_patch_body (Raw_patch.from_lines_list code) }
