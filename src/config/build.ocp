@@ -14,7 +14,6 @@
 
 begin library "configuration"
   files = [
-    "global.ml"
     "configuration.ml"
   ]
 end

@@ -2,12 +2,12 @@ open Check_types
 open Info
 
 let global_checks : Check_types.global_check list = [
-  Interface_missing.check
+  Interface_missing.check;
+  Code_length.check
 ]
 
 let (analyses : Check_types.source_check list) = [
   Code_identifier_length.check;
-  (* Code_length.check *)
 ]
 
 let iter_files ?(recdir=true) f dirname =
@@ -56,6 +56,9 @@ let scan_files ?(kind=Source) path =
 
 let scan path =
   let sources : string list = scan_files path in
+  let asts =
+    List.map (fun source -> parse_source ~tool_name:"" source) sources in
+
   (* let interfaces = scan_files ~kind:Interface path in *)
   let config = Configuration.default in
   let reports : Reports.t = Reports.empty in
@@ -70,14 +73,15 @@ let scan path =
       check.global_run config reports sources)
     global_checks;
 
+
   (* Checks on each source files *)
   List.iter (fun check ->
-      List.iter (fun source ->
+      List.iter (fun ast ->
           (* Printf.eprintf "  --- [%s] %s ---\n%!" *)
           (*   (cat_to_string check.source_info.cat) *)
           (*   (check.source_info.name); *)
-          check.source_run config reports source)
-        sources)
+          check.source_run config reports ast)
+        asts)
     analyses;
 
   Reports.print reports

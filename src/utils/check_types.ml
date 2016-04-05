@@ -4,7 +4,7 @@ type source_check = {
   source_run :
     Configuration.t ->
     Reports.t ->
-    string ->
+    Parsetree.structure ->
     unit;
   source_info : Info.t;
 }
