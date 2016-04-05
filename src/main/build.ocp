@@ -17,5 +17,5 @@ begin program "ocplint"
     "ocplint_actions.ml"
     "ocplint.ml"
   ]
-  requires = [ "code_check" "template" ]
+  requires = [ "code_check" "interface_check" "check-types" ]
 end

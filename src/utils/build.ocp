@@ -1,8 +1,16 @@
+begin library "info"
+  files = [ "info.ml" ]
+end
 
 begin library "reports"
   files = [
-    "info.ml"
     "reports.ml"
   ]
-  requires = [ "compiler-libs" ]
+  requires = [ "compiler-libs" "info" ]
+end
+
+
+begin library "check-types"
+  files = [ "check_types.ml"]
+  requires = [ "compiler-libs.common" "configuration" "info" "reports" ]
 end

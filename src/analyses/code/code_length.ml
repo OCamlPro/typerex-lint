@@ -7,7 +7,7 @@ module IteratorArg = struct
     let open Typedtree in
     match p.pat_desc with
     | Tpat_var (id, _) ->
-      Format.eprintf "TEST %S\n%!" (Ident.name id)
+      (* Format.eprintf "TEST %S\n%!" (Ident.name id) *)()
     | _ -> ()
 end
 
@@ -19,6 +19,7 @@ module Check : Analyse.CHECK = struct
     Info.cat = Info.Code;
   }
   let reports = reports
+  let config = ""
 end
 
 let check = (module Check : Analyse.CHECK)

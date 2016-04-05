@@ -6,7 +6,4 @@ type t = {
   cat : cat;
 }
 
-let cat_to_string = function
-  | Code -> "Code"
-  | Typo -> "Typo"
-  | Interface -> "Interface"
+val cat_to_string : cat -> string

@@ -14,16 +14,17 @@
 
 
 begin library "code_check"
-  files = [
+    files = [
     "code/code_identifier_length.ml"
-    "code/code_length.ml"
   ]
-  requires = [ "compiler-libs.common" "template" "config" ]
+  requires = [ "compiler-libs.common" "check-types" "configuration" ]
 end
 
-begin library "template"
-  files = [
-    "template/analyse.ml"
+
+
+begin library "interface_check"
+    files = [
+    "interface/interface_missing.ml"
   ]
-  requires = [ "compiler-libs.common" "reports" ]
+  requires = [ "compiler-libs.common" "check-types" "configuration" ]
 end

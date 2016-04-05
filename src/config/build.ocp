@@ -12,9 +12,9 @@
 (*                                                                            *)
 (******************************************************************************)
 
-begin library "config"
+begin library "configuration"
   files = [
     "global.ml"
+    "configuration.ml"
   ]
-  requires = [ "template" ]
 end
