@@ -56,8 +56,16 @@ let scan_files ?(kind=Source) path =
 
 let scan path =
   let sources : string list = scan_files path in
-  let asts =
-    List.map (fun source -> parse_source ~tool_name:"" source) sources in
+  let asts_mli, asts_ml =
+    List.fold_left (fun (mli, ml) source ->
+        let tool_name = Ast_mapper.tool_name () in
+        if Filename.check_suffix source "ml" then
+          mli, parse_source ~tool_name source :: ml
+        else
+          parse_interf ~tool_name source :: mli, ml)
+      ([], []) sources in
+  (* let asts = *)
+  (*   List.map (fun source -> ) sources in *)
 
   (* let interfaces = scan_files ~kind:Interface path in *)
   let config = Configuration.default in
@@ -81,7 +89,7 @@ let scan path =
           (*   (cat_to_string check.source_info.cat) *)
           (*   (check.source_info.name); *)
           check.source_run config reports ast)
-        asts)
+        asts_ml)
     analyses;
 
   Reports.print reports
