@@ -5,7 +5,7 @@ type source_check = {
     Configuration.t ->
     Reports.t ->
     string ->
-    Reports.t;
+    unit;
   source_info : Info.t;
 }
 
@@ -14,7 +14,7 @@ type global_check = {
     Configuration.t ->
     Reports.t ->
     string list ->
-    Reports.t;
+    unit;
   global_info : Info.t;
 }
 

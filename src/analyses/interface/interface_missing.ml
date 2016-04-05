@@ -21,7 +21,6 @@ let run config reports sources =
         let msg =
           Printf.sprintf "Missing interface for %S" file in
         Reports.add (Reports.warning Location.none info msg) reports)
-    (List.filter (fun file -> Filename.check_suffix file "ml") sources);
-  reports
+    (List.filter (fun file -> Filename.check_suffix file "ml") sources)
 
 let check : Check_types.global_check = { global_run = run; global_info = info }
