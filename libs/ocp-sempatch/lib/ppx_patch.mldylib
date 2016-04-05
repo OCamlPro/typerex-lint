@@ -1,7 +1,8 @@
 # OASIS_START
-# DO NOT EDIT (digest: d81de6dea9a0cd29921840859ce875e5)
+# DO NOT EDIT (digest: f2e75334aecc1638c4d80fcb5527bebc)
 Ppx_patch
 Ast_filter
+Std_utils
 parsing/Patch_lexer
 parsing/Patch_parser
 parsing/Raw_patch

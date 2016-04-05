@@ -9,4 +9,8 @@ type body = {
   after: Parsetree.expression;
 }
 
-type t = id * header * body
+type t = {
+  name: id;
+  header: header;
+  body: body;
+}
