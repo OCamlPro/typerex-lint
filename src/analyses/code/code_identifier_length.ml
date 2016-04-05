@@ -40,6 +40,6 @@ let mapper config reports =
   }
 
 let run config reports source =
-  ignore (check_source (mapper config reports) source)
+  ignore (default_mapper.structure (mapper config reports) source)
 
 let check : Check_types.source_check = { source_run = run; source_info = info }
