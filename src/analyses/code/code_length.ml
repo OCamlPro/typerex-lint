@@ -1,25 +1,36 @@
-let reports = Reports.empty
+open Asttypes
+open Parsetree
+open Ast_mapper
+open Check_types
+open Configuration
+open Info
+open Reports
 
-module IteratorArg = struct
-  include TypedtreeIter.DefaultIteratorArgument
+let info = {
+  name = "Code Length";
+  details = "Long details";
+  cat = Code;
+}
 
-  let enter_pattern p =
-    let open Typedtree in
-    match p.pat_desc with
-    | Tpat_var (id, _) ->
-      (* Format.eprintf "TEST %S\n%!" (Ident.name id) *)()
-    | _ -> ()
-end
+let check_line config reports lnum file line =
+  let line_len = String.length line in
+  if line_len > 80 then
+    let pos = Lexing.({dummy_pos with pos_fname = file; pos_lnum = lnum}) in
+    let loc = Location.({none with loc_start = pos}) in
+    let msg = Printf.sprintf "Line too long (%d)." line_len in
+    Reports.add (Reports.warning loc info msg) reports
 
-module Check : Analyse.CHECK = struct
-  let analyse = (module IteratorArg : TypedtreeIter.IteratorArgument)
-  let info = {
-    Info.name = "name ";
-    Info.details = "details";
-    Info.cat = Info.Code;
-  }
-  let reports = reports
-  let config = ""
-end
+let check_file config reports file =
+  let ic = open_in file in
+  let rec loop lnum ic =
+    try
+      check_line config reports lnum file (input_line ic);
+      loop (lnum + 1) ic
+    with End_of_file -> () in
+  loop 1 ic;
+  close_in ic
 
-let check = (module Check : Analyse.CHECK)
+let run config reports sources =
+  List.iter (check_file config reports) sources
+
+let check : Check_types.global_check = { global_run = run; global_info = info }

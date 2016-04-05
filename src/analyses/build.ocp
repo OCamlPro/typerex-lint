@@ -16,6 +16,7 @@
 begin library "code_check"
     files = [
     "code/code_identifier_length.ml"
+    "code/code_length.ml"
   ]
   requires = [ "compiler-libs.common" "check-types" "configuration" ]
 end
