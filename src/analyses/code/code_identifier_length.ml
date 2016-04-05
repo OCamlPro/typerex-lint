@@ -4,6 +4,7 @@ open Ast_mapper
 open Check_types
 open Configuration
 open Info
+open Reports
 
 let info = {
   name = "Code Identifier Length";
@@ -16,21 +17,24 @@ let mapper config reports =
     pat  = fun mapper pat ->
       begin match pat.ppat_desc with
       | Ppat_var ident ->
-        let id_str =  ident.txt in
+        let id_str = ident.txt in
         let id_loc = ident.loc in
         let id_len = String.length id_str in
         let min_len = config.min_identifier_len in
         let max_len = config.max_identifier_len in
         if id_len < min_len then
-          Format.eprintf  "%a\n  %S is too short: it should be at least of size '%d'.\n%!"
-            Location.print_loc id_loc
-          id_str
-          min_len;
-        if id_len > max_len then
-          Format.eprintf "%a\n  %S is too long: it should not exceed '%d'.\n%!"
-            Location.print_loc id_loc
-            id_str
-            max_len
+          let msg =
+            Printf.sprintf
+              "%S is too short: it should be at least of size '%d'."
+              id_str
+              min_len in
+          Reports.add (Reports.warning id_loc info msg) reports;
+          if id_len > max_len then
+            let msg =
+              Printf.sprintf "%S is too long: it should not exceed '%d'.\n%!"
+                id_str
+                max_len in
+            Reports.add (Reports.warning id_loc info msg) reports
       | _ -> () end;
       pat
   }

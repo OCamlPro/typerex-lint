@@ -4,7 +4,7 @@ type kind = Warning | Error
 type report = {
   kind : kind;
   loc : Location.t;
-  check : Info.t;
+  info : Info.t;
   msg : string;
 }
 
@@ -12,7 +12,7 @@ let none =
   let open Info in
   { kind = Warning;
     loc = Location.none;
-    check = {name = "_none_"; details = "..."; cat = Code};
+    info = {name = "_none_"; details = "..."; cat = Code};
     msg = ""
   }
 
@@ -22,11 +22,20 @@ module StringSet = Set.Make (
     let compare = Pervasives.compare
   end)
 
-type t = StringSet.t
+type t = StringSet.t ref
 
-let empty = StringSet.empty
+let empty = ref StringSet.empty
 
-let add = StringSet.add
+let warning loc info msg = { kind = Warning; loc; info; msg }
+let error loc info msg = { kind = Error; loc; info; msg }
 
-let print_warnings reports =
-  assert false
+let add report reports =
+  reports := StringSet.add report !reports
+
+let print reports =
+  StringSet.iter (fun report ->
+      if report.loc <> Location.none then
+        Format.eprintf "%a\n  %s\n" Location.print_loc report.loc report.msg
+      else
+        Format.eprintf "%s\n" report.msg)
+    !reports

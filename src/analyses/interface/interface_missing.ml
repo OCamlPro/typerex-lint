@@ -18,7 +18,9 @@ let run config reports sources =
   List.iter (fun file ->
       let name = Filename.chop_extension file in
       if not (List.mem name mlis) then
-        Printf.eprintf "Missing interface for %S\n%!" file)
+        let msg =
+          Printf.sprintf "Missing interface for %S" file in
+        Reports.add (Reports.warning Location.none info msg) reports)
     (List.filter (fun file -> Filename.check_suffix file "ml") sources);
   reports
 

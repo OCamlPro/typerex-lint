@@ -65,22 +65,24 @@ let scan path =
   (* (\* Global Checks *\) *)
   let reports =
     List.fold_left (fun reports check ->
-        Printf.eprintf "  --- [%s] %s ---\n%!"
-          (cat_to_string check.global_info.cat)
-          (check.global_info.name);
+        (* Printf.eprintf "  --- [%s] %s ---\n%!" *)
+        (*   (cat_to_string check.global_info.cat) *)
+        (*   (check.global_info.name); *)
         check.global_run config reports sources)
       reports global_checks in
 
   (* Checks on each source files *)
-  List.fold_left (fun reports check ->
-      Printf.eprintf "  --- [%s] %s ---\n%!"
-        (cat_to_string check.source_info.cat)
-        (check.source_info.name);
-      List.fold_left (fun reports source ->
-          check.source_run config reports source)
-        reports sources)
-    reports analyses
+  let reports =
+    List.fold_left (fun reports check ->
+        List.fold_left (fun reports source ->
+            (* Printf.eprintf "  --- [%s] %s ---\n%!" *)
+            (*   (cat_to_string check.source_info.cat) *)
+            (*   (check.source_info.name); *)
+            check.source_run config reports source)
+          reports sources)
+      reports analyses in
 
+  Reports.print reports
 
 
 
