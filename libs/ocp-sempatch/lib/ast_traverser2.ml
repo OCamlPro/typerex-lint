@@ -15,7 +15,7 @@ type 'a mapper = {
 }
 
 (* let t2_bindings f default self = *)
-(*   List.foldmap2 f (self.t2_value_binding self) default *)
+(*   List.foldmap2_exn f (self.t2_value_binding self) default *)
 
 (* let t2_structure_item f default self { pstr_loc = loc; pstr_desc = desc } = *)
 (*   match desc with *)
@@ -44,14 +44,14 @@ let t2_expression f default self e1 e2 =
   (* | Pexp_fun (_, default_val1, pattern1, e1), Pexp_fun (_, default_val2, pattern2, e2) -> *)
   (*   let default_traversed = (Option.merge_inf (fun v1 v2 -> self.t2_expr self v1 v2) default_val1 default_val2) |> Option.value default *)
   (*   in f default_traversed @@ f (self.t2_expr self e1 e2) (self.t2_pat self pattern1 pattern2) *)
-  | Pexp_apply (e1, args1), Pexp_apply (e2, args2) -> List.foldmap2 f (fun x y ->  (self.t2_expr self) (snd x) (snd y)) (self.t2_expr self e1 e2) args1 args2
+  | Pexp_apply (e1, args1), Pexp_apply (e2, args2) -> List.foldmap2_exn f (fun x y ->  (self.t2_expr self) (snd x) (snd y)) (self.t2_expr self e1 e2) args1 args2
   (* | Pexp_match (e1, c1), Pexp_match(e2, c2) *)
   (* | Pexp_try (e1, c1), Pexp_try (e2, c2) -> f (self.t2_cases self c1 c2) (self.t2_expr self e1 e2) *)
-  | Pexp_tuple e1, Pexp_tuple e2 -> List.foldmap2 f (self.t2_expr self) default e1 e2
+  | Pexp_tuple e1, Pexp_tuple e2 -> List.foldmap2_exn f (self.t2_expr self) default e1 e2
   | Pexp_variant (_, e1), Pexp_variant (_, e2) -> Option.merge_inf (self.t2_expr self) e1 e2 |> Option.value default
   | Pexp_record (f1, m1), Pexp_record (f2, m2) ->
     let trav_model =  Option.merge_inf (self.t2_expr self) m1 m2 |> Option.value default in
-    List.foldmap2 f (fun x y -> (self.t2_expr self) (snd x) (snd y)) trav_model f1 f2
+    List.foldmap2_exn f (fun x y -> (self.t2_expr self) (snd x) (snd y)) trav_model f1 f2
   | Pexp_field (e1, _), Pexp_field (e2, _) -> self.t2_expr self e1 e2
   | Pexp_let _ , Pexp_let _
   | Pexp_match _ , Pexp_match _

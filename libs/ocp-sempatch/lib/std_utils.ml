@@ -74,7 +74,7 @@ sig
   type 'a t = 'a list
 
   val foldmap: ('c -> 'b -> 'c) -> ('a -> 'b) -> 'c -> 'a t -> 'c
-  val foldmap2: ('c -> 'b -> 'c) -> ('a -> 'd -> 'b) -> 'c -> 'a t -> 'd t -> 'c
+  val foldmap2_exn: ('c -> 'b -> 'c) -> ('a -> 'd -> 'b) -> 'c -> 'a t -> 'd t -> 'c
 end
 =
 struct
@@ -84,7 +84,7 @@ struct
 
   let foldmap foldFun mapFun ini = Fun.compose (List.fold_left foldFun ini) (List.map mapFun)
 
-  let foldmap2 foldFun mapFun ini l = Fun.compose (List.fold_left foldFun ini) (List.map2 mapFun l)
+  let foldmap2_exn foldFun mapFun ini l = Fun.compose (List.fold_left foldFun ini) (List.map2 mapFun l)
 end
 
 module List = UList
