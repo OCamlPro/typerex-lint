@@ -6,8 +6,12 @@ let global_checks : Check_types.global_check list = [
   Code_length.check
 ]
 
-let (analyses : Check_types.source_check list) = [
+let sources_checks : Check_types.source_check list = [
   Code_identifier_length.check;
+]
+
+let cmt_checks : Check_types.cmt_check list = [
+  Test_cmt.check
 ]
 
 let iter_files ?(recdir=true) f dirname =
@@ -28,9 +32,8 @@ let scan_project ?(kind=Source) path = (* todo *)
   let found_files =
     let files = ref [] in
     iter_files (fun file ->
-        if (kind = Source &&
-            (Filename.check_suffix file "ml"
-             || Filename.check_suffix file "mli"))  ||
+        if (kind = Source && Filename.check_suffix file "ml") ||
+           (kind = Interface && Filename.check_suffix file "mli")  ||
            (kind = Cmt && Filename.check_suffix file "cmt")
         then
           files := (Filename.concat path file) :: !files) path;
@@ -41,9 +44,9 @@ let scan_project ?(kind=Source) path = (* todo *)
 let scan_files ?(kind=Source) path =
   scan_project ~kind path
 
-(* let scan_cmts path = *)
-(*   let files = scan_project ~kind:Cmt path in *)
-(*   List.map Cmt_format.read_cmt files *)
+let scan_cmts path =
+  let files = scan_project ~kind:Cmt path in
+  List.map Cmt_format.read_cmt files
 
 (* let scan_checks () = *)
 (*   let open Info in *)
@@ -55,7 +58,9 @@ let scan_files ?(kind=Source) path =
 (*         (info.details)) analyses *)
 
 let scan path =
+  (* All inputs for each analyze *)
   let sources : string list = scan_files path in
+  let cmts : Cmt_format.cmt_infos list = scan_cmts path in
   let asts_mli, asts_ml =
     List.fold_left (fun (mli, ml) source ->
         let tool_name = Ast_mapper.tool_name () in
@@ -64,79 +69,24 @@ let scan path =
         else
           parse_interf ~tool_name source :: mli, ml)
       ([], []) sources in
-  (* let asts = *)
-  (*   List.map (fun source -> ) sources in *)
 
-  (* let interfaces = scan_files ~kind:Interface path in *)
+  (* Initializing states (config, reports set, etc. *)
   let config = Configuration.default in
   let reports : Reports.t = Reports.empty in
 
   Printf.eprintf "Starting analyses...\n%!";
 
-  (* (\* Global Checks *\) *)
-  List.iter (fun check ->
-      (* Printf.eprintf "  --- [%s] %s ---\n%!" *)
-      (*   (cat_to_string check.global_info.cat) *)
-      (*   (check.global_info.name); *)
-      check.global_run config reports sources)
-    global_checks;
+  (* Global Checks *)
+  List.iter (fun check -> check.global_run config reports sources) global_checks;
 
-
-  (* Checks on each source files *)
+  (* Checks on each source files. *)
   List.iter (fun check ->
-      List.iter (fun ast ->
-          (* Printf.eprintf "  --- [%s] %s ---\n%!" *)
-          (*   (cat_to_string check.source_info.cat) *)
-          (*   (check.source_info.name); *)
-          check.source_run config reports ast)
-        asts_ml)
-    analyses;
+      List.iter (fun ast -> check.source_run config reports ast) asts_ml)
+    sources_checks;
+
+  (* Start analyses on Cmt. *)
+  List.iter (fun check ->
+      List.iter (fun cmt -> check.cmt_run config reports cmt) cmts)
+    cmt_checks;
 
   Reports.print reports
-
-
-
-
-
-
-
-
-
-  (* List.fold_left (fun reports chk -> *)
-  (*     (\* Getting all analyse as a Typedtree IteratorArgument *\) *)
-  (*     let module A = (val chk : Analyse.ANALYSE) in *)
-  (*     (\* let module AA = (A(T)) in *\) *)
-  (*     let check = A.check in *)
-  (*     (\* let module Check = (TypedtreeIter.MakeIterator(IA)) in *\) *)
-  (*     (\* let config = AA.config in *\) *)
-  (*     Printf.eprintf "CONFIG %s\n%!" config; *)
-    (*   List.fold_left (fun reports cmt -> *)
-    (*       match cmt.cmt_annots with *)
-    (*       | Implementation str -> *)
-    (*         Check.iter_structure str; reports *)
-    (*       | Interface interface -> *)
-    (*         Check.iter_signature interface; reports *)
-    (*       | Packed (tsig, strl) -> assert false (\* todo *\) *)
-    (*       | Partial_implementation bin_partial_arr *)
-    (*       | Partial_interface  bin_partial_arr -> *)
-    (*         Array.fold_left (fun reports bin_partial -> *)
-    (*             match bin_partial with *)
-    (*             | Partial_structure str -> *)
-    (*               Check.iter_structure str; reports *)
-    (*             | Partial_structure_item str_item -> *)
-    (*               Check.iter_structure_item str_item; reports *)
-    (*             | Partial_expression expr -> *)
-    (*               Check.iter_expression expr; reports *)
-    (*             | Partial_pattern pat -> *)
-    (*               Check.iter_pattern pat; reports *)
-    (*             | Partial_class_expr cl_expr -> *)
-    (*               Check.iter_class_expr cl_expr; reports *)
-    (*             | Partial_signature sign -> *)
-    (*               Check.iter_signature sign; reports *)
-    (*             | Partial_signature_item sign_item -> *)
-    (*               Check.iter_signature_item sign_item; reports *)
-    (*             | Partial_module_type mod_type -> *)
-    (*               Check.iter_module_type mod_type; reports) *)
-    (*           reports bin_partial_arr) *)
-    (*     reports cmts) *)
-    (* [] analyses *)
