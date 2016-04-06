@@ -30,6 +30,8 @@ Library "ppx_patch"
   Modules:
     Ppx_patch,
     Ast_filter,
+    Ast_traverser, # May be removed ?
+    Ast_traverser2,
     Std_utils,
     parsing/Patch_lexer,
     parsing/Patch_parser,

@@ -53,11 +53,29 @@ let preprocess { Parsed_patches.name; header; body} =
   testInclusion !metas_in_post_patch !metas_in_pre_patch;
   { name; header = { expr_variables = !metas_in_pre_patch }; body = { before = processed_before_patch; after = processed_after_patch }}
 
-let is_meta = Fun.flip List.mem
+let is_meta : string list -> string -> bool = Fun.flip List.mem
 
-let match_expression_desc meta_vars expr pattern =
-  match expr, pattern with
-  | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some StringMap.empty
-  | Pexp_ident i, Pexp_ident { Asttypes.txt = Longident.Lident j } when is_meta meta_vars j -> Some (StringMap.singleton j (Pexp_ident i))
-  | Pexp_ident _, Pexp_ident _ -> None
-  | _ -> failwith "TODO"
+let merge_envs = Option.merge_sup (StringMap.merge (fun k -> Misc.const))
+
+let match_at_root meta_vars =
+  let open Ast_traverser2 in
+  let default = traverse merge_envs None
+  in
+  from_mapper None {
+    t2_expr = (fun self ({ pexp_desc = e1 } as expr1) ({ pexp_desc = e2 } as expr2) ->
+        match e1, e2 with
+        | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some StringMap.empty
+        | Pexp_ident i, Pexp_ident { Asttypes.txt = Longident.Lident j } when is_meta meta_vars j -> Some (StringMap.singleton j (Pexp_ident i))
+        | _ -> default.t2_expr self expr1 expr2
+      );
+  }
+
+let rec match_expression ?(recurse=true) meta_vars expr pattern =
+  let open Asttypes in
+  let single_traverser =
+    let open Ast_traverser in
+    let default = apply_traverser2 merge_envs None (match_at_root meta_vars) pattern
+    in
+    default
+  in
+  single_traverser.Ast_traverser.traverse_expr single_traverser expr
