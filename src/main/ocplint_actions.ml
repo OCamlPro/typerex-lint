@@ -1,6 +1,13 @@
 open Check_types
 open Info
 
+type source_kind = Source | Interface | Cmt
+
+let string_of_source_kind = function
+  | Source -> "ml files"
+  | Interface -> "mli files"
+  | Cmt -> "cmt* files"
+
 let global_checks : Check_types.global_check list = [
   Interface_missing.check;
   Code_length.check
@@ -28,7 +35,7 @@ let iter_files ?(recdir=true) f dirname =
   iter dirname ""
 
 let scan_project ?(kind=Source) path = (* todo *)
-  Format.eprintf "Scanning %S in project %S...\n%!" (kind_of_string kind) path;
+  Format.eprintf "Scanning %S in project %S...\n%!" (string_of_source_kind kind) path;
   let found_files =
     let files = ref [] in
     iter_files (fun file ->

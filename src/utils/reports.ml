@@ -32,6 +32,10 @@ let error loc info msg = { kind = Error; loc; info; msg }
 let add report reports =
   reports := StringSet.add report !reports
 
+let string_of_kind = function
+  | Warning -> "Warning"
+  | Error -> "Error"
+
 let print reports =
   StringSet.iter (fun report ->
       if report.loc <> Location.none then
