@@ -36,10 +36,56 @@ let string_of_kind = function
   | Warning -> "Warning"
   | Error -> "Error"
 
+let filter_by_kind kind reports =
+  StringSet.filter (fun el -> el.kind = kind) !reports
+
+let filter_by_cat cat reports =
+  StringSet.filter (fun el -> Info.(el.info.cat) = cat) !reports
+
+let output ppf reports =
+  let open Info in
+  let code = filter_by_cat Code reports in
+  let typo = filter_by_cat Typo reports  in
+  let interface = filter_by_cat Interface reports in
+
+  if not (StringSet.is_empty code) then begin
+    Format.fprintf ppf " --- Code ---\n%!";
+    StringSet.iter (fun report ->
+        if report.loc <> Location.none then
+          Format.fprintf ppf "%a\n  %s\n"
+            Location.print_loc report.loc report.msg
+        else
+          Format.fprintf ppf "%s\n" report.msg)
+      code
+  end;
+
+  if not (StringSet.is_empty typo) then begin
+    Format.fprintf ppf " --- Typography ---\n%!";
+    StringSet.iter (fun report ->
+        if report.loc <> Location.none then
+          Format.fprintf ppf "%a\n  %s\n"
+            Location.print_loc report.loc report.msg
+        else
+          Format.fprintf ppf "%s\n" report.msg)
+      typo
+  end;
+
+  if not (StringSet.is_empty interface) then begin
+    Format.fprintf ppf " --- Interface ---\n%!";
+    StringSet.iter (fun report ->
+        if report.loc <> Location.none then
+          Format.fprintf ppf "%a\n  %s\n"
+            Location.print_loc report.loc report.msg
+        else
+          Format.fprintf ppf "%s\n" report.msg)
+      interface
+  end
+
+(* Output reports - raw *)
+let txt reports file =
+  let oc = open_out file in
+  output (Format.formatter_of_out_channel oc) reports;
+  close_out oc
+
 let print reports =
-  StringSet.iter (fun report ->
-      if report.loc <> Location.none then
-        Format.eprintf "%a\n  %s\n" Location.print_loc report.loc report.msg
-      else
-        Format.eprintf "%s\n" report.msg)
-    !reports
+  output Format.err_formatter reports
