@@ -12,7 +12,7 @@
 (*                                                                            *)
 (******************************************************************************)
 
-begin program "ocplint"
+begin program "ocp-lint"
   files = [
     "ocplint_actions.ml"
     "ocplint.ml"
