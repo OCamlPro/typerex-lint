@@ -11,8 +11,8 @@ let in_file = open_in "test/sempatch.md"
 let patches = Patch_parser.sempatch (Patch_lexer.read) (Lexing.from_channel in_file)
 
 let results = [
-  [ true ; true ; true ; false];
-  [ false; true ; true ; false]
+  [ true ; true ; true ; false; true ];
+  [ false; true ; true ; false; false]
 ]
 
 let test_asts = List.map (fun s -> Parser.parse_expression Lexer.token (Lexing.from_string s)) test_progs

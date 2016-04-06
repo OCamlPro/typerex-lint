@@ -77,7 +77,7 @@ let is_meta : string list -> string -> bool = Fun.flip List.mem
 
 let merge_envs = Option.merge_sup (StringMap.merge (fun k -> Misc.const))
 
-let match_at_root meta_vars =
+let rec match_at_root meta_vars =
   let open Ast_traverser2 in
   let default = traverse merge_envs None
   in
@@ -86,11 +86,16 @@ let match_at_root meta_vars =
         match e1, e2 with
         | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some StringMap.empty
         | Pexp_ident i, Pexp_ident { Asttypes.txt = Longident.Lident j } when is_meta meta_vars j -> Some (StringMap.singleton j (Pexp_ident i))
+
+        | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, attrs); } ])
+          when loc.Asttypes.txt = "here" -> self.t2_expr self expr1 e
+        | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, attrs); } ])
+          when loc.Asttypes.txt = "inside" -> match_expression meta_vars expr1 (Expr e)
         | _ -> default.t2_expr self expr1 expr2
       );
   }
 
-let rec match_expression ?(recurse=true) meta_vars expr pattern =
+and match_expression ?(recurse=true) meta_vars expr pattern =
   let open Asttypes in
   let single_traverser =
     let open Ast_traverser in
@@ -99,16 +104,3 @@ let rec match_expression ?(recurse=true) meta_vars expr pattern =
     default
   in
   single_traverser.Ast_traverser.traverse_expr single_traverser expr
-
-
-(* match expr, pattern with *)
-(* | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some StringMap.empty *)
-(* | Pexp_ident i, Pexp_ident { Asttypes.txt = Longident.Lident j } when is_meta meta_vars j -> Some (StringMap.singleton j (Pexp_ident i)) *)
-(* | Pexp_ident _, Pexp_ident _ -> None *)
-(* | Pexp_let (isrecl, bindingsl, exprl), *)
-(*   Pexp_let (isrecr, bindingsr, exprr) -> *)
-(* if isrecl <> isrecr then None *)
-(* else *)
-(* Option.merge (StringMap.merge (fun k -> Option.merge (fun _ -> raisePatchError ("The meta-variable " ^ k ^ "has two values")))) *)
-(*   (match_bindings ~recurse:false meta_vars  *)
-(* | _ -> failwith "TODO" *)

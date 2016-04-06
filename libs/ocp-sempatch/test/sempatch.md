@@ -1,6 +1,6 @@
 # patch0
 ```
-f x
+f [%inside x]
 ```
 
 # patch1
@@ -17,4 +17,8 @@ foo
 # patch3
 ```
 foo
+```
+# patch4
+```
+f [%inside y]
 ```
