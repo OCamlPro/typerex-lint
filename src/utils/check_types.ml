@@ -1,5 +1,3 @@
-type kind = Source | Interface | Cmt
-
 type source_check = {
   source_run :
     Configuration.t ->
@@ -26,11 +24,6 @@ type cmt_check = {
     unit;
   cmt_info : Info.t;
 }
-
-let kind_of_string = function
-  | Source -> "ml files"
-  | Interface -> "mli files"
-  | Cmt -> "cmt* files"
 
 let parse_source ~tool_name source =
   Pparse.parse_implementation ~tool_name Format.err_formatter source

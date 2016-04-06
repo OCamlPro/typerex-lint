@@ -6,4 +6,4 @@ type t = {
   cat : cat;
 }
 
-val cat_to_string : cat -> string
+val string_of_cat : cat -> string
