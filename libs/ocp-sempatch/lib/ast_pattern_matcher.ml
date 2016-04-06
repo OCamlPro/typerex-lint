@@ -15,6 +15,24 @@ let testInclusion l1 l2 =
   with
     Failure x -> raisePatchError ("The meta-variable " ^ x ^ " is present in the substitution AST and not in the original one")
 
+let curryfying_mapper =
+  let open Ast_mapper in
+  { default_mapper with
+    expr = (fun self e ->
+        match e.pexp_desc with
+        | Pexp_apply (f, args) ->
+          List.fold_left (fun acc (lbl, arg) ->
+              {
+                arg with
+                pexp_desc = Pexp_apply (acc, [lbl,arg]);
+              }
+            )
+            f
+            args
+        | _ -> default_mapper.expr self e
+      );
+  }
+
 (** preprocess the patch before applying it
 
     Currently, this means adding a "?" in front of meta-variables to avoid
@@ -43,15 +61,17 @@ let preprocess { Parsed_patches.name; header; body} =
   and metas_in_pre_patch  = ref []
   and metas_in_post_patch = ref []
   in
-  let map processed_vars =
+  let map processed_vars expr =
     let mapper = mkmapper processed_vars in
-    mapper.expr mapper
+    curryfying_mapper.expr curryfying_mapper (mapper.expr mapper expr)
   in
   let processed_before_patch = map metas_in_pre_patch body.before
   and processed_after_patch = map metas_in_post_patch body.after
   in
   testInclusion !metas_in_post_patch !metas_in_pre_patch;
   { name; header = { expr_variables = !metas_in_pre_patch }; body = { before = processed_before_patch; after = processed_after_patch }}
+
+let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper
 
 let is_meta : string list -> string -> bool = Fun.flip List.mem
 
@@ -79,3 +99,16 @@ let rec match_expression ?(recurse=true) meta_vars expr pattern =
     default
   in
   single_traverser.Ast_traverser.traverse_expr single_traverser expr
+
+
+(* match expr, pattern with *)
+(* | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some StringMap.empty *)
+(* | Pexp_ident i, Pexp_ident { Asttypes.txt = Longident.Lident j } when is_meta meta_vars j -> Some (StringMap.singleton j (Pexp_ident i)) *)
+(* | Pexp_ident _, Pexp_ident _ -> None *)
+(* | Pexp_let (isrecl, bindingsl, exprl), *)
+(*   Pexp_let (isrecr, bindingsr, exprr) -> *)
+(* if isrecl <> isrecr then None *)
+(* else *)
+(* Option.merge (StringMap.merge (fun k -> Option.merge (fun _ -> raisePatchError ("The meta-variable " ^ k ^ "has two values")))) *)
+(*   (match_bindings ~recurse:false meta_vars  *)
+(* | _ -> failwith "TODO" *)
