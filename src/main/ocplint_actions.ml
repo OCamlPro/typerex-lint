@@ -22,8 +22,8 @@ let iter_files ?(recdir=true) f dirname =
         if Sys.is_directory (Filename.concat dirname file) then begin
           if recdir then iter dirname file
         end else
-          f file
-      ) files
+          f file)
+      files
   in
   iter dirname ""
 
@@ -47,15 +47,6 @@ let scan_files ?(kind=Source) path =
 let scan_cmts path =
   let files = scan_project ~kind:Cmt path in
   List.map Cmt_format.read_cmt files
-
-(* let scan_checks () = *)
-(*   let open Info in *)
-(*   List.iter (fun check -> *)
-(*       let info = check.info in *)
-(*       Format.eprintf " [%s]: %s\n   %s\n%!" *)
-(*         (cat_to_string info.cat) *)
-(*         (info.name) *)
-(*         (info.details)) analyses *)
 
 let scan path =
   (* All inputs for each analyze *)

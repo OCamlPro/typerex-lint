@@ -38,26 +38,6 @@ let parse_source ~tool_name source =
 let parse_interf ~tool_name interface =
   Pparse.parse_interface ~tool_name Format.err_formatter interface
 
-let check_source mapper file =
-  let open Ast_mapper in
-  let tool_name = tool_name () in
-  if Filename.check_suffix file "ml" then
-    let ast = parse_source ~tool_name file in
-    ignore (default_mapper.structure mapper ast)
-  else ()
-
-let check_interface mapper file =
-  let open Ast_mapper in
-  let tool_name = tool_name () in
-  if Filename.check_suffix file "mli" then
-    let ast = parse_interf ~tool_name file in
-    ignore (default_mapper.signature mapper ast)
-  else ()
-
-let check mapper file =
-  check_source mapper file;
-  check_interface mapper file
-
 let iter_cmt iterator cmt =
   let open Cmt_format in
   let module IA = (val iterator : TypedtreeIter.IteratorArgument) in
