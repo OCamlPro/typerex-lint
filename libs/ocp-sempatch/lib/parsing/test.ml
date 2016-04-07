@@ -10,7 +10,7 @@ let in_file = open_in "test/sempatch.md"
 let patches = Patch_parser.sempatch (Patch_lexer.read) (Lexing.from_channel in_file)
 
 let results = [
-  [ 1 ; 1 ; 3 ; 0; 1 ; 0; 2];
+  [ 1 ; 1 ; 5 ; 0; 1 ; 0; 2];
   [ 0; 1 ; 1 ; 0; 0; 0; 0]
 ]
 
