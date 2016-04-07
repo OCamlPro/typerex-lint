@@ -10,6 +10,7 @@ struct
 
   let const x _ = x
 end
+
 module Fun:
 sig
   val flip : ('a -> 'b -> 'c) -> ('b -> 'a -> 'c)
@@ -39,6 +40,9 @@ sig
   val value: 'a -> 'a t -> 'a
 
   val fold: ('a -> 'b -> 'a) -> 'a -> 'b option -> 'a
+
+  val some : 'a -> 'a t
+  val none : 'a t
 end
 =
 struct
@@ -65,6 +69,9 @@ struct
 
   let fold f init = let open Fun in
     value init %> map (f init)
+
+  let some x = Some x
+  let none = None
 end
 
 module UList:
