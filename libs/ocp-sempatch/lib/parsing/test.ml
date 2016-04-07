@@ -18,8 +18,8 @@ let results = [
 let test_asts = List.map (fun s -> Parser.parse_expression Lexer.token (Lexing.from_string s)) test_progs
 
 let apply ast patch =
-  let patch = Ast_pattern_matcher.preprocess patch in
-  match Ast_pattern_matcher.match_ast Parsed_patches.(patch.header.expr_variables) (Ast_pattern_matcher.preprocess_src_expr ast) (Ast_traverser2.Expr Parsed_patches.(patch.body.before)) with
+  let patch = Parsed_patches.preprocess patch in
+  match Ast_pattern_matcher.match_ast Parsed_patches.(patch.header.expr_variables) (Parsed_patches.preprocess_src_expr ast) (Ast_traverser2.Expr Parsed_patches.(patch.body.before)) with
   | None -> false
   | Some x -> true
 
