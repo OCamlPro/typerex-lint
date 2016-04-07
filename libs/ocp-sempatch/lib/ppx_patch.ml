@@ -39,7 +39,7 @@ let rename_vars_ vars = {
       in
       fun mapper expr ->
         let new_expr = match expr with
-          | { pexp_desc = Pexp_ident ({ txt = var; } as desc); } ->
+          | { pexp_desc = Pexp_ident ({ txt = var; _ } as desc); _ } ->
             let new_var = List.fold_left (fun expr (_, oldv, newv) -> rename_last expr ((=) oldv) newv) var vars in
             { expr with
               pexp_desc = Pexp_ident { desc with txt = new_var; };
@@ -69,33 +69,6 @@ let rename_vars_ vars = {
     end
 }
 
-let rename_var_ ?(rename_def=true) old_name new_name = {
-  default_mapper with
-  expr =
-    begin
-      fun mapper expr ->
-        match expr with
-        | { pexp_desc = Pexp_ident desc; }
-          when Ast_filter.txt_is desc (Longident.Lident old_name) ->
-          { expr with
-            pexp_desc = Pexp_ident { desc with txt = Longident.Lident new_name };
-          }
-        | p -> default_mapper.expr mapper p
-    end;
-  pat =
-    if rename_def then
-      begin
-        fun mapper pat ->
-          match pat.ppat_desc with
-          | Ppat_var { txt = id; loc; } when id = old_name ->
-            { pat with
-              ppat_desc = Ppat_var { txt = new_name; loc }
-            }
-          | p -> default_mapper.pat mapper pat
-      end
-    else default_mapper.pat
-}
-
 let add_arg_fun_ fname arg_name = {
   default_mapper with
   value_binding =
@@ -118,7 +91,7 @@ let make_fun_call_ var_name default_arg = {
   default_mapper with
   expr = fun mapper expr ->
     match expr with
-    | { pexp_desc = Pexp_ident i; pexp_attributes = attrs } when Ast_filter.txt_is i (Longident.Lident var_name) ->
+    | { pexp_desc = Pexp_ident i; _ } when Ast_filter.txt_is i (Longident.Lident var_name) ->
       { expr with
         pexp_desc = Pexp_apply (Exp.ident (Location.mkloc (Longident.Lident var_name) expr.pexp_loc), [ "", default_arg ]);
       }
@@ -130,7 +103,7 @@ let insert_at_toplevel_ (elt_gen : ?loc:Location.t -> unit -> structure_item) = 
   structure = (fun _ s ->
       match s with
       | [] -> elt_gen () :: s
-      | hd::s' -> elt_gen ~loc:hd.pstr_loc () :: s
+      | hd::_ -> elt_gen ~loc:hd.pstr_loc () :: s
     );
 }
 

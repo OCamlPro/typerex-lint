@@ -75,6 +75,11 @@ sig
 
   val foldmap: ('c -> 'b -> 'c) -> ('a -> 'b) -> 'c -> 'a t -> 'c
   val foldmap2_exn: ('c -> 'b -> 'c) -> ('a -> 'd -> 'b) -> 'c -> 'a t -> 'd t -> 'c
+
+  val cons : 'a -> 'a list -> 'a list
+
+  val sum : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
+  val product : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
 end
 =
 struct
@@ -85,6 +90,12 @@ struct
   let foldmap foldFun mapFun ini = Fun.compose (List.fold_left foldFun ini) (List.map mapFun)
 
   let foldmap2_exn foldFun mapFun ini l = Fun.compose (List.fold_left foldFun ini) (List.map2 mapFun l)
+
+  let cons e l = e::l
+
+  let sum = map2
+
+  let product f l1 l2 = List.map (fun x -> List.map (f x) l2) l1 |> List.flatten
 end
 
 module List = UList

@@ -1,3 +1,4 @@
+[@@@ ocaml.warning "-44"]
 open Ppx_patch
 open Ast_filter
 open Ast_filter.Infix

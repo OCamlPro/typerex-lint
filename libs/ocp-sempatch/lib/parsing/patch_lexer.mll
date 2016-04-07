@@ -1,5 +1,4 @@
 {
-  open Lexing
   open Patch_parser
 }
 

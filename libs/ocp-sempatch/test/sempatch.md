@@ -26,3 +26,9 @@ foo
 ```
 f y
 ```
+
+# patch6
+variables: v
+```
+[%inside f] v
+```

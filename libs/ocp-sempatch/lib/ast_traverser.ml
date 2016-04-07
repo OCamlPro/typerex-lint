@@ -34,7 +34,7 @@ let traverse_expression f default self e =
   | Pexp_constant _ -> default
   (* | Pexp_let (_, bindings, expr) -> f (traverse_bindings f default self bindings) (self.traverse_expr self expr) *)
   (* | Pexp_function cases -> self.traverse_cases self cases *)
-  | Pexp_fun (_, default_val, pattern, e) -> (Option.fold (fun _ v -> self.traverse_expr self v) default default_val)
+  | Pexp_fun (_, default_val, _, _) -> (Option.fold (fun _ v -> self.traverse_expr self v) default default_val)
   | Pexp_apply (e, args) -> List.foldmap f (Fun.compose (self.traverse_expr self) snd) (self.traverse_expr self e) args
   (* | Pexp_match (e, cases) *)
   (* | Pexp_try (e, cases) -> f (self.traverse_cases self cases) (self.traverse_expr self e) *)
@@ -54,10 +54,7 @@ let traverse f default = {
 }
 
 let apply_to_expr f default trav2 ast self e =
-  match trav2 (Ast_traverser2.Expr e) ast with
-  | Some env -> Some env (* traverser 2 returns a result at the root, we're happy *)
-  | None -> (* Search deeper in the tree for a match *)
-    traverse_expression f default self e
+  f (trav2 (Ast_traverser2.Expr e) ast) (traverse_expression f default self e)
 
 let apply_traverser2 f default trav2 ast = {
   traverse_expr = apply_to_expr f default trav2 ast;

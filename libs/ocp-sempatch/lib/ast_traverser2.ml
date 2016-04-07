@@ -89,5 +89,5 @@ let traverse f default = {
 let from_mapper default mapper ast1 ast2 =
   match ast1, ast2 with
   | Expr e1, Expr e2 -> mapper.t2_expr mapper e1 e2
-  | Pat p1, Pat p2 -> failwith "Non implemented"
+  | Pat _, Pat _ -> failwith "Non implemented"
   | _ -> default

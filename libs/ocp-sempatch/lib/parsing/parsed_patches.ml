@@ -59,7 +59,7 @@ let preprocess { name; header; body} =
       with
         expr = (fun m e ->
             match e.pexp_desc with
-            | Pexp_ident ({ Asttypes.txt = Longident.Lident v } as ident) when List.mem v header.expr_variables ->
+            | Pexp_ident ({ Asttypes.txt = Longident.Lident v; _ } as ident) when List.mem v header.expr_variables ->
               let new_var = "?" ^ v in
               if List.mem new_var !processed_vars then (* For the moment, don't allow meta variables to appear more than once in a patch *)
                 raisePatchError ("The variable " ^ v ^ " appears more than once in the patch")

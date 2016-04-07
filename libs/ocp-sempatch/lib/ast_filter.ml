@@ -218,7 +218,7 @@ type t =
   | Or of t*t
   | Not of t
 
-let test_ t = F t
+(* let test_ t = F t *)
 let and_ t1 t2 = And (t1, t2)
 let or_ t1 t2 = Or (t1, t2)
 let not_ t = Not t
@@ -313,34 +313,34 @@ let txt_is loc = (=) loc.Asttypes.txt
 
 let pattern_is_id pattern id =
   match pattern with
-  | { ppat_desc = Ppat_var loc } when txt_is loc id -> true
+  | { ppat_desc = Ppat_var loc; _ } when txt_is loc id -> true
   | _ -> false (* TODO: Is there another pattern to look at ? *)
 
 let binds_id binder id =
   match binder with
-  | { pvb_pat = pat } when pattern_is_id pat id -> true
+  | { pvb_pat = pat; _ } when pattern_is_id pat id -> true
   | _ -> false
 
 
 let rec limit_to_toplevel_expr = {
     nothing with
-    test_structure_item = (fun f stri ->
+    test_structure_item = (fun _ stri ->
         match stri with
-        | { pstr_desc = Pstr_eval _ } -> true, all
+        | { pstr_desc = Pstr_eval _; _ } -> true, all
         | _ -> false, limit_to_toplevel_expr);
   }
 
-let rec limit_to_def_of var = {
+let limit_to_def_of var = {
     nothing with
     test_value_binding = (fun mapper binding ->
         if binds_id binding var then true, all else false, mapper);
   }
 
-let rec limit_to_scope_of var = {
+let limit_to_scope_of var = {
     nothing with
     test_expr = (fun mapper exp ->
         match exp with
-        | { pexp_desc = Pexp_let (_, bindings, _) }
+        | { pexp_desc = Pexp_let (_, bindings, _); _ }
           when List.exists (fun b -> binds_id b var) bindings ->
           true, all
         | _ -> false, mapper);
@@ -348,7 +348,7 @@ let rec limit_to_scope_of var = {
 
 let not_at_toplevel = {
     all with
-    test_structure = (fun f _ -> false, all)
+    test_structure = (fun _ _ -> false, all)
   }
 
 
@@ -382,7 +382,7 @@ let rec limit_range condition patch = let open Ast_mapper in
       getter
       trans
       default_trans
-      parent_mapper
+      _
       node
     =
     match apply_filter condition getter node with
