@@ -17,5 +17,5 @@ begin program "ocp-lint"
     "ocplint_actions.ml"
     "ocplint.ml"
   ]
-  requires = [ "code_check" "interface_check" "check-types" ]
+  requires = [ "checks" "check-types" ]
 end

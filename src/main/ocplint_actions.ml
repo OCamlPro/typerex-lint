@@ -8,19 +8,6 @@ let string_of_source_kind = function
   | Interface -> "mli files"
   | Cmt -> "cmt* files"
 
-let global_checks : Check_types.global_check list = [
-  Interface_missing.check;
-  Code_length.check
-]
-
-let sources_checks : Check_types.source_check list = [
-  Code_identifier_length.check;
-]
-
-let cmt_checks : Check_types.cmt_check list = [
-  Test_cmt.check
-]
-
 let iter_files ?(recdir=true) f dirname =
   let rec iter dirname dir =
     let files = Sys.readdir (Filename.concat dirname dir) in
@@ -35,7 +22,8 @@ let iter_files ?(recdir=true) f dirname =
   iter dirname ""
 
 let scan_project ?(kind=Source) path = (* todo *)
-  Format.eprintf "Scanning %S in project %S...\n%!" (string_of_source_kind kind) path;
+  Format.eprintf "Scanning %S in project %S...\n%!"
+    (string_of_source_kind kind) path;
   let found_files =
     let files = ref [] in
     iter_files (fun file ->
@@ -55,7 +43,21 @@ let scan_cmts path =
   let files = scan_project ~kind:Cmt path in
   List.map Cmt_format.read_cmt files
 
-let scan path =
+let filter_checks filters checks =
+  let flags = Checks.parse_options false filters in
+  List.fold_left2
+    (fun acc flag check -> if flag then check :: acc else acc)
+    [] (Array.to_list flags) checks
+
+let scan ~filters path =
+  (* Initializing states (config, reports set, etc. *)
+  let config = Configuration.default in
+  let reports : Reports.t = Reports.empty in
+
+  (* XXX TODO : don't forget to read config file too ! *)
+  (* Getting all warnings available in ocp-lint *)
+  let checks = filter_checks filters Checks.checks in
+
   (* All inputs for each analyze *)
   let sources : string list = scan_files path in
   let cmts : Cmt_format.cmt_infos list = scan_cmts path in
@@ -68,23 +70,52 @@ let scan path =
           parse_interf ~tool_name source :: mli, ml)
       ([], []) sources in
 
-  (* Initializing states (config, reports set, etc. *)
-  let config = Configuration.default in
-  let reports : Reports.t = Reports.empty in
-
   Printf.eprintf "Starting analyses...\n%!";
 
   (* Global Checks *)
-  List.iter (fun check -> check.global_run config reports sources) global_checks;
+  List.iter
+    (fun check -> check.global_run config reports sources)
+    (Checks.global_checks checks);
 
   (* Checks on each source files. *)
   List.iter (fun check ->
       List.iter (fun ast -> check.source_run config reports ast) asts_ml)
-    sources_checks;
+    (Checks.source_checks checks);
 
   (* Start analyses on Cmt. *)
   List.iter (fun check ->
       List.iter (fun cmt -> check.cmt_run config reports cmt) cmts)
-    cmt_checks;
+    (Checks.cmt_checks checks);
 
   Reports.print reports
+
+let list_warnings () =
+  Format.eprintf "List of warnings :\n";
+  List.iter (fun ((id, check) as c)->
+      Format.eprintf "%4d %s\n" id (get_info c).name)
+    Checks.checks;
+
+  Format.eprintf "\n";
+  let all =
+    String.concat " " (List.rev_map string_of_int (Checks.letter 'a')) in
+
+  let code_set =
+    String.concat " " (List.rev_map string_of_int (Checks.letter 'c')) in
+
+  let interface_set =
+    String.concat " " (List.rev_map string_of_int (Checks.letter 'i')) in
+
+  let typo_set =
+    String.concat " " (List.rev_map string_of_int (Checks.letter 't')) in
+
+  Format.eprintf "   A All warnings\n";
+  Format.eprintf "     Set of warnings %s\n" all;
+
+  Format.eprintf "   C All warnings touching the code\n";
+  Format.eprintf "     Set of warnings %s\n" code_set;
+
+  Format.eprintf "   I All warnings touching the interface\n";
+  Format.eprintf "     Set of warnings %s\n" interface_set;
+
+  Format.eprintf "   T All warnings touching the typography\n";
+  Format.eprintf "     Set of warnings %s\n" typo_set;

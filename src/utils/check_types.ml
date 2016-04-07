@@ -1,3 +1,5 @@
+type kind = Source | Interface | Cmt
+
 type source_check = {
   source_run :
     Configuration.t ->
@@ -24,6 +26,22 @@ type cmt_check = {
     unit;
   cmt_info : Info.t;
 }
+
+type check = int * check_desc
+and check_desc =
+  | SCheck of source_check
+  | GCheck of global_check
+  | CCheck of cmt_check
+
+let kind_of_string = function
+  | Source -> "ml files"
+  | Interface -> "mli files"
+  | Cmt -> "cmt* files"
+
+let get_info = function
+  | (_, GCheck check) -> check.global_info
+  | (_, SCheck check) -> check.source_info
+  | (_, CCheck check) -> check.cmt_info
 
 let parse_source ~tool_name source =
   Pparse.parse_implementation ~tool_name Format.err_formatter source

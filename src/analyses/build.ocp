@@ -13,6 +13,11 @@
 (******************************************************************************)
 
 
+begin library "checks"
+  files = [ "checks.ml" ]
+  requires = [ "code_check" "interface_check" "check-types" ]
+end
+
 begin library "code_check"
     files = [
     "code/code_identifier_length.ml"
@@ -21,8 +26,6 @@ begin library "code_check"
   ]
   requires = [ "compiler-libs.common" "check-types" "configuration" ]
 end
-
-
 
 begin library "interface_check"
     files = [
