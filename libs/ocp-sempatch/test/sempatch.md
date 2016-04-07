@@ -20,5 +20,9 @@ foo
 ```
 # patch4
 ```
-f [%inside y]
+[%inside f] y
+```
+# patch5
+```
+f y
 ```
