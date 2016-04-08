@@ -45,6 +45,14 @@ let json_of_reports reports =
             ("list", `List list) ]
  
 let write_json ppf reports =
-  let json = json_of_reports reports in
+  let json = json_of_reports !reports in
   let json_str = Yojson.Basic.pretty_to_string json in
   Format.fprintf ppf "%s" json_str
+
+let json reports file =
+  let oc = open_out file in
+  let ppf = Format.formatter_of_out_channel oc in
+  write_json ppf reports
+
+let print reports =
+  write_json Format.err_formatter reports

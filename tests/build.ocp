@@ -12,31 +12,9 @@
 (*                                                                            *)
 (******************************************************************************)
 
-begin library "output"
+begin program "testsuite"
   files = [
-    "json.ml"
-    "txt.ml"
+    "testsuite.ml"
   ]
-  requires = [ "reports" "compiler-libs" "yojson" "unix" ]
-end
-
-begin
-  generated = true
-  dirname = [ "%{yojson_SRC_DIR}%" ]
-
-  begin objects "yojson"
-    files = [ "yojson.ml" ] (* yojson.cm{o,x} *)
-    requires = [ "biniou" "easy-format" ]
-  end
-
-end
-
-begin
-  generated = true
-  dirname = [ "%{easy-format_SRC_DIR}%" ]
-
-  begin objects "easy-format"
-    files = [ "easy_format.ml" ] (* easy_format.cm{o,x} *)
-  end
-
+  requires = [ "unix" "checks" "str" ]
 end

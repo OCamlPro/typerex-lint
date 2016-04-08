@@ -8,6 +8,10 @@ let action = ref ActionNone
 
 let filters = ref ""
 
+let json_output_file = ref None
+
+let txt_output_file = ref None
+
 let set_action new_action =
    if !action <> ActionNone then
      raise @@ Arg.Bad
@@ -35,6 +39,10 @@ let arg_spec = Arg.align [
     "--list-warnings", Arg.Unit (fun () ->
         set_action ActionList
       ), " List of warnings";
+    "--json", Arg.String (fun file -> json_output_file := Some file)
+    ,"file   Give file where to print warning in json format";
+    "--txt", Arg.String (fun file -> txt_output_file := Some file)
+    ,"file   Give file where to print warning in json format";
   ]
 
 let arg_spec = Arg.align arg_spec
@@ -48,7 +56,7 @@ let main () =
 
   match !action with
   | ActionLoad dir ->
-    Ocplint_actions.scan ~filters:!filters dir
+    Ocplint_actions.scan ~filters:!filters ~json_file:!json_output_file ~txt_file:!txt_output_file dir
   | ActionList ->
     Ocplint_actions.list_warnings ();
     exit 0
