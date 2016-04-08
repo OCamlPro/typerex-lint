@@ -6,15 +6,19 @@ open Configuration
 open Info
 open Reports
 
+let details =
+  Printf.sprintf "Checks long lines in your code. The default value is %d.\n"
+    Configuration.default.max_line_len
+
 let info = {
   name = "Code Length";
-  details = "Long details";
+  details;
   cat = Code;
 }
 
 let check_line config reports lnum file line =
   let line_len = String.length line in
-  if line_len > config.code_length_max then
+  if line_len > config.max_line_len then
     let pos = Lexing.({dummy_pos with pos_fname = file; pos_lnum = lnum}) in
     let loc = Location.({none with loc_start = pos}) in
     let msg = Printf.sprintf "Line too long (%d)." line_len in

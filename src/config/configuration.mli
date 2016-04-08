@@ -5,8 +5,8 @@ type t = {
   max_identifier_len : int;
 
   (* Analyse code_length *)
-  code_length : bool;
-  code_length_max : int;
+  code_line_length : bool;
+  max_line_len : int;
 
 (* Analyse XXXX *)
 }
