@@ -4,7 +4,7 @@
 %token COMMA
 %token<string> ID
 
-%token <string list> OCAML_CODE
+%token <Raw_patch.patch_line list> OCAML_CODE
 
 %token HASH
 %token VARIABLE_KW
@@ -29,4 +29,4 @@ vars_def:
   | VARIABLE_KW COLON vars = separated_nonempty_list(COMMA, ID) EOL { vars }
 
 patch_body:
-  | code = OCAML_CODE EOL { Raw_patch.to_patch_body (Raw_patch.from_lines_list code) }
+  | code = OCAML_CODE EOL { Raw_patch.to_patch_body code }

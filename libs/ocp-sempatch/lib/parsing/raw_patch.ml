@@ -28,13 +28,3 @@ let to_patch_body patch =
     Parsed_patches.before = parse_strlist (filter_map exists_before_patch patch);
     Parsed_patches.after = parse_strlist (filter_map exists_after_patch patch);
   }
-
-let from_lines_list = List.map (fun line ->
-    let len = String.length line in
-    if len = 0 then EQUAL ""
-    else
-      match line.[0] with
-      | '+' -> ADD (String.sub line 1 (len-1))
-      | '-' -> REMOVE (String.sub line 1 (len-1))
-      | _ -> EQUAL line
-  )
