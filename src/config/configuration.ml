@@ -8,6 +8,9 @@ type t = {
   code_line_length : bool;
   max_line_len : int;
 
+  (* Analyse code_identity_let *)
+  code_identity_let : bool;
+
 (* Analyse XXXX *)
 }
 
@@ -19,8 +22,11 @@ let default = {
   code_identifier_len = true;
   min_identifier_len = 2;
   max_identifier_len = 15;
+
   code_line_length = true;
   max_line_len = 80;
+
+  code_identity_let = true;
 }
 
 let safe_bool_of_string field value line_nbr =
@@ -62,6 +68,9 @@ let update_config config field value line_nbr =
   | "max_line_len" ->
     let i = safe_int_of_string field value line_nbr in
     { config with max_line_len = i }
+  | "code_identity_let" ->
+    let b = safe_bool_of_string field value line_nbr in
+    { config with code_line_length = b }
   | _ ->
     let msg =
       Printf.sprintf
@@ -114,7 +123,12 @@ let output_config ppf config =
   Format.fprintf ppf "%s = %b\n"  "code_line_length"
     config.code_line_length;
   Format.fprintf ppf "%s = %i\n"  "max_line_len"
-    config.max_line_len
+    config.max_line_len;
+
+  Format.fprintf ppf "\n(* Code : Identity let *)\n";
+  Format.fprintf ppf "%s = %b\n"  "code_identity_let"
+    config.code_identity_let
+
 
 let dump_config config file =
   let oc = open_out file in

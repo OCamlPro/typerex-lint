@@ -8,6 +8,9 @@ type t = {
   code_line_length : bool;
   max_line_len : int;
 
+  (* Analyse code_identity_let *)
+  code_identity_let : bool;
+
 (* Analyse XXXX *)
 }
 

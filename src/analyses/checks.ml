@@ -6,12 +6,13 @@ let checks : Check_types.check list = [
   (* Code *)
   1, GCheck Code_length.check;
   2, SCheck Code_identifier_length.check;
+  3, SCheck Code_identity_let.check;
 
   (* Typo *)
-  3, GCheck Interface_missing.check;
+  4, GCheck Interface_missing.check;
 
   (* Interface *)
-  4, CCheck Test_cmt.check;
+  5, CCheck Test_cmt.check;
 
   (* Doc *)
 ]
