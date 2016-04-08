@@ -32,21 +32,24 @@ let mapper config reports =
         let id_len = String.length id_str in
         let min_len = config.min_identifier_len in
         let max_len = config.max_identifier_len in
-        if id_len < min_len then
+        if id_len < min_len then begin
           let msg =
             Printf.sprintf
               "%S is too short: it should be at least of size '%d'."
               id_str
               min_len in
-          Reports.add (Reports.warning id_loc info msg) reports;
-          if id_len > max_len then
-            let msg =
-              Printf.sprintf "%S is too long: it should not exceed '%d'.\n%!"
+          Reports.add (Reports.warning id_loc info msg) reports
+        end;
+        if id_len > max_len then begin
+          let msg =
+            Printf.sprintf "%S is too long: it should not exceed '%d'.\n%!"
                 id_str
                 max_len in
-            Reports.add (Reports.warning id_loc info msg) reports
-      | _ -> () end;
-      pat
+          Reports.add (Reports.warning id_loc info msg) reports
+        end;
+        pat
+      | _ -> default_mapper.pat mapper pat
+      end
   }
 
 let run config reports source =
