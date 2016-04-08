@@ -79,7 +79,8 @@ let output ppf reports =
         else
           Format.fprintf ppf "%s\n" report.msg)
       interface
-  end
+  end;
+  Format.fprintf ppf "%!"
 
 (* Output reports - raw *)
 let txt reports file =
