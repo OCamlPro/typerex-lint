@@ -6,9 +6,19 @@ open Configuration
 open Info
 open Reports
 
+let details =
+  Printf.sprintf
+    "Checks that every identifier has a minimum and a maximum length. \
+     Usually, short names implies that the code is harder to read and \
+     understand. \n \
+     The default value for short identifier is %d and for the long identifier \
+     is %d.\n"
+    Configuration.default.min_identifier_len
+    Configuration.default.max_identifier_len
+
 let info = {
-  name = "Code Identifier Length";
-  details = "Long details";
+  name = "Identifier Length";
+  details;
   cat = Code;
 }
 
