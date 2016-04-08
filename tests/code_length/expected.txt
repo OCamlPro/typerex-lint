@@ -1,0 +1,7 @@
+ --- Code ---
+File "code_length/test_code_length.ml", line 3
+  Line too long (83).
+File "code_length/test_code_length.ml", line 5
+  Line too long (83).
+File "code_length/test_code_length.ml", line 8
+  Line too long (88).
