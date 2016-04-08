@@ -1,12 +1,13 @@
 open Check_types
 open Info
 
-type source_kind = Source | Interface | Cmt
+type source_kind = Source | Interface | Cmt | Config
 
 let string_of_source_kind = function
   | Source -> "ml files"
   | Interface -> "mli files"
   | Cmt -> "cmt* files"
+  | Config -> "configuration file"
 
 let iter_files ?(recdir=true) f dirname =
   let rec iter dirname dir =
@@ -29,7 +30,8 @@ let scan_project ?(kind=Source) path = (* todo *)
     iter_files (fun file ->
         if (kind = Source && Filename.check_suffix file "ml") ||
            (kind = Interface && Filename.check_suffix file "mli")  ||
-           (kind = Cmt && Filename.check_suffix file "cmt")
+           (kind = Cmt && Filename.check_suffix file "cmt") ||
+           (kind = Config && Filename.check_suffix file "conf")
         then
           files := (Filename.concat path file) :: !files) path;
     !files in
@@ -43,6 +45,14 @@ let scan_cmts path =
   let files = scan_project ~kind:Cmt path in
   List.map Cmt_format.read_cmt files
 
+let scan_config path =
+  let config = scan_project ~kind:Config path in
+  match config with
+  | [] -> Configuration.default   (* No configuration file, take the default. *)
+  | [ config_file ] -> Configuration.read_config config_file
+  | configs -> (* TODO what to do when we define many configs file ? *)
+    Configuration.default
+
 let filter_checks filters checks =
   let flags = Checks.parse_options false filters in
   List.fold_left2
@@ -51,7 +61,10 @@ let filter_checks filters checks =
 
 let scan ~filters path =
   (* Initializing states (config, reports set, etc. *)
-  let config = Configuration.default in
+  let config = scan_config path in
+  (* XXX TODO:
+     Now that we read config, we need to remove all analyses which don't appear
+     in the config file. *)
   let reports : Reports.t = Reports.empty in
 
   (* XXX TODO : don't forget to read config file too ! *)

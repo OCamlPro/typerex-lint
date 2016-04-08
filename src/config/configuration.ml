@@ -100,17 +100,25 @@ let read_config file =
     with End_of_file -> config in
   loop default 1
 
-let print_config ppf config =
-  Format.fprintf ppf "%s\n%!"  "(* Code : Identifier length *)";
-  Format.fprintf ppf "%s = %b\n%!"  "code_identifier_len"
+let output_config ppf config =
+  Format.fprintf ppf "\n(* Code : Identifier length *)\n";
+  Format.fprintf ppf "%s = %b\n"  "code_identifier_len"
     config.code_identifier_len;
-  Format.fprintf ppf "%s = %i\n%!"  "min_identifier_len"
+  Format.fprintf ppf "%s = %i\n"  "min_identifier_len"
     config.min_identifier_len;
-  Format.fprintf ppf "%s = %i\n%!"  "max_identifier_len"
+  Format.fprintf ppf "%s = %i\n"  "max_identifier_len"
     config.max_identifier_len;
 
-  Format.fprintf ppf "%s\n%!"  "(* Code : Code length *)";
-  Format.fprintf ppf "%s = %b\n%!"  "code_length"
+
+  Format.fprintf ppf "\n(* Code : Code Length *)\n";
+  Format.fprintf ppf "%s = %b\n"  "code_length"
     config.code_length;
-  Format.fprintf ppf "%s = %i\n%!"  "code_length_max"
+  Format.fprintf ppf "%s = %i\n"  "code_length_max"
     config.code_length_max
+
+let dump_config config file =
+  let oc = open_out file in
+  output_config (Format.formatter_of_out_channel oc) config;
+  close_out oc
+
+let print_config config = output_config Format.std_formatter config
