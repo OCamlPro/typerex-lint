@@ -15,6 +15,7 @@
 begin library "output"
   files = [
     "json.ml"
+    "txt.ml"
   ]
   requires = [ "reports" "compiler-libs" "yojson" "unix" ]
 end

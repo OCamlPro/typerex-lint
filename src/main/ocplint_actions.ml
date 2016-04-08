@@ -59,7 +59,7 @@ let filter_checks filters checks =
     (fun acc flag check -> if flag then check :: acc else acc)
     [] (Array.to_list flags) checks
 
-let scan ~filters path =
+let scan ~filters ~json_file ~txt_file path =
   (* Initializing states (config, reports set, etc. *)
   let config = scan_config path in
   (* XXX TODO:
@@ -100,7 +100,13 @@ let scan ~filters path =
       List.iter (fun cmt -> check.cmt_run config reports cmt) cmts)
     (Checks.cmt_checks checks);
 
-  Reports.print reports
+  match txt_file, json_file with
+    | None, None -> Txt.print reports
+    | None, Some json_file -> Json.json reports json_file
+    | Some txt_file, None -> Txt.txt reports txt_file
+    | Some json_file, Some txt_file ->
+      Json.json reports json_file;
+      Txt.txt reports txt_file
 
 let list_warnings () =
   Format.eprintf "List of warnings :\n";
