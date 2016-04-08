@@ -2,8 +2,13 @@ type t = {
   (* Analyse code_identifier_length *)
   code_identifier_len : bool;
   min_identifier_len : int;
-  max_identifier_len : int
-  (* Analyse XXXX *)
+  max_identifier_len : int;
+
+  (* Analyse code_length *)
+  code_length : bool;
+  code_length_max : int;
+
+(* Analyse XXXX *)
 }
 
 exception Wrong_field of string
@@ -14,6 +19,8 @@ let default = {
   code_identifier_len = true;
   min_identifier_len = 2;
   max_identifier_len = 15;
+  code_length = true;
+  code_length_max = 80;
 }
 
 let safe_bool_of_string field value line_nbr =
@@ -49,6 +56,12 @@ let update_config config field value line_nbr =
   | "max_identifier_len" ->
     let i = safe_int_of_string field value line_nbr in
     { config with max_identifier_len = i }
+  | "code_length" ->
+    let b = safe_bool_of_string field value line_nbr in
+    { config with code_length = b }
+  | "code_length_max" ->
+    let i = safe_int_of_string field value line_nbr in
+    { config with code_length_max = i }
   | _ ->
     let msg =
       Printf.sprintf
@@ -94,4 +107,10 @@ let print_config ppf config =
   Format.fprintf ppf "%s = %i\n%!"  "min_identifier_len"
     config.min_identifier_len;
   Format.fprintf ppf "%s = %i\n%!"  "max_identifier_len"
-    config.max_identifier_len
+    config.max_identifier_len;
+
+  Format.fprintf ppf "%s\n%!"  "(* Code : Code length *)";
+  Format.fprintf ppf "%s = %b\n%!"  "code_length"
+    config.code_length;
+  Format.fprintf ppf "%s = %i\n%!"  "code_length_max"
+    config.code_length_max

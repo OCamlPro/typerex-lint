@@ -14,7 +14,7 @@ let info = {
 
 let check_line config reports lnum file line =
   let line_len = String.length line in
-  if line_len > 80 then
+  if line_len > config.code_length_max then
     let pos = Lexing.({dummy_pos with pos_fname = file; pos_lnum = lnum}) in
     let loc = Location.({none with loc_start = pos}) in
     let msg = Printf.sprintf "Line too long (%d)." line_len in
