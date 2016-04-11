@@ -87,6 +87,8 @@ sig
 
   val sum : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
   val product : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
+
+  val find_opt : ('a -> bool) -> 'a list -> 'a option
 end
 =
 struct
@@ -103,6 +105,8 @@ struct
   let sum = map2
 
   let product f l1 l2 = List.map (fun x -> List.map (f x) l2) l1 |> List.flatten
+
+  let find_opt f l = try List.find f l |> Option.some with Not_found -> None
 end
 
 module List = UList

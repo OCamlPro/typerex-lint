@@ -5,26 +5,59 @@ module StringMap = Map.Make(String)
 
 let is_meta : string list -> string -> bool = Fun.flip List.mem
 
-let rec match_at_root meta_vars =
-  let open Ast_traverser2 in
-  let default = traverse (List.product (StringMap.merge (fun _ -> Misc.const))) []
+let apply_replacements tree attributes var_replacements =
+  (* TODO : Keep location from the original AST *)
+  let new_tree = List.find_opt (fun x -> (fst x).Asttypes.txt = "__sempatch_replace") attributes
+                 |> Option.map snd
+                 |> Option.map (function
+                     | PStr [ { pstr_desc = Pstr_eval (e, _); _ } ] -> e
+                     | _ -> Parsed_patches.raisePatchError "Invalid replacement extension node"
+                   )
+                 |> Option.value tree
   in
-  from_mapper [] {
-    t2_expr = (fun self ({ pexp_desc = e1; _ } as expr1) ({ pexp_desc = e2; _ } as expr2) ->
-        match e1, e2 with
-        | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> [StringMap.empty]
-        | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta meta_vars j ->
-          [StringMap.singleton j e]
-        | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "here" ->
-          self.t2_expr self expr1 e
-        | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "inside" ->
-          match_ast meta_vars expr1 (Expr e)
-        | _ -> default.t2_expr self expr1 expr2
-      );
-  }
+  let mapper = Ast_mapper.(
+      { default_mapper with
+        expr = (fun self e ->
+            match e.pexp_desc with
+            | Pexp_ident { Asttypes.txt = Longident.Lident i; _} ->
+              (
+                try
+                  { e with pexp_desc = StringMap.find i var_replacements }
+                with
+                  Not_found -> e
+              )
+            | _ -> e
+          );
+      })
+  in
+  mapper.Ast_mapper.expr mapper tree
 
-and match_ast meta_vars ast pattern =
-  let open Ast_traverser in
-  let single_traverser = apply_traverser2 List.append [] (match_at_root meta_vars) pattern
+let apply patch =
+  let is_meta = is_meta Parsed_patches.(patch.header.expr_variables) in
+  let rec match_at_root =
+    let open Ast_maybe_mapper2 in
+    let default = mk (StringMap.merge (fun _ -> Misc.const)) StringMap.empty in
+    {
+      expr = (fun self ({ pexp_desc = e1; _ } as expr1) ({ pexp_desc = e2; pexp_attributes = attrs2; _ } as expr2) ->
+          let replacements =
+            match e1, e2 with
+            | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some (expr1, StringMap.empty)
+            | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta j ->
+              Some (expr1, StringMap.singleton j e)
+            (* | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "here" -> *)
+            (*   self.t2_expr self expr1 e *)
+            (* | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "inside" -> *)
+            (*   match_ast meta_vars expr1 (Expr e) *)
+            | _ -> default.expr self expr1 expr2
+          in
+          Option.map (fun (e, env) -> apply_replacements e attrs2 env, env) replacements
+        );
+    }
   in
-  single_traverser.traverse_expr single_traverser ast
+  ()
+
+and match_ast meta_vars ast pattern = failwith "later"
+  (* let open Ast_traverser in *)
+  (* let single_traverser = apply_traverser2 List.append [] (match_at_root meta_vars) pattern *)
+  (* in *)
+  (* single_traverser.traverse_expr single_traverser ast *)
