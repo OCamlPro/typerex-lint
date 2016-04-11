@@ -31,6 +31,7 @@ sig
   type 'a t = 'a option
 
   val map : ('a -> 'b) -> 'a t -> 'b t
+  val iter : ('a -> unit) -> 'a t -> unit
 
   val merge_sup : ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val merge_inf : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
@@ -51,6 +52,8 @@ struct
   let map f = function
     | None -> None
     | Some x -> Some (f x)
+
+  let iter f x = ignore (map f x)
 
   let merge_sup f o1 o2 = match o1, o2 with
     | Some x, Some y -> Some (f x y)

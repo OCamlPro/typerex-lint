@@ -6,10 +6,7 @@ type header = {
   expr_variables : string list;
 }
 
-type body = {
-  before: Parsetree.expression;
-  after: Parsetree.expression;
-}
+type body = Parsetree.expression
 
 type t = {
   name: id;
@@ -49,8 +46,7 @@ let curryfying_mapper =
 
 (** preprocess the patch before applying it
 
-    Currently, this means adding a "?" in front of meta-variables to avoid
-    conflict with real ones and perform sanity checks
+    Currently, this just means curryfiying the world
 *)
 let preprocess { name; header; body} =
   let open Ast_mapper in
@@ -72,17 +68,17 @@ let preprocess { name; header; body} =
           )
     }
   and metas_in_pre_patch  = ref []
-  and metas_in_post_patch = ref []
+  (* and metas_in_post_patch = ref [] *)
   in
   let map processed_vars expr =
     let mapper = mkmapper processed_vars in
     curryfying_mapper.expr curryfying_mapper (mapper.expr mapper expr)
   in
-  let processed_before_patch = map metas_in_pre_patch body.before
-  and processed_after_patch = map metas_in_post_patch body.after
+  let processed_before_patch = map metas_in_pre_patch body
+  (* and processed_after_patch = map metas_in_post_patch body.after *)
   in
-  testInclusion !metas_in_post_patch !metas_in_pre_patch;
-  { name; header = { expr_variables = !metas_in_pre_patch }; body = { before = processed_before_patch; after = processed_after_patch }}
+  (* testInclusion !metas_in_post_patch !metas_in_pre_patch; *)
+  { name; header = { expr_variables = !metas_in_pre_patch }; body = processed_before_patch; }
 
 let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper
 

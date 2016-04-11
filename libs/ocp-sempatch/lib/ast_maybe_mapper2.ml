@@ -14,23 +14,12 @@ let merge_ast_and_env (env_merger : 'a -> 'a -> 'a) =
 let combine mapper merge default elements patch =
   let results = List.map2 mapper elements patch in
   List.fold_left (merge_ast_and_env merge) (Some ([], default)) results
-  (* let exists_match = List.fold_left merge default results *)
-  (* in *)
-  (* if exists_match then *)
-  (*   List.map2 (fun x y -> match y with *)
-  (*       | Some e -> e *)
-  (*       | None -> x) *)
-  (*     elements results *)
-  (*   |> Option.some *)
-  (* else *)
-  (*   None *)
-
 
 let traverse_expression merge default self e patch =
   let maybe_desc =
   match e.pexp_desc, patch.pexp_desc with
   | Pexp_ident _, Pexp_ident _
-  | Pexp_constant _, Pexp_constant _ -> Some (e.pexp_desc, default)
+  | Pexp_constant _, Pexp_constant _ -> None
   | Pexp_tuple e1s, Pexp_tuple e2s -> Option.map (fun (trees, env) -> (Pexp_tuple trees, env)) @@ combine (self.expr self) merge default e1s e2s
   (* | Pexp_apply (f1, [lbl1, arg1]), Pexp_apply (f2, [lbl2, arg2]) -> *)
   (*   let mapped_f = self.expr self f1 f2 *)

@@ -24,7 +24,4 @@ let to_patch_body patch =
   let parse_strlist expr =
   Parser.parse_expression Lexer.token (Lexing.from_string (String.concat "\n" expr))
   in
-  {
-    Parsed_patches.before = parse_strlist (filter_map exists_before_patch patch);
-    Parsed_patches.after = parse_strlist (filter_map exists_after_patch patch);
-  }
+  parse_strlist (filter_map exists_before_patch patch);

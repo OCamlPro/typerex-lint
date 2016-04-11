@@ -17,7 +17,7 @@ let apply_replacements tree attributes var_replacements =
   in
   let mapper = Ast_mapper.(
       { default_mapper with
-        expr = (fun self e ->
+        expr = (fun _self e ->
             match e.pexp_desc with
             | Pexp_ident { Asttypes.txt = Longident.Lident i; _} ->
               (
@@ -30,9 +30,9 @@ let apply_replacements tree attributes var_replacements =
           );
       })
   in
-  mapper.Ast_mapper.expr mapper tree
+  mapper.Ast_mapper.expr mapper new_tree
 
-let apply patch =
+let apply patch expr =
   let is_meta = is_meta Parsed_patches.(patch.header.expr_variables) in
   let rec match_at_root =
     let open Ast_maybe_mapper2 in
@@ -44,20 +44,18 @@ let apply patch =
             | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some (expr1, StringMap.empty)
             | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta j ->
               Some (expr1, StringMap.singleton j e)
-            (* | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "here" -> *)
-            (*   self.t2_expr self expr1 e *)
-            (* | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "inside" -> *)
-            (*   match_ast meta_vars expr1 (Expr e) *)
+            | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "inside" ->
+              apply_to_expr e expr1
             | _ -> default.expr self expr1 expr2
           in
           Option.map (fun (e, env) -> apply_replacements e attrs2 env, env) replacements
         );
     }
-  in
-  ()
-
-and match_ast meta_vars ast pattern = failwith "later"
-  (* let open Ast_traverser in *)
-  (* let single_traverser = apply_traverser2 List.append [] (match_at_root meta_vars) pattern *)
-  (* in *)
-  (* single_traverser.traverse_expr single_traverser ast *)
+  and apply_to_expr pattern expr =
+    let open Ast_maybe_mapper2 in
+    match expr.pexp_desc with
+    | Pexp_ident _ | Pexp_constant _ -> match_at_root.expr match_at_root expr pattern
+    | _ -> failwith "Not implemented yet"
+  in apply_to_expr Parsed_patches.(patch.body) expr
+     |> Option.map fst
+     |> Option.value expr

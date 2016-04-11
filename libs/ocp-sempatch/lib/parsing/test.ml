@@ -1,7 +1,7 @@
 open Std_utils
 
 let test_progs = [
-  "f x y";
+  "f";
   "x";
 ]
 
@@ -18,16 +18,17 @@ let test_asts = List.map (fun s -> Parser.parse_expression Lexer.token (Lexing.f
 
 let apply ast patch =
   let patch = Parsed_patches.preprocess patch in
-  Ast_pattern_matcher.match_ast Parsed_patches.(patch.header.expr_variables) (Parsed_patches.preprocess_src_expr ast) (Ast_traverser2.Expr Parsed_patches.(patch.body.before))
-  |> List.length
+  Ast_pattern_matcher.apply patch ast
+  (* |> List.length *)
 
 let () =
   List.iter2
     (
-      fun ast result ->
+      fun ast _result ->
         List.map (apply ast) patches
-        |> List.map2 (=) result
-        |> List.iteri (Printf.printf "test %d : %B\n")
+        |> List.iter @@ Printast.expression 0 Format.std_formatter
+        (* |> List.map2 (=) result *)
+        (* |> List.iteri (Printf.printf "test %d : %B\n") *)
     )
     test_asts
     results;
