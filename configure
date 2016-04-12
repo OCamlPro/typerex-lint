@@ -1,0 +1,8 @@
+#!/bin/sh
+
+cd autoconf; ./configure $*
+cd ..
+echo Creating root directory _obuild/
+mkdir -p _obuild
+rm -f boot/.ocpstop
+
