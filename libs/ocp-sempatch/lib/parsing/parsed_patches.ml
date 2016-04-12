@@ -32,7 +32,7 @@ let curryfying_mapper =
     expr = (fun self e ->
         match e.pexp_desc with
         | Pexp_apply (f, args) ->
-          List.fold_left (fun acc (lbl, arg) ->
+          let currified_applies = List.fold_left (fun acc (lbl, arg) ->
               {
                 arg with
                 pexp_desc = Pexp_apply (acc, [lbl,arg]);
@@ -40,6 +40,7 @@ let curryfying_mapper =
             )
             f
             args
+          in { e with pexp_desc = currified_applies.pexp_desc }
         | _ -> default_mapper.expr self e
       );
   }
