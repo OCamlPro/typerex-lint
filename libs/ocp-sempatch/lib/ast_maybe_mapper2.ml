@@ -10,7 +10,6 @@ let merge_ast_and_env (env_merger : 'a -> 'a -> 'a) =
       (fun new_env -> (ast :: accu_ast, new_env)) (env_merger accu_env env)
     )
 
-
 let combine mapper merge default elements patch =
   let results = List.map2 mapper elements patch in
   List.fold_left (merge_ast_and_env merge) (Some ([], default)) results
@@ -21,15 +20,15 @@ let traverse_expression merge default self e patch =
   | Pexp_ident _, Pexp_ident _
   | Pexp_constant _, Pexp_constant _ -> None
   | Pexp_tuple e1s, Pexp_tuple e2s -> Option.map (fun (trees, env) -> (Pexp_tuple trees, env)) @@ combine (self.expr self) merge default e1s e2s
-  (* | Pexp_apply (f1, [lbl1, arg1]), Pexp_apply (f2, [lbl2, arg2]) -> *)
-  (*   let mapped_f = self.expr self f1 f2 *)
-  (*   and mapped_arg = self.expr self arg1 arg2 |> Option.map (fun x -> [lbl1,x]) in *)
-  (*   (match mapped_f, mapped_arg with *)
-  (*    | None, None -> None *)
-  (*    | Some f, None -> Pexp_apply (f, [lbl1, arg1]) |> Option.some *)
-  (*    | None, Some a -> Pexp_apply (f1, a) |> Option.some *)
-  (*    | Some f, Some a -> Pexp_apply (f, a) |> Option.some *)
-  (*   ) *)
+  | Pexp_apply (f1, [lbl1, arg1]), Pexp_apply (f2, [_lbl2, arg2]) ->
+    Option.merge_inf
+      (fun (f, env_f) (a, env_a) -> (Pexp_apply (f, [lbl1, a]), merge env_f env_a))
+      (self.expr self f1 f2)
+      (self.expr self arg1 arg2)
+  | Pexp_apply _, _ | _, Pexp_apply _
+  | Pexp_ident _, _ | _, Pexp_ident _
+  | Pexp_constant _, _ | _, Pexp_constant _
+    -> None
   | _ -> failwith "Non implemented"
   in Option.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc
 
