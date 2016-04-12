@@ -8,7 +8,7 @@ OasisFormat: 0.4
 BuildTools: ocamlbuild
 Plugins: META (0.4), DevFiles (0.4), StdFiles(0.4)
 AlphaFeatures: stdfiles_markdown, ocamlbuild_more_args
-XOCamlbuildExtraArgs: -tag safe_string -use-menhir -cflags -w -cflags +a-4
+XOCamlbuildExtraArgs: -tag safe_string -use-menhir -cflags -w -cflags +a-4-44
 
 Executable "test_patch"
   Path: patch
