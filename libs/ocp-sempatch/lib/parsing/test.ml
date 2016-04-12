@@ -1,35 +1,42 @@
 open Std_utils
 
 let test_progs = [
-  "f";
-  "x";
+  "f",   [ "f"; "f"            ; "bar"; "f"];
+  "x",   [ "x"; "((+) x) 1"    ; "bar"; "x"];
+  "f x", [ "y"; "f (((+) x) 1)"; "bar"; "f x"];
 ]
 
 let in_file = open_in "test/sempatch.md"
 
 let patches = Patch_parser.sempatch (Patch_lexer.read) (Lexing.from_channel in_file)
 
-let results = [
-  [ 1 ; 1 ; 5 ; 0; 1 ; 0; 2];
-  [ 0; 1 ; 1 ; 0; 0; 0; 0]
-]
+let string_to_expr s = Parser.parse_expression Lexer.token (Lexing.from_string s)
+let expr_to_string e =
+  Pprintast.expression Format.str_formatter e;
+  Format.flush_str_formatter ()
 
-let test_asts = List.map (fun s -> Parser.parse_expression Lexer.token (Lexing.from_string s)) test_progs
+(* let test_asts = List.map string_to_expr test_progs *)
 
 let apply ast patch =
   let patch = Parsed_patches.preprocess patch in
   Ast_pattern_matcher.apply patch ast
-  (* |> List.length *)
+
+let test patches (ast, expected_results) =
+  let parsed_ast = string_to_expr ast in
+  List.map2 (fun expect patch ->
+      let result = expr_to_string (apply parsed_ast patch) in
+      Option.some_if (expect <> result) result)
+    expected_results patches
 
 let () =
-  List.iter2
-    (
-      fun ast _result ->
-        List.map (apply ast) patches
-        |> List.iter @@ Printast.expression 0 Format.std_formatter
-        (* |> List.map2 (=) result *)
-        (* |> List.iteri (Printf.printf "test %d : %B\n") *)
-    )
-    test_asts
-    results;
+  List.map (test patches) test_progs
+  |> List.iteri
+       (fun i -> List.iteri
+          (fun j ast_opt -> match ast_opt with
+            | Some ast ->
+              Printf.printf "Error applying patch %d at test %d : got " j i;
+              print_endline ast
+            | None -> ()
+          )
+       );
   close_in in_file

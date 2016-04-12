@@ -1,34 +1,20 @@
 # patch0
 ```
-f [%inside x]
+f x [@__sempatch_replace y]
 ```
 
 # patch1
 ```
-x
+x [@__sempatch_replace x+1]
 ```
 
 # patch2
 variables: foo
 ```
-foo
+foo [@__sempatch_replace bar]
 ```
 
 # patch3
 ```
 foo
-```
-# patch4
-```
-[%inside f] y
-```
-# patch5
-```
-f y
-```
-
-# patch6
-variables: v
-```
-[%inside f] v
 ```
