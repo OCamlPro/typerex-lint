@@ -40,10 +40,21 @@ sig
 
   val value: 'a -> 'a t -> 'a
 
+  val (|?) : 'a t -> 'a -> 'a
+
   val fold: ('a -> 'b -> 'a) -> 'a -> 'b option -> 'a
 
   val some : 'a -> 'a t
   val none : 'a t
+  val some_if : bool -> 'a -> 'a t
+
+  val is_some : 'a t -> bool
+  val is_none : 'a t -> bool
+
+  module Infix :
+  sig
+    val (|?) : 'a t -> 'a -> 'a
+  end
 end
 =
 struct
@@ -70,11 +81,23 @@ struct
     | None -> default
     | Some x -> x
 
+  let (|?) opt default = value default opt
+
   let fold f init = let open Fun in
     value init %> map (f init)
 
   let some x = Some x
   let none = None
+
+  let some_if cond x = if cond then Some x else None
+
+  let is_none x = (=) None x
+  let is_some x = (<>) None x
+
+  module Infix =
+  struct
+    let (|?) = (|?)
+  end
 end
 
 module UList:
