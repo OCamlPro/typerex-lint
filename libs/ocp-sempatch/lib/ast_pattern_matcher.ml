@@ -44,7 +44,7 @@ let apply patch expr =
             | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some (expr1, StringMap.empty)
             | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta j ->
               Some (expr1, StringMap.singleton j e)
-            | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "inside" ->
+            | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "__sempatch_inside" ->
               apply_to_expr e expr1
             | _ -> default.expr self expr1 expr2
           in
