@@ -1,10 +1,10 @@
 (**************************************************************************)
 (*                                                                        *)
-(*                              OCamlPro TypeRex                          *)
+(*                        OCamlPro Typerex                                *)
 (*                                                                        *)
 (*   Copyright OCamlPro 2011-2016. All rights reserved.                   *)
-(*   This file is distributed under the terms of the GPL v3.0             *)
-(*      (GNU Public Licence version 3.0).                                 *)
+(*   This file is distributed under the terms of the AGPL v3.0            *)
+(*   (GNU Affero General Public Licence version 3.0).                     *)
 (*                                                                        *)
 (*     Contact: <typerex@ocamlpro.com> (http://www.ocamlpro.com/)         *)
 (*                                                                        *)
@@ -17,6 +17,7 @@
 (*  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE      *)
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
+
 
 let a = 
   1 
