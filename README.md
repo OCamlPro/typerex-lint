@@ -6,7 +6,25 @@ A style checker for [OCaml](http://ocaml.org/) language.
 
 The OCaml Style Checker is a tool for OCaml sources...
 
-## Build
+## Build and Install
+
+### Dependencies
+
+ocp-lint is currently written for OCaml 4.02 and superior versions.
+
+OPAM dependencies: ocp-build, yojson
+
+You can use `make opam-deps` to install dependencies in the current switch.
+
+### Build Instructions
+
+Use the following instructions:
+```
+./configure
+make
+make install
+```
+to install `ocp-lint` on your system.
 
 ## Running
 
