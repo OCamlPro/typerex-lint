@@ -40,6 +40,7 @@ let apply patch expr =
       expr = (fun self defined_vars ({ pexp_desc = e1; _ } as expr1) ({ pexp_desc = e2; pexp_attributes = attrs2; _ } as expr2) ->
           let replacements =
             match e1, e2 with
+            | Pexp_constant c1, Pexp_constant c2 when c1 = c2 -> Some (expr1, defined_vars)
             | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some (expr1, defined_vars)
             | Pexp_ident { Asttypes.txt = Longident.Lident i; _ }, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_binding j ->
               Option.some_if (Variables.get_ident j defined_vars = (Some i)) (expr1, defined_vars)
