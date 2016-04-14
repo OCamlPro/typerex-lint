@@ -16,6 +16,15 @@ let combine mapper merge default elements patch =
   let results = List.map2 mapper elements patch in
   List.fold_left (merge_ast_and_env merge) (Some ([], default)) results
 
+let map_binding merge _default self defined_vars binding patch =
+  self.pattern self defined_vars binding.pvb_pat patch.pvb_pat
+  >>= (fun (pattern, pattern_env) ->
+      self.expr self defined_vars binding.pvb_expr patch.pvb_expr
+      >|= (fun (expr, expr_env) ->
+          { binding with pvb_pat = pattern; pvb_expr = expr; }, merge pattern_env expr_env
+        )
+    )
+
 let map_expr merge default self defined_vars e patch =
   let maybe_desc =
   match e.pexp_desc, patch.pexp_desc with
@@ -35,6 +44,23 @@ let map_expr merge default self defined_vars e patch =
       (fun (pat, env_pat) (expr, env_expr) -> Pexp_fun (lbl1, default1, pat, expr), merge env_pat env_expr)
       mapped_arg
       mapped_expr
+  | Pexp_let (isrecl, bindingsl, exprl), Pexp_let (isrecr, bindingsr, exprr) when isrecl = isrecr ->
+    let mapped_bindings = List.fold_left2 (fun accu bindingl bindingr ->
+        accu
+        >>= (fun (binding_list, env) ->
+            map_binding merge default self defined_vars bindingl bindingr
+            >|= (fun (parsed_binding, new_env) ->
+                parsed_binding :: binding_list, merge env new_env)))
+        (Some ([], defined_vars))
+        bindingsl
+        bindingsr
+    in
+    mapped_bindings >>= (fun (bindings, env) ->
+        self.expr self env exprl exprr >|= (fun (mapped_expr, env) ->
+            Pexp_let (isrecl, bindings, mapped_expr), env
+          )
+      )
+  | Pexp_let _, _ | _, Pexp_let _
   | Pexp_apply _, _ | _, Pexp_apply _
   | Pexp_ident _, _ | _, Pexp_ident _
   | Pexp_constant _, _ | _, Pexp_constant _

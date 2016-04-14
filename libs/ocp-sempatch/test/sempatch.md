@@ -19,3 +19,10 @@ variables: y
 ```
 (fun y -> y) [@__sempatch_replace foo]
 ```
+
+
+# patch4
+variables: x
+```
+(let x = 1 in x) [@__sempatch_replace tralala]
+```

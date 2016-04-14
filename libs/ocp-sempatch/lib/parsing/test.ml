@@ -1,10 +1,11 @@
 open Std_utils
 
 let test_progs = [
-  "f",   [ "f"; "f"            ; "bar"; "f"];
-  "x",   [ "x"; "((+) x) 1"    ; "bar"; "x"];
-  "f x", [ "y"; "f (((+) x) 1)"; "bar"; "f x"];
-  "fun x -> x", [ "fun x  -> x"; "fun x  -> ((+) x) 1"; "bar"; "foo"];
+  "f",   [ "f"; "f"            ; "bar"; "f"; "f"];
+  "x",   [ "x"; "((+) x) 1"    ; "bar"; "x"; "x"];
+  "f x", [ "y"; "f (((+) x) 1)"; "bar"; "f x"; "f x"];
+  "fun x -> x", [ "fun x  -> x"; "fun x  -> ((+) x) 1"; "bar"; "foo"; "fun x  -> x"];
+  "let x = 1 in x", [ "let x = 1 in x"; "let x = 1 in ((+) x) 1"; "bar"; "let x = 1 in x"; "tralala"];
 ]
 
 let in_file = open_in "test/sempatch.md"
