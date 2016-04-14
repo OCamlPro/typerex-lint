@@ -92,7 +92,14 @@ let apply patch expr =
     | Pexp_apply (fct, [lbl, arg]) ->
       merge_two_exprs (mkapply lbl) fct arg
     | Pexp_fun(lbl, default, pat, expr) ->
-      merge_one_expr (fun (expr, env) -> Pexp_fun (lbl, default, pat, expr), env) expr
+      Option.fold
+        (fun _ value -> merge_two_exprs
+            (fun (default_expr, default_env) (body_expr, body_env) ->
+               Pexp_fun (lbl, Some default_expr, pat, body_expr), StringMap.merge (fun _ -> Misc.const) default_env body_env)
+            value expr
+        )
+        (merge_one_expr (fun (expr, env) -> Pexp_fun (lbl, default, pat, expr), env) expr)
+        default
     | _ -> failwith "Not implemented yet"
   in apply_to_expr empty Parsed_patches.(patch.body) expr
      |> Option.map fst
