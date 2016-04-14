@@ -4,6 +4,7 @@ let test_progs = [
   "f",   [ "f"; "f"            ; "bar"; "f"];
   "x",   [ "x"; "((+) x) 1"    ; "bar"; "x"];
   "f x", [ "y"; "f (((+) x) 1)"; "bar"; "f x"];
+  "fun x -> x", [ "fun x  -> x"; "fun x  -> ((+) x) 1"; "bar"; "foo"];
 ]
 
 let in_file = open_in "test/sempatch.md"
@@ -29,14 +30,21 @@ let test patches (ast, expected_results) =
     expected_results patches
 
 let () =
+  let failure = ref false in
   List.map (test patches) test_progs
   |> List.iteri
        (fun i -> List.iteri
           (fun j ast_opt -> match ast_opt with
             | Some ast ->
               Printf.printf "Error applying patch %d at test %d : got " j i;
+              failure := true;
               print_endline ast
             | None -> ()
           )
        );
-  close_in in_file
+  close_in in_file;
+  if !failure
+  then
+    exit 1
+  else
+    exit 0

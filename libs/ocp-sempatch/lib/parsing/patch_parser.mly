@@ -23,7 +23,7 @@ patch_name:
   | HASH name = ID EOL { name }
 
 patch_header:
-  |  vars = loption(vars_def) { { Parsed_patches.expr_variables = vars } }
+  |  vars = loption(vars_def) { { Parsed_patches.meta_expr = vars; Parsed_patches.meta_bindings = []; } }
 
 vars_def:
   | VARIABLE_KW COLON vars = separated_nonempty_list(COMMA, ID) EOL { vars }

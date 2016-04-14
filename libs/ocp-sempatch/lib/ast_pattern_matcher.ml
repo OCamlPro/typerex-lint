@@ -1,5 +1,6 @@
 open Parsetree
 open Std_utils
+open Option.Infix
 
 module StringMap = Map.Make(String)
 
@@ -20,12 +21,9 @@ let apply_replacements tree attributes var_replacements =
         expr = (fun _self e ->
             match e.pexp_desc with
             | Pexp_ident { Asttypes.txt = Longident.Lident i; _} ->
-              (
-                try
-                  { e with pexp_desc = StringMap.find i var_replacements }
-                with
-                  Not_found -> e
-              )
+              Variables.get_expr i var_replacements
+              >|= (fun desc -> { e with pexp_desc = desc; })
+              |> Option.value e
             | _ -> e
           );
       })
@@ -33,7 +31,8 @@ let apply_replacements tree attributes var_replacements =
   mapper.Ast_mapper.expr mapper new_tree
 
 let apply patch expr =
-  let is_meta = is_meta Parsed_patches.(patch.header.expr_variables) in
+  let is_meta_expr e = List.mem e Parsed_patches.(patch.header.meta_expr)
+  and is_meta_binding b = List.mem b Parsed_patches.(patch.header.meta_bindings) in
   let rec match_at_root =
     let open Ast_maybe_mapper2 in
     let default = mk (StringMap.merge (fun _ -> Misc.const)) StringMap.empty in
@@ -41,15 +40,28 @@ let apply patch expr =
       expr = (fun self defined_vars ({ pexp_desc = e1; _ } as expr1) ({ pexp_desc = e2; pexp_attributes = attrs2; _ } as expr2) ->
           let replacements =
             match e1, e2 with
-            | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some (expr1, StringMap.empty)
-            | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta j ->
-              Some (expr1, StringMap.singleton j e)
+            | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Some (expr1, defined_vars)
+            | Pexp_ident { Asttypes.txt = Longident.Lident i; _ }, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_binding j ->
+              Option.some_if (Variables.get_ident j defined_vars = (Some i)) (expr1, defined_vars)
+            | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_expr j ->
+              (* TODO (one day...) treat the case where j is already defined as an expression *)
+              (* Option.some_if (not (Variables.is_defined_ident j defined_vars)) *)
+              Some (expr1, Variables.add j (Variables.Expression e) empty)
             | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "__sempatch_inside" ->
               apply_to_expr defined_vars e expr1
             | _ -> default.expr self defined_vars expr1 expr2
           in
           Option.map (fun (e, env) -> apply_replacements e attrs2 env, env) replacements
         );
+      pattern = (fun _self _defined_vars pat1 pat2 ->
+          let replacements =
+            match pat1.ppat_desc, pat2.ppat_desc with
+            | Ppat_var v, Ppat_var v' when v.Asttypes.txt = v'.Asttypes.txt -> Some (pat1, empty)
+            | Ppat_var { Asttypes.txt = v; _ }, Ppat_var { Asttypes.txt = v'; _ } when is_meta_binding v' ->
+              Some (pat1, StringMap.singleton v' (Variables.Ident v))
+            | _ -> None
+          in replacements
+        )
     }
   and apply_to_expr defined_vars pattern expr =
     let open Ast_maybe_mapper2 in
@@ -71,6 +83,31 @@ let apply patch expr =
             res_expr, StringMap.merge (fun _ -> Misc.const) env (snd merged)
           )
       )
+    | Pexp_fun(lbl, default, pat, expr) ->
+      let under_pat_opt = Some (pat, empty) in
+      let under_expr_opt = apply_to_expr defined_vars pattern expr
+      in
+      let under_pat = under_pat_opt |? (pat, empty)
+      and under_expr = under_expr_opt |? (expr, empty)
+      in
+      let merged =
+        Pexp_fun (
+          lbl,
+          default,
+          fst under_pat,
+          fst under_expr
+        ), StringMap.merge (fun _ -> Misc.const) (snd under_pat) (snd under_expr)
+      in
+      let res = match_at_root.expr match_at_root defined_vars { expr with pexp_desc = fst merged} pattern
+      in
+      Option.(
+        some_if (is_some under_pat_opt || is_some under_expr_opt || is_some res )
+          (
+            let res_expr, env = res |? ({ expr with pexp_desc = fst merged }, snd merged) in
+            res_expr, StringMap.merge (fun _ -> Misc.const) env (snd merged)
+          )
+      )
+
     | _ -> failwith "Not implemented yet"
   in apply_to_expr empty Parsed_patches.(patch.body) expr
      |> Option.map fst

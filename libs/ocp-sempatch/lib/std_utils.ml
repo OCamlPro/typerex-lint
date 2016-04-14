@@ -40,8 +40,6 @@ sig
 
   val value: 'a -> 'a t -> 'a
 
-  val (|?) : 'a t -> 'a -> 'a
-
   val fold: ('a -> 'b -> 'a) -> 'a -> 'b option -> 'a
 
   val some : 'a -> 'a t
@@ -51,18 +49,24 @@ sig
   val is_some : 'a t -> bool
   val is_none : 'a t -> bool
 
+  val bind : 'a t -> ('a -> 'b t) -> 'b t
+
   module Infix :
   sig
     val (|?) : 'a t -> 'a -> 'a
+    val (>>=) : 'a t -> ('a -> 'b t) -> 'b t
+    val (>|=) : 'a t -> ('a -> 'b) -> 'b t
   end
 end
 =
 struct
   type 'a t = 'a option
 
-  let map f = function
+  let bind x f = match x with
     | None -> None
-    | Some x -> Some (f x)
+    | Some x -> f x
+
+  let map f x = bind x (fun x -> Some (f x))
 
   let iter f x = ignore (map f x)
 
@@ -97,6 +101,8 @@ struct
   module Infix =
   struct
     let (|?) = (|?)
+    let (>>=) = bind
+    let (>|=) x y = map y x
   end
 end
 

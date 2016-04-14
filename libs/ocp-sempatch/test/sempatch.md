@@ -15,6 +15,7 @@ foo [@__sempatch_replace bar]
 ```
 
 # patch3
+variables: y
 ```
-foo
+(fun y -> y) [@__sempatch_replace foo]
 ```
