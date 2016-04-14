@@ -66,48 +66,33 @@ let apply patch expr =
   and apply_to_expr defined_vars pattern expr =
     let open Ast_maybe_mapper2 in
     let open Option.Infix in
+    let merge_two_exprs merge_fun e1 e2 =
+      let under_e1 = apply_to_expr defined_vars pattern e1
+      and under_e2 = apply_to_expr defined_vars pattern e2 in
+      let merged = merge_fun (under_e1 |? (e1, empty)) (under_e2 |? (e2, empty)) in
+      let default_res = { expr with pexp_desc = fst merged } in
+      let res = match_at_root.expr match_at_root defined_vars default_res pattern in
+      Option.some_if Option.(is_some under_e1 || is_some under_e2 || is_some res) (
+        let res_expr, env = res |? (default_res, snd merged) in
+        res_expr, StringMap.merge (fun _ -> Misc.const) env (snd merged)
+      )
+    and merge_one_expr merge_fun e =
+      let under = apply_to_expr defined_vars pattern e in
+      let merged = merge_fun (under |? (e, empty)) in
+      let default_res = { expr with pexp_desc = fst merged } in
+      let res = match_at_root.expr match_at_root defined_vars default_res pattern in
+      Option.some_if Option.(is_some under || is_some res) (
+        let res_expr, env  = res |? (default_res, snd merged) in
+        res_expr, StringMap.merge (fun _ -> Misc.const) env (snd merged)
+      )
+    in
     let mkapply lbl (expr_f, env_f) (expr_arg, env_arg) = Pexp_apply (expr_f, [lbl, expr_arg]), StringMap.merge (fun _ -> Misc.const) env_f env_arg in
     match expr.pexp_desc with
     | Pexp_ident _ | Pexp_constant _ -> match_at_root.expr match_at_root defined_vars expr pattern
     | Pexp_apply (fct, [lbl, arg]) ->
-      let under_f = apply_to_expr defined_vars pattern fct
-      and under_arg = apply_to_expr defined_vars pattern arg
-      in
-      let merged = mkapply lbl (under_f |? (fct, StringMap.empty)) (under_arg |? (arg, StringMap.empty)) in
-      let res = match_at_root.expr match_at_root defined_vars { expr with pexp_desc = (fst merged) } pattern
-      in
-      Option.(
-        some_if (is_some under_f || is_some under_arg || is_some res)
-          (
-            let res_expr, env = res |? ({ expr with pexp_desc = fst merged }, snd merged) in
-            res_expr, StringMap.merge (fun _ -> Misc.const) env (snd merged)
-          )
-      )
+      merge_two_exprs (mkapply lbl) fct arg
     | Pexp_fun(lbl, default, pat, expr) ->
-      let under_pat_opt = Some (pat, empty) in
-      let under_expr_opt = apply_to_expr defined_vars pattern expr
-      in
-      let under_pat = under_pat_opt |? (pat, empty)
-      and under_expr = under_expr_opt |? (expr, empty)
-      in
-      let merged =
-        Pexp_fun (
-          lbl,
-          default,
-          fst under_pat,
-          fst under_expr
-        ), StringMap.merge (fun _ -> Misc.const) (snd under_pat) (snd under_expr)
-      in
-      let res = match_at_root.expr match_at_root defined_vars { expr with pexp_desc = fst merged} pattern
-      in
-      Option.(
-        some_if (is_some under_pat_opt || is_some under_expr_opt || is_some res )
-          (
-            let res_expr, env = res |? ({ expr with pexp_desc = fst merged }, snd merged) in
-            res_expr, StringMap.merge (fun _ -> Misc.const) env (snd merged)
-          )
-      )
-
+      merge_one_expr (fun (expr, env) -> Pexp_fun (lbl, default, pat, expr), env) expr
     | _ -> failwith "Not implemented yet"
   in apply_to_expr empty Parsed_patches.(patch.body) expr
      |> Option.map fst
