@@ -1,0 +1,15 @@
+begin library "plugin-lib"
+  files = [
+    "input.mli"
+    "warning.mli"
+    "check.mli"
+    "plugin_types.mli"
+    "plugin.ml"
+  ]
+  requires = [ "compiler-libs.common" ]
+end
+
+begin program "test"
+   files = [ "test.ml" ]
+   requires = [ "plugin-lib" ]
+end
