@@ -1,5 +1,7 @@
 {
   open Patch_parser
+
+  let code_buf = Buffer.create 30
 }
 
 let white = [' ' '\t']+
@@ -11,18 +13,30 @@ rule read =
   parse
   | white { read lexbuf }
   | newline* { EOL }
-  | "```" { read_code [] lexbuf }
+  | "```" { Buffer.clear code_buf; read_quoted lexbuf; CODE (Buffer.to_bytes code_buf |> Bytes.to_string) }
   | "variables" { VARIABLE_KW }
   | ':' { COLON }
   | ',' { COMMA }
   | '#' { HASH }
   | id { ID (Lexing.lexeme lexbuf) }
   | eof { EOF }
-and read_code lst =
+
+and read_quoted =
   parse
-  | "```" { OCAML_CODE (List.rev lst) }
-  | newline { read_code lst lexbuf }
-  | ocaml_code {read_code (Raw_patch.EQUAL (Lexing.lexeme lexbuf) :: lst) lexbuf }
-  | '-' ocaml_code {read_code (Raw_patch.REMOVE (Lexing.lexeme lexbuf) :: lst) lexbuf }
-  | '+' ocaml_code {read_code (Raw_patch.ADD (Lexing.lexeme lexbuf) :: lst) lexbuf }
-  | eof { failwith "Non terminated code" }
+  | newline "```" { () }
+  | _ { Buffer.add_string code_buf (Lexing.lexeme lexbuf); read_quoted lexbuf }
+
+{
+  let read_all = read
+    (* let in_code = ref false in *)
+    (* function x -> *)
+    (*   let read_fun = *)
+    (*   if !in_code then *)
+    (*     read_quoted *)
+    (*   else *)
+    (*     read *)
+    (*   in *)
+    (*   match read_fun x with *)
+    (*   | TICKS -> in_code := not !in_code; TICKS *)
+    (*   | res -> res *)
+}

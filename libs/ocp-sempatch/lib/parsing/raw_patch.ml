@@ -2,8 +2,8 @@ type patch_line =
   | EQUAL of string
   | ADD of string
   | REMOVE of string
-
-type t = patch_line list
+  | SUBPATCH of t
+and t = patch_line list
 
 let rec filter_map f = function
   | [] -> []
@@ -12,16 +12,18 @@ let rec filter_map f = function
     | Some hd' -> hd'::(filter_map f tl)
     | None -> (filter_map f tl)
 
-let exists_before_patch = function
-  | EQUAL l | REMOVE l -> Some l
-  | ADD _ -> None
-
-let exists_after_patch = function
-    | EQUAL l | ADD l -> Some l
-    | REMOVE _ -> None
-
-let to_patch_body patch =
-  let parse_strlist expr =
-  Parser.parse_expression Lexer.token (Lexing.from_string (String.concat "\n" expr))
-  in
-  parse_strlist (filter_map exists_before_patch patch);
+let to_patch_body p =
+  let rec convert_line = function
+    | [] -> ([], [], false)
+    | l :: tl ->
+      let (before, after, is_change) = convert_line tl in
+      match l with
+      | EQUAL l -> (l :: before, l :: after, is_change)
+      | ADD l -> (before, l :: after, true)
+      | REMOVE l -> (l :: before, after, true)
+      | SUBPATCH p -> (convert_patch p @ before, after, is_change)
+  and convert_patch p =
+    let (before, after, has_change) = convert_line p in
+    "[%__sempatch_inside (" :: before @ ")" :: (if has_change then " [@__sempatch_replace" :: after @ ["]"] else []) @ ["]"]
+  in Parser.parse_expression Lexer.token (Lexing.from_string (String.concat "\n" @@ convert_patch p))
+     |> (fun x -> Pprintast.expression Format.std_formatter x; Format.print_newline (); x)

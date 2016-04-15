@@ -10,7 +10,7 @@ let test_progs = [
 
 let in_file = open_in "test/sempatch.md"
 
-let patches = Patch_parser.sempatch (Patch_lexer.read) (Lexing.from_channel in_file)
+let patches = Patch_parser.sempatch (Patch_lexer.read_all) (Lexing.from_channel in_file)
 
 let string_to_expr s = Parser.parse_expression Lexer.token (Lexing.from_string s)
 let expr_to_string e =

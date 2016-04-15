@@ -4,13 +4,14 @@
 %token COMMA
 %token<string> ID
 
-%token <Raw_patch.patch_line list> OCAML_CODE
+%token<string> CODE
+
+(* %token <Raw_patch.patch_line list> OCAML_CODE *)
 
 %token HASH
 %token VARIABLE_KW
 
 %start <Parsed_patches.t list> sempatch
-%start <Parsed_patches.body> patch_body
 %%
 
 sempatch:
@@ -29,4 +30,4 @@ vars_def:
   | VARIABLE_KW COLON vars = separated_nonempty_list(COMMA, ID) EOL { vars }
 
 patch_body:
-  | code = OCAML_CODE EOL { Raw_patch.to_patch_body code }
+  | cde = CODE EOL { Raw_patch.to_patch_body (Code_parser.code Code_lexer.read_code (Lexing.from_string cde)) }

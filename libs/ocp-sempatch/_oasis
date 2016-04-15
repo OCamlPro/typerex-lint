@@ -29,20 +29,20 @@ Library "ppx_patch"
   Path: lib
   Modules:
     Ppx_patch,
-    Ast_filter,
-    Ast_traverser, # May be removed ?
-    Ast_traverser2,
-    Std_utils,
-    parsing/Patch_lexer,
-    parsing/Patch_parser,
-    parsing/Raw_patch
+    Ast_filter
+    # Ast_traverser, # May be removed ?
+    # Ast_traverser2,
+    # Std_utils,
+    # parsing/Patch_lexer,
+    # parsing/Patch_parser,
+    # parsing/Raw_patch
   BuildDepends:
     ppx_tools,
     compiler-libs
 
 Executable "parser_test"
-  Path: lib/parsing
-  MainIs: test.ml
+  Path: lib
+  MainIs: parsing/test.ml
   BuildDepends:
     compiler-libs,
     compiler-libs.common

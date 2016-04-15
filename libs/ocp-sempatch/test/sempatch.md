@@ -1,28 +1,32 @@
 # patch0
 ```
-f x [@__sempatch_replace y]
+- f x
++ y
 ```
 
 # patch1
 ```
-x [@__sempatch_replace x+1]
+- x
++ (x+1)
 ```
 
 # patch2
 variables: foo
 ```
-foo [@__sempatch_replace bar]
+- foo
++ bar
 ```
 
 # patch3
 variables: y
 ```
-(fun y -> y) [@__sempatch_replace foo]
+- fun y -> y
++ foo
 ```
 
 
 # patch4
-variables: x
 ```
-(let x = 1 in x) [@__sempatch_replace tralala]
+- let x = 1 in x
++ tralala
 ```
