@@ -1,11 +1,10 @@
 open Std_utils
 
 let test_progs = [
-  "f",   [ "f"; "f"            ; "bar"; "f"; "f"];
-  "x",   [ "x"; "((+) x) 1"    ; "bar"; "x"; "x"];
-  "f x", [ "y"; "f (((+) x) 1)"; "bar"; "f x"; "f x"];
-  "fun x -> x", [ "fun x  -> x"; "fun x  -> ((+) x) 1"; "bar"; "foo"; "fun x  -> x"];
-  "let x = 1 in x", [ "let x = 1 in x"; "let x = 1 in ((+) x) 1"; "bar"; "let x = 1 in x"; "tralala"];
+  "f x", [ "patch0", "y" ];
+  "x", [ "patch1", "((+) x) 1" ];
+  "fun x -> x", [ "patch1", "fun x  -> ((+) x) 1"; "patch3", "foo"];
+  "let x = 1 in x", [ "patch4", "tralala"];
 ]
 
 let in_file = open_in "test/sempatch.md"
@@ -17,27 +16,32 @@ let expr_to_string e =
   Pprintast.expression Format.str_formatter e;
   Format.flush_str_formatter ()
 
-(* let test_asts = List.map string_to_expr test_progs *)
-
 let apply ast patch =
   let patch = Parsed_patches.preprocess patch in
   Ast_pattern_matcher.apply patch ast
 
 let test patches (ast, expected_results) =
   let parsed_ast = string_to_expr ast in
-  List.map2 (fun expect patch ->
-      let result = expr_to_string (apply parsed_ast patch) in
-      Option.some_if (expect <> result) result)
-    expected_results patches
+  List.map (fun patch ->
+    List.map (fun (name, expected) ->
+        if (name = patch.Parsed_patches.name) then
+          let result = expr_to_string (apply parsed_ast patch) in
+          Option.some_if (expected <> result) (name, result)
+        else None
+        )
+    expected_results
+  )
+  patches
+  |> List.flatten
 
 let () =
   let failure = ref false in
   List.map (test patches) test_progs
   |> List.iteri
-       (fun i -> List.iteri
-          (fun j ast_opt -> match ast_opt with
-            | Some ast ->
-              Printf.printf "Error applying patch %d at test %d : got " j i;
+       (fun i -> List.iter
+          (fun ast_opt -> match ast_opt with
+            | Some (name, ast) ->
+              Printf.printf "Error applying patch %s at test %d : got " name i;
               failure := true;
               print_endline ast
             | None -> ()
