@@ -2,20 +2,10 @@ type input
 
 val mains : (string, (string * input list option) list) Hashtbl.t
 
-module type SimpleConfig = sig
-  type config_file
-  type 'a option_class
-  type 'a config_option
-  val config : config_file
-  val create_option :
-    string list -> ?short_help:string -> string list -> ?level:int ->
-    string -> string -> string
-end
-
 module MakePlugin :
   functor (Plugin : Plugin_types.PluginArg) ->
   sig
-    module Config : SimpleConfig
+    module Config : Configuration.CONFIG
 
     module MakeCheck :
       functor (CA : Check.CheckArg) ->
@@ -24,11 +14,13 @@ module MakePlugin :
         val short_name : string
         val details : string
         val create_option :
+          string -> 
+          string -> 
           string ->
-          string ->
-          string ->
-          string ->
-          string
+          int ->
+          'a SimpleConfig.option_class -> 
+          'a -> 
+          'a SimpleConfig.config_option
 
         module MakeWarnings :
           functor (WA : Warning.WarningArg) ->

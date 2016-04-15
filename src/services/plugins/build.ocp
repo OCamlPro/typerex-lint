@@ -6,7 +6,7 @@ begin library "plugin-lib"
     "plugin_types.mli"
     "plugin.ml"
   ]
-  requires = [ "compiler-libs.common" ]
+  requires = [ "compiler-libs.common" "default-config" ]
 end
 
 begin program "test"

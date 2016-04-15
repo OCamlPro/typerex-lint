@@ -1,3 +1,5 @@
+open SimpleConfig
+
 (* EXEMPLE *)
 module DummyPlugin = Plugin.MakePlugin (struct
     let name = "Plugin de test"
@@ -27,18 +29,19 @@ module DummyWarnings = DummyLint.MakeWarnings(struct
 
 let first_dummy_option = DummyLint.create_option
     "first-dummy-option"
-    "First dummy option"
-    "int option"
-    "1"
+    "Short First dummy option"
+    "Long First dummy option"
+    1
+    SimpleConfig.int_option
+    2
 
 let second_dummy_option = DummyLint.create_option
     "second-dummy-option"
     "Second dummy option"
-    "int option"
-    "2"
-
-let xx1 = 2  (* !!first_dummy_option  *)
-let xx2 = 15 (* !!second_dummy_option *)
+    "Long Second dummy option"
+    1
+    SimpleConfig.int_option
+    15
 
 let mapper =
   let open Parsetree in
@@ -50,9 +53,9 @@ let mapper =
           let id_str = ident.txt in
           let id_loc = ident.loc in
           let id_len = String.length id_str in
-          if id_len < xx1 then
+          if id_len < !!first_dummy_option then
             DummyWarnings.report id_loc (FirstWarning id_str);
-          if id_len > xx2 then
+          if id_len > !!second_dummy_option then
             DummyWarnings.report id_loc (SecondWarning id_str);
           pat
         | _ -> Ast_mapper.default_mapper.Ast_mapper.pat mapper pat

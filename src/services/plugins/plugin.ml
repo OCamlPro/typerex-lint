@@ -1,23 +1,4 @@
 
-module type SimpleConfig = sig
-  type config_file
-  type 'a option_class
-  type 'a config_option
-  val config : config_file
-  val create_option :
-    string list -> ?short_help:string -> string list -> ?level:int ->
-    string -> string -> string
-end
-
-module DefaultConfig = struct
-  type 'a option_class = string
-  type 'a config_option = string
-  type config_file = string
-  let config = "config"
-  let create_option option ?short_help help ?level ty default = default
-end
-
-(* ************************* *)
 module type PluginArg = sig
   val name : string
   val short_name : string
@@ -47,7 +28,7 @@ let register_main pname main =          (* xxx todo *)
     raise Not_found
 
 module MakePlugin(P : PluginArg) = struct
-  module Config = DefaultConfig
+  module Config = Configuration.DefaultConfig
 
   let name = P.name
   let short_name = P.short_name
@@ -72,9 +53,9 @@ module MakePlugin(P : PluginArg) = struct
     let short_name = Chk.short_name
     let details = Chk.details
 
-    let create_option option help ty default =
+    let create_option option short_help lhelp level ty default =
       let option = [P.name; option] in
-      Config.create_option option help ty default
+      Config.create_option option ~short_help [lhelp] ~level ty default
 
     let report warning =
       report_warning ()

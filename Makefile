@@ -14,7 +14,7 @@ SRC=src
 
 all:
 	if [ ! -d "_obuild" ]; then $(OCPBUILD) init; fi
-	$(OCPBUILD)
+	$(OCPBUILD) test
 
 clean:
 	$(OCPBUILD) clean
