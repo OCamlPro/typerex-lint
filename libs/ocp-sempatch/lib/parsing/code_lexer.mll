@@ -10,8 +10,8 @@ let ocaml_code = [^'+' '-' '\n'] [^'\n']*
 
 rule read_code =
   parse
-  | "[..." newline { ENTER_SUBPATCH }
-  | newline "...]" { EXIT_SUBPATCH }
+  | "[..." { ENTER_SUBPATCH }
+  | "...]" { EXIT_SUBPATCH }
   | newline* { EOL }
   | '+' { PLUS }
   | '-' { MINUS }
