@@ -68,29 +68,6 @@ let apply patch expr =
     let open Ast_maybe_mapper2 in
     let open Res.Err_monad_infix in
 
-    (* let merge_two merge_fun x1 default1 x2 default2 = *)
-    (*   let merged = merge_fun (x1 |? default1) (x2 |? default2) in *)
-    (*   let res = match_at_root.expr match_at_root defined_vars (fst merged) patch in *)
-    (*   Option.some_if Option.(is_some x1 || is_some x2 || is_some res) ( *)
-    (*     let res_expr, res_env = res |? merged in *)
-    (*     res_expr, StringMap.merge (fun _ -> Misc.const) res_env (snd merged) *)
-    (*   ) *)
-    (* in *)
-    (*  *)
-    (* let merge_two_exprs merge_fun e1 e2 = *)
-    (*   let under_e1 = apply_to_expr defined_vars e1 patch *)
-    (*   and under_e2 = apply_to_expr defined_vars e2 patch in *)
-    (*   merge_two *)
-    (*     (fun x1 x2 -> let (e, env) = merge_fun x1 x2 in { expr with pexp_desc = e }, env) *)
-    (*     under_e1 (e1, empty) *)
-    (*     under_e2 (e2, empty) *)
-    (* and merge_one_expr merge_fun e = *)
-    (*   let under = apply_to_expr defined_vars e patch in *)
-    (*   merge_two (fun x1 _ -> let (e, env) = merge_fun x1 in { expr with pexp_desc = e }, env) *)
-    (*     under (e, empty) *)
-    (*     None () *)
-    (* in *)
-    (* let mkapply lbl (expr_f, env_f) (expr_arg, env_arg) = Pexp_apply (expr_f, [lbl, expr_arg]), StringMap.merge (fun _ -> Misc.const) env_f env_arg in *)
     match expr.pexp_desc with
     | Pexp_ident _ | Pexp_constant _ -> match_at_root.expr match_at_root defined_vars expr patch
     | Pexp_apply (fct, [lbl, arg]) ->
@@ -132,11 +109,6 @@ let apply patch expr =
                 )
             )
         )
-    (*   let new_bindings_opt = apply_to_bindings defined_vars patch bindings in *)
-    (*   let under_expr = apply_to_expr (snd (new_bindings_opt |? (bindings, empty))) expr patch in *)
-    (*   merge_two (fun (bind, bind_env) (expr, expr_env) -> { expr with pexp_desc = Pexp_let (isrec, bind, expr) }, StringMap.merge (fun _ -> Misc.const) bind_env expr_env) *)
-    (*     new_bindings_opt (bindings, empty) *)
-    (*     under_expr (expr, empty) *)
 
     | Pexp_tuple expr_list ->
       List.fold_left (fun mapped expr ->
