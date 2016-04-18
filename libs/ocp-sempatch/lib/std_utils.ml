@@ -1,3 +1,7 @@
+type ('a, 'b) result =
+  | Ok of 'a
+  | Error of 'b
+
 module Misc:
 sig
   val pair: 'a -> 'b -> 'a*'b
@@ -17,6 +21,8 @@ sig
 
   val compose : ('b -> 'c) -> ('a -> 'b) -> ('a -> 'c)
   val ( %> ) : ('b -> 'c) -> ('a -> 'b) -> ('a -> 'c)
+
+  val id : 'a -> 'a
 end
 =
 struct
@@ -24,6 +30,8 @@ struct
   let compose f g x = f (g x)
 
   let ( %> ) = compose
+
+  let id x = x
 end
 
 module Option:
@@ -103,6 +111,68 @@ struct
     let (|?) = (|?)
     let (>>=) = bind
     let (>|=) x y = map y x
+  end
+end
+
+module Error:
+sig
+  type ('good, 'bad) t = ('good, 'bad) result
+
+  val return : 'a -> ('a, 'err) t
+  val fail : 'a -> ('ok, 'a) t
+
+  val map : ('a -> 'b) -> ('a, 'err) t -> ('b, 'err) t
+  val map_err : ('a -> 'b) -> ('ok, 'a) t -> ('ok, 'b) t
+
+  val bind : ('a -> ('b, 'err) t) -> ('a, 'err) t -> ('b, 'err) t
+  val bind_err : ('a -> ('ok, 'b) t) -> ('ok, 'a) t -> ('ok, 'b) t
+
+  val ok_if : bool -> 'a -> 'b -> ('a, 'b) t
+
+  module Ok_monad_infix :
+  sig
+    val (>>=) : ('a, 'err) t -> ('a -> ('b, 'err) t) -> ('b, 'err) t
+    val (>|=) : ('a, 'err) t -> ('a -> 'b) -> ('b, 'err) t
+  end
+  module Err_monad_infix :
+  sig
+    val (>|=) : ('ok, 'a) t -> ('a -> 'b) -> ('ok, 'b) t
+    val (>>=) : ('ok, 'a) t -> ('a -> ('ok, 'b) t) -> ('ok, 'b) t
+  end
+end
+=
+struct
+  type (+'good, +'bad) t = ('good, 'bad) result
+
+  let return x = Ok x
+  let fail x = Error x
+
+  let map2 f_ok f_fail = function
+    | Ok x -> Ok (f_ok x)
+    | Error e -> Error (f_fail e)
+
+  let map f = map2 f Fun.id
+  let map_err f x = map2 Fun.id f x
+
+  let bind2 f_ok f_fail = function
+    | Ok x -> f_ok x
+    | Error e -> f_fail e
+
+  let bind f = bind2 f fail
+  let bind_err f x = bind2 return f x
+
+  let ok_if cond ok_val err_val =
+    if cond then Ok ok_val else Error err_val
+
+  module Ok_monad_infix =
+  struct
+    let (>>=) x f = bind f x
+    let (>|=) x f = map f x
+  end
+  module Err_monad_infix =
+  struct
+    let (>>=) x f = bind_err f x
+    let (>|=) x f = map_err f x
   end
 end
 
