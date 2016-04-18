@@ -15,3 +15,10 @@
 - let x = 1 in x
 + tralala
 ```
+
+# replaceInsideLet
+```
+let x = 1 in
+- x
++ y
+```
