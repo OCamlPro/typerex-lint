@@ -4,6 +4,12 @@
 + y
 ```
 
+# apply
+```
+- f x
++ foo
+```
+
 # functionMatch
 ```
 - fun x -> x

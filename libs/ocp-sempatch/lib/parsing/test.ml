@@ -2,6 +2,7 @@ open Std_utils
 
 let test_progs = [
   "x", [ "simpleVar", "y" ];
+  "f x", [ "apply", "foo"];
   "x", [ "patch1", "((+) x) 1" ];
   "fun x -> x", [ "patch1", "fun x  -> ((+) x) 1"; "functionMatch", "foo"];
   "let x = 1 in x", [ "letBinding", "tralala"; "replaceInsideLet", "let x = 1 in y"];

@@ -93,8 +93,19 @@ let apply patch expr =
     (* let mkapply lbl (expr_f, env_f) (expr_arg, env_arg) = Pexp_apply (expr_f, [lbl, expr_arg]), StringMap.merge (fun _ -> Misc.const) env_f env_arg in *)
     match expr.pexp_desc with
     | Pexp_ident _ | Pexp_constant _ -> match_at_root.expr match_at_root defined_vars expr patch
-    (* | Pexp_apply (fct, [lbl, arg]) -> *)
-    (*   merge_two_exprs (mkapply lbl) fct arg *)
+    | Pexp_apply (fct, [lbl, arg]) ->
+      apply_to_expr defined_vars fct patch
+      >>= (fun (mapped_expr, env_expr) ->
+          apply_to_expr defined_vars arg patch
+          >>= (fun (mapped_arg, env_arg) ->
+              let self_expr = { expr with pexp_desc = Pexp_apply (mapped_expr, [lbl, mapped_arg]);} in
+              match_at_root.expr match_at_root defined_vars self_expr patch
+              >|= (fun (mapped_self, env_self) ->
+                  mapped_self, merge_envs env_expr (merge_envs env_arg env_self)
+                )
+            )
+        )
+
     | Pexp_fun(lbl, default, pat, expr) ->
       let apply_some expr = apply_to_expr defined_vars expr patch
                             |> Res.map (fun (tree, env) -> Some tree, env) in
@@ -126,7 +137,8 @@ let apply patch expr =
     (*   merge_two (fun (bind, bind_env) (expr, expr_env) -> { expr with pexp_desc = Pexp_let (isrec, bind, expr) }, StringMap.merge (fun _ -> Misc.const) bind_env expr_env) *)
     (*     new_bindings_opt (bindings, empty) *)
     (*     under_expr (expr, empty) *)
-    | _ -> failwith "Not implemented yet"
+    | _ ->
+      failwith "Not implemented yet"
 
   and apply_to_binding defined_vars patch binding =
     let open Res.Err_monad_infix in
