@@ -109,7 +109,18 @@ let apply patch expr =
                 )
             )
         )
-    (* | Pexp_let (isrec, bindings, expr) -> *)
+    | Pexp_let (isrec, bindings, expr) ->
+      apply_to_bindings defined_vars patch bindings
+      >>= (fun (mapped_bindings, env_bindings) ->
+          apply_to_expr env_bindings expr patch
+          >>= (fun (mapped_expr, env_combined) ->
+              let self_expr = Ast_helper.Exp.mk (Pexp_let (isrec, mapped_bindings, mapped_expr)) in
+              match_at_root.expr match_at_root defined_vars self_expr patch
+              >|= (fun (mapped_self, env_self) ->
+                  mapped_self, merge_envs env_combined env_self
+                )
+            )
+        )
     (*   let new_bindings_opt = apply_to_bindings defined_vars patch bindings in *)
     (*   let under_expr = apply_to_expr (snd (new_bindings_opt |? (bindings, empty))) expr patch in *)
     (*   merge_two (fun (bind, bind_env) (expr, expr_env) -> { expr with pexp_desc = Pexp_let (isrec, bind, expr) }, StringMap.merge (fun _ -> Misc.const) bind_env expr_env) *)
@@ -117,23 +128,23 @@ let apply patch expr =
     (*     under_expr (expr, empty) *)
     | _ -> failwith "Not implemented yet"
 
-  (* and apply_to_binding defined_vars patch binding = *)
-  (*   let open Error.Err_monad_infix in *)
-  (*   apply_to_expr defined_vars binding.pvb_expr patch *)
-  (*   >|= (fun (expr, env) -> { binding with pvb_expr = expr }, env) *)
-  (*  *)
-  (* and apply_to_bindings defined_vars patch bindings = *)
-  (*   let one_true = ref false in *)
-  (*   let res =List.fold_left *)
-  (*       (fun (mapped_bindings, accu_env) binding -> *)
-  (*          let mapped_binding_opt = apply_to_binding defined_vars patch binding in *)
-  (*          Option.iter (fun _ -> one_true := true) mapped_binding_opt; *)
-  (*          let (mapped_binding, env) = mapped_binding_opt |? (binding, empty) in *)
-  (*          (mapped_binding :: mapped_bindings, StringMap.merge (fun _ -> Misc.const) accu_env env) *)
-  (*       ) *)
-  (*       ([], defined_vars) *)
-  (*       bindings *)
-  (*   in Option.some_if !one_true res *)
+  and apply_to_binding defined_vars patch binding =
+    let open Res.Err_monad_infix in
+    apply_to_expr defined_vars binding.pvb_expr patch
+    >|= (fun (expr, env) -> { binding with pvb_expr = expr }, env)
+
+  and apply_to_bindings defined_vars patch bindings =
+    let open Res.Err_monad_infix in
+    List.fold_left (fun mapped binding ->
+        mapped >>= (fun (mapped_bindings, accu_env) ->
+            apply_to_binding defined_vars patch binding
+            >|= (fun (mapped_binding, new_env) ->
+                mapped_binding :: mapped_bindings, merge_envs accu_env new_env
+                )
+          )
+      )
+      (Res.fail ([], empty))
+      bindings
 
   in apply_to_expr empty expr Parsed_patches.(patch.body)
      |> Error.map fst

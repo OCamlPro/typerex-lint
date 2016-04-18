@@ -25,11 +25,33 @@ type 'a t = {
 (*         ) *)
 (*     ) *)
 
+let map_binding merge _default self defined_vars binding patch =
+  self.pattern self defined_vars binding.pvb_pat patch.pvb_pat
+  >>= (fun (mapped_pattern, env_pattern) ->
+      self.expr self defined_vars binding.pvb_expr patch.pvb_expr
+      >|= (fun (mapped_expr, env_expr) ->
+          { binding with pvb_pat = mapped_pattern; pvb_expr = mapped_expr; }, merge env_pattern env_expr
+        )
+    )
+
+let map_bindings merge default self defined_vars =
+  List.fold_left2 (fun accu binding patch_binding ->
+      accu
+      >>= (fun (bind_list, env) ->
+          map_binding merge default self defined_vars binding patch_binding
+          >|= (fun (mapped_binding, new_env) ->
+              mapped_binding :: bind_list, merge env new_env
+            )
+        )
+    )
+    (Ok ([], default))
+
+
 let map_expr merge default self defined_vars e patch =
   let maybe_desc =
   match e.pexp_desc, patch.pexp_desc with
   | Pexp_ident _, Pexp_ident _
-  | Pexp_constant _, Pexp_constant _ -> Error (e, default)
+  | Pexp_constant _, Pexp_constant _ -> Error (e.pexp_desc, default)
   (* | Pexp_tuple e1s, Pexp_tuple e2s -> Error.map (fun (trees, env) -> (Pexp_tuple trees, env)) @@ combine (self.expr self defined_vars) merge default e1s e2s *)
   (* | Pexp_apply (f1, [lbl1, arg1]), Pexp_apply (f2, [_lbl2, arg2]) -> *)
   (*   Option.merge_inf *)
@@ -45,13 +67,16 @@ let map_expr merge default self defined_vars e patch =
     begin
       match mapped_arg, mapped_expr with
       | Ok (pat, env_pat), Ok (expr, env_expr) -> Ok (Pexp_fun (lbl1, default1, pat, expr), merge env_pat env_expr)
-      | _, _ -> Error (e, defined_vars)
+      | _, _ -> Error (e.pexp_desc, defined_vars)
     end
-  (*   Option.merge_inf *)
-  (*     (fun (pat, env_pat) (expr, env_expr) -> Pexp_fun (lbl1, default1, pat, expr), merge env_pat env_expr) *)
-  (*     mapped_arg *)
-  (*     mapped_expr *)
-  (* | Pexp_let (isrecl, bindingsl, exprl), Pexp_let (isrecr, bindingsr, exprr) when isrecl = isrecr -> *)
+  | Pexp_let (isrecl, bindingsl, exprl), Pexp_let (isrecr, bindingsr, exprr) when isrecl = isrecr ->
+    map_bindings merge default self defined_vars bindingsl bindingsr
+    >>= (fun (mapped_bindings, env_bindings) ->
+        self.expr self env_bindings exprl exprr
+        >|= (fun (mapped_expr, env_expr) ->
+            Pexp_let (isrecl, mapped_bindings, mapped_expr), env_expr
+          )
+      )
   (*   let mapped_bindings = List.fold_left2 (fun accu bindingl bindingr -> *)
   (*       accu *)
   (*       >>= (fun (binding_list, env) -> *)
@@ -71,9 +96,9 @@ let map_expr merge default self defined_vars e patch =
   | Pexp_apply _, _ | _, Pexp_apply _
   | Pexp_ident _, _ | _, Pexp_ident _
   | Pexp_constant _, _ | _, Pexp_constant _
-    -> Error (e, default)
+    -> Error (e.pexp_desc, default)
   | _ -> failwith "Non implemented"
-  in Error.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc
+  in Res.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc
 
 let map_pattern _merge default _self _defined_vars p patch =
   let maybe_desc =
