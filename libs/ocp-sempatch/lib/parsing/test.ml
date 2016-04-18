@@ -6,6 +6,7 @@ let test_progs = [
   "x", [ "patch1", "((+) x) 1" ];
   "fun x -> x", [ "patch1", "fun x  -> ((+) x) 1"; "functionMatch", "foo"];
   "let x = 1 in x", [ "letBinding", "tralala"; "replaceInsideLet", "let x = 1 in y"];
+  "1, 2, 3, 4", [ "tuples", "foo"];
 ]
 
 let in_file = open_in "test/sempatch.md"

@@ -137,6 +137,25 @@ let apply patch expr =
     (*   merge_two (fun (bind, bind_env) (expr, expr_env) -> { expr with pexp_desc = Pexp_let (isrec, bind, expr) }, StringMap.merge (fun _ -> Misc.const) bind_env expr_env) *)
     (*     new_bindings_opt (bindings, empty) *)
     (*     under_expr (expr, empty) *)
+
+    | Pexp_tuple expr_list ->
+      List.fold_left (fun mapped expr ->
+          mapped >>= (fun (mapped_exprs, accu_env) ->
+              apply_to_expr defined_vars expr patch
+              >|= (fun (mapped_expr, env_expr) ->
+                  mapped_expr :: mapped_exprs, merge_envs accu_env env_expr
+                )
+            )
+        )
+        (Ok ([], empty))
+        expr_list
+      >>= (fun (mapped_list, env_list) ->
+          let self_expr = Ast_helper.Exp.mk (Pexp_tuple mapped_list) in
+          match_at_root.expr match_at_root defined_vars self_expr patch
+          >|= (fun (mapped_self, env_self) ->
+              mapped_self, merge_envs env_list env_self
+            )
+        )
     | _ ->
       failwith "Not implemented yet"
 

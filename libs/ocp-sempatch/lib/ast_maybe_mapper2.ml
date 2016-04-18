@@ -52,7 +52,21 @@ let map_expr merge default self defined_vars e patch =
   match e.pexp_desc, patch.pexp_desc with
   | Pexp_ident _, Pexp_ident _
   | Pexp_constant _, Pexp_constant _ -> Error (e.pexp_desc, default)
-  (* | Pexp_tuple e1s, Pexp_tuple e2s -> Error.map (fun (trees, env) -> (Pexp_tuple trees, env)) @@ combine (self.expr self defined_vars) merge default e1s e2s *)
+  | Pexp_tuple e1s, Pexp_tuple e2s -> (* Error.map (fun (trees, env) -> (Pexp_tuple trees, env)) @@ combine (self.expr self defined_vars) merge default e1s e2s *)
+      List.fold_left2 (fun accu expr patch_expr ->
+          accu >>= (fun (expr_list, accu_env) ->
+              self.expr self defined_vars expr patch_expr
+              >|= (fun (mapped_expr, new_env) ->
+                  mapped_expr :: expr_list, merge accu_env new_env
+                )
+            )
+      )
+        (Ok ([], default))
+        e1s
+        e2s
+      >|= (fun (exprs, env) ->
+          Pexp_tuple exprs, env
+        )
   | Pexp_apply (f1, [lbl1, arg1]), Pexp_apply (f2, [_lbl2, arg2]) ->
     self.expr self defined_vars f1 f2
     >>= (fun (mapped_f, env_f) -> 
