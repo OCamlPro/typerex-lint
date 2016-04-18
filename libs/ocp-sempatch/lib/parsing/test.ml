@@ -1,7 +1,7 @@
 open Std_utils
 
 let test_progs = [
-  "f x", [ "patch0", "y" ];
+  "x", [ "patch0", "y" ];
   "x", [ "patch1", "((+) x) 1" ];
   "fun x -> x", [ "patch1", "fun x  -> ((+) x) 1"; "patch3", "foo"];
   "let x = 1 in x", [ "patch4", "tralala"];

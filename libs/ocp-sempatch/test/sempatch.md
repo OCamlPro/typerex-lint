@@ -1,29 +1,14 @@
 # patch0
 ```
-- f x
+- x
 + y
 ```
 
-# patch1
-```
-- x
-+ (x+1)
-```
-
-# patch2
-variables: foo
-```
-- foo
-+ bar
-```
-
 # patch3
-variables: y
 ```
-- fun y -> y
+- fun x -> x
 + foo
 ```
-
 
 # patch4
 ```
