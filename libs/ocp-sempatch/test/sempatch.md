@@ -1,16 +1,16 @@
-# patch0
+# simpleVar
 ```
 - x
 + y
 ```
 
-# patch3
+# functionMatch
 ```
 - fun x -> x
 + foo
 ```
 
-# patch4
+# letBinding
 ```
 - let x = 1 in x
 + tralala
