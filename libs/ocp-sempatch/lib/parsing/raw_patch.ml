@@ -26,4 +26,4 @@ let to_patch_body p =
     let (before, after, has_change) = convert_line p in
     "[%__sempatch_inside (" :: before @ ")" :: (if has_change then " [@__sempatch_replace" :: after @ ["]"] else []) @ ["]"]
   in Parser.parse_expression Lexer.token (Lexing.from_string (String.concat "\n" @@ convert_patch p))
-     |> (fun x -> Pprintast.expression Format.std_formatter x; Format.print_newline (); x)
+     |> (fun x -> x)

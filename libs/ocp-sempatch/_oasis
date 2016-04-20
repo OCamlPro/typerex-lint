@@ -10,36 +10,6 @@ Plugins: META (0.4), DevFiles (0.4), StdFiles(0.4)
 AlphaFeatures: stdfiles_markdown, ocamlbuild_more_args
 XOCamlbuildExtraArgs: -tag safe_string -use-menhir -cflags -w -cflags +a-4-44
 
-Executable "test_patch"
-  Path: patch
-  Install: false
-  MainIs: test_patch.ml
-  BuildDepends:
-    ppx_patch
-
-Executable "patch_engine"
-  Path: src
-  MainIs: patch_engine.ml
-  BuildDepends:
-    findlib,
-    ppx_patch,
-    compiler-libs.toplevel
-
-Library "ppx_patch"
-  Path: lib
-  Modules:
-    Ppx_patch,
-    Ast_filter
-    # Ast_traverser, # May be removed ?
-    # Ast_traverser2,
-    # Std_utils,
-    # parsing/Patch_lexer,
-    # parsing/Patch_parser,
-    # parsing/Raw_patch
-  BuildDepends:
-    ppx_tools,
-    compiler-libs
-
 Executable "parser_test"
   Path: lib
   MainIs: parsing/test.ml

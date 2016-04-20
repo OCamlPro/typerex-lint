@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 7d28077ebe782f933bdd6cb1f237d859) *)
+(* DO NOT EDIT (digest: da44b3d97949e4fea38c6bb732e08467) *)
 module OASISGettext = struct
 (* # 22 "src/oasis/OASISGettext.ml" *)
 
@@ -607,16 +607,10 @@ end
 open Ocamlbuild_plugin;;
 let package_default =
   {
-     MyOCamlbuildBase.lib_ocaml = [("ppx_patch", ["lib"], [])];
+     MyOCamlbuildBase.lib_ocaml = [];
      lib_c = [];
      flags = [];
-     includes =
-       [
-          ("src", ["lib"]);
-          ("patch", ["lib"]);
-          ("lib/parsing", ["lib"]);
-          ("lib", ["lib/parsing"])
-       ]
+     includes = [("lib/parsing", ["lib"]); ("lib", ["lib/parsing"])]
   }
   ;;
 
@@ -624,7 +618,7 @@ let conf = {MyOCamlbuildFindlib.no_automatic_syntax = false}
 
 let dispatch_default = MyOCamlbuildBase.dispatch_default conf package_default;;
 
-# 628 "myocamlbuild.ml"
+# 622 "myocamlbuild.ml"
 (* OASIS_STOP *)
 let my_flags () =
   flag ["ocaml"; "pp"; "compile_extend"]
