@@ -1,10 +1,6 @@
 open Parsetree
 open Std_utils
 
-module StringMap = Map.Make(String)
-
-let empty = StringMap.empty
-
 let apply_replacements tree attributes var_replacements =
   (* TODO : Keep location from the original AST *)
   let open Option.Infix in
@@ -33,10 +29,10 @@ let apply_replacements tree attributes var_replacements =
 let apply patch expr =
   let is_meta_expr e = List.mem e Parsed_patches.(patch.header.meta_expr)
   and is_meta_binding b = List.mem b Parsed_patches.(patch.header.meta_bindings)
-  and merge_envs = StringMap.merge (fun _ -> Misc.const) in
+  and merge_envs = Variables.merge in
   let rec match_at_root =
     let open Ast_maybe_mapper2 in
-    let default = mk (StringMap.merge (fun _ -> Misc.const)) in
+    let default = mk Variables.merge in
     {
       expr = (fun self defined_vars ({ pexp_desc = e1; _ } as expr1) ({ pexp_desc = e2; pexp_attributes = attrs2; _ } as expr2) ->
           let replacements =
@@ -47,20 +43,20 @@ let apply patch expr =
               Error.ok_if (Variables.get_ident j defined_vars = (Some i)) (expr1, defined_vars) (expr1, defined_vars)
             | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_expr j ->
               (* TODO (one day...) treat the case where j is already defined as an expression *)
-              Ok (expr1, Variables.add j (Variables.Expression e) empty)
+              Ok (expr1, Variables.add_env j (Variables.Expression e) defined_vars)
             | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "__sempatch_inside" ->
               apply_to_expr defined_vars expr1 e
             | _ -> default.expr self defined_vars expr1 expr2
           in
           Error.map (fun (e, env) -> apply_replacements e attrs2 env, env) replacements
         );
-      pattern = (fun _self _defined_vars pat1 pat2 ->
+      pattern = (fun _self defined_vars pat1 pat2 ->
           let replacements =
             match pat1.ppat_desc, pat2.ppat_desc with
-            | Ppat_var v, Ppat_var v' when v.Asttypes.txt = v'.Asttypes.txt -> Ok (pat1, empty)
+            | Ppat_var v, Ppat_var v' when v.Asttypes.txt = v'.Asttypes.txt -> Ok (pat1, defined_vars)
             | Ppat_var { Asttypes.txt = v; _ }, Ppat_var { Asttypes.txt = v'; _ } when is_meta_binding v' ->
-              Ok (pat1, StringMap.singleton v' (Variables.Ident v))
-            | _ -> Error (pat1, empty)
+              Ok (pat1, Variables.add_env v' (Variables.Ident v) defined_vars)
+            | _ -> Error (pat1, defined_vars)
           in replacements
         )
     }
@@ -82,7 +78,7 @@ let apply patch expr =
       | Pexp_fun(lbl, default, pat, expr) ->
         let apply_some expr = apply_to_expr defined_vars expr patch
                               |> Res.map (fun (tree, env) -> Some tree, env) in
-        Option.fold (fun _ -> apply_some) (Ok (None, empty)) default
+        Option.fold (fun _ -> apply_some) (Ok (None, defined_vars)) default
         >>= (fun (mapped_default, env_default) ->
             apply_to_expr defined_vars expr patch
             >|= (fun (mapped_expr, env_expr) ->
@@ -107,7 +103,7 @@ let apply patch expr =
                   )
               )
           )
-          (Ok ([], empty))
+          (Ok ([], defined_vars))
           expr_list
         >|= (fun (mapped_list, env_list) ->
             Pexp_tuple mapped_list, [ env_list ]
@@ -128,7 +124,7 @@ let apply patch expr =
         failwith "Not implemented yet"
     in desc_err
     >>= (fun (mapped_desc, env_exprs) ->
-        let self_expr = Ast_helper.Exp.mk mapped_desc in
+        let self_expr = { expr with pexp_desc = mapped_desc } in
         match_at_root.expr match_at_root defined_vars self_expr patch
         >|= (fun (mapped_self, env_self) ->
             mapped_self, (List.fold_left merge_envs env_self env_exprs)
@@ -151,16 +147,16 @@ let apply patch expr =
                 )
           )
       )
-      (Res.fail ([], empty))
+      (Res.fail ([], defined_vars))
       bindings
 
   and apply_to_maybe_expr env patch =
     let open Res.Err_monad_infix in
     function
     | Some e -> apply_to_expr env e patch >|= (fun (expr, env) -> Some expr, env)
-    | None -> Ok (None, empty)
+    | None -> Ok (None, env)
 
-  in apply_to_expr empty expr Parsed_patches.(patch.body)
+  in apply_to_expr Variables.empty expr Parsed_patches.(patch.body)
      |> Error.map fst
      |> Error.map_err fst
      |> (function Ok x -> x | Error x -> x)

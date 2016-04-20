@@ -100,6 +100,7 @@ let map_expr merge self defined_vars e patch =
     -> Error (e.pexp_desc, defined_vars)
   | _ -> failwith "Non implemented"
   in Res.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc
+     |> Error.map (fun (expr, attrs) -> expr, Variables.set_loc [e.pexp_loc] attrs)
 
 let map_pattern _merge _self defined_vars p patch =
   let maybe_desc =
