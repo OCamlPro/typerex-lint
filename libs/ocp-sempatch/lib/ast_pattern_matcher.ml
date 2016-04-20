@@ -68,84 +68,73 @@ let apply patch expr =
     let open Ast_maybe_mapper2 in
     let open Res.Err_monad_infix in
 
-    match expr.pexp_desc with
-    | Pexp_ident _ | Pexp_constant _ -> match_at_root.expr match_at_root defined_vars expr patch
-    | Pexp_apply (fct, [lbl, arg]) ->
-      apply_to_expr defined_vars fct patch
-      >>= (fun (mapped_expr, env_expr) ->
-          apply_to_expr defined_vars arg patch
-          >>= (fun (mapped_arg, env_arg) ->
-              let self_expr = { expr with pexp_desc = Pexp_apply (mapped_expr, [lbl, mapped_arg]);} in
-              match_at_root.expr match_at_root defined_vars self_expr patch
-              >|= (fun (mapped_self, env_self) ->
-                  mapped_self, merge_envs env_expr (merge_envs env_arg env_self)
-                )
-            )
-        )
+    let desc_err =
+      match expr.pexp_desc with
+      | Pexp_ident _ | Pexp_constant _ as d -> Error.fail (d, [defined_vars])
+      | Pexp_apply (fct, [lbl, arg]) ->
+        apply_to_expr defined_vars fct patch
+        >>= (fun (mapped_expr, env_expr) ->
+            apply_to_expr defined_vars arg patch
+            >|= (fun (mapped_arg, env_arg) ->
+                Pexp_apply (mapped_expr, [lbl, mapped_arg]), [env_expr; env_arg]
+              )
+          )
+      | Pexp_fun(lbl, default, pat, expr) ->
+        let apply_some expr = apply_to_expr defined_vars expr patch
+                              |> Res.map (fun (tree, env) -> Some tree, env) in
+        Option.fold (fun _ -> apply_some) (Ok (None, empty)) default
+        >>= (fun (mapped_default, env_default) ->
+            apply_to_expr defined_vars expr patch
+            >|= (fun (mapped_expr, env_expr) ->
+                Pexp_fun (lbl, mapped_default, pat, mapped_expr), [ env_expr; env_default]
+              )
+          )
+      | Pexp_let (isrec, bindings, expr) ->
+        apply_to_bindings defined_vars patch bindings
+        >>= (fun (mapped_bindings, env_bindings) ->
+            apply_to_expr env_bindings expr patch
+            >|= (fun (mapped_expr, env_combined) ->
+                Pexp_let (isrec, mapped_bindings, mapped_expr), [ env_combined ]
+              )
+          )
 
-    | Pexp_fun(lbl, default, pat, expr) ->
-      let apply_some expr = apply_to_expr defined_vars expr patch
-                            |> Res.map (fun (tree, env) -> Some tree, env) in
-      Option.fold (fun _ -> apply_some) (Ok (None, empty)) default
-      >>= (fun (mapped_default, env_default) ->
-          apply_to_expr defined_vars expr patch
-          >>= (fun (mapped_expr, env_expr) ->
-              let self_expr = Ast_helper.Exp.mk (Pexp_fun (lbl, mapped_default, pat, mapped_expr)) in
-              match_at_root.expr match_at_root defined_vars self_expr patch
-              >|= (fun (mapped_self, env_self) ->
-                  mapped_self, merge_envs env_default (merge_envs env_expr env_self)
-                )
-            )
-        )
-    | Pexp_let (isrec, bindings, expr) ->
-      apply_to_bindings defined_vars patch bindings
-      >>= (fun (mapped_bindings, env_bindings) ->
-          apply_to_expr env_bindings expr patch
-          >>= (fun (mapped_expr, env_combined) ->
-              let self_expr = Ast_helper.Exp.mk (Pexp_let (isrec, mapped_bindings, mapped_expr)) in
-              match_at_root.expr match_at_root defined_vars self_expr patch
-              >|= (fun (mapped_self, env_self) ->
-                  mapped_self, merge_envs env_combined env_self
-                )
-            )
-        )
+      | Pexp_tuple expr_list ->
+        List.fold_left (fun mapped expr ->
+            mapped >>= (fun (mapped_exprs, accu_env) ->
+                apply_to_expr defined_vars expr patch
+                >|= (fun (mapped_expr, env_expr) ->
+                    mapped_expr :: mapped_exprs, merge_envs accu_env env_expr
+                  )
+              )
+          )
+          (Ok ([], empty))
+          expr_list
+        >|= (fun (mapped_list, env_list) ->
+            Pexp_tuple mapped_list, [ env_list ]
+          )
 
-    | Pexp_tuple expr_list ->
-      List.fold_left (fun mapped expr ->
-          mapped >>= (fun (mapped_exprs, accu_env) ->
-              apply_to_expr defined_vars expr patch
-              >|= (fun (mapped_expr, env_expr) ->
-                  mapped_expr :: mapped_exprs, merge_envs accu_env env_expr
-                )
-            )
-        )
-        (Ok ([], empty))
-        expr_list
-      >>= (fun (mapped_list, env_list) ->
-          let self_expr = Ast_helper.Exp.mk (Pexp_tuple mapped_list) in
-          match_at_root.expr match_at_root defined_vars self_expr patch
-          >|= (fun (mapped_self, env_self) ->
-              mapped_self, merge_envs env_list env_self
-            )
-        )
+      | Pexp_ifthenelse (cif, cthen, celse) ->
+        apply_to_expr defined_vars cif patch
+        >>= (fun (mapped_cif, env_cif) ->
+            apply_to_expr defined_vars cthen patch
+            >>= (fun (mapped_cthen, env_cthen) ->
+                apply_to_maybe_expr defined_vars patch celse
+                >|= (fun (mapped_celse, env_celse) ->
+                    Pexp_ifthenelse (mapped_cif, mapped_cthen, mapped_celse), [ env_cif; env_cthen; env_celse ]
+                  )
+              )
+          )
+      | _ ->
+        failwith "Not implemented yet"
+    in desc_err
+    >>= (fun (mapped_desc, env_exprs) ->
+        let self_expr = Ast_helper.Exp.mk mapped_desc in
+        match_at_root.expr match_at_root defined_vars self_expr patch
+        >|= (fun (mapped_self, env_self) ->
+            mapped_self, (List.fold_left merge_envs env_self env_exprs)
+          )
 
-    | Pexp_ifthenelse (cif, cthen, celse) ->
-      apply_to_expr defined_vars cif patch
-      >>= (fun (mapped_cif, env_cif) ->
-          apply_to_expr defined_vars cthen patch
-          >>= (fun (mapped_cthen, env_cthen) ->
-              apply_to_maybe_expr defined_vars patch celse
-              >>= (fun (mapped_celse, env_celse) ->
-                  let self_expr = Ast_helper.Exp.mk (Pexp_ifthenelse (mapped_cif, mapped_cthen, mapped_celse)) in
-                  match_at_root.expr match_at_root defined_vars self_expr patch
-                  >|= (fun (mapped_self, env_self) ->
-                      mapped_self, merge_envs env_cif (merge_envs env_cthen (merge_envs env_celse env_self))
-                    )
-                )
-            )
       )
-    | _ ->
-      failwith "Not implemented yet"
 
   and apply_to_binding defined_vars patch binding =
     let open Res.Err_monad_infix in
