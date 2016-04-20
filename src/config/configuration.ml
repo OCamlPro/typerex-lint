@@ -4,13 +4,13 @@ end
 
 module type CONFIG = sig
   val config_file : SimpleConfig.config_file
-  val create_option : 
-    string list -> 
-    ?short_help:string -> 
-    string list -> 
+  val create_option :
+    string list ->
+    ?short_help:string ->
+    string list ->
     ?level:int ->
-    'a SimpleConfig.option_class -> 
-    'a -> 
+    'a SimpleConfig.option_class ->
+    'a ->
     'a SimpleConfig.config_option
 end
 
