@@ -47,7 +47,7 @@ module Warnings = CodeIdentifierLength.MakeWarnings(struct
         2
         [ Warning.kind_code ]
         ~short_name:"identifier-too-long"
-        ~msg:"%s is too long: it should be at most of size '%size'."
+        ~msg:"%id is too long: it should be at most of size '%size'."
         ~args
 
     let report loc = function
