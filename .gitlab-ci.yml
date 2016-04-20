@@ -1,0 +1,20 @@
+cache:
+  paths:
+  - .opam
+
+build:
+  tags:
+    - jessie
+    - amd64
+    - opam
+  script:
+    - eval $(opam config env)
+    - export OPAMROOT=${PWD}/.opam
+    - |
+      if [ ! -d ${OPAMROOT} ]; then
+        opam init default /var/cache/opam-repository
+      fi
+    - eval $(opam config env)
+    - ./configure
+    - make opam-deps
+    - make
