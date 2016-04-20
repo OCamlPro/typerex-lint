@@ -1,0 +1,11 @@
+begin library "typedtree-iter"
+  files = [ "typedtreeIter.ml" ]
+  requires = [ "compiler-libs" ]
+  pp = [ "ocp-pp" ]
+end
+
+(* begin library "typedtree-map" *)
+(*   files = [ "typedtreeMap.ml" ] *)
+(*   requires = [ "compiler-libs" ] *)
+(*   pp = [ "ocp-pp" ] *)
+(* end *)
