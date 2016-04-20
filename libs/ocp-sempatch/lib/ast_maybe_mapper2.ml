@@ -7,7 +7,7 @@ type 'a t = {
   pattern : 'a t -> 'a -> pattern -> pattern -> (pattern * 'a, pattern * 'a) Error.t;
 }
 
-let map_binding merge _default self defined_vars binding patch =
+let map_binding merge self defined_vars binding patch =
   self.pattern self defined_vars binding.pvb_pat patch.pvb_pat
   >>= (fun (mapped_pattern, env_pattern) ->
       self.expr self defined_vars binding.pvb_expr patch.pvb_expr
@@ -16,29 +16,29 @@ let map_binding merge _default self defined_vars binding patch =
         )
     )
 
-let map_bindings merge default self defined_vars =
+let map_bindings merge self defined_vars =
   List.fold_left2 (fun accu binding patch_binding ->
       accu
       >>= (fun (bind_list, env) ->
-          map_binding merge default self defined_vars binding patch_binding
+          map_binding merge self defined_vars binding patch_binding
           >|= (fun (mapped_binding, new_env) ->
               mapped_binding :: bind_list, merge env new_env
             )
         )
     )
-    (Ok ([], default))
+    (Ok ([], defined_vars))
 
-let map_maybe_expr _merge _default self defined_vars expr_opt patch_opt =
+let map_maybe_expr _merge self defined_vars expr_opt patch_opt =
   match expr_opt, patch_opt with
   | Some e, Some patch -> self.expr self defined_vars e patch >|= (fun (mapped, env) -> Some mapped, env)
   | None, None -> Ok (None, defined_vars)
   | _ -> Error (expr_opt, defined_vars)
 
-let map_expr merge default self defined_vars e patch =
+let map_expr merge self defined_vars e patch =
   let maybe_desc =
   match e.pexp_desc, patch.pexp_desc with
   | Pexp_ident _, Pexp_ident _
-  | Pexp_constant _, Pexp_constant _ -> Error (e.pexp_desc, default)
+  | Pexp_constant _, Pexp_constant _ -> Error (e.pexp_desc, defined_vars)
   | Pexp_tuple e1s, Pexp_tuple e2s ->
       List.fold_left2 (fun accu expr patch_expr ->
           accu >>= (fun (expr_list, accu_env) ->
@@ -48,7 +48,7 @@ let map_expr merge default self defined_vars e patch =
                 )
             )
       )
-        (Ok ([], default))
+        (Ok ([], defined_vars))
         e1s
         e2s
       >|= (fun (exprs, env) ->
@@ -74,7 +74,7 @@ let map_expr merge default self defined_vars e patch =
       | _, _ -> Error (e.pexp_desc, defined_vars)
     end
   | Pexp_let (isrecl, bindingsl, exprl), Pexp_let (isrecr, bindingsr, exprr) when isrecl = isrecr ->
-    map_bindings merge default self defined_vars bindingsl bindingsr
+    map_bindings merge self defined_vars bindingsl bindingsr
     >>= (fun (mapped_bindings, env_bindings) ->
         self.expr self env_bindings exprl exprr
         >|= (fun (mapped_expr, env_expr) ->
@@ -87,7 +87,7 @@ let map_expr merge default self defined_vars e patch =
     >>= (fun (mapped_if, env_if) ->
         self.expr self defined_vars thenl thenr
         >>= (fun (mapped_then, env_then) ->
-            map_maybe_expr merge default self defined_vars elsel elser
+            map_maybe_expr merge self defined_vars elsel elser
             >|= (fun (mapped_else, env_else) ->
                 Pexp_ifthenelse (mapped_if, mapped_then, mapped_else), merge env_if (merge env_then env_else)
             )
@@ -97,19 +97,19 @@ let map_expr merge default self defined_vars e patch =
   | Pexp_apply _, _ | _, Pexp_apply _
   | Pexp_ident _, _ | _, Pexp_ident _
   | Pexp_constant _, _ | _, Pexp_constant _
-    -> Error (e.pexp_desc, default)
+    -> Error (e.pexp_desc, defined_vars)
   | _ -> failwith "Non implemented"
   in Res.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc
 
-let map_pattern _merge default _self _defined_vars p patch =
+let map_pattern _merge _self defined_vars p patch =
   let maybe_desc =
     match p.ppat_desc, patch.ppat_desc with
-    | Ppat_var _, _ -> Error (p, default)
+    | Ppat_var _, _ -> Error (p, defined_vars)
     |_, _ -> failwith "Non implemented"
   in Error.map (fun (tree, env) -> { p with ppat_desc = tree; }, env) maybe_desc
 
-let mk merge default = {
-  expr = map_expr merge default;
-  pattern = map_pattern merge default;
+let mk merge = {
+  expr = map_expr merge;
+  pattern = map_pattern merge;
 }
 

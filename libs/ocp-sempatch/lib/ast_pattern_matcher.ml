@@ -36,7 +36,7 @@ let apply patch expr =
   and merge_envs = StringMap.merge (fun _ -> Misc.const) in
   let rec match_at_root =
     let open Ast_maybe_mapper2 in
-    let default = mk (StringMap.merge (fun _ -> Misc.const)) StringMap.empty in
+    let default = mk (StringMap.merge (fun _ -> Misc.const)) in
     {
       expr = (fun self defined_vars ({ pexp_desc = e1; _ } as expr1) ({ pexp_desc = e2; pexp_attributes = attrs2; _ } as expr2) ->
           let replacements =
