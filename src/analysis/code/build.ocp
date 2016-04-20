@@ -1,0 +1,12 @@
+
+begin library "lint-code"
+  files = [
+    "code_identifier_length.ml"
+  ]
+  requires = [ "plugin-lib" "plugins" ]
+end
+
+begin program "test"
+  files = [ "test.ml" ]
+  requires = [ "plugin-lib" "lint-code"]
+end

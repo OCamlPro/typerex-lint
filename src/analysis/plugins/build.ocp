@@ -1,0 +1,6 @@
+begin library "plugins"
+  files = [
+    "plugin_mascot.ml"
+  ]
+  requires = [ "plugin-lib" ]
+end
