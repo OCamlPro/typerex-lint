@@ -22,7 +22,7 @@ module type IteratorArgument = sig
    val leave_modtype_declaration : modtype_declaration -> unit
    val enter_core_field_type : core_field_type -> unit
    val leave_core_field_type : core_field_type -> unit
-#else
+#elif OCAML_VERSION >= "4.02" && OCAML_VERSION < "4.03"
   val enter_value_binding : value_binding -> unit
   val leave_value_binding : value_binding -> unit
   val enter_type_extension : type_extension -> unit
@@ -31,6 +31,7 @@ module type IteratorArgument = sig
   val leave_extension_constructor : extension_constructor -> unit
   val enter_module_type_declaration : module_type_declaration -> unit
   val leave_module_type_declaration : module_type_declaration -> unit
+#else
 #endif
     val enter_structure : structure -> unit
     val enter_value_description : value_description -> unit
