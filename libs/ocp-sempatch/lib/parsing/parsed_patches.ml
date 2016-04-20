@@ -36,13 +36,37 @@ let curryfying_mapper =
           let currified_applies = List.fold_left (fun acc (lbl, arg) ->
               {
                 arg with
-                pexp_desc = Pexp_apply (acc, [lbl,arg]);
+                pexp_desc = Pexp_apply (acc, [lbl, self.expr self arg]);
+                pexp_attributes = (Location.mknoloc "__sempatch_uncurryfy", PStr [])::[];
               }
             )
-            f
+              (self.expr self f)
             args
-          in { e with pexp_desc = currified_applies.pexp_desc }
+          in { e with
+               pexp_desc = currified_applies.pexp_desc;
+               pexp_attributes = e.pexp_attributes;
+             }
         | _ -> default_mapper.expr self e
+      );
+  }
+
+let under_arg { pexp_desc = desc; _ } =
+  match desc with
+  | Pexp_apply (f, arg) -> Some (f, arg)
+  | _ -> None
+
+let uncurryfying_mapper =
+  let open Ast_mapper in
+  { default_mapper with
+    expr = (fun self e ->
+            match e.pexp_desc with
+            | Pexp_apply (f, args) when List.exists (fun (loc, _) -> loc.Location.txt = "__sempatch_uncurryfy") f.pexp_attributes ->
+              (
+                match under_arg f with
+                | Some (next_fun, next_arg) -> self.expr self { e with pexp_desc = Pexp_apply (next_fun, next_arg @ args) }
+                | None -> default_mapper.expr self e
+              )
+            | _ -> default_mapper.expr self e
       );
   }
 
@@ -64,10 +88,10 @@ let preprocess { name; header; body} =
               match e.pexp_desc with
               | Pexp_ident ({ Asttypes.txt = Longident.Lident v; _ }) when List.mem v header.meta_expr ->
                 let new_var = v in
-                if not in_replacement && List.mem new_var !meta_exprs_in_pre_patch then
-                  (* For the moment, don't allow meta expressions to appear more than once in a patch *)
-                  raisePatchError ("The variable " ^ v ^ " appears more than once in the patch")
-                else
+                (* if not in_replacement && List.mem new_var !meta_exprs_in_pre_patch then *)
+                (*   (* For the moment, don't allow meta expressions to appear more than once in a patch *) *)
+                (*   raisePatchError ("The variable " ^ v ^ " appears more than once in the patch") *)
+                (* else *)
                   (
                     let processed_vars = if in_replacement then metas_in_post_patch else meta_exprs_in_pre_patch in
                     processed_vars := new_var :: !processed_vars;
@@ -103,3 +127,5 @@ let preprocess { name; header; body} =
   { name; header = { meta_expr = !meta_exprs_in_pre_patch; meta_bindings = !meta_bindings_in_pre_patch; }; body = processed_before_patch; }
 
 let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper
+
+let postprocess = uncurryfying_mapper.Ast_mapper.expr uncurryfying_mapper

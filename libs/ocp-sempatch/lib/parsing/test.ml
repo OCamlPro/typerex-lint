@@ -2,7 +2,7 @@ open Std_utils
 
 let test_progs = [
   "x", [ "simpleVar", "y" ];
-  "f x", [ "apply", "foo"];
+  "f x y", [ "apply", "foo y"];
   "x", [ "patch1", "((+) x) 1" ];
   "fun x -> x", [ "patch1", "fun x  -> ((+) x) 1"; "functionMatch", "foo"];
   "let x = 1 in x", [ "letBinding", "tralala"; "replaceInsideLet", "let x = 1 in y"];
@@ -21,14 +21,14 @@ let expr_to_string e =
 
 let apply ast patch =
   let patch = Parsed_patches.preprocess patch in
-  Ast_pattern_matcher.apply patch ast
+  Ast_pattern_matcher.apply patch (Parsed_patches.preprocess_src_expr ast)
 
 let test patches (ast, expected_results) =
   let parsed_ast = string_to_expr ast in
   List.map (fun patch ->
     List.map (fun (name, expected) ->
         if (name = patch.Parsed_patches.name) then
-          let result = expr_to_string (apply parsed_ast patch) in
+          let result = expr_to_string (apply parsed_ast patch |> Parsed_patches.postprocess) in
           Option.some_if (expected <> result) (name, result)
         else None
         )
