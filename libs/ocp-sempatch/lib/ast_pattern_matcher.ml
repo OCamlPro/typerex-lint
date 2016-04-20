@@ -1,6 +1,5 @@
 open Parsetree
 open Std_utils
-open Option.Infix
 
 module StringMap = Map.Make(String)
 
@@ -8,9 +7,10 @@ let empty = StringMap.empty
 
 let apply_replacements tree attributes var_replacements =
   (* TODO : Keep location from the original AST *)
+  let open Option.Infix in
   let new_tree = List.find_opt (fun x -> (fst x).Asttypes.txt = "__sempatch_replace") attributes
-                 |> Option.map snd
-                 |> Option.map (function
+                 >|= snd
+                 >|= (function
                      | PStr [ { pstr_desc = Pstr_eval (e, _); _ } ] -> e
                      | _ -> Parsed_patches.raisePatchError "Invalid replacement extension node"
                    )
