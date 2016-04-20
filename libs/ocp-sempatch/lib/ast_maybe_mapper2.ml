@@ -28,7 +28,7 @@ let map_bindings merge default self defined_vars =
     )
     (Ok ([], default))
 
-let map_maybe_expr merge default self defined_vars expr_opt patch_opt =
+let map_maybe_expr _merge _default self defined_vars expr_opt patch_opt =
   match expr_opt, patch_opt with
   | Some e, Some patch -> self.expr self defined_vars e patch >|= (fun (mapped, env) -> Some mapped, env)
   | None, None -> Ok (None, defined_vars)
