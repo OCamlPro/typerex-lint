@@ -34,3 +34,12 @@ let x = 1 in
 - 1, 2, 3, 4
 + foo
 ```
+
+# listCompare
+variables: l, e1, e2
+```
+- if List.length l = 0 then e1 else e2
++ match l with
++ | [] -> e1
++ | _  -> e2
+```

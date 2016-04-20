@@ -7,6 +7,7 @@ let test_progs = [
   "fun x -> x", [ "patch1", "fun x  -> ((+) x) 1"; "functionMatch", "foo"];
   "let x = 1 in x", [ "letBinding", "tralala"; "replaceInsideLet", "let x = 1 in y"];
   "1, 2, 3, 4", [ "tuples", "foo"];
+  "if List.length l = 0 then foo else bar", [ "listCompare", "match l with | [] -> e1 | _ -> e2" ]
 ]
 
 let in_file = open_in "test/sempatch.md"

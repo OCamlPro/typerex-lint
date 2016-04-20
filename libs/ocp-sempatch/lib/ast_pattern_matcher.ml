@@ -128,6 +128,22 @@ let apply patch expr =
               mapped_self, merge_envs env_list env_self
             )
         )
+
+    | Pexp_ifthenelse (cif, cthen, celse) ->
+      apply_to_expr defined_vars cif patch
+      >>= (fun (mapped_cif, env_cif) ->
+          apply_to_expr defined_vars cthen patch
+          >>= (fun (mapped_cthen, env_cthen) ->
+              apply_to_maybe_expr defined_vars patch celse
+              >>= (fun (mapped_celse, env_celse) ->
+                  let self_expr = Ast_helper.Exp.mk (Pexp_ifthenelse (mapped_cif, mapped_cthen, mapped_celse)) in
+                  match_at_root.expr match_at_root defined_vars self_expr patch
+                  >|= (fun (mapped_self, env_self) ->
+                      mapped_self, merge_envs env_cif (merge_envs env_cthen (merge_envs env_celse env_self))
+                    )
+                )
+            )
+      )
     | _ ->
       failwith "Not implemented yet"
 
@@ -148,6 +164,12 @@ let apply patch expr =
       )
       (Res.fail ([], empty))
       bindings
+
+  and apply_to_maybe_expr env patch =
+    let open Res.Err_monad_infix in
+    function
+    | Some e -> apply_to_expr env e patch >|= (fun (expr, env) -> Some expr, env)
+    | None -> Ok (None, empty)
 
   in apply_to_expr empty expr Parsed_patches.(patch.body)
      |> Error.map fst

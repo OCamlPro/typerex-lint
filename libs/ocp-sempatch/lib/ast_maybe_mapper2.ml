@@ -28,6 +28,11 @@ let map_bindings merge default self defined_vars =
     )
     (Ok ([], default))
 
+let map_maybe_expr merge default self defined_vars expr_opt patch_opt =
+  match expr_opt, patch_opt with
+  | Some e, Some patch -> self.expr self defined_vars e patch >|= (fun (mapped, env) -> Some mapped, env)
+  | None, None -> Ok (None, defined_vars)
+  | _ -> Error (expr_opt, defined_vars)
 
 let map_expr merge default self defined_vars e patch =
   let maybe_desc =
@@ -74,6 +79,18 @@ let map_expr merge default self defined_vars e patch =
         self.expr self env_bindings exprl exprr
         >|= (fun (mapped_expr, env_expr) ->
             Pexp_let (isrecl, mapped_bindings, mapped_expr), env_expr
+          )
+      )
+
+  | Pexp_ifthenelse (ifl, thenl, elsel), Pexp_ifthenelse(ifr, thenr, elser) ->
+    self.expr self defined_vars ifl ifr
+    >>= (fun (mapped_if, env_if) ->
+        self.expr self defined_vars thenl thenr
+        >>= (fun (mapped_then, env_then) ->
+            map_maybe_expr merge default self defined_vars elsel elser
+            >|= (fun (mapped_else, env_else) ->
+                Pexp_ifthenelse (mapped_if, mapped_then, mapped_else), merge env_if (merge env_then env_else)
+            )
           )
       )
   | Pexp_let _, _ | _, Pexp_let _
