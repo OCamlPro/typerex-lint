@@ -1,15 +1,17 @@
 begin library "plugin-lib"
   files = [
+    "plugin_error.ml"
     "input.mli"
-    "warning.mli"
+    "warning_types.mli"
     "check.mli"
     "plugin_types.mli"
+    "warning.ml"
     "plugin.ml"
   ]
-  requires = [ "compiler-libs.common" "default-config" ]
-end
-
-begin program "test"
-   files = [ "test.ml" ]
-   requires = [ "plugin-lib" ]
+  requires = [
+    "compiler-libs.common"
+    "default-config"
+    "parsetree-iter"
+    "plugin-utils"
+  ]
 end
