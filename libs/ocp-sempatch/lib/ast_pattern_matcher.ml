@@ -34,7 +34,7 @@ let apply patch expr =
     let open Ast_maybe_mapper2 in
     let default = mk Variables.merge in
     {
-      expr = (fun self env ({ pexp_desc = e1; _ } as expr1) ({ pexp_desc = e2; pexp_attributes = attrs2; _ } as expr2) ->
+      expr = (fun self env ~patch:({ pexp_desc = e2; pexp_attributes = attrs2; _ } as expr2) ~expr:({ pexp_desc = e1; _ } as expr1) ->
           let replacements =
             match e1, e2 with
             | Pexp_constant c1, Pexp_constant c2 when c1 = c2 -> Ok (expr1, env)
@@ -45,12 +45,12 @@ let apply patch expr =
               (* TODO (one day...) treat the case where j is already defined as an expression *)
               Ok (expr1, Variables.add_env j (Variables.Expression e) env)
             | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "__sempatch_inside" ->
-              apply_to_expr env expr1 e
-            | _ -> default.expr self env expr1 expr2
+              apply_to_expr env ~expr:expr1 ~patch:e
+            | _ -> default.expr self env ~expr:expr1 ~patch:expr2
           in
           Error.map (fun (e, env) -> apply_replacements e attrs2 env, env) replacements
         );
-      pattern = (fun _self env pat1 pat2 ->
+      pattern = (fun _self env ~patch:pat2 ~pat:pat1 ->
           let replacements =
             match pat1.ppat_desc, pat2.ppat_desc with
             | Ppat_var v, Ppat_var v' when v.Asttypes.txt = v'.Asttypes.txt -> Ok (pat1, env)
@@ -60,7 +60,7 @@ let apply patch expr =
           in replacements
         )
     }
-  and apply_to_expr env expr patch =
+  and apply_to_expr env ~patch ~expr =
     let open Ast_maybe_mapper2 in
     let open Res.Err_monad_infix in
 
@@ -68,19 +68,19 @@ let apply patch expr =
       match expr.pexp_desc with
       | Pexp_ident _ | Pexp_constant _ as d -> Error.fail (d, [env])
       | Pexp_apply (fct, [lbl, arg]) ->
-        apply_to_expr env fct patch
+        apply_to_expr env ~expr:fct ~patch
         >>= (fun (mapped_expr, env_expr) ->
-            apply_to_expr env arg patch
+            apply_to_expr env ~expr:arg ~patch
             >|= (fun (mapped_arg, env_arg) ->
                 Pexp_apply (mapped_expr, [lbl, mapped_arg]), [env_expr; env_arg]
               )
           )
       | Pexp_fun(lbl, default, pat, expr) ->
-        let apply_some expr = apply_to_expr env expr patch
+        let apply_some expr = apply_to_expr env ~expr ~patch
                               |> Res.map (fun (tree, env) -> Some tree, env) in
         Option.fold (fun _ -> apply_some) (Ok (None, env)) default
         >>= (fun (mapped_default, env_default) ->
-            apply_to_expr env expr patch
+            apply_to_expr env ~expr ~patch
             >|= (fun (mapped_expr, env_expr) ->
                 Pexp_fun (lbl, mapped_default, pat, mapped_expr), [ env_expr; env_default]
               )
@@ -88,7 +88,7 @@ let apply patch expr =
       | Pexp_let (isrec, bindings, expr) ->
         apply_to_bindings env patch bindings
         >>= (fun (mapped_bindings, env_bindings) ->
-            apply_to_expr env_bindings expr patch
+            apply_to_expr env_bindings ~expr ~patch
             >|= (fun (mapped_expr, env_combined) ->
                 Pexp_let (isrec, mapped_bindings, mapped_expr), [ env_combined ]
               )
@@ -97,7 +97,7 @@ let apply patch expr =
       | Pexp_tuple expr_list ->
         List.fold_left (fun mapped expr ->
             mapped >>= (fun (mapped_exprs, accu_env) ->
-                apply_to_expr env expr patch
+                apply_to_expr env ~expr ~patch
                 >|= (fun (mapped_expr, env_expr) ->
                     mapped_expr :: mapped_exprs, merge_envs accu_env env_expr
                   )
@@ -110,9 +110,9 @@ let apply patch expr =
           )
 
       | Pexp_ifthenelse (cif, cthen, celse) ->
-        apply_to_expr env cif patch
+        apply_to_expr env ~expr:cif ~patch
         >>= (fun (mapped_cif, env_cif) ->
-            apply_to_expr env cthen patch
+            apply_to_expr env ~expr:cthen ~patch
             >>= (fun (mapped_cthen, env_cthen) ->
                 apply_to_maybe_expr env patch celse
                 >|= (fun (mapped_celse, env_celse) ->
@@ -125,7 +125,7 @@ let apply patch expr =
     in desc_err
     >>= (fun (mapped_desc, env_exprs) ->
         let self_expr = { expr with pexp_desc = mapped_desc } in
-        match_at_root.expr match_at_root env self_expr patch
+        match_at_root.expr match_at_root env ~expr:self_expr ~patch
         >|= (fun (mapped_self, env_self) ->
             mapped_self, (List.fold_left merge_envs env_self env_exprs)
           )
@@ -134,7 +134,7 @@ let apply patch expr =
 
   and apply_to_binding env patch binding =
     let open Res.Err_monad_infix in
-    apply_to_expr env binding.pvb_expr patch
+    apply_to_expr env ~expr:binding.pvb_expr ~patch
     >|= (fun (expr, env) -> { binding with pvb_expr = expr }, env)
 
   and apply_to_bindings env patch bindings =
@@ -153,10 +153,10 @@ let apply patch expr =
   and apply_to_maybe_expr env patch =
     let open Res.Err_monad_infix in
     function
-    | Some e -> apply_to_expr env e patch >|= (fun (expr, env) -> Some expr, env)
+    | Some expr -> apply_to_expr env ~expr ~patch >|= (fun (expr, env) -> Some expr, env)
     | None -> Ok (None, env)
 
-  in apply_to_expr Variables.empty expr Parsed_patches.(patch.body)
+  in apply_to_expr Variables.empty ~expr ~patch:Parsed_patches.(patch.body)
      |> Error.map fst
      |> Error.map_err fst
      |> (function Ok x -> x | Error x -> x)

@@ -3,14 +3,14 @@ open Parsetree
 open Res.Ok_monad_infix
 
 type 'a t = {
-  expr : 'a t -> 'a -> expression -> expression -> (expression * 'a, expression * 'a) Error.t;
-  pattern : 'a t -> 'a -> pattern -> pattern -> (pattern * 'a, pattern * 'a) Error.t;
+  expr : 'a t -> 'a -> patch:expression -> expr:expression -> (expression * 'a, expression * 'a) Error.t;
+  pattern : 'a t -> 'a -> patch:pattern -> pat:pattern -> (pattern * 'a, pattern * 'a) Error.t;
 }
 
 let map_binding merge self env binding patch =
-  self.pattern self env binding.pvb_pat patch.pvb_pat
+  self.pattern self env ~pat:binding.pvb_pat ~patch:patch.pvb_pat
   >>= (fun (mapped_pattern, env_pattern) ->
-      self.expr self env binding.pvb_expr patch.pvb_expr
+      self.expr self env ~expr:binding.pvb_expr ~patch:patch.pvb_expr
       >|= (fun (mapped_expr, env_expr) ->
           { binding with pvb_pat = mapped_pattern; pvb_expr = mapped_expr; }, merge env_pattern env_expr
         )
@@ -30,11 +30,12 @@ let map_bindings merge self env =
 
 let map_maybe_expr _merge self env expr_opt patch_opt =
   match expr_opt, patch_opt with
-  | Some e, Some patch -> self.expr self env e patch >|= (fun (mapped, env) -> Some mapped, env)
+  | Some expr, Some patch -> self.expr self env ~expr ~patch >|= (fun (mapped, env) -> Some mapped, env)
   | None, None -> Ok (None, env)
   | _ -> Error (expr_opt, env)
 
-let map_expr merge self env e patch =
+let map_expr merge self env ~patch ~expr =
+  let e = expr in
   let maybe_desc =
   match e.pexp_desc, patch.pexp_desc with
   | Pexp_ident _, Pexp_ident _
@@ -42,7 +43,7 @@ let map_expr merge self env e patch =
   | Pexp_tuple e1s, Pexp_tuple e2s ->
       List.fold_left2 (fun accu expr patch_expr ->
           accu >>= (fun (expr_list, accu_env) ->
-              self.expr self env expr patch_expr
+              self.expr self env ~expr ~patch:patch_expr
               >|= (fun (mapped_expr, new_env) ->
                   mapped_expr :: expr_list, merge accu_env new_env
                 )
@@ -55,18 +56,18 @@ let map_expr merge self env e patch =
           Pexp_tuple exprs, env
         )
   | Pexp_apply (f1, [lbl1, arg1]), Pexp_apply (f2, [_lbl2, arg2]) ->
-    self.expr self env f1 f2
+    self.expr self env ~expr:f1 ~patch:f2
     >>= (fun (mapped_f, env_f) -> 
-        self.expr self env arg1 arg2
+        self.expr self env ~expr:arg1 ~patch:arg2
         >|= (fun (mapped_arg, env_arg) ->
             Pexp_apply (mapped_f, [lbl1, mapped_arg]), merge env_f env_arg
           )
       )
   | Pexp_fun (lbl1, default1, pat1, expr1), Pexp_fun (_lbl2, _default2, pat2, expr2) ->
     (* TODO: handle labels and default values *)
-    let mapped_arg = self.pattern self env pat1 pat2 in
+    let mapped_arg = self.pattern self env ~pat:pat1 ~patch:pat2 in
     let mapped_expr = mapped_arg
-      >>= (fun (_, env) -> self.expr self env expr1 expr2)
+      >>= (fun (_, env) -> self.expr self env ~expr:expr1 ~patch:expr2)
     in
     begin
       match mapped_arg, mapped_expr with
@@ -76,16 +77,16 @@ let map_expr merge self env e patch =
   | Pexp_let (isrecl, bindingsl, exprl), Pexp_let (isrecr, bindingsr, exprr) when isrecl = isrecr ->
     map_bindings merge self env bindingsl bindingsr
     >>= (fun (mapped_bindings, env_bindings) ->
-        self.expr self env_bindings exprl exprr
+        self.expr self env_bindings ~expr:exprl ~patch:exprr
         >|= (fun (mapped_expr, env_expr) ->
             Pexp_let (isrecl, mapped_bindings, mapped_expr), env_expr
           )
       )
 
   | Pexp_ifthenelse (ifl, thenl, elsel), Pexp_ifthenelse(ifr, thenr, elser) ->
-    self.expr self env ifl ifr
+    self.expr self env ~expr:ifl ~patch:ifr
     >>= (fun (mapped_if, env_if) ->
-        self.expr self env thenl thenr
+        self.expr self env ~expr:thenl ~patch:thenr
         >>= (fun (mapped_then, env_then) ->
             map_maybe_expr merge self env elsel elser
             >|= (fun (mapped_else, env_else) ->
@@ -102,12 +103,12 @@ let map_expr merge self env e patch =
   in Res.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc
      |> Error.map (fun (expr, attrs) -> expr, Variables.set_loc [e.pexp_loc] attrs)
 
-let map_pattern _merge _self env p patch =
+let map_pattern _merge _self env ~patch ~pat =
   let maybe_desc =
-    match p.ppat_desc, patch.ppat_desc with
-    | Ppat_var _, _ -> Error (p, env)
+    match pat.ppat_desc, patch.ppat_desc with
+    | Ppat_var _, _ -> Error (pat, env)
     |_, _ -> failwith "Non implemented"
-  in Error.map (fun (tree, env) -> { p with ppat_desc = tree; }, env) maybe_desc
+  in Error.map (fun (tree, env) -> { pat with ppat_desc = tree; }, env) maybe_desc
 
 let mk merge = {
   expr = map_expr merge;
