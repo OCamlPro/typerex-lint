@@ -1,3 +1,4 @@
 PKG ppx_tools
 PKG findlib
 B _build/**
+FLG -w +a-4
