@@ -1,3 +1,5 @@
+(** [kind] is the category of the warning. A warning can be about the code, a
+    typography (for example the line length), interface, metrics and custom. *)
 type kind =
   | Code
   | Typo
@@ -8,11 +10,11 @@ type kind =
 and kinds = kind list
 
 type warning = {
-  id : int;
-  kinds : kinds;
-  short_name : string;
-  message : string;
-  loc : Location.t;
+  id : int;            (* Warning number *)
+  kinds : kinds;       (* Warning kinds *)
+  short_name : string; (* A short name to identify a warning *)
+  message : string;    (* The displayed message *)
+  loc : Location.t;    (* The location of the warning *)
 }
 
 module type WarningArg = sig

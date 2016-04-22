@@ -11,7 +11,8 @@ type t
 
 val empty: t
 
-val add: Location.t -> int -> Warning_types.kinds -> string -> string -> t -> unit
+val add :
+  Location.t -> int -> Warning_types.kinds -> string -> string -> t -> unit
 
 val add_warning : Warning_types.warning -> t -> unit
 

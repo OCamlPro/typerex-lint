@@ -1,3 +1,4 @@
+(** Type [input] is the type of inputs that each linter can takes as argument. *)
 type input =
     | InStruct of (Parsetree.structure -> unit)
     | InInterf of (Parsetree.signature -> unit)
