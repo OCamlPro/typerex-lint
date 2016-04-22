@@ -91,3 +91,6 @@ module MakeIterator(Iter : IteratorArgument) : sig
 end
 
 module DefaultIteratorArgument : IteratorArgument
+
+val iter_structure : (module IteratorArgument) -> Parsetree.structure -> unit
+val iter_signature : (module IteratorArgument) -> Parsetree.signature -> unit

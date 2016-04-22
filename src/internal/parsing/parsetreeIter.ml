@@ -288,10 +288,7 @@ module MakeIterator(Iter : IteratorArgument) : sig
 #else
 #endif
         | Ppat_variant (label, pato) ->
-          begin match pato with
-            None -> ()
-          | Some pat -> iter_pattern pat
-          end
+          may_iter iter_pattern pato
         | Ppat_record (list, closed) ->
           List.iter (fun (_, pat) -> iter_pattern pat) list
         | Ppat_array list -> List.iter iter_pattern list
@@ -388,10 +385,7 @@ module MakeIterator(Iter : IteratorArgument) : sig
         | Pexp_ifthenelse (exp1, exp2, expo) ->
           iter_expression exp1;
           iter_expression exp2;
-          begin match expo with
-            None -> ()
-          | Some exp -> iter_expression exp
-          end
+          may_iter iter_expression expo
         | Pexp_sequence (exp1, exp2) ->
           iter_expression exp1;
           iter_expression exp2
@@ -847,3 +841,13 @@ module DefaultIteratorArgument = struct
     let leave_bindings _ = ()
 
   end
+
+let iter_structure iterator structure =
+  let module IA = (val iterator : IteratorArgument) in
+  let module I = (MakeIterator(IA)) in
+  I.iter_structure structure
+
+let iter_signature iterator signature =
+  let module IA = (val iterator : IteratorArgument) in
+  let module I = (MakeIterator(IA)) in
+  I.iter_signature signature
