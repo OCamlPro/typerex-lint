@@ -1,24 +1,4 @@
-if os_type = "Win32" then {
-  camlp4o = "%{OCAMLBIN}%/camlp4o.exe"
-} else {
-  camlp4o = "%{OCAMLBIN}%/camlp4o"
-}
-
 begin library "default-config"
   files = [ "configuration.ml" ]
-  requires = [ "simple-config" ]
-end
-
-begin library "simple-config"
-  files = [ 
-
-    "simpleConfig.mli" (
-      pp = [ "camlp4o" ]
-      pp_deps = [ camlp4o ]
-    )
-    "simpleConfig.ml4" (
-      ml=true pp = [ "camlp4o" "-impl" ]
-      pp_deps = [ camlp4o ]
-    )
-  ]	
+  requires = [ "ocplib-system" ]
 end
