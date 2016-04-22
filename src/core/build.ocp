@@ -5,5 +5,5 @@ begin program "ocp-lint"
     "ocplint_actions.ml"
     "ocplint.ml"
   ]
-  requires = [ "plugin-lib" "lint-code" "lint-interface" "simple-config"]
+  requires = [ "plugin-lib" "lint-code" "lint-interface" "ocplib-system"]
 end
