@@ -35,10 +35,10 @@ let add_warning warning wset =
 let iter f s = WarningSet.iter f !s
 
 let print ppf warning =
-  let kinds =
-    List.fold_left (fun acc k ->
-        acc ^ " " ^ kind_to_string k) "" warning.kinds in
+  let kinds = String.concat " " (List.map kind_to_string warning.kinds) in
   if warning.loc <> Location.none then
     Format.fprintf ppf "%a" Location.print warning.loc;
+
   Format.fprintf ppf "   id: %d\n   kinds: [%s]\n   short: %s\n   msg: %s  \n%!"
-    warning.id kinds warning.short_name warning.message
+    warning.id kinds warning.short_name warning.message;
+  Format.fprintf ppf "@."

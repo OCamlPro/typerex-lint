@@ -1,10 +1,10 @@
 begin library "plugin-lib"
   files = [
-    "plugin_error.ml"
     "input.mli"
     "warning_types.mli"
-    "check.mli"
+    "lint.mli"
     "plugin_types.mli"
+    "plugin_error.ml"
     "warning.ml"
     "plugin.ml"
   ]
@@ -13,5 +13,5 @@ begin library "plugin-lib"
     "default-config"
     "parsetree-iter"
     "plugin-utils"
-  ]
+ ]
 end

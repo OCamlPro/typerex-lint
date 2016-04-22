@@ -1,6 +1,6 @@
 type error =
-  | Plugin_already_registered of string
-  | Plugin_not_found of string
+  | Plugin_already_registered of (module Plugin_types.PLUGIN)
+  | Plugin_not_found of (module Plugin_types.PLUGIN)
 
 exception  Plugin_error of error
 

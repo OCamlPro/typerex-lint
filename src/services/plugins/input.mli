@@ -1,20 +1,17 @@
-module type INPUT = sig
-  val main : 'a -> unit
-end
-
 type input =
-    | AST of (Parsetree.structure -> unit)
-    | CMT of (Cmt_format.cmt_infos -> unit)
-    | SRC of (string list -> unit)
+    | InStruct of (Parsetree.structure -> unit)
+    | InInterf of (Parsetree.signature -> unit)
+    | InTop of (Parsetree.toplevel_phrase -> unit)
+    | InCmt of (Cmt_format.cmt_infos -> unit)
+    | InMl of (string -> unit)
+    | InMli of (string -> unit)
+    | InAll of (string list -> unit)
 
-module type InputAST = sig
-  val main : Parsetree.structure -> unit
-end
-
-module type InputCMT = sig
-  val main : Cmt_format.cmt_infos -> unit
-end
-
-module type InputSRC = sig
-  val main : string list -> unit
-end
+module type INPUT = sig val input : input end
+module type STRUCTURE = sig val main : Parsetree.structure -> unit end
+module type INTERFACE = sig val main : Parsetree.signature -> unit end
+module type TOPLEVEL = sig val main : Parsetree.toplevel_phrase -> unit end
+module type CMT = sig val main : Cmt_format.cmt_infos -> unit end
+module type ML = sig val main : string -> unit end
+module type MLI = sig val main : string -> unit end
+module type ALL = sig val main : string list -> unit end
