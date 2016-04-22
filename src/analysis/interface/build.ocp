@@ -1,0 +1,8 @@
+
+begin library "lint-interface"
+  files = [
+    "interface_missing.ml"
+  ]
+  requires = [ "plugin-lib" "plugins" ]
+  link = [ "-linkall" ]
+end

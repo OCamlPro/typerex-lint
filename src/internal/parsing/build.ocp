@@ -1,0 +1,11 @@
+begin library "parsetree-iter"
+  files = [ "parsetreeIter.ml" ]
+  requires = [ "compiler-libs" ]
+  pp = [ "ocp-pp" ]
+end
+
+(* begin library "parsetree-map" *)
+(*   files = [ "parsetreeMap.ml" ] *)
+(*   requires = [ "compiler-libs" ] *)
+(*   pp = [ "ocp-pp" ] *)
+(* end *)

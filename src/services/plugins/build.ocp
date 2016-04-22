@@ -1,0 +1,17 @@
+begin library "plugin-lib"
+  files = [
+    "input.mli"
+    "warning_types.mli"
+    "lint.mli"
+    "plugin_types.mli"
+    "plugin_error.ml"
+    "warning.ml"
+    "plugin.ml"
+  ]
+  requires = [
+    "compiler-libs.common"
+    "default-config"
+    "parsetree-iter"
+    "plugin-utils"
+ ]
+end

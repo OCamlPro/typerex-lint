@@ -1,138 +1,31 @@
-type t = {
-  (* Analyse code_identifier_length *)
-  code_identifier_len : bool;
-  min_identifier_len : int;
-  max_identifier_len : int;
+module type ConfigArg = sig
+  val filename : string
+end
 
-  (* Analyse code_length *)
-  code_line_length : bool;
-  max_line_len : int;
+module type CONFIG = sig
+  val config_file : SimpleConfig.config_file
+  val simple_args : unit -> (string * Arg.spec * string) list
+  val create_option :
+    string list ->
+    ?short_help:string ->
+    string list ->
+    ?level:int ->
+    'a SimpleConfig.option_class ->
+    'a ->
+    'a SimpleConfig.config_option
+end
 
-  (* Analyse code_identity_let *)
-  code_identity_let : bool;
+module MakeConfig (C: ConfigArg) = struct
+  let config_file = SimpleConfig.create_config_file (File.of_string C.filename)
+  let simple_args () = []
+    (* Uncomment this when ocp-build will be updated *)
+    (* SimpleConfig.LowLevel.simple_args "" config_file *)
 
-(* Analyse XXXX *)
-}
+  let create_option
+      opt_names ?short_help long_help ?level opt_class default_value =
+      SimpleConfig.create_option config_file
+          opt_names ?short_help long_help ?level
+          opt_class default_value
+  end
 
-exception Wrong_field of string
-exception Wrong_type of string
-exception Wrong_format of string
-
-let default = {
-  code_identifier_len = true;
-  min_identifier_len = 2;
-  max_identifier_len = 15;
-
-  code_line_length = true;
-  max_line_len = 80;
-
-  code_identity_let = true;
-}
-
-let safe_bool_of_string field value line_nbr =
-  try bool_of_string value
-  with _ ->
-    let msg =
-      Printf.sprintf
-        "Error in config file at line \'%i\' : %s needs a bool. \'%s\' is not a bool."
-        line_nbr
-        field
-        value in
-    raise (Wrong_type msg)
-
-let safe_int_of_string field value line_nbr =
-  try int_of_string value
-  with _ ->
-    let msg =
-      Printf.sprintf
-        "Error in config file at line \'%i\' : %s needs an int. \'%s\' is not an int."
-        line_nbr
-        field
-        value in
-    raise (Wrong_type msg)
-
-let update_config config field value line_nbr =
-  match field with
-  | "code_identifier_len" ->
-    let b = safe_bool_of_string field value line_nbr in
-    { config with code_identifier_len = b }
-  | "min_identifier_len" ->
-    let i = safe_int_of_string field value line_nbr in
-    { config with min_identifier_len = i }
-  | "max_identifier_len" ->
-    let i = safe_int_of_string field value line_nbr in
-    { config with max_identifier_len = i }
-  | "code_line_length" ->
-    let b = safe_bool_of_string field value line_nbr in
-    { config with code_line_length = b }
-  | "max_line_len" ->
-    let i = safe_int_of_string field value line_nbr in
-    { config with max_line_len = i }
-  | "code_identity_let" ->
-    let b = safe_bool_of_string field value line_nbr in
-    { config with code_line_length = b }
-  | _ ->
-    let msg =
-      Printf.sprintf
-        "Error in config file at line \'%i\' : Unknown field \'%s\'%!"
-        line_nbr
-        field in
-    raise (Wrong_field msg)
-
-let read_field config line line_nbr =
-  (* Is it a comment ? *)
-  try
-    Scanf.sscanf line " (* %s@)" (fun _str -> ());
-    config
-  with _ ->
-  (* Is it a field ? *)
-  try
-    let field, value = Scanf.sscanf line " %s = %s" (fun str v -> str, v) in
-    update_config config field value line_nbr
-  with
-  | End_of_file -> config
-  | (Wrong_type _ as e) | (Wrong_field _ as e) -> raise e
-  | Scanf.Scan_failure msg ->
-    let msg =
-      Printf.sprintf
-        "Error in config file at line %i : format is \'key = value\'%!"
-        line_nbr in
-    raise (Wrong_format msg)
-
-let read_config file =
-  let ic = open_in file in
-  let rec loop config line_nbr =
-    try
-      let line = input_line ic in
-      let config = read_field config line line_nbr in
-      loop config (line_nbr + 1)
-    with End_of_file -> config in
-  loop default 1
-
-let output_config ppf config =
-  Format.fprintf ppf "\n(* Code : Identifier length *)\n";
-  Format.fprintf ppf "%s = %b\n"  "code_identifier_len"
-    config.code_identifier_len;
-  Format.fprintf ppf "%s = %i\n"  "min_identifier_len"
-    config.min_identifier_len;
-  Format.fprintf ppf "%s = %i\n"  "max_identifier_len"
-    config.max_identifier_len;
-
-
-  Format.fprintf ppf "\n(* Code : Code Length *)\n";
-  Format.fprintf ppf "%s = %b\n"  "code_line_length"
-    config.code_line_length;
-  Format.fprintf ppf "%s = %i\n"  "max_line_len"
-    config.max_line_len;
-
-  Format.fprintf ppf "\n(* Code : Identity let *)\n";
-  Format.fprintf ppf "%s = %b\n"  "code_identity_let"
-    config.code_identity_let
-
-
-let dump_config config file =
-  let oc = open_out file in
-  output_config (Format.formatter_of_out_channel oc) config;
-  close_out oc
-
-let print_config config = output_config Format.std_formatter config
+module DefaultConfig : CONFIG = MakeConfig(struct let filename = ".ocplint" end)

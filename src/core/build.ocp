@@ -1,0 +1,9 @@
+
+begin program "ocp-lint"
+  files = [
+    "parallel_engine.ml"
+    "ocplint_actions.ml"
+    "ocplint.ml"
+  ]
+  requires = [ "plugin-lib" "lint-code" "lint-interface" "simple-config"]
+end

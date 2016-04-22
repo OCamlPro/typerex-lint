@@ -1,0 +1,10 @@
+
+begin library "lint-code"
+  files = [
+    "code_identifier_length.ml"
+    "code_length.ml"
+    "code_useless_if.ml"
+  ]
+  requires = [ "plugin-lib" "plugins" ]
+  link = [ "-linkall" ]
+end
