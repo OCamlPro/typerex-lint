@@ -9,7 +9,7 @@ let details =
      Usually, short names implies that the code is harder to read and \
      understand."
 
-module CodeIdentifierLength = Mascot.MakeCheck(struct
+module CodeIdentifierLength = Mascot.MakeLint(struct
     let name = "Code Identifier Length"
     let short_name = "code-identifier-length"
     let details = details
@@ -22,6 +22,7 @@ let min_identifier_length = CodeIdentifierLength.create_option
     "Identifiers with a shorter name will trigger a warning"
     SimpleConfig.int_option
     2
+
 
 let max_identifier_length = CodeIdentifierLength.create_option
      "max_identifier_length"
@@ -82,13 +83,7 @@ let iter =
   end in
   (module IterArg : ParsetreeIter.IteratorArgument)
 
-let iter_ast iterator ast =
-  let open ParsetreeIter in
-  let module IA = (val iterator : ParsetreeIter.IteratorArgument) in
-  let module I = (ParsetreeIter.MakeIterator(IA)) in
-  I.iter_structure ast
-
 (* Registering a main entry to the linter *)
-module MainAST = CodeIdentifierLength.MakeInputAST(struct
-    let main ast = iter_ast iter ast
+module MainML = CodeIdentifierLength.MakeInputStructure(struct
+    let main ast = ParsetreeIter.iter_structure iter ast
   end)
