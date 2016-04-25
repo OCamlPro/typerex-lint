@@ -1,0 +1,37 @@
+comp += [ "-w" "+A-4" ]
+
+begin library "ocp-sempatch"
+    dirname = "lib"
+    files = [
+      "std_utils.ml"
+      "res.ml"
+      "variables.ml"
+      "parsing/parsed_patches.ml"
+      "parsing/raw_patch.ml"
+      "ast_maybe_mapper2.ml"
+      "ast_pattern_matcher.ml"
+      "parsing/code_lexer.mll"
+      "parsing/code_parser.mly"
+      "parsing/patch_lexer.mll"
+      "parsing/patch_parser.mly"
+      "sempatch.mli"
+      "sempatch.ml"
+    ]
+    requires = [
+        "compiler-libs"
+        "compiler-libs.common"
+    ]
+    ocamlyacc = "menhir"
+end
+
+begin program "sempatch-test"
+    files = [
+      "test/sempatch-runner.ml"
+    ]
+    requires = [
+        "ocp-sempatch"
+    ]
+
+    test_args = [ "test/sempatch.md" ]
+    tests = [ "test" ]
+end
