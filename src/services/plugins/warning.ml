@@ -15,8 +15,7 @@ let kind_to_string = function
   | Custom kind -> kind
 
 (* Warning Set *)
-module WarningSet = Set.Make (
-  struct
+module WarningSet = Set.Make (struct
     type t = warning
     let compare = Pervasives.compare
   end)
@@ -25,14 +24,14 @@ type t = WarningSet.t ref
 
 let empty = ref WarningSet.empty
 
-let add loc id kinds short_name message wset =
-  let warning = { id; kinds; short_name; message; loc } in
-  wset := WarningSet.add warning !wset
-
 let add_warning warning wset =
   wset := WarningSet.add warning !wset
 
-let iter f s = WarningSet.iter f !s
+let add loc id kinds short_name message wset =
+  let warning = { id; kinds; short_name; message; loc } in
+  add_warning warning wset
+
+let iter f wset = WarningSet.iter f !wset
 
 let print ppf warning =
   let kinds = String.concat " " (List.map kind_to_string warning.kinds) in
