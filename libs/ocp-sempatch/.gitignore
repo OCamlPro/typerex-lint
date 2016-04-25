@@ -15,6 +15,9 @@
 # ocamlbuild working directory
 _build/
 
+# ocp-build working directory
+_obuild/
+
 # ocamlbuild targets
 *.byte
 *.native
