@@ -31,13 +31,13 @@ let add loc id kinds short_name message wset =
   let warning = { id; kinds; short_name; message; loc } in
   add_warning warning wset
 
+let length wset = WarningSet.cardinal !wset
+
 let iter f wset = WarningSet.iter f !wset
 
 let print ppf warning =
-  let kinds = String.concat " " (List.map kind_to_string warning.kinds) in
   if warning.loc <> Location.none then
     Format.fprintf ppf "%a" Location.print warning.loc;
 
-  Format.fprintf ppf "   id: %d\n   kinds: [%s]\n   short: %s\n   msg: %s  \n%!"
-    warning.id kinds warning.short_name warning.message;
+  Format.fprintf ppf "  %s" warning.message;
   Format.fprintf ppf "@."

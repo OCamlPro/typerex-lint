@@ -30,6 +30,9 @@ val add :
 (** [add_warning warning wset] adds the warning [warning] to [wset]. *)
 val add_warning : Warning_types.warning -> t -> unit
 
+(** [length wset] returns the size of [wset].  *)
+val length : t -> int
+
 (** [iter f wset] applies [f] in turn to all elements of [wset]. The elements of
     [wset] are presented to [f] in increasing order with respect to the ordering
     over the type of elements. *)

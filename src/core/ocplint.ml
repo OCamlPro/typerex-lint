@@ -5,6 +5,7 @@ type action =
 | ActionLoad of string
 
 let action = ref ActionNone
+let exit_status = ref 0
 
 let set_action new_action =
    if !action <> ActionNone then
@@ -27,6 +28,9 @@ let core_args_spec = Arg.align [
 
     "--list-warnings", Arg.Unit (fun () -> set_action ActionList),
     " List of warnings";
+    "--warn-error", Arg.Unit (fun () ->
+        exit_status := 1),
+    " List of warnings";
   ]
 
 let main () =
@@ -45,7 +49,11 @@ let main () =
 
   match !action with
   | ActionLoad dir ->
-    Ocplint_actions.scan ~filters:"" dir
+    Ocplint_actions.scan ~filters:"" dir;
+    Plugin.iter_plugins (fun plugin checks ->
+      let module P = (val plugin : Plugin_types.PLUGIN) in
+      if Warning.length P.warnings > 0 then exit !exit_status);
+    exit 0 (* No warning, we can exit successfully *)
   | ActionList ->
     exit 0
   | ActionNone ->

@@ -26,20 +26,28 @@ let lint all mls mlis asts_ml asts_mli cmts =
     mlis;
 
   (* Itering on Parsetree.structure *)
-  List.iter (fun input ->
+  List.iter (function input ->
       Plugin.iter_plugins (fun plugin checks ->
           Plugin.LintMap.iter (fun cname runs ->
               List.iter (function
-                  | Input.InStruct main -> main (Lazy.force input)
+                  | Input.InStruct main ->
+                    begin match Lazy.force input with
+                      | None -> ()
+                      | Some input ->  main input
+                    end
                   | _ -> ()) runs) checks))
     asts_ml;
 
   (* Itering on Parsetree.signature *)
-  List.iter (fun input ->
+  List.iter (function input ->
       Plugin.iter_plugins (fun plugin checks ->
           Plugin.LintMap.iter (fun cname runs ->
               List.iter (function
-                  | Input.InInterf main -> main (Lazy.force input)
+                  | Input.InInterf main ->
+                    begin match Lazy.force input with
+                      | None -> ()
+                      | Some input ->  main input
+                    end
                   | _ -> ()) runs) checks))
     asts_mli;
 

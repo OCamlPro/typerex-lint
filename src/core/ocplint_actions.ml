@@ -1,14 +1,20 @@
+open SimpleConfig
+module GConfig = Configuration.DefaultConfig
 
-type source_kind = All | Source | Interface | Cmt | Config
+let ignored_modules = GConfig.create_option
+    ["ignored_module"]
+    ~short_help:"Module to ignore during the lint."
+    ["Module to ignore during the lint."]
+    ~level:0
+    (SimpleConfig.list_option SimpleConfig.string_option)
+    [
+      "src/internal/parsing/parsetreeMap.ml";
+      "src/internal/parsing/parsetreeIter.ml";
+      "src/internal/typing/typedtreeMap.ml";
+      "src/internal/typing/typedtreeIter.ml"
+    ]
 
-let string_of_source_kind = function
-  | All -> "all files"
-  | Source -> "ml files"
-  | Interface -> "mli files"
-  | Cmt -> "cmt* files"
-  | Config -> "configuration file"
-
-let iter_files ?(recdir=true) f dirname =
+let iter_files ?(recdir=true) apply dirname =
   let rec iter dirname dir =
     let files = Sys.readdir (Filename.concat dirname dir) in
     Array.iter (fun file ->
@@ -16,59 +22,67 @@ let iter_files ?(recdir=true) f dirname =
         if Sys.is_directory (Filename.concat dirname file) then begin
           if recdir then iter dirname file
         end else
-          f file)
+          apply file)
       files
   in
   iter dirname ""
 
-let scan_project ?(kind=Source) path = (* todo *)
-  Format.eprintf "Scanning %S in project %S...\n%!"
-    (string_of_source_kind kind) path;
+let scan_project path = (* todo *)
+  Format.printf "Scanning files in project %S...\n%!" path;
   let found_files =
     let files = ref [] in
     iter_files (fun file ->
-        if (kind = All) ||
-           (kind = Source && Filename.check_suffix file "ml") ||
-           (kind = Interface && Filename.check_suffix file "mli")  ||
-           (kind = Cmt && Filename.check_suffix file "cmt") ||
-           (kind = Config && Filename.check_suffix file "conf")
-        then
-          files := (Filename.concat path file) :: !files) path;
+        files := (Filename.concat path file) :: !files) path;
     !files in
-  Format.eprintf "Found '%d' file(s)\n%!" (List.length found_files);
+  Format.printf "Found '%d' file(s)\n%!" (List.length found_files);
   found_files
-
-let scan_all path = scan_project ~kind:All path
-
-let scan_sources ?(kind=Source) path = scan_project ~kind path
-
-let scan_cmts path =
-  let files = scan_project ~kind:Cmt path in
-  List.map (fun file -> lazy (Cmt_format.read_cmt file)) files
 
 let filter_plugins filters =
   (* TODO: xxx filter options in command-line or configuration file *)
   Plugin.plugins
 
+let filter_modules sources filters =
+  List.filter (fun source ->
+      not (List.exists (fun f -> f = source) filters)) sources
+
 let parse_source source =
-  Pparse.parse_implementation ~tool_name:"" Format.err_formatter source
+  try
+    Some
+      (Pparse.parse_implementation ~tool_name:"" Format.err_formatter  source)
+  with Syntaxerr.Error _ ->
+    Printf.printf "Cannot lint %S.\n" source;
+    None
 
 let parse_interf source =
-  Pparse.parse_interface ~tool_name:"" Format.err_formatter source
+  try
+    Some (Pparse.parse_interface ~tool_name:"" Format.err_formatter source)
+  with Syntaxerr.Error _ ->
+    Printf.printf "Cannont lint %S.\n" source;
+    None
+
+let is_source file = Filename.check_suffix file "ml"
+let is_interface file = Filename.check_suffix file "mli"
+let is_cmt file = Filename.check_suffix file "cmt"
+let is_cmt file = Filename.check_suffix file "cmt"
 
 let scan ~filters path =
   (* XXX TODO : don't forget to read config file too ! *)
   (* let plugins = filter_plugins filters in *)
 
-  let all = scan_all path in
-  (* All inputs for each analyze *)
-  let mls, mlis = scan_sources path, scan_sources ~kind:Interface path in
+  let all = filter_modules (scan_project path) !!ignored_modules in
 
-  let cmts = scan_cmts path in
+  (* All inputs for each analyze *)
+  let mls = List.filter (fun file -> is_source file) all in
+  let mlis = List.filter (fun file -> is_interface file) all in
+
+  let cmts =
+    let files = List.filter (fun file -> is_cmt file) all in
+    List.map (fun file -> lazy (Cmt_format.read_cmt file)) files in
+
   let asts_ml, asts_mli =
     List.map (fun file -> lazy (parse_source file)) mls,
     List.map (fun file -> lazy (parse_interf file)) mlis in
 
-  Printf.eprintf "Starting analyses...\n%!";
+  Format.printf "Starting analyses...\n%!";
 
   Parallel_engine.lint all mls mlis asts_ml asts_mli cmts
