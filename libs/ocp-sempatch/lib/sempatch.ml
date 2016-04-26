@@ -18,3 +18,9 @@ let apply patch expression =
   Ast_pattern_matcher.apply patch expression
   |> Res.map fst
   |> Res.unwrap
+
+let get_matches patch expression =
+  Ast_pattern_matcher.apply patch expression
+  |> Res.map snd
+  |> Res.unwrap
+  |> (fun x -> x.Variables.matches)

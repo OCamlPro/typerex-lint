@@ -22,3 +22,8 @@ val mk : Parsed_patches.body -> Parsed_patches.header -> t
    Apply the patch to the expression and return the resulting expression
 *)
 val apply : t -> Parsetree.expression -> Parsetree.expression
+
+(**
+   Return all the matches on the given expression
+*)
+val get_matches : t -> Parsetree.expression -> (Variables.env * Location.t) list
