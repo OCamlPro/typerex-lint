@@ -3,7 +3,12 @@ open SimpleConfig (* for !! *)
 (* We will register this linter to the Mascot plugin. *)
 module Mascot = Plugin_mascot.PluginMascot
 
-let details = "Checks long lines in your code. The default value is 80."
+let default_value = 80
+
+let details =
+  Printf.sprintf
+    "Checks long lines in your code. The default value is %d."
+    default_value
 
 module CodeLength = Mascot.MakeLint(struct
     let name = "Code Length"
@@ -16,7 +21,8 @@ let max_line_length = CodeLength.create_option
     "max_line_length"
     "Maximum line length"
     "Maximum line length"
-    SimpleConfig.int_option 80
+    SimpleConfig.int_option
+    default_value
 
 type warning = LongLine of int
 

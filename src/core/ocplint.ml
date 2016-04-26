@@ -42,8 +42,8 @@ let main () =
       Globals.plugins core_args_spec in
 
   Arg.parse all_args
-    (fun s ->
-       Printf.printf "Error: don't know what to do with %s\n%!" s;
+    (fun cmd ->
+       Printf.printf "Error: don't know what to do with %s\n%!" cmd;
        exit 1)
     usage_msg;
 

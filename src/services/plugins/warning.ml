@@ -33,7 +33,7 @@ let add loc id kinds short_name message wset =
 
 let length wset = WarningSet.cardinal !wset
 
-let iter f wset = WarningSet.iter f !wset
+let iter apply wset = WarningSet.iter apply !wset
 
 let print ppf warning =
   if warning.loc <> Location.none then

@@ -20,13 +20,8 @@ let register_main plugin cname main =
   with Not_found ->
     raise (Plugin_error(Plugin_not_found plugin))
 
-let iter_plugins f =
-  Hashtbl.iter (fun pname checks ->
-      Globals.LintMap.iter (fun cname runs -> f pname cname runs) checks)
-    Globals.plugins
-
-let iter_plugins f =
-  Hashtbl.iter (fun plugin checks -> f plugin checks) Globals.plugins
+let iter_plugins apply =
+  Hashtbl.iter (fun plugin checks -> apply plugin checks) Globals.plugins
 
 module MakePlugin(P : Plugin_types.PluginArg) = struct
 

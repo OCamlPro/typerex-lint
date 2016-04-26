@@ -3,11 +3,18 @@ open SimpleConfig (* for !! *)
 (* We will register this linter to the Mascot plugin. *)
 module Mascot = Plugin_mascot.PluginMascot
 
+let default_max = 30
+let default_min = 2
+
 let details =
   Printf.sprintf
     "Checks that every identifier has a minimum and a maximum length. \
      Usually, short names implies that the code is harder to read and \
-     understand."
+     understand. \n \
+     The default value for short identifier is %d and for the long identifier \
+     is %d.\n"
+    default_min
+    default_max
 
 module CodeIdentifierLength = Mascot.MakeLint(struct
     let name = "Code Identifier Length"
@@ -21,14 +28,14 @@ let min_identifier_length = CodeIdentifierLength.create_option
     "Identifiers with a shorter name will trigger a warning"
     "Identifiers with a shorter name will trigger a warning"
     SimpleConfig.int_option
-    2
-
+    default_min
 
 let max_identifier_length = CodeIdentifierLength.create_option
      "max_identifier_length"
     "Identifiers with a longer name will trigger a warning"
     "Identifiers with a longer name will trigger a warning"
-    SimpleConfig.int_option 30
+    SimpleConfig.int_option
+    default_max
 
 type warnings = Short of string | Long of string
 

@@ -4,6 +4,6 @@ let subsitute str substs =
     | [] -> str
     | (pattern, replace) :: others ->
       let str =
-        Str.global_substitute (Str.regexp pattern) (fun s -> replace) str in
+        Str.global_substitute (Str.regexp pattern) (fun _ -> replace) str in
       loop str others in
   loop str substs

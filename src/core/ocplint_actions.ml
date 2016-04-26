@@ -37,7 +37,7 @@ let filter_plugins filters =
 
 let filter_modules sources filters =
   List.filter (fun source ->
-      not (List.exists (fun f -> f = source) filters)) sources
+      not (List.exists (fun ignored -> ignored = source) filters)) sources
 
 let parse_source source =
   try
