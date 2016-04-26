@@ -15,8 +15,6 @@ let parse_body chan =
 let mk body header = Parsed_patches.({ body; header; })
 
 let apply patch expression =
-  let patch = Parsed_patches.preprocess patch
-  and expression = Parsed_patches.preprocess_src_expr expression
-  in
   Ast_pattern_matcher.apply patch expression
-  |> Parsed_patches.postprocess
+  |> Res.map fst
+  |> Res.unwrap

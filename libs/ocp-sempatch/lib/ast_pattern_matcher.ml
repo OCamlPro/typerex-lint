@@ -156,8 +156,13 @@ let apply patch expr =
     | Some expr -> apply_to_expr env ~expr ~patch >|= (fun (expr, env) -> Some expr, env)
     | None -> Ok (None, env)
 
-  in apply_to_expr Variables.empty ~expr ~patch:Parsed_patches.(patch.body)
-     |> Error.map fst
-     |> Error.map_err fst
-     |> (function Ok x -> x | Error x -> x)
+  in
+  let expr = Parsed_patches.preprocess_src_expr expr
+  and patch = Parsed_patches.preprocess patch
+  in
+  apply_to_expr Variables.empty ~expr ~patch:Parsed_patches.(patch.body)
+  |> Res.map (fun (tree, env) -> Parsed_patches.postprocess tree, env)
+     (* |> Error.map fst *)
+     (* |> Error.map_err fst *)
+     (* |> (function Ok x -> x | Error x -> x) *)
 
