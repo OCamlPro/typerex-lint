@@ -47,8 +47,8 @@ variables: l, e1, e2
 # function
 ```
 function
-  | foo -> 1
+  | foo -> true
   | bar ->
--    1
-+    0
+-    true
++    false
 ```

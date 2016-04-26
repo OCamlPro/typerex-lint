@@ -87,6 +87,13 @@ let map_expr merge self env ~patch ~expr =
       >|= (fun (exprs, env) ->
           Pexp_tuple exprs, env
         )
+
+  | Pexp_construct (identl, exprl), Pexp_construct (identr, exprr) when identl.Asttypes.txt = identr.Asttypes.txt ->
+    map_maybe_expr merge self env exprl exprr
+    >|= (fun (mapped_expr, env_expr) ->
+        Pexp_construct (identl, mapped_expr), env_expr
+      )
+
   | Pexp_apply (f1, [lbl1, arg1]), Pexp_apply (f2, [_lbl2, arg2]) ->
     self.expr self env ~expr:f1 ~patch:f2
     >>= (fun (mapped_f, env_f) -> 
@@ -137,6 +144,7 @@ let map_expr merge self env ~patch ~expr =
   | Pexp_apply _, _ | _, Pexp_apply _
   | Pexp_ident _, _ | _, Pexp_ident _
   | Pexp_constant _, _ | _, Pexp_constant _
+  | Pexp_construct _, _ | _, Pexp_construct _
     -> Error (e.pexp_desc, env)
   | _ -> failwith "Non implemented"
   in Res.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc

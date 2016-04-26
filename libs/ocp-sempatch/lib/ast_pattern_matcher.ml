@@ -126,6 +126,12 @@ let apply patch expr =
             Pexp_function mapped_cases, [ env_cases ]
           )
 
+      | Pexp_construct (ident, expr) ->
+        apply_to_maybe_expr env patch expr
+        >|= (fun (mapped_expr, env_expr) ->
+            Pexp_construct (ident, mapped_expr), [env_expr]
+          )
+
       | _ ->
         Pprintast.expression Format.std_formatter expr;
         Format.print_newline ();
