@@ -3,6 +3,6 @@ interface, metrics, and typography)."
 
 module PluginMascot = Plugin.MakePlugin (struct
     let name = "Mascot"
-    let short_name = "plugin-mascot"
+    let short_name = "plugin_mascot"
     let details = details
   end)

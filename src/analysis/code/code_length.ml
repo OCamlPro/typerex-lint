@@ -7,15 +7,15 @@ let details = "Checks long lines in your code. The default value is 80."
 
 module CodeLength = Mascot.MakeLint(struct
     let name = "Code Length"
-    let short_name = "code-length"
+    let short_name = "code_length"
     let details = details
   end)
 
 (* Defining/Using option from configuration file / command line *)
 let max_line_length = CodeLength.create_option
-     "max_line_length"
-     "Maximum line length"
-     "Maximum line length"
+    "max_line_length"
+    "Maximum line length"
+    "Maximum line length"
     SimpleConfig.int_option 80
 
 type warning = LongLine of int
@@ -27,7 +27,7 @@ module Warnings = CodeLength.MakeWarnings(struct
         loc
         1
         [ Warning.kind_code ]
-        ~short_name:"long-line"
+        ~short_name:"long_line"
         ~msg:"This line is too long ('%line'): it should be at most of size '%max'."
         ~args
 

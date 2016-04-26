@@ -11,13 +11,13 @@ let details =
 
 module CodeIdentifierLength = Mascot.MakeLint(struct
     let name = "Code Identifier Length"
-    let short_name = "code-identifier-length"
+    let short_name = "code_identifier_length"
     let details = details
   end)
 
 (* Defining/Using option from configuration file / command line *)
 let min_identifier_length = CodeIdentifierLength.create_option
-    "min-identifier-length"
+    "min_identifier_length"
     "Identifiers with a shorter name will trigger a warning"
     "Identifiers with a shorter name will trigger a warning"
     SimpleConfig.int_option
@@ -39,7 +39,7 @@ module Warnings = CodeIdentifierLength.MakeWarnings(struct
         loc
         1
         [ Warning.kind_code ]
-        ~short_name:"identifier-too-short"
+        ~short_name:"identifier_too_short"
         ~msg:"%id is too short: it should be at least of size '%size'."
         ~args
 
@@ -47,7 +47,7 @@ module Warnings = CodeIdentifierLength.MakeWarnings(struct
         loc
         2
         [ Warning.kind_code ]
-        ~short_name:"identifier-too-long"
+        ~short_name:"identifier_too_long"
         ~msg:"%id is too long: it should be at most of size '%size'."
         ~args
 
