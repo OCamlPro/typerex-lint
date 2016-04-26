@@ -211,6 +211,10 @@ let lint ast =
            Warnings.report loc (Inlined_function "Str.first_chars")
          | "Inlined function Str.string_after" ->
            Warnings.report loc (Inlined_function "Str.string_after")
+         | "Inlined function incr" ->
+           Warnings.report loc (Inlined_function "incr")
+         | "Inlined function decr" ->
+           Warnings.report loc (Inlined_function "decr")
          | "Empty list test <>" ->
            Warnings.report loc (Empty_list_test "<>")
          | "Empty list test =" ->
@@ -219,10 +223,6 @@ let lint ast =
          | "Comparison to boolean = false" | "Comparison to boolean == false"
          | "Comparison to boolean <> true" | "Comparison to boolean != false" ->
            Warnings.report loc Comparison_to_boolean
-         | "Abstract apply" ->
-           Warnings.report loc Abstract_apply
-         | "Module name not snake case" ->
-           Warnings.report loc (Module_name_not_snake_case "TODO")
          | "Constant if" ->
            Warnings.report loc Constant_if
          | "Constant match" ->
@@ -245,8 +245,14 @@ let lint ast =
            Warnings.report loc (Module_type_name_not_uppercase "TODO")
          | "Sys break implicitly caught" ->
            Warnings.report loc Sys_break_implicitly_caught
+
+         | "Module name not snake case" -> (* ??? *)
+           Warnings.report loc (Module_name_not_snake_case "TODO")
+         | "Abstract apply" ->          (* ??? *)
+           Warnings.report loc Abstract_apply
          | "Partial function" ->        (* ???? *)
            Warnings.report loc (Partial_function "TODO")
+
          | patch_name ->
            Warnings.report loc (Generic_warning patch_name)
 
