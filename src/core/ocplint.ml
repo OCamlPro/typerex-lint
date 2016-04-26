@@ -30,7 +30,7 @@ let core_args_spec = Arg.align [
     " List of warnings";
     "--warn-error", Arg.Unit (fun () ->
         exit_status := 1),
-    " List of warnings";
+    " Every warning returns an error status code.";
   ]
 
 let main () =
