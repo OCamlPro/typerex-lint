@@ -79,7 +79,7 @@ let preprocess { header; body} =
   and meta_bindings_in_pre_patch = ref []
   and metas_in_post_patch = ref []
   in
-  let mkmapper in_replacement =
+  let rec mkmapper in_replacement =
     { default_mapper
       with
         expr = (fun self e ->
@@ -87,10 +87,10 @@ let preprocess { header; body} =
               match e.pexp_desc with
               | Pexp_ident ({ Asttypes.txt = Longident.Lident v; _ }) when List.mem v header.meta_expr ->
                 let new_var = v in
-                (* if not in_replacement && List.mem new_var !meta_exprs_in_pre_patch then *)
-                (*   (* For the moment, don't allow meta expressions to appear more than once in a patch *) *)
-                (*   raisePatchError ("The variable " ^ v ^ " appears more than once in the patch") *)
-                (* else *)
+                if not in_replacement && List.mem new_var !meta_exprs_in_pre_patch then
+                  (* For the moment, don't allow meta expressions to appear more than once in a patch *)
+                  raisePatchError ("The variable " ^ v ^ " appears more than once in the patch")
+                else
                   (
                     let processed_vars = if in_replacement then metas_in_post_patch else meta_exprs_in_pre_patch in
                     processed_vars := new_var :: !processed_vars;
@@ -114,6 +114,12 @@ let preprocess { header; body} =
               | _ -> pat
             in default_mapper.pat self new_pattern
           );
+        attribute = (fun self (name, payload) ->
+            if name.Asttypes.txt = "__sempatch_replace" then
+              let mapper= mkmapper true in
+              name, mapper.payload mapper payload
+            else default_mapper.attribute self (name, payload)
+          )
     }
   in
   let map expr =
