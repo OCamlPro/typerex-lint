@@ -1,0 +1,12 @@
+#!/bin/sh
+
+LINT=_obuild/ocp-lint/ocp-lint.asm
+
+$LINT --warn-error --project src > /dev/null
+
+if [ "$?" = 0 ]; then
+    exit 0
+else
+    echo "\n/!\\ Please fix the warnings before commiting./!\\"
+    exit 1
+fi

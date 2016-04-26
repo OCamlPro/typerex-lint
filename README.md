@@ -27,6 +27,19 @@ make install
 to install `ocp-lint` on your system.
 
 ## Running
+### Pre-commit hook
+To use `ocp-lint` as a pre-commit hook, first compile and install `ocp-lint`:
+
+    $ ./configure
+    $ make
+    $ make install
+
+Then copy the file `scripts/pre-commit-lint`
+in your `.git/hooks/` directory. The argument `--warn-error` is activated by
+default.
+
+This script will execute `ocp-lint` with the default configuration. You can also
+create a `.ocplint` file in your project and configure it according to your needs.
 
 ## Configuration File
 
