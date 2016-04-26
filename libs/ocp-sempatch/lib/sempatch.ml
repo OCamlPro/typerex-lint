@@ -4,6 +4,7 @@ let from_channel chan =
   Patch_parser.sempatch
     (Patch_lexer.read_all)
     (Lexing.from_channel chan)
+  |> StringMap.from_list_pair
 
 let parse_body chan =
   Code_parser.code
@@ -11,7 +12,7 @@ let parse_body chan =
     (Lexing.from_channel chan)
   |> Raw_patch.to_patch_body
 
-let mk name body header = Parsed_patches.({ name; body; header; })
+let mk body header = Parsed_patches.({ body; header; })
 
 let apply patch expression =
   let patch = Parsed_patches.preprocess patch
@@ -19,5 +20,3 @@ let apply patch expression =
   in
   Ast_pattern_matcher.apply patch expression
   |> Parsed_patches.postprocess
-
-let get_name patch = patch.Parsed_patches.name

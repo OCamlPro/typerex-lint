@@ -10,7 +10,6 @@ type header = {
 type body = Parsetree.expression
 
 type t = {
-  name: id;
   header: header;
   body: body;
 }
@@ -74,7 +73,7 @@ let uncurryfying_mapper =
 
     Currently, this just means curryfiying the world
 *)
-let preprocess { name; header; body} =
+let preprocess { header; body} =
   let open Ast_mapper in
   let meta_exprs_in_pre_patch  = ref []
   and meta_bindings_in_pre_patch = ref []
@@ -124,7 +123,7 @@ let preprocess { name; header; body} =
   let processed_before_patch = map body
   in
   testInclusion !metas_in_post_patch (List.append !meta_bindings_in_pre_patch !meta_exprs_in_pre_patch);
-  { name; header = { meta_expr = !meta_exprs_in_pre_patch; meta_bindings = !meta_bindings_in_pre_patch; }; body = processed_before_patch; }
+  { header = { meta_expr = !meta_exprs_in_pre_patch; meta_bindings = !meta_bindings_in_pre_patch; }; body = processed_before_patch; }
 
 let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper
 

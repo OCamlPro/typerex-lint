@@ -21,16 +21,18 @@ let expr_to_string e =
 
 let test patches (ast, expected_results) =
   let parsed_ast = string_to_expr ast in
-  List.map (fun patch ->
+  StringMap.fold (fun patch_name patch accu ->
     List.map (fun (name, expected) ->
-        if (name = Sempatch.get_name patch) then
+        if (name = patch_name) then
           let result = expr_to_string (Sempatch.apply patch parsed_ast) in
           Option.some_if (expected <> result) (name, result)
         else None
         )
     expected_results
+    :: accu
   )
   patches
+  []
   |> List.flatten
 
 let () =

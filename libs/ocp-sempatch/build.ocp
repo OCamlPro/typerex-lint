@@ -4,6 +4,7 @@ begin library "ocp-sempatch"
     dirname = "lib"
     files = [
       "std_utils.ml"
+      "stringMap.ml"
       "res.ml"
       "variables.ml"
       "parsing/parsed_patches.ml"

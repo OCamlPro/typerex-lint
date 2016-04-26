@@ -11,14 +11,14 @@
 %token HASH
 %token VARIABLE_KW
 
-%start <Parsed_patches.t list> sempatch
+%start <(string * Parsed_patches.t) list> sempatch
 %%
 
 sempatch:
   | patches = list(patch) EOF { patches }
 
 patch:
-  | name = patch_name; header = patch_header; body = patch_body { let open Parsed_patches in {name; header; body} }
+  | name = patch_name; header = patch_header; body = patch_body { let open Parsed_patches in name, {header; body} }
 
 patch_name:
   | HASH name = ID EOL { name }

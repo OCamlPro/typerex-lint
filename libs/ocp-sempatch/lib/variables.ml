@@ -7,7 +7,7 @@ type v =
   | Expression of expression_desc
   | Ident of string
 
-module M = Map.Make(String)
+module M = StringMap
 
 type t = {
   env : v M.t;
