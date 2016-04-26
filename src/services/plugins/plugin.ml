@@ -36,7 +36,6 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     let short_name = short_name
     let details = details
     let warnings = warnings
-    module Config = Config
   end
   let plugin = (module Plugin : Plugin_types.PLUGIN)
 
