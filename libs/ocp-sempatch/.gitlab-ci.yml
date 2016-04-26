@@ -15,5 +15,6 @@ build:
         opam init default /var/cache/opam-repository
       fi
     - eval $(opam config env)
-    - opam install ocp-build
-    - ocp-build test
+    - opam install ocp-build menhir
+    - ocp-build init
+    - ocp-build tests
