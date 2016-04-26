@@ -38,8 +38,8 @@ let main () =
   let all_args =
     Hashtbl.fold (fun plugin _ args ->
         let module Plugin = (val plugin : Plugin_types.PLUGIN) in
-        Plugin.Config.simple_args () @ args)
-      Plugin.plugins core_args_spec in
+        Globals.Config.simple_args () @ args)
+      Globals.plugins core_args_spec in
 
   Arg.parse all_args
     (fun s ->

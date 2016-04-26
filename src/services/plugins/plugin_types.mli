@@ -5,7 +5,6 @@ module type PluginArg = sig
 end
 
 module type PLUGIN = sig
-  module Config : Configuration.CONFIG
   val name : string
   val short_name : string
   val details : string

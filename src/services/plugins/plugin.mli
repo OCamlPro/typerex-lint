@@ -1,23 +1,10 @@
-(** [LintMap] is a Map containing all information about the linter.
-    The key is a [string] representing the linter name, and the value of the
-    map contains a list of [input] (registered mains). *)
-module LintMap : sig
-  type 'a t
-  type key = string
-  val iter : (key -> 'a -> unit) -> 'a t -> unit
-end
-
-(** [plugins] is a global data structure where all plugins are registered.
-    The keys of the structure are a [Plugin_types.PLUGIN] and the value are
-    a [LintMap.t]. *)
-val plugins :
-  ((module Plugin_types.PLUGIN), (Input.input list) LintMap.t) Hashtbl.t
 
 (** [iter_plugins f] applies f to all bindings in the global data structure
     [plugins]. [f] receives the [plugin] as first argument and the [LintMap.t]
     associated to this plugin as second. *)
 val iter_plugins :
-  ((module Plugin_types.PLUGIN) -> (Input.input list) LintMap.t -> unit) ->
+  ((module Plugin_types.PLUGIN) ->
+   (Input.input list) Globals.LintMap.t -> unit) ->
   unit
 
 
@@ -27,10 +14,6 @@ val iter_plugins :
     [MakeLint]. *)
 module MakePlugin : functor (Plugin : Plugin_types.PluginArg) ->
 sig
-
-  (** [Config] is a module which allow to create options for the configuration
-   file and command-line arguments. *)
-  module Config : Configuration.CONFIG
 
   (** The name of the plugin.  *)
   val name : string

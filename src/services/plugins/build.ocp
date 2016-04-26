@@ -1,5 +1,6 @@
 begin library "plugin-lib"
   files = [
+    "globals.ml"
     "input.mli"
     "warning_types.mli"
     "lint.mli"

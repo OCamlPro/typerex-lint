@@ -1,18 +1,12 @@
 open SimpleConfig
-module GConfig = Configuration.DefaultConfig
 
-let ignored_modules = GConfig.create_option
-    ["ignored_module"]
+let ignored_files = Globals.Config.create_option
+    ["ignored_files"]
     ~short_help:"Module to ignore during the lint."
     ["Module to ignore during the lint."]
     ~level:0
     (SimpleConfig.list_option SimpleConfig.string_option)
-    [
-      "src/internal/parsing/parsetreeMap.ml";
-      "src/internal/parsing/parsetreeIter.ml";
-      "src/internal/typing/typedtreeMap.ml";
-      "src/internal/typing/typedtreeIter.ml"
-    ]
+    []
 
 let iter_files ?(recdir=true) apply dirname =
   let rec iter dirname dir =
@@ -39,7 +33,7 @@ let scan_project path = (* todo *)
 
 let filter_plugins filters =
   (* TODO: xxx filter options in command-line or configuration file *)
-  Plugin.plugins
+  Globals.plugins
 
 let filter_modules sources filters =
   List.filter (fun source ->
@@ -69,7 +63,7 @@ let scan ~filters path =
   (* XXX TODO : don't forget to read config file too ! *)
   (* let plugins = filter_plugins filters in *)
 
-  let all = filter_modules (scan_project path) !!ignored_modules in
+  let all = filter_modules (scan_project path) !!ignored_files in
 
   (* All inputs for each analyze *)
   let mls = List.filter (fun file -> is_source file) all in

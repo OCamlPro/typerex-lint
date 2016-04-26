@@ -1,38 +1,34 @@
 open Plugin_error
 
-module LintMap = Map.Make (String)
-
-let plugins = Hashtbl.create 42
-
 let register_plugin plugin =
   try
-    let _ = Hashtbl.find plugins plugin in
+    let _ = Hashtbl.find Globals.plugins plugin in
     raise (Plugin_error(Plugin_already_registered plugin))
   with Not_found ->
-    Hashtbl.add plugins plugin LintMap.empty
+    Hashtbl.add Globals.plugins plugin Globals.LintMap.empty
 
 let register_main plugin cname main =
   try
-    let lints = Hashtbl.find plugins plugin in
+    let lints = Hashtbl.find Globals.plugins plugin in
     try
-      let runs = LintMap.find cname lints in
-      let new_lints = LintMap.add cname (main :: runs) lints in
-      Hashtbl.replace plugins plugin new_lints
+      let runs = Globals.LintMap.find cname lints in
+      let new_lints = Globals.LintMap.add cname (main :: runs) lints in
+      Hashtbl.replace Globals.plugins plugin new_lints
     with Not_found ->
-      Hashtbl.replace plugins plugin (LintMap.add cname [main] lints)
+      Hashtbl.replace
+        Globals.plugins plugin (Globals.LintMap.add cname [main] lints)
   with Not_found ->
     raise (Plugin_error(Plugin_not_found plugin))
 
 let iter_plugins f =
   Hashtbl.iter (fun pname checks ->
-      LintMap.iter (fun cname runs -> f pname cname runs) checks)
-    plugins
+      Globals.LintMap.iter (fun cname runs -> f pname cname runs) checks)
+    Globals.plugins
 
 let iter_plugins f =
-  Hashtbl.iter (fun plugin checks -> f plugin checks) plugins
+  Hashtbl.iter (fun plugin checks -> f plugin checks) Globals.plugins
 
 module MakePlugin(P : Plugin_types.PluginArg) = struct
-  module Config = Configuration.DefaultConfig
 
   let name = P.name
   let short_name = P.short_name
@@ -50,7 +46,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
   let plugin = (module Plugin : Plugin_types.PLUGIN)
 
   let create_option options short_help lhelp ty default =
-    Config.create_option options ~short_help [lhelp] ~level:0 ty default
+    Globals.Config.create_option options ~short_help [lhelp] ~level:0 ty default
 
   module MakeLint (C : Lint.LintArg) = struct
 
@@ -64,7 +60,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
 
     let create_option option short_help lhelp ty default =
       let option = [P.short_name; short_name; option] in
-      Config.create_option option ~short_help [lhelp] ~level:0 ty default
+      Globals.Config.create_option option ~short_help [lhelp] ~level:0 ty default
 
     module MakeWarnings (WA : Warning_types.WarningArg) = struct
       type t = WA.t
@@ -106,14 +102,9 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
   end (* MakeCheck *)
 
   let () =
-    (* Creating 2 defaults options for plugins: "--plugin" and "--no-plugin" *)
+    (* Creating default options for plugins: "--plugin.enable" *)
     ignore (create_option
-        ["no-"^ P.short_name]
-        details
-        details
-        SimpleConfig.bool_option true);
-    ignore (create_option
-        [P.short_name]
+        [P.short_name; "enable"]
         details
         details
         SimpleConfig.bool_option true);
