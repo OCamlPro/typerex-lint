@@ -7,7 +7,8 @@ let test_progs = [
   "fun x -> x", [ "patch1", "fun x  -> ((+) x) 1"; "functionMatch", "foo"];
   "let x = 1 in x", [ "letBinding", "tralala"; "replaceInsideLet", "let x = 1 in y"];
   "1, 2, 3, 4", [ "tuples", "foo"];
-  "if List.length mylist = 0 then foo else bar", [ "listCompare", "match mylist with | [] -> foo | _ -> bar" ]
+  "if List.length mylist = 0 then foo else bar", [ "listCompare", "match mylist with | [] -> foo | _ -> bar" ];
+  "function | foo -> 1 | bar -> 1", [ "function", "function | foo -> 1 | bar -> 0"]
 ]
 
 let in_file = open_in Sys.argv.(1)

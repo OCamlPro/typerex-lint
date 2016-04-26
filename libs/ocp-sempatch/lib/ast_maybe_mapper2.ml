@@ -34,6 +34,38 @@ let map_maybe_expr _merge self env expr_opt patch_opt =
   | None, None -> Ok (None, env)
   | _ -> Error (expr_opt, env)
 
+let map_case merge self env
+    { pc_lhs = lhs_e; pc_guard = guard_e; pc_rhs = rhs_e }
+    { pc_lhs = lhs_patch; pc_guard = guard_patch; pc_rhs = rhs_patch }
+  =
+  self.pattern self env ~patch:lhs_patch ~pat:lhs_e
+  >>= (fun (mapped_lhs, env_lhs) ->
+      map_maybe_expr merge self env_lhs guard_e guard_patch
+      >>= (fun (mapped_guard, env_guard) ->
+          self.expr self env_lhs ~expr:rhs_e ~patch:rhs_patch
+          >|= (fun (mapped_rhs, env_rhs) ->
+              {
+                pc_lhs = mapped_lhs;
+                pc_guard = mapped_guard;
+                pc_rhs = mapped_rhs;
+              },
+              merge env_lhs (merge env_guard env_rhs)
+            )
+        )
+    )
+
+let map_cases merge self env =
+  List.fold_left2 (fun accu binding patch_binding ->
+      accu
+      >>= (fun (bind_list, env) ->
+          map_case merge self env binding patch_binding
+          >|= (fun (mapped_binding, new_env) ->
+              mapped_binding :: bind_list, merge env new_env
+            )
+        )
+    )
+    (Ok ([], env))
+
 let map_expr merge self env ~patch ~expr =
   let e = expr in
   let maybe_desc =
@@ -94,6 +126,13 @@ let map_expr merge self env ~patch ~expr =
             )
           )
       )
+
+  | Pexp_function casesl, Pexp_function casesr ->
+    map_cases merge self env casesl casesr
+    >|= (fun (mapped_cases, env_cases) ->
+        Pexp_function mapped_cases, env_cases
+      )
+
   | Pexp_let _, _ | _, Pexp_let _
   | Pexp_apply _, _ | _, Pexp_apply _
   | Pexp_ident _, _ | _, Pexp_ident _

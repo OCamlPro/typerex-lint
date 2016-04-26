@@ -43,3 +43,12 @@ variables: l, e1, e2
 + | [] -> e1
 + | _  -> e2
 ```
+
+# function
+```
+function
+  | foo -> 1
+  | bar ->
+-    1
++    0
+```

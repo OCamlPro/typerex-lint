@@ -120,7 +120,15 @@ let apply patch expr =
                   )
               )
           )
+      | Pexp_function cases ->
+        apply_to_cases env patch cases
+        >|= (fun (mapped_cases, env_cases) ->
+            Pexp_function mapped_cases, [ env_cases ]
+          )
+
       | _ ->
+        Pprintast.expression Format.std_formatter expr;
+        Format.print_newline ();
         failwith "Not implemented yet"
     in desc_err
     >>= (fun (mapped_desc, env_exprs) ->
@@ -131,6 +139,35 @@ let apply patch expr =
           )
 
       )
+
+  and apply_to_case env patch { pc_lhs; pc_guard; pc_rhs } =
+    let open Res.Err_monad_infix in
+    apply_to_maybe_expr env patch pc_guard
+    >>= (fun (mapped_guard, env_guard) ->
+        apply_to_expr env ~expr:pc_rhs ~patch
+        >|= (fun (mapped_rhs, env_rhs) ->
+            {
+              pc_lhs;
+              pc_guard = mapped_guard;
+              pc_rhs = mapped_rhs;
+            },
+            merge_envs env_guard env_rhs
+          )
+      )
+
+  and apply_to_list mapper env patch =
+    let open Res.Err_monad_infix in
+    List.fold_left (fun mapped elt ->
+        mapped >>= (fun (mapped_elts, accu_env) ->
+            mapper env patch elt
+            >|= (fun (mapped_elt, new_env) ->
+                mapped_elt :: mapped_elts, merge_envs accu_env new_env
+              )
+          )
+      )
+      (Res.fail ([], env))
+
+  and apply_to_cases env patch = apply_to_list apply_to_case env patch
 
   and apply_to_binding env patch binding =
     let open Res.Err_monad_infix in
