@@ -51,7 +51,7 @@ let mem k x = M.mem k x.env
 let is_defined_ident key universe = Option.is_some (get_ident key universe)
 
 let merge v1 v2 = {
-  env = M.merge (fun _ -> Misc.const) v1.env v2.env;
+  env = M.merge (fun _ -> Option.merge_sup Misc.const) v1.env v2.env;
   matches = v1.matches @ v2.matches;
 }
 
