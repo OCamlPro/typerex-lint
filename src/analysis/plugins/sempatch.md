@@ -109,4 +109,20 @@ variables: cond
 cond != false
 ```
 
+# Inlined function incr
+variables: expr
+```
+- expr := !expr + 1
+```
 
+# Inlined function decr
+variables: expr
+```
+- expr := !expr - 1
+```
+
+# Constant if
+variables: expr
+```
+- if cond then expr else expr
+```
