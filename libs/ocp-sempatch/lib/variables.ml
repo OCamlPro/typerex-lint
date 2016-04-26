@@ -9,15 +9,17 @@ type v =
 
 module M = StringMap
 
+type env = v M.t
+
 type t = {
-  env : v M.t;
-  matches_positions : Location.t list;
+  env : env;
+  matches : (env * Location.t) list;
 }
 
 let set_env e v = { v with env = e }
 
 let map_env f x = { x with env = f x.env }
-let map_pos f x = { x with matches_positions = f x.matches_positions }
+let map_pos f x = { x with matches = f x.matches }
 
 let add_match loc = map_pos (List.cons loc)
 let set_loc loc = map_pos (fun _ -> loc)
@@ -50,7 +52,7 @@ let is_defined_ident key universe = Option.is_some (get_ident key universe)
 
 let merge v1 v2 = {
   env = M.merge (fun _ -> Misc.const) v1.env v2.env;
-  matches_positions = v1.matches_positions @ v2.matches_positions;
+  matches = v1.matches @ v2.matches;
 }
 
-let empty = { env = M.empty; matches_positions = []; }
+let empty = { env = M.empty; matches = []; }
