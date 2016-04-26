@@ -1,0 +1,37 @@
+
+
+(*************************************)
+(*   Never edit options files while  *)
+(*       the program is running      *)
+(*************************************)
+(* SECTION : Header                  *)
+(* These options must be read first  *)
+(*************************************)
+
+
+
+(* Module to ignore during the lint. *)
+ignored_files = [
+  "src/internal/parsing/parsetreeMap.ml";
+  "src/internal/parsing/parsetreeIter.ml";
+  "src/internal/typing/typedtreeMap.ml";
+  "src/internal/typing/typedtreeIter.ml";
+]
+plugin_mascot = {
+
+(* A style-checker for OCaml sources (code, documentation, interface, metrics, and typography). *)
+  enable = true
+  code_identifier_length = {
+
+(* Identifiers with a shorter name will trigger a warning *)
+    min_identifier_length = 1
+
+(* Identifiers with a longer name will trigger a warning *)
+    max_identifier_length = 30
+  }
+  code_length = {
+
+(* Maximum line length *)
+    max_line_length = 80
+  }
+}
