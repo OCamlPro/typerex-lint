@@ -14,13 +14,13 @@ let apply_replacements tree attributes var_replacements =
   in
   let mapper = Ast_mapper.(
       { default_mapper with
-        expr = (fun _self e ->
+        expr = (fun self e ->
             match e.pexp_desc with
             | Pexp_ident { Asttypes.txt = Longident.Lident i; _} ->
               Variables.get_expr i var_replacements
               >|= (fun desc -> { e with pexp_desc = desc; })
               |> Option.value e
-            | _ -> e
+            | _ -> default_mapper.expr self e
           );
       })
   in
