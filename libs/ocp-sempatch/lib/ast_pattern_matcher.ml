@@ -38,12 +38,12 @@ let apply patch expr =
           let replacements =
             match e1, e2 with
             | Pexp_constant c1, Pexp_constant c2 when c1 = c2 -> Ok (expr1, env)
-            | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Ok (expr1, env)
             | Pexp_ident { Asttypes.txt = Longident.Lident i; _ }, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_binding j ->
               Error.ok_if (Variables.get_ident j env = (Some i)) (expr1, env) (expr1, env)
             | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_expr j ->
               (* TODO (one day...) treat the case where j is already defined as an expression *)
               Ok (expr1, Variables.add_env j (Variables.Expression e) env)
+            | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Ok (expr1, env)
             | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "__sempatch_inside" ->
               apply_to_expr env ~expr:expr1 ~patch:e
             | _ -> default.expr self env ~expr:expr1 ~patch:expr2
