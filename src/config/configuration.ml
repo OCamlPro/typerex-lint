@@ -17,6 +17,7 @@ end
 
 module MakeConfig (C: ConfigArg) = struct
   let config_file = SimpleConfig.create_config_file (File.of_string C.filename)
+
   let simple_args () = []
     (* Uncomment this when ocp-build will be updated *)
     (* SimpleConfig.LowLevel.simple_args "" config_file *)
@@ -26,6 +27,8 @@ module MakeConfig (C: ConfigArg) = struct
       SimpleConfig.create_option config_file
           opt_names ?short_help long_help ?level
           opt_class default_value
+  let () =
+    SimpleConfig.load config_file
   end
 
 module DefaultConfig : CONFIG = MakeConfig(struct let filename = ".ocplint" end)
