@@ -28,7 +28,8 @@ module Warnings = CodeLength.MakeWarnings(struct
         1
         [ Warning.kind_code ]
         ~short_name:"long_line"
-        ~msg:"This line is too long ('%line'): it should be at most of size '%max'."
+        ~msg:"This line is too long ('%line'): it should be at \
+              most of size '%max'."
         ~args
 
     let report loc = function
