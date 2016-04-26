@@ -19,8 +19,15 @@ let apply patch expression =
   |> Res.map fst
   |> Res.unwrap
 
-let get_matches patch expression =
+let get_matches_from_patch patch expression =
   Ast_pattern_matcher.apply patch expression
   |> Res.map snd
   |> Res.unwrap
   |> (fun x -> x.Variables.matches)
+
+let get_matches_from_patches patches expression=
+  StringMap.fold (fun name patch accu ->
+      List.map (fun res -> name, res) (get_matches_from_patch patch expression) @ accu
+    )
+    patches
+    []
