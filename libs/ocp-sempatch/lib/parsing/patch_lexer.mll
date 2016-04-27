@@ -7,8 +7,7 @@
 let white = [' ' '\t']+
 let newline = ('\r' | '\n' | "\r\n")
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
-let ocaml_code = [^'+' '-' '\n'] [^'\n']*
-let title_delim = '#'
+let title_delim = '@'
 let code_delim = "```"
 
 let comment_begin = "(*"
