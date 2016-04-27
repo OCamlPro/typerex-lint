@@ -54,17 +54,21 @@ let map_case merge self env
         )
     )
 
-let map_cases merge self env =
-  List.fold_left2 (fun accu binding patch_binding ->
-      accu
-      >>= (fun (bind_list, env) ->
-          map_case merge self env binding patch_binding
-          >|= (fun (mapped_binding, new_env) ->
-              mapped_binding :: bind_list, merge env new_env
-            )
-        )
-    )
-    (Ok ([], env))
+let map_cases merge self env cases cases_patch =
+  try
+    List.fold_left2 (fun accu binding patch_binding ->
+        accu
+        >>= (fun (bind_list, env) ->
+            map_case merge self env binding patch_binding
+            >|= (fun (mapped_binding, new_env) ->
+                mapped_binding :: bind_list, merge env new_env
+              )
+          )
+      )
+      (Ok ([], env))
+      cases
+      cases_patch
+  with Invalid_argument "List.fold_left2" -> Error (cases, env)
 
 let map_expr merge self env ~patch ~expr =
   let e = expr in
