@@ -36,7 +36,8 @@ let x = 1 in
 ```
 
 # listCompare
-variables: l, e1, e2
+expressions: l, e1, e2
+message: "This is a message"
 ```
 - if List.length l = 0 then e1 else e2
 + match l with

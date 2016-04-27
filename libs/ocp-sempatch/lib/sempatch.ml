@@ -2,7 +2,7 @@ type t = Parsed_patches.t
 
 let from_channel chan =
   Patch_parser.sempatch
-    (Patch_lexer.read_all)
+    (Patch_lexer.read)
     (Lexing.from_channel chan)
   |> StringMap.from_list_pair
 

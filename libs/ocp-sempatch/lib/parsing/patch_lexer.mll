@@ -1,7 +1,7 @@
 {
   open Patch_parser
 
-  let code_buf = Buffer.create 30
+  let str_litteral_buf = Buffer.create 30
 }
 
 let white = [' ' '\t']+
@@ -13,30 +13,30 @@ rule read =
   parse
   | white { read lexbuf }
   | newline* { EOL }
-  | "```" { Buffer.clear code_buf; read_quoted lexbuf; CODE (Buffer.to_bytes code_buf |> Bytes.to_string) }
-  | "variables" { VARIABLE_KW }
+  | "```" {
+    Buffer.clear str_litteral_buf; read_code lexbuf;
+    CODE (Buffer.to_bytes str_litteral_buf |> Bytes.to_string)
+  }
+  | "expressions" { EXPR_KW }
+  | "bindings" { BINDINGS_KW }
+  | "message" { MESSAGES_KW }
+  | "\"" {
+    Buffer.clear str_litteral_buf; read_string lexbuf;
+    STRING (Buffer.to_bytes str_litteral_buf |> Bytes.to_string)
+  }
   | ':' { COLON }
   | ',' { COMMA }
   | '#' { HASH }
   | id { ID (Lexing.lexeme lexbuf) }
   | eof { EOF }
 
-and read_quoted =
+and read_code =
   parse
   | newline "```" { () }
-  | _ { Buffer.add_string code_buf (Lexing.lexeme lexbuf); read_quoted lexbuf }
+  | _ { Buffer.add_string str_litteral_buf (Lexing.lexeme lexbuf); read_code lexbuf }
 
-{
-  let read_all = read
-    (* let in_code = ref false in *)
-    (* function x -> *)
-    (*   let read_fun = *)
-    (*   if !in_code then *)
-    (*     read_quoted *)
-    (*   else *)
-    (*     read *)
-    (*   in *)
-    (*   match read_fun x with *)
-    (*   | TICKS -> in_code := not !in_code; TICKS *)
-    (*   | res -> res *)
-}
+and read_string =
+  parse
+  | '"' { () }
+  | '\\' '"' { Buffer.add_char str_litteral_buf '"'; read_string lexbuf }
+  | _ { Buffer.add_string str_litteral_buf (Lexing.lexeme lexbuf); read_string lexbuf }

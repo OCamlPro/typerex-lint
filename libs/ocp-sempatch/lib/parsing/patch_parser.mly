@@ -9,7 +9,11 @@
 (* %token <Raw_patch.patch_line list> OCAML_CODE *)
 
 %token HASH
-%token VARIABLE_KW
+
+%token EXPR_KW
+%token BINDINGS_KW
+%token MESSAGES_KW
+%token<string> STRING
 
 %start <(string * Parsed_patches.t) list> sempatch
 %%
@@ -24,10 +28,17 @@ patch_name:
   | HASH name = ID EOL { name }
 
 patch_header:
-  |  vars = loption(vars_def) { { Parsed_patches.meta_expr = vars; Parsed_patches.meta_bindings = []; } }
+  | fields = list(header_def) { Parsed_patches.header_from_list fields }
 
-vars_def:
-  | VARIABLE_KW COLON vars = separated_nonempty_list(COMMA, ID) EOL { vars }
+header_def:
+  | EXPR_KW COLON exprs = separated_nonempty_list(COMMA, ID) EOL
+  { Parsed_patches.Expressions exprs }
+  | BINDINGS_KW COLON bindings = separated_nonempty_list(COMMA, ID) EOL
+  { Parsed_patches.Bindings bindings }
+  | MESSAGES_KW COLON msg = STRING EOL { Parsed_patches.Message msg }
 
 patch_body:
-  | cde = CODE EOL { Raw_patch.to_patch_body (Code_parser.code Code_lexer.read_code (Lexing.from_string cde)) }
+  | cde = CODE EOL
+  { Raw_patch.to_patch_body
+    (Code_parser.code Code_lexer.read_code (Lexing.from_string cde))
+  }

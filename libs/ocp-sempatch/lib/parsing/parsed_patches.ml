@@ -5,6 +5,13 @@ type id = string
 type header = {
   meta_expr : string list;
   meta_bindings : string list;
+  message : string option;
+}
+
+let void_header = {
+  meta_expr = [];
+  meta_bindings = [];
+  message = None;
 }
 
 type body = Parsetree.expression
@@ -14,9 +21,21 @@ type t = {
   body: body;
 }
 
+type setting =
+  | Expressions of string list
+  | Bindings of string list
+  | Message of string
+
 exception PatchError of string
 
 let raisePatchError e = raise (PatchError e)
+
+let add_header_field header = function
+  | Expressions v -> { header with meta_expr = v @ header.meta_expr }
+  | Bindings b -> { header with meta_bindings = b  @ header.meta_bindings }
+  | Message m -> { header with message = Some m }
+
+let header_from_list l = List.fold_left add_header_field void_header l
 
 (** Checks wether l1 \subset l2 where l1 and l2 represents unordonned sets of elements *)
 let testInclusion l1 l2 =
@@ -129,7 +148,7 @@ let preprocess { header; body} =
   let processed_before_patch = map body
   in
   testInclusion !metas_in_post_patch (List.append !meta_bindings_in_pre_patch !meta_exprs_in_pre_patch);
-  { header = { meta_expr = !meta_exprs_in_pre_patch; meta_bindings = !meta_bindings_in_pre_patch; }; body = processed_before_patch; }
+  { header = { header with meta_expr = !meta_exprs_in_pre_patch; meta_bindings = !meta_bindings_in_pre_patch; }; body = processed_before_patch; }
 
 let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper
 
