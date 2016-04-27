@@ -33,6 +33,10 @@ rule read =
   | ':' { COLON } | ',' { COMMA } | title_delim { TITLE_DELIM } | id { ID (Lexing.lexeme lexbuf) }
   | comment_begin { read_comment lexbuf; read lexbuf }
   | eof { EOF }
+  | _ { failwith ("Invalid token " ^ (Lexing.lexeme lexbuf)
+                  ^ " at line " ^
+                  Lexing.(lexbuf.lex_curr_p.pos_lnum |> string_of_int))
+  }
 
 and read_code =
   parse
