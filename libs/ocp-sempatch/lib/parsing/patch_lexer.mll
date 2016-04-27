@@ -8,12 +8,14 @@ let white = [' ' '\t']+
 let newline = ('\r' | '\n' | "\r\n")+
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 let ocaml_code = [^'+' '-' '\n'] [^'\n']*
+let title_delim = '#'
+let code_delim = "```"
 
 rule read =
   parse
   | white { read lexbuf }
   | newline* { EOL }
-  | "```" {
+  | code_delim newline {
     Buffer.clear str_litteral_buf; read_code lexbuf;
     CODE (Buffer.to_bytes str_litteral_buf |> Bytes.to_string)
   }
@@ -26,13 +28,13 @@ rule read =
   }
   | ':' { COLON }
   | ',' { COMMA }
-  | '#' { HASH }
+  | title_delim { TITLE_DELIM }
   | id { ID (Lexing.lexeme lexbuf) }
   | eof { EOF }
 
 and read_code =
   parse
-  | newline "```" { () }
+  | newline code_delim { () }
   | _ { Buffer.add_string str_litteral_buf (Lexing.lexeme lexbuf); read_code lexbuf }
 
 and read_string =

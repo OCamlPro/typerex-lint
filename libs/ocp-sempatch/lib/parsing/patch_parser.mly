@@ -6,9 +6,7 @@
 
 %token<string> CODE
 
-(* %token <Raw_patch.patch_line list> OCAML_CODE *)
-
-%token HASH
+%token TITLE_DELIM
 
 %token EXPR_KW
 %token BINDINGS_KW
@@ -25,7 +23,7 @@ patch:
   | name = patch_name; header = patch_header; body = patch_body { let open Parsed_patches in name, {header; body} }
 
 patch_name:
-  | HASH name = ID EOL { name }
+  | TITLE_DELIM name = ID EOL { name }
 
 patch_header:
   | fields = list(header_def) { Parsed_patches.header_from_list fields }
