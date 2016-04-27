@@ -10,6 +10,7 @@ let test_progs = [
   "if List.length mylist = 0 then foo else bar", [ "listCompare", "match mylist with | [] -> foo | _ -> bar" ];
   "function | foo -> true | bar -> true", [ "function", "function | foo -> true | bar -> false"];
   "match x with foo -> true | bar -> false", [ "match", "x = foo" ];
+  "match x with Some y -> true | None -> false", [ "matchPattern", "Option.is_some x" ]
 ]
 
 let in_file = open_in Sys.argv.(1)

@@ -160,12 +160,27 @@ let map_expr merge self env ~patch ~expr =
   in Res.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc
      |> Error.map (fun (expr, attrs) -> expr, Variables.set_loc [attrs.Variables.env, e.pexp_loc] attrs)
 
-let map_pattern _merge _self env ~patch ~pat =
+let map_maybe_pattern merge self env ~patch ~pat =
+  match pat, patch with
+  | None, None -> Ok (None, env)
+  | Some pat, Some patch -> self.pattern self env ~patch ~pat
+    >|= (fun (mapped, env) -> Some mapped, env)
+  | _ -> Error (pat, env)
+
+let map_pattern merge self env ~patch ~pat =
   let maybe_desc =
     match pat.ppat_desc, patch.ppat_desc with
-    | Ppat_var _, _ -> Error (pat, env)
+    | Ppat_construct (constrl, pat_optl), Ppat_construct (constrr, pat_optr)
+      when constrl.Asttypes.txt = constrr.Asttypes.txt ->
+      map_maybe_pattern merge self env ~pat:pat_optl ~patch:pat_optr
+      >|= (fun (mapped, env) ->
+          Ppat_construct (constrl, mapped), env
+        )
+    | Ppat_var _, _ | _, Ppat_var _
+    | Ppat_construct _, _ | _, Ppat_construct _
+      -> Error (pat.ppat_desc, env)
     |_, _ -> failwith "Non implemented"
-  in Error.map (fun (tree, env) -> { pat with ppat_desc = tree; }, env) maybe_desc
+  in Res.map (fun (tree, env) -> { pat with ppat_desc = tree; }, env) maybe_desc
 
 let mk merge = {
   expr = map_expr merge;

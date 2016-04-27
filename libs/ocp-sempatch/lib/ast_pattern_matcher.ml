@@ -50,13 +50,13 @@ let apply patch expr =
           in
           Error.map (fun (e, env) -> apply_replacements e attrs2 env, env) replacements
         );
-      pattern = (fun _self env ~patch:pat2 ~pat:pat1 ->
+      pattern = (fun self env ~patch:pat2 ~pat:pat1 ->
           let replacements =
             match pat1.ppat_desc, pat2.ppat_desc with
             | Ppat_var v, Ppat_var v' when v.Asttypes.txt = v'.Asttypes.txt -> Ok (pat1, env)
             | Ppat_var { Asttypes.txt = v; _ }, Ppat_var { Asttypes.txt = v'; _ } when is_meta_binding v' ->
               Ok (pat1, Variables.add_env v' (Variables.Ident v) env)
-            | _ -> Error (pat1, env)
+            | _ -> default.pattern self env ~patch:pat2 ~pat:pat1
           in replacements
         )
     }

@@ -65,3 +65,12 @@ function
 -   | bar -> false
 + x = foo
 ```
+
+@matchPattern
+expressions : x, y
+```
+- match x with
+- | Some y -> true
+- | None -> false
++ Option.is_some x
+```
