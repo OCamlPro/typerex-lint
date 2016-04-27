@@ -48,7 +48,11 @@ let apply patch expr =
               apply_to_expr env ~expr:expr1 ~patch:e
             | _ -> default.expr self env ~expr:expr1 ~patch:expr2
           in
-          Error.map (fun (e, env) -> apply_replacements e attrs2 env, env) replacements
+          let result = match replacements with
+          | Ok (expr, attrs) -> Ok (expr, Variables.set_loc [attrs.Variables.env, expr.pexp_loc] attrs)
+          | Error (expr, attrs) -> Error (expr, Variables.set_loc [] attrs)
+          in
+          Error.map (fun (e, env) -> apply_replacements e attrs2 env, env) result
         );
       pattern = (fun self env ~patch:pat2 ~pat:pat1 ->
           let replacements =

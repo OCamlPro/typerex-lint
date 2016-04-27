@@ -161,10 +161,7 @@ let map_expr merge self env ~patch ~expr =
   | Pexp_construct _, _ | _, Pexp_construct _
     -> Error (e.pexp_desc, env)
   | _ -> failwith "Non implemented"
-  in
-  match Res.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc with
-  | Ok (expr, attrs) -> Ok (expr, Variables.set_loc [attrs.Variables.env, e.pexp_loc] attrs)
-  | Error (expr, attrs) -> Error (expr, Variables.set_loc [] attrs)
+  in Res.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc
 
 let map_maybe_pattern _merge self env ~patch ~pat =
   match pat, patch with
