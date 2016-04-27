@@ -1,9 +1,8 @@
-
-
-
 # simpleVar
+(* This is a comment *)
 ```
 - x
+(* This is a comment too *)
 + y
 ```
 
@@ -12,6 +11,8 @@
 - f x
 + foo
 ```
+
+(* And this is also a commment *)
 
 # functionMatch
 ```
