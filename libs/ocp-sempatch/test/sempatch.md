@@ -57,3 +57,11 @@ function
 -    true
 +    false
 ```
+
+@match
+```
+- match x with
+-   | foo -> true
+-   | bar -> false
++ x = foo
+```

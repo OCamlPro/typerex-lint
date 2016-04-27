@@ -132,6 +132,16 @@ let apply patch expr =
             Pexp_construct (ident, mapped_expr), [env_expr]
           )
 
+      | Pexp_match (expr, cases) ->
+        apply_to_cases env patch cases
+        >>= (fun (mapped_cases, env_cases) ->
+            apply_to_expr env_cases ~expr ~patch
+            >|= (fun (mapped_expr, env_expr) ->
+                Pexp_match (mapped_expr, mapped_cases),
+                [ env_cases; env_expr ]
+              )
+          )
+
       | _ ->
         Pprintast.expression Format.std_formatter expr;
         Format.print_newline ();
@@ -196,7 +206,8 @@ let apply patch expr =
   and apply_to_maybe_expr env patch =
     let open Res.Err_monad_infix in
     function
-    | Some expr -> apply_to_expr env ~expr ~patch >|= (fun (expr, env) -> Some expr, env)
+    | Some expr -> apply_to_expr env ~expr ~patch
+      >|= (fun (expr, env) -> Some expr, env)
     | None -> Ok (None, env)
 
   in

@@ -140,6 +140,16 @@ let map_expr merge self env ~patch ~expr =
         Pexp_function mapped_cases, env_cases
       )
 
+  | Pexp_match (exprl, casesl), Pexp_match (exprr, casesr) ->
+    map_cases merge self env casesl casesr
+    >>= (fun (mapped_cases, env_cases) ->
+        self.expr self env ~expr:exprl ~patch:exprr
+        >|= (fun (mapped_expr, env_expr) ->
+            Pexp_match (mapped_expr, mapped_cases),
+            merge env_cases env_expr
+          )
+      )
+
   | Pexp_let _, _ | _, Pexp_let _
   | Pexp_apply _, _ | _, Pexp_apply _
   | Pexp_ident _, _ | _, Pexp_ident _
