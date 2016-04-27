@@ -19,7 +19,7 @@
 %%
 
 sempatch:
-  | patches = list(patch) EOF { patches }
+  | option(EOL) patches = list(patch) EOF { patches }
 
 patch:
   | name = patch_name; header = patch_header; body = patch_body { let open Parsed_patches in name, {header; body} }
