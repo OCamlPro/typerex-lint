@@ -18,21 +18,34 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "plugin-lib"
+begin library "globals"
+  files = [ "globals.ml" ]
+  requires = [ "default-config" "plugin-api"]
+end
+
+begin library "plugin-api"
   files = [
-    "globals.ml"
+    "plugin_types.mli"
+    "plugin_error.ml"
     "input.mli"
     "warning_types.mli"
     "lint.mli"
-    "plugin_types.mli"
-    "plugin_error.ml"
     "warning.ml"
+  ]
+  requires = [ "compiler-libs" ]
+end
+
+begin library "plugin-lib"
+  files = [
     "plugin.ml"
   ]
   requires = [
     "compiler-libs.common"
+    "ocp-sempatch"
     "default-config"
     "parsetree-iter"
     "plugin-utils"
- ]
+    "plugin-api"
+    "globals"
+  ]
 end

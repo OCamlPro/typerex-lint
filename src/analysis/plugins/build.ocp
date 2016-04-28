@@ -23,5 +23,5 @@ begin library "plugins"
     "plugin_mascot.ml"
     "plugin_sempatch.ml"
   ]
-  requires = [ "plugin-lib" ]
+  requires = [ "plugin-lib" "ocp-sempatch" ]
 end

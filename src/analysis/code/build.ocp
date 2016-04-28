@@ -24,6 +24,6 @@ begin library "lint-code"
     "code_length.ml"
     "code_useless_if.ml"
   ]
-  requires = [ "plugin-lib" "plugins" ]
+  requires = [ "plugins" ]
   link = [ "-linkall" ]
 end
