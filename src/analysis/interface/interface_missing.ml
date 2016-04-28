@@ -33,10 +33,11 @@ let mli = ".mli"
 
 let check source =
   let modname = Filename.chop_extension source in
+  let loc = Location.in_file source in
   if not (Sys.file_exists (modname ^ mli)) then
-    Warnings.report Location.none (MissingInterface source)
+    Warnings.report loc (MissingInterface source)
 
 (* Registering a main entry to the linter *)
-module MainSRC = CodeLength.MakeInputMLI(struct
+module MainSRC = CodeLength.MakeInputML(struct
     let main source = check source
   end)
