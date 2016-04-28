@@ -1,5 +1,6 @@
 @simpleVar
 (* This is a comment *)
+name: "Simple var replacement"
 ```
 - x
 (* This is a comment too *)

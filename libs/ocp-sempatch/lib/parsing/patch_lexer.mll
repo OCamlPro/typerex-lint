@@ -24,6 +24,7 @@ rule read =
   }
   | "expressions" { EXPR_KW }
   | "message" { MESSAGES_KW }
+  | "name" { NAME_KW }
   | "\"" {
     Buffer.clear str_litteral_buf; read_string lexbuf;
     STRING (Buffer.to_bytes str_litteral_buf |> Bytes.to_string)

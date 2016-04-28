@@ -10,6 +10,7 @@
 
 %token EXPR_KW
 %token MESSAGES_KW
+%token NAME_KW
 %token<string> STRING
 
 %start <(string * Parsed_patches.t) list> sempatch
@@ -32,6 +33,7 @@ header_def:
   | EXPR_KW COLON exprs = separated_nonempty_list(COMMA, ID) eols
   { Parsed_patches.Expressions exprs }
   | MESSAGES_KW COLON msg = STRING eols { Parsed_patches.Message msg }
+  | NAME_KW COLON msg = STRING eols { Parsed_patches.Name msg }
 
 patch_body:
   | cde = CODE eols

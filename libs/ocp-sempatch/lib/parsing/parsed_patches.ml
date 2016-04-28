@@ -5,11 +5,13 @@ type id = string
 type header = {
   meta_expr : string list;
   message : string option;
+  name : string option;
 }
 
 let void_header = {
   meta_expr = [];
   message = None;
+  name = None;
 }
 
 type body = Parsetree.expression
@@ -22,6 +24,7 @@ type t = {
 type setting =
   | Expressions of string list
   | Message of string
+  | Name of string
 
 exception PatchError of string
 
@@ -30,6 +33,7 @@ let raisePatchError e = raise (PatchError e)
 let add_header_field header = function
   | Expressions v -> { header with meta_expr = v @ header.meta_expr }
   | Message m -> { header with message = Some m }
+  | Name m -> { header with name = Some m }
 
 let header_from_list l = List.fold_left add_header_field void_header l
 
