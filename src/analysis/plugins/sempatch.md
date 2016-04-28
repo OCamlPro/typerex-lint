@@ -1,128 +1,91 @@
-# List function on singleton String.concat
-variables: s, l, x
+@Incr
+expressions: e1, e2
+message: "Use 'incr %e1' instead of '%e1 := !%e2 + 1.'"
 ```
-- String.concat s [x]
-```
-# List function on singleton List.map
-variables: f, l, x
-```
-- List.map f [x]
+e1 := !e2 + 1
 ```
 
-# List function on singleton List.fold_left
-variables: f, acc, l, x
+@Decr
+expressions: e1, e2
+message:  "Use 'decr %e1' instead of '%e1 := !%e2 - 1'."
 ```
-- List.fold_left f acc [x]
-```
-
-# List function on singleton List.fold_right
-variables: f, acc, l, x
-```
-- List.fold_right f acc [x]
+- e1 := !e2 - 1
++ decr e1
 ```
 
-# Useless if
-variables: cond
+@Incr
+expressions: e1, e2
+message: "Use 'incr %e1' instead of '%e1 := !%e2 + 1.'"
 ```
-- if cond then true else false
-```
-
-# Backwards if
-variables: cond, expr
-```
-- if cond then () else expr
+e1 := !e2 + 1
 ```
 
-# Useless else
-variables: cond, expr
+@Decr
+expressions: e1, e2
+message:  "Use 'decr %e1' instead of '%e1 := !%e2 - 1'."
 ```
-- if cond then expr else ()
-```
-
-# Inlined function Str.first_chars
-variables:s
-integer:n
-```
-- String.sub s 0 n
+- e1 := !e2 - 1
++ decr e1
 ```
 
-# Inlined function Str.string_after
-variables:s, s'
-integer:n, n'
-when: equal(s, s') && equal(n, n')
+@CompToFalse
+expressions: cond
+message: "Use 'not %cond' instead of '%cond = false'."
 ```
-- String.sub s 0 (String.length s' - n')
-```
-
-# Inlined function Str.last_chars
-variables:s, s'
-integer:n, n'
-when: equal(s, s') && equal(n, n')
-```
-- String.sub s (String.length s' - n) n'
+- cond = false
++ not cond
 ```
 
-# Empty list test <>
-variables: l
+@CompToFalse2
+expressions: cond
+message: "Use '%cond' instead of '%cond != false'."
 ```
-- List.length l > 0
-```
-
-# Empty list test =
-variables: l
-```
-- List.length l = 0
+- cond != false 
++ cond 
 ```
 
-# Comparison to boolean = true
-variables: cond
+@ CompToFalse3
+expressions: cond
+message: "Use 'not %cond' instead of '%cond == false'."
 ```
-cond = true
-```
-
-# Comparison to boolean == true
-variables: cond
-```
-cond == true
-```
-# Comparison to boolean <> true
-variables: cond
-```
-cond <> true
+- cond == false
++ not cond
 ```
 
-# Comparison to boolean = false
-variables: cond
+@ CompToTrue1
+expressions: cond
+message: "Use '%cond' instead of '%cond = true'."
 ```
-cond = false
-```
-
-# Comparison to boolean == true
-variables: cond
-```
-cond == false
+- cond = true
++ cond
 ```
 
-# Comparison to boolean != false
-variables: cond
+@ CompToTrue2
+expressions: cond
+message: "Use '%cond' instead of '%cond == true'."
 ```
-cond != false
-```
-
-# Inlined function incr
-variables: expr
-```
-- expr := !expr + 1
+- cond == true
++ cond
 ```
 
-# Inlined function decr
-variables: expr
+@CompToTrue3
+expressions: cond
+message: "Use 'not %cond' instead of '%cond <> true'."
 ```
-- expr := !expr - 1
+- cond <> true
++ not cond
 ```
 
-# Constant if
-variables: expr
+@EmptyListComparison
+expressions: l
+message: "Use a pattern matching instead of comparing to `0`."
 ```
-- if cond then expr else expr
+List.length l = 0
+```
+
+@ LetIdentity
+expressions: x, e
+```
+- let x = e in x
++ e
 ```
