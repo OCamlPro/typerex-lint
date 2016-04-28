@@ -28,6 +28,7 @@ module LintMap : sig
   val add : key -> 'a -> 'a t -> 'a t
   val iter : (key -> 'a -> unit) -> 'a t -> unit
   val find : key -> 'a t -> 'a
+  val cardinal : 'a t -> int
 end
 
 (** [Config] is a module which allow to create options for the configuration
