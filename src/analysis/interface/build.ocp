@@ -3,6 +3,6 @@ begin library "lint-interface"
   files = [
     "interface_missing.ml"
   ]
-  requires = [ "plugin-lib" "plugins" ]
+  requires = [ "plugins" ]
   link = [ "-linkall" ]
 end
