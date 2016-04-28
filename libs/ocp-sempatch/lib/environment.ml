@@ -16,7 +16,6 @@ let add_ident name value = map_current (M.add_ident name value)
 let map_matches f x = { x with matches = f x.matches }
 let set_matches m = map_matches (fun _ -> m)
 
-let get key env = M.get key env.current_match
 let get_expr key env = M.get_expr key env.current_match
 let get_ident key env = M.get_ident key env.current_match
 
