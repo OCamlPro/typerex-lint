@@ -1,3 +1,7 @@
+open Std_utils
+
+module StringMap = StringMap
+
 type t = Parsed_patches.t
 
 let from_channel chan =

@@ -77,9 +77,9 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     let map_args env args =
       List.map (fun str ->
           try
-            match MyStringMap.find str env with
-            | Variables.Ident ident -> ("%" ^ str, ident)
-            | Variables.Expression expr ->
+            match Std_utils.StringMap.find str env with
+            | Variable.Ident ident -> ("%" ^ str, ident)
+            | Variable.Expression expr ->
               Pprintast.expression
                 Format.str_formatter
                 (Ast_helper.Exp.mk expr);
@@ -112,7 +112,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
               let patches = Sempatch.from_channel ic in
               let matches = Sempatch.get_matches_from_patches patches expr in
               List.iter (fun (patch_name, (env, loc)) ->
-                  let patch = MyStringMap.find patch_name patches in
+                  let patch = Std_utils.StringMap.find patch_name patches in
                   report env loc patch_name [Warning.kind_code] patch)
                 matches)
             patches

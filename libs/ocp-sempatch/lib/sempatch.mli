@@ -1,3 +1,5 @@
+module StringMap = Std_utils.StringMap
+
 (**
    The type of semantic patches
 *)

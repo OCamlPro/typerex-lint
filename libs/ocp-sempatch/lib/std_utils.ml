@@ -211,4 +211,17 @@ struct
   let find_opt f l = try List.find f l |> Option.some with Not_found -> None
 end
 
+module StringMap:
+sig
+  include Map.S with type key = string
+  val from_list_pair : (string * 'a) list -> 'a t
+end
+=
+struct
+  module M = Map.Make(String)
+  include M
+
+  let from_list_pair l = List.fold_left (fun map (k, e) -> M.add k e map) M.empty l
+end
+
 module List = UList
