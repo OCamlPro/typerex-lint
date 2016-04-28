@@ -32,8 +32,8 @@ patch_header:
 header_def:
   | EXPR_KW COLON exprs = separated_nonempty_list(COMMA, ID) eols
   { Parsed_patches.Expressions exprs }
-  | MESSAGES_KW COLON msg = STRING eols { Parsed_patches.Message msg }
-  | NAME_KW COLON msg = STRING eols { Parsed_patches.Name msg }
+  | MESSAGES_KW COLON msg = string_or_id eols { Parsed_patches.Message msg }
+  | NAME_KW COLON msg = string_or_id eols { Parsed_patches.Name msg }
 
 patch_body:
   | cde = CODE eols
@@ -46,3 +46,7 @@ eols:
 
 eols_option:
   | list(EOL) { }
+
+string_or_id:
+  | s = STRING { s }
+  | s = ID { s }

@@ -8,6 +8,7 @@ name: "Simple var replacement"
 ```
 
 @apply
+name : apply
 ```
 - f x
 + foo
