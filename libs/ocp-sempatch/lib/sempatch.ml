@@ -27,7 +27,7 @@ let get_matches_from_patch patch expression =
   Ast_pattern_matcher.apply patch expression
   |> Res.map snd
   |> Res.unwrap
-  |> (fun x -> x.Variables.matches)
+  |> (fun x -> x.Environment.matches)
 
 let get_matches_from_patches patches expression=
   StringMap.fold (fun name patch accu ->

@@ -17,7 +17,7 @@ let apply_replacements tree attributes var_replacements =
         expr = (fun self e ->
             match e.pexp_desc with
             | Pexp_ident { Asttypes.txt = Longident.Lident i; _} ->
-              Variables.get_expr i var_replacements
+              Environment.get_expr i var_replacements
               >|= (fun desc -> { e with pexp_desc = desc; })
               |> Option.value e
             | _ -> default_mapper.expr self e
@@ -28,10 +28,10 @@ let apply_replacements tree attributes var_replacements =
 
 let apply patch expr =
   let is_meta_expr e = List.mem e Parsed_patches.(patch.header.meta_expr)
-  and merge_envs = Variables.merge in
+  and merge_envs = Environment.merge in
   let rec match_at_root =
     let open Ast_maybe_mapper2 in
-    let default = mk Variables.merge in
+    let default = mk Environment.merge in
     {
       expr = (fun self env ~patch:({ pexp_desc = e2; pexp_attributes = attrs2; _ } as expr2) ~expr:({ pexp_desc = e1; _ } as expr1) ->
           let replacements =
@@ -39,15 +39,15 @@ let apply patch expr =
             | Pexp_constant c1, Pexp_constant c2 when c1 = c2 -> Ok (expr1, env)
             | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_expr j ->
               (* TODO (one day...) treat the case where j is already defined as an expression *)
-              Ok (expr1, Variables.add_env j (Variables.Expression e) env)
+              Ok (expr1, Environment.add_expr j e env)
             | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Ok (expr1, env)
             | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "__sempatch_inside" ->
               apply_to_expr env ~expr:expr1 ~patch:e
             | _ -> default.expr self env ~expr:expr1 ~patch:expr2
           in
           let result = match replacements with
-          | Ok (expr, attrs) -> Ok (expr, Variables.set_loc [attrs.Variables.env, expr.pexp_loc] attrs)
-          | Error (expr, attrs) -> Error (expr, Variables.set_loc [] attrs)
+          | Ok (expr, attrs) -> Ok (expr, Environment.set_matches [attrs.Environment.current_match, expr.pexp_loc] attrs)
+          | Error (expr, attrs) -> Error (expr, Environment.set_matches [] attrs)
           in
           Error.map (fun (e, env) -> apply_replacements e attrs2 env, env) result
         );
@@ -55,7 +55,7 @@ let apply patch expr =
           let replacements =
             match pat1.ppat_desc, pat2.ppat_desc with
             | Ppat_var { Asttypes.txt = v; _ }, Ppat_var { Asttypes.txt = v'; _ } when is_meta_expr v' ->
-              Ok (pat1, Variables.add_env v' (Variables.Ident v) env)
+              Ok (pat1, Environment.add_ident v'  v env)
             | Ppat_var v, Ppat_var v' when v.Asttypes.txt = v'.Asttypes.txt ->
               Ok (pat1, env)
             | _ -> default.pattern self env ~patch:pat2 ~pat:pat1
@@ -216,7 +216,7 @@ let apply patch expr =
   let expr = Parsed_patches.preprocess_src_expr expr
   and patch = Parsed_patches.preprocess patch
   in
-  apply_to_expr Variables.empty ~expr ~patch:Parsed_patches.(patch.body)
+  apply_to_expr Environment.empty ~expr ~patch:Parsed_patches.(patch.body)
   |> Res.map (fun (tree, env) -> Parsed_patches.postprocess tree, env)
      (* |> Error.map fst *)
      (* |> Error.map_err fst *)

@@ -27,10 +27,10 @@ let dump_env patch_name (env, _) =
       StringMap.iter (fun key value ->
           let dump =
             match value with
-            | Variables.Expression e ->
+            | Variable.Expression e ->
               Pprintast.expression Format.str_formatter (Ast_helper.Exp.mk e);
               Format.flush_str_formatter ();
-            | Variables.Ident i -> i
+            | Variable.Ident i -> i
           in
           Printf.eprintf "[%s=%s]" key dump
         )

@@ -28,9 +28,15 @@ val apply : t -> Parsetree.expression -> Parsetree.expression
 (**
    Return all the matches on the given expression
 *)
-val get_matches_from_patch : t -> Parsetree.expression -> (Variables.env * Location.t) list
+val get_matches_from_patch :
+  t
+  -> Parsetree.expression
+  -> (Match.t * Location.t) list
 
 (**
    Return all the matches from all the patches on the given expression
 *)
-val get_matches_from_patches : t StringMap.t -> Parsetree.expression -> (string * (Variables.env * Location.t)) list
+val get_matches_from_patches :
+  t StringMap.t
+  -> Parsetree.expression
+  -> (string * (Match.t * Location.t)) list
