@@ -22,7 +22,7 @@ module WarningSet = Set.Make (struct
 
 type t = WarningSet.t ref
 
-let empty = ref WarningSet.empty
+let empty () = ref WarningSet.empty
 
 let add_warning warning wset =
   wset := WarningSet.add warning !wset
