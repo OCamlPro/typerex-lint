@@ -22,12 +22,28 @@ let expr_to_string e =
   Pprintast.expression Format.str_formatter e;
   Format.flush_str_formatter ()
 
+let dump_env patch_name (env, _) =
+  Printf.eprintf "==========\n%s : \n" patch_name;
+      StringMap.iter (fun key value ->
+          let dump =
+            match value with
+            | Variables.Expression e ->
+              Pprintast.expression Format.str_formatter (Ast_helper.Exp.mk e);
+              Format.flush_str_formatter ();
+            | Variables.Ident i -> i
+          in
+          Printf.eprintf "[%s=%s]" key dump
+        )
+        env;
+      Printf.eprintf "\n"
+
 let test patches (ast, expected_results) =
   let parsed_ast = string_to_expr ast in
   StringMap.fold (fun patch_name patch accu ->
     List.map (fun (name, expected) ->
         if (name = patch_name) then
           let result = expr_to_string (Sempatch.apply patch parsed_ast) in
+          List.iter (dump_env name) (Sempatch.get_matches_from_patch patch parsed_ast);
           Option.some_if (expected <> result) (name, result)
         else None
         )
