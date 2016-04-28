@@ -4,13 +4,11 @@ type id = string
 
 type header = {
   meta_expr : string list;
-  meta_bindings : string list;
   message : string option;
 }
 
 let void_header = {
   meta_expr = [];
-  meta_bindings = [];
   message = None;
 }
 
@@ -23,7 +21,6 @@ type t = {
 
 type setting =
   | Expressions of string list
-  | Bindings of string list
   | Message of string
 
 exception PatchError of string
@@ -32,7 +29,6 @@ let raisePatchError e = raise (PatchError e)
 
 let add_header_field header = function
   | Expressions v -> { header with meta_expr = v @ header.meta_expr }
-  | Bindings b -> { header with meta_bindings = b  @ header.meta_bindings }
   | Message m -> { header with message = Some m }
 
 let header_from_list l = List.fold_left add_header_field void_header l
@@ -95,7 +91,6 @@ let uncurryfying_mapper =
 let preprocess { header; body} =
   let open Ast_mapper in
   let meta_exprs_in_pre_patch  = ref []
-  and meta_bindings_in_pre_patch = ref []
   and metas_in_post_patch = ref []
   in
   let rec mkmapper in_replacement =
@@ -121,12 +116,12 @@ let preprocess { header; body} =
         pat = (fun self pat ->
             let new_pattern =
               match pat.ppat_desc with
-              | Ppat_var { Asttypes.txt = i; _ } when List.mem i header.meta_expr || List.mem i header.meta_bindings ->
-                if not in_replacement && List.mem i !meta_bindings_in_pre_patch then
+              | Ppat_var { Asttypes.txt = i; _ } when List.mem i header.meta_expr ->
+                if not in_replacement && List.mem i !meta_exprs_in_pre_patch then
                   raisePatchError ("The pattern " ^ i ^ " appears more than once in the patch")
                 else (* TODO : Check if the variable appears out of scope ? *)
                   (
-                    let processed_vars = if in_replacement then metas_in_post_patch else meta_bindings_in_pre_patch in
+                    let processed_vars = if in_replacement then metas_in_post_patch else meta_exprs_in_pre_patch in
                     processed_vars := i :: !processed_vars;
                     pat
                   )
@@ -147,8 +142,8 @@ let preprocess { header; body} =
   in
   let processed_before_patch = map body
   in
-  testInclusion !metas_in_post_patch (List.append !meta_bindings_in_pre_patch !meta_exprs_in_pre_patch);
-  { header = { header with meta_expr = !meta_exprs_in_pre_patch; meta_bindings = !meta_bindings_in_pre_patch; }; body = processed_before_patch; }
+  testInclusion !metas_in_post_patch (List.append !meta_exprs_in_pre_patch !meta_exprs_in_pre_patch);
+  { header = { header with meta_expr = !meta_exprs_in_pre_patch; }; body = processed_before_patch; }
 
 let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper
 

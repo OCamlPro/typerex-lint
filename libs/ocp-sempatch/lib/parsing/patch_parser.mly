@@ -9,7 +9,6 @@
 %token TITLE_DELIM
 
 %token EXPR_KW
-%token BINDINGS_KW
 %token MESSAGES_KW
 %token<string> STRING
 
@@ -32,8 +31,6 @@ patch_header:
 header_def:
   | EXPR_KW COLON exprs = separated_nonempty_list(COMMA, ID) eols
   { Parsed_patches.Expressions exprs }
-  | BINDINGS_KW COLON bindings = separated_nonempty_list(COMMA, ID) eols
-  { Parsed_patches.Bindings bindings }
   | MESSAGES_KW COLON msg = STRING eols { Parsed_patches.Message msg }
 
 patch_body:

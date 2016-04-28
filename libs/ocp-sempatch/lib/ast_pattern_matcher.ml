@@ -28,7 +28,6 @@ let apply_replacements tree attributes var_replacements =
 
 let apply patch expr =
   let is_meta_expr e = List.mem e Parsed_patches.(patch.header.meta_expr)
-  and is_meta_binding b = List.mem b Parsed_patches.(patch.header.meta_bindings)
   and merge_envs = Variables.merge in
   let rec match_at_root =
     let open Ast_maybe_mapper2 in
@@ -38,8 +37,6 @@ let apply patch expr =
           let replacements =
             match e1, e2 with
             | Pexp_constant c1, Pexp_constant c2 when c1 = c2 -> Ok (expr1, env)
-            | Pexp_ident { Asttypes.txt = Longident.Lident i; _ }, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_binding j ->
-              Error.ok_if (Variables.get_ident j env = (Some i)) (expr1, env) (expr1, env)
             | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_expr j ->
               (* TODO (one day...) treat the case where j is already defined as an expression *)
               Ok (expr1, Variables.add_env j (Variables.Expression e) env)
@@ -57,9 +54,10 @@ let apply patch expr =
       pattern = (fun self env ~patch:pat2 ~pat:pat1 ->
           let replacements =
             match pat1.ppat_desc, pat2.ppat_desc with
-            | Ppat_var v, Ppat_var v' when v.Asttypes.txt = v'.Asttypes.txt -> Ok (pat1, env)
-            | Ppat_var { Asttypes.txt = v; _ }, Ppat_var { Asttypes.txt = v'; _ } when is_meta_binding v' ->
+            | Ppat_var { Asttypes.txt = v; _ }, Ppat_var { Asttypes.txt = v'; _ } when is_meta_expr v' ->
               Ok (pat1, Variables.add_env v' (Variables.Ident v) env)
+            | Ppat_var v, Ppat_var v' when v.Asttypes.txt = v'.Asttypes.txt ->
+              Ok (pat1, env)
             | _ -> default.pattern self env ~patch:pat2 ~pat:pat1
           in replacements
         )
@@ -92,9 +90,9 @@ let apply patch expr =
       | Pexp_let (isrec, bindings, expr) ->
         apply_to_bindings env patch bindings
         >>= (fun (mapped_bindings, env_bindings) ->
-            apply_to_expr env_bindings ~expr ~patch
-            >|= (fun (mapped_expr, env_combined) ->
-                Pexp_let (isrec, mapped_bindings, mapped_expr), [ env_combined ]
+            apply_to_expr env ~expr ~patch
+            >|= (fun (mapped_expr, env_expr) ->
+                Pexp_let (isrec, mapped_bindings, mapped_expr), [ env_bindings; env_expr ]
               )
           )
 

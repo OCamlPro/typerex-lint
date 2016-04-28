@@ -23,7 +23,6 @@ rule read =
     CODE (Buffer.to_bytes str_litteral_buf |> Bytes.to_string)
   }
   | "expressions" { EXPR_KW }
-  | "bindings" { BINDINGS_KW }
   | "message" { MESSAGES_KW }
   | "\"" {
     Buffer.clear str_litteral_buf; read_string lexbuf;
