@@ -17,7 +17,7 @@ val kind_to_string : Warning_types.kind -> string
 type t
 
 (** The empty set of warning. *)
-val empty : t
+val empty : unit -> t
 
 (** [add loc id kinds short_name message wset] adds the warning to [wset] with
     the location [loc], warning number [id], kinds [kinds], a short message

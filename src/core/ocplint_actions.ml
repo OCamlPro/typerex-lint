@@ -40,16 +40,18 @@ let filter_modules sources filters =
       not (List.exists (fun ignored -> ignored = source) filters)) sources
 
 let parse_source source =
+  let tool_name = Ast_mapper.tool_name () in
   try
     Some
-      (Pparse.parse_implementation ~tool_name:"" Format.err_formatter  source)
+      (Pparse.parse_implementation ~tool_name Format.err_formatter  source)
   with Syntaxerr.Error _ ->
     Printf.printf "Cannot lint %S.\n" source;
     None
 
 let parse_interf source =
+  let tool_name = Ast_mapper.tool_name () in
   try
-    Some (Pparse.parse_interface ~tool_name:"" Format.err_formatter source)
+    Some (Pparse.parse_interface ~tool_name Format.err_formatter source)
   with Syntaxerr.Error _ ->
     Printf.printf "Cannont lint %S.\n" source;
     None
@@ -59,7 +61,34 @@ let is_interface file = Filename.check_suffix file "mli"
 let is_cmt file = Filename.check_suffix file "cmt"
 let is_cmt file = Filename.check_suffix file "cmt"
 
-let scan ~filters path =
+
+let register_default_sempatch () =
+  (* TODO: Fabrice: vérifier que le fichier existe, sinon prendre celui dans
+     l'exécutable par défaut*)
+  let default_patches = [
+    "./src/analysis/plugins/sempatch.md"
+  ] in
+  let
+    module Default = Plugin_sempatch.SempatchPlugin.MakeLintPatch(struct
+      let name = "Lint from semantic patches (default)"
+      let short_name = "sempatch-lint"
+      let details = "Lint from semantic patches (default)."
+      let patches = default_patches
+    end) in
+  ()
+
+let register_default_plugins patches =
+  register_default_sempatch ();
+  let
+    module UserDefined = Plugin_sempatch.SempatchPlugin.MakeLintPatch(struct
+      let name = "Lint from semantic patches (user defined)."
+      let short_name = "sempatch-lint"
+      let details = "Lint from semantic patches (user defined)."
+      let patches = patches
+    end) in
+  ()
+
+let scan ~filters path patches =
   (* XXX TODO : don't forget to read config file too ! *)
   (* let plugins = filter_plugins filters in *)
 
@@ -79,4 +108,5 @@ let scan ~filters path =
 
   Format.printf "Starting analyses...\n%!";
 
+  register_default_plugins patches;
   Parallel_engine.lint all mls mlis asts_ml asts_mli cmts

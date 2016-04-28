@@ -4,3 +4,10 @@ module type LintArg = sig
   val short_name : string
   val details : string
 end
+
+module type LintPatchArg = sig
+  val name : string
+  val short_name : string
+  val details : string
+  val patches : string list
+end
