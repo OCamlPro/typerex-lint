@@ -1,6 +1,6 @@
 comp += [ "-w" "+A-4" ]
 
-begin library "ocp-sempatch"
+begin library "ocplib-sempatch"
     files = [
       "lib/std_utils.ml"
       "lib/myStringMap.ml"
@@ -23,14 +23,14 @@ begin library "ocp-sempatch"
     ocamlyacc = "menhir"
 end
 
-(* begin program "sempatch-test" *)
-(*     files = [ *)
-(*       "test/sempatch-runner.ml" *)
-(*     ] *)
-(*     requires = [ *)
-(*         "ocp-sempatch" *)
-(*     ] *)
+begin program "sempatch-test"
+    files = [
+      "test/sempatch_runner.ml"
+    ]
+    requires = [
+        "ocplib-sempatch"
+    ]
 
-(*     test_args = [ "test/sempatch.md" ] *)
-(*     tests = [ "test" ] *)
-(* end *)
+    test_args = [ "test/sempatch.md" ]
+    tests = [ "test" ]
+end

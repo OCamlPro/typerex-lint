@@ -41,7 +41,7 @@ begin library "plugin-lib"
   ]
   requires = [
     "compiler-libs.common"
-    "ocp-sempatch"
+    "ocplib-sempatch"
     "default-config"
     "parsetree-iter"
     "plugin-utils"
