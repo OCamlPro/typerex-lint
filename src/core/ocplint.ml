@@ -25,6 +25,7 @@ type action =
 
 let action = ref ActionNone
 let exit_status = ref 0
+let patches = ref []
 
 let set_action new_action =
    if !action <> ActionNone then
@@ -37,7 +38,7 @@ let usage_msg =
   String.concat "\n" [
     "Usage:";
     Printf.sprintf "   %s [OPTIONS] --project DIR" name;
-    Printf.sprintf "   %s [OPTIONS] --project DIR --warnings -4,-5" name;
+    Printf.sprintf "   %s [OPTIONS] --project DIR --patches foo.md,bar.md" name;
     "";
   ]
 
@@ -47,16 +48,27 @@ let core_args_spec = Arg.align [
 
     "--list-warnings", Arg.Unit (fun () -> set_action ActionList),
     " List of warnings";
+
     "--warn-error", Arg.Unit (fun () ->
         exit_status := 1),
     " Every warning returns an error status code.";
+
+    "--patches", Arg.String (fun files ->
+        patches := (Str.split (Str.regexp ",") files)),
+    " List of user defined lint with the patch format."
   ]
+
+let core_args () =
+  Arg.parse core_args_spec
+    (fun cmd ->
+       Printf.printf "Error: don't know what to do with %s\n%!" cmd;
+       exit 1)
+    usage_msg
 
 let main () =
   (* Getting all options declared in all registered plugins. *)
   let all_args =
     Hashtbl.fold (fun plugin _ args ->
-        let module Plugin = (val plugin : Plugin_types.PLUGIN) in
         Globals.Config.simple_args () @ args)
       Globals.plugins core_args_spec in
 
@@ -68,7 +80,7 @@ let main () =
 
   match !action with
   | ActionLoad dir ->
-    Ocplint_actions.scan ~filters:"" dir;
+    Ocplint_actions.scan ~filters:"" dir !patches;
     Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
       if Warning.length P.warnings > 0 then exit !exit_status);
