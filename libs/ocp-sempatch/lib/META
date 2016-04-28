@@ -1,0 +1,12 @@
+# OASIS_START
+# DO NOT EDIT (digest: 09ab6fd44d26f6f42b5dbd4bc65622b8)
+version = "0.1"
+description = "test"
+requires = "ppx_tools compiler-libs"
+archive(byte) = "ppx_patch.cma"
+archive(byte, plugin) = "ppx_patch.cma"
+archive(native) = "ppx_patch.cmxa"
+archive(native, plugin) = "ppx_patch.cmxs"
+exists_if = "ppx_patch.cma"
+# OASIS_STOP
+
