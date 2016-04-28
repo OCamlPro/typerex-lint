@@ -41,6 +41,12 @@ sig
   (** The details of the plugin.  *)
   val details : string
 
+  (** [MakeLintPatch] is a functor which take a module of type
+      [Lint.LintPatchArg] as an argument. It allows to create a linter based
+      on semantic patches. It takes the files names of patches as arguments and
+      automatically register the linter linter into a plugin. *)
+  module MakeLintPatch : functor (CA : Lint.LintPatchArg) ->  sig  end
+
   (** [MakeLint] is a functor which take a module of type [Lint.LintArg] as an
       argument. It allows to create a linter and automatically register it to
       the plugin in the global [plugins]. The functor allows to create specific
