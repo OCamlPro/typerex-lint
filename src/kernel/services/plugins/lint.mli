@@ -18,21 +18,16 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "plugin-lib"
-  files = [
-    "globals.ml"
-    "input.mli"
-    "warning_types.mli"
-    "lint.mli"
-    "plugin_types.mli"
-    "plugin_error.ml"
-    "warning.ml"
-    "plugin.ml"
-  ]
-  requires = [
-    "compiler-libs.common"
-    "default-config"
-    "parsetree-iter"
-    "plugin-utils"
- ]
+(** [LintArg] is a type module which is used by the functor [Plugin.MakeLint]. *)
+module type LintArg = sig
+  val name : string
+  val short_name : string
+  val details : string
+end
+
+module type LintPatchArg = sig
+  val name : string
+  val short_name : string
+  val details : string
+  val patches : string list
 end
