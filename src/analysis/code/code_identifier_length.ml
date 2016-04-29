@@ -67,7 +67,7 @@ module Warnings = CodeIdentifierLength.MakeWarnings(struct
         1
         [ Warning.kind_code ]
         ~short_name:"identifier_too_short"
-        ~msg:"%id is too short: it should be at least of size '%size'."
+        ~msg:"$id is too short: it should be at least of size '$size'."
         ~args
 
     let w_too_long loc args = CodeIdentifierLength.new_warning
@@ -75,18 +75,18 @@ module Warnings = CodeIdentifierLength.MakeWarnings(struct
         2
         [ Warning.kind_code ]
         ~short_name:"identifier_too_long"
-        ~msg:"%id is too long: it should be at most of size '%size'."
+        ~msg:"$id is too long: it should be at most of size '$size'."
         ~args
 
     let report loc = function
       | Short id ->
         w_too_short
           loc
-          [("%id", id); ("%size", string_of_int !!min_identifier_length)]
+          [("id", id); ("size", string_of_int !!min_identifier_length)]
       | Long id ->
         w_too_long
           loc
-          [("%id", id); ("%size", string_of_int !!max_identifier_length)]
+          [("id", id); ("size", string_of_int !!max_identifier_length)]
   end)
 
 let iter =

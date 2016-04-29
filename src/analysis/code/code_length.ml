@@ -54,15 +54,15 @@ module Warnings = CodeLength.MakeWarnings(struct
         1
         [ Warning.kind_code ]
         ~short_name:"long_line"
-        ~msg:"This line is too long ('%line'): it should be at \
-              most of size '%max'."
+        ~msg:"This line is too long ('$line'): it should be at \
+              most of size '$max'."
         ~args
 
     let report loc = function
       | LongLine len ->
         line_too_long loc
-          [("%line", string_of_int len);
-           ("%max", string_of_int !!max_line_length)]
+          [("line", string_of_int len);
+           ("max", string_of_int !!max_line_length)]
   end)
 
 let check_line lnum file line =

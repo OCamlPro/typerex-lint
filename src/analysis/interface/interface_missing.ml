@@ -41,12 +41,12 @@ module Warnings = CodeLength.MakeWarnings(struct
         1
         [ Warning.kind_interface ]
         ~short_name:"missing-interface"
-        ~msg:"Missing interface for '%file'."
+        ~msg:"Missing interface for '$file'."
         ~args
 
     let report loc = function
       | MissingInterface file ->
-        missing loc [("%file", file)]
+        missing loc [("file", file)]
   end)
 
 let mli = ".mli"
