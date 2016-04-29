@@ -78,9 +78,7 @@ let apply patch expr =
               )
           )
       | Pexp_fun(lbl, default, pat, expr) ->
-        let apply_some expr = apply_to_expr env ~expr ~patch
-                              |> Res.map (fun (tree, env) -> Some tree, env) in
-        Option.fold (fun _ -> apply_some) (Ok (None, env)) default
+        apply_to_maybe_expr env patch default
         >>= (fun (mapped_default, env_default) ->
             apply_to_expr env ~expr ~patch
             >|= (fun (mapped_expr, env_expr) ->
@@ -210,7 +208,7 @@ let apply patch expr =
     function
     | Some expr -> apply_to_expr env ~expr ~patch
       >|= (fun (expr, env) -> Some expr, env)
-    | None -> Ok (None, env)
+    | None -> Error (None, env)
 
   in
   let expr = Parsed_patches.preprocess_src_expr expr
