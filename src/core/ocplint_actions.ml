@@ -112,11 +112,11 @@ let scan ~filters path patches =
   let all = filter_modules (scan_project path) !!ignored_files in
 
   (* All inputs for each analyze *)
-  let mls = List.filter (fun file -> is_source file) all in
-  let mlis = List.filter (fun file -> is_interface file) all in
+  let mls = List.filter is_source all in
+  let mlis = List.filter is_interface all in
 
   let cmts =
-    let files = List.filter (fun file -> is_cmt file) all in
+    let files = List.filter is_cmt all in
     List.map (fun file -> lazy (Cmt_format.read_cmt file)) files in
 
   let asts_ml, asts_mli =

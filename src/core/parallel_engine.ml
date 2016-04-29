@@ -52,7 +52,15 @@ let lint all mls mlis asts_ml asts_mli cmts =
                   | Input.InStruct main ->
                     begin match Lazy.force input with
                       | None -> ()
-                      | Some input ->  main input
+                      | Some input ->
+                        try
+                          main input
+                        with
+                        | Parsed_patches.PatchError err ->
+                          Printf.eprintf
+                            "Error when parsing patch file : %S\n%!" err
+                        | Failure err ->
+                          Printf.eprintf "Error with patch file: %S\n%!" err
                     end
                   | _ -> ()) runs) checks))
     asts_ml;
