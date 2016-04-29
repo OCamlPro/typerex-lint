@@ -18,46 +18,25 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Warning_types
+(** [LintMap] is a Map containing all information about the linter.
+    The key is a [string] representing the linter name, and the value of the
+    map contains a list of [input] (registered mains). *)
+module LintMap : sig
+  type 'a t
+  type key = string
+  val empty : 'a t
+  val add : key -> 'a -> 'a t -> 'a t
+  val iter : (key -> 'a -> unit) -> 'a t -> unit
+  val find : key -> 'a t -> 'a
+  val cardinal : 'a t -> int
+end
 
-let kind_code = Code
-let kind_typo = Typo
-let kind_interface = Interface
-let kind_metrics = Metrics
+(** [Config] is a module which allow to create options for the configuration
+    file and command-line arguments. *)
+module Config : Configuration.CONFIG
 
-let new_kind kind = Custom kind
-
-let kind_to_string = function
-  | Code -> "code"
-  | Typo -> "typographie"
-  | Interface -> "interface"
-  | Metrics -> "metrics"
-  | Custom kind -> kind
-
-(* Warning Set *)
-module WarningSet = Set.Make (struct
-    type t = warning
-    let compare = Pervasives.compare
-  end)
-
-type t = WarningSet.t ref
-
-let empty = ref WarningSet.empty
-
-let add_warning warning wset =
-  wset := WarningSet.add warning !wset
-
-let add loc id kinds short_name message wset =
-  let warning = { id; kinds; short_name; message; loc } in
-  add_warning warning wset
-
-let length wset = WarningSet.cardinal !wset
-
-let iter apply wset = WarningSet.iter apply !wset
-
-let print ppf warning =
-  if warning.loc <> Location.none then
-    Format.fprintf ppf "%a" Location.print warning.loc;
-
-  Format.fprintf ppf "  %s" warning.message;
-  Format.fprintf ppf "@."
+(** [plugins] is a global data structure where all plugins are registered.
+    The keys of the structure are a [Plugin_types.PLUGIN] and the value are
+    a [LintMap.t]. *)
+val plugins :
+  ((module Plugin_types.PLUGIN), (Input.input list) LintMap.t) Hashtbl.t

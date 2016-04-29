@@ -20,23 +20,46 @@ AC_ARG_ENABLE(version-check,
 
 AC_PROG_CC
 
+AC_PROG_OCAML
+
+if test "$OCAMLC" = "no"; then
+   AC_MSG_ERROR([You must install the OCaml compiler])
+fi
+
+if test "$OCAMLVERSION" = ""; then
+   AC_MSG_ERROR([No OCaml version. ocamlc -version is not parsable.])
+fi
+
 # Check that OCaml version is greater or equal to 4.00.0
 if test "$VERSION_CHECK" = "yes" ; then
-
-  AC_PROG_OCAML
-  AC_PROG_CAMLP4
-
   AX_SPLIT_VERSION(OCAMLVERSION)
   OCAML_MAJOR_VERSION=$AX_MAJOR_VERSION
   OCAML_MINOR_VERSION=$AX_MINOR_VERSION
   OCAML_POINT_VERSION=$AX_POINT_VERSION
 
-  if test "$OCAMLC" = "no"; then
-     AC_MSG_ERROR([You must install the OCaml compiler])
-  fi
   AX_COMPARE_VERSION( [$OCAMLVERSION], [lt], [3.12.1],
      AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 fi
+
+AC_PROG_FINDLIB
+if test "$OCAMLFIND" = "no"; then
+   AC_MSG_ERROR([You must install OCaml package 'ocamlfind'])
+fi
+
+AC_CHECK_OCAML_PKG([yojson])
+ if test "$OCAML_PKG_yojson" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'yojson'.])
+ fi
+
+AC_CHECK_OCAML_PKG([menhirLib])
+ if test "$OCAML_PKG_menhirLib" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'menhir'.])
+ fi
+
+AC_CHECK_PROG([OCPBUILD],ocp-build,yes,no)
+ if test "$OCAML_PKG_yojson" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'ocp-build'.])
+ fi
 
 if test "x$prefix" = "xNONE"; then
 #  prefix=$ac_default_prefix

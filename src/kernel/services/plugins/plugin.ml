@@ -49,19 +49,80 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
   let short_name = P.short_name
   let details = P.details
 
-  let warnings = Warning.empty
+  let warnings = Warning.empty ()
 
   module Plugin = struct
     let name = name
     let short_name = short_name
     let details = details
     let warnings = warnings
-    module Config = Config
   end
   let plugin = (module Plugin : Plugin_types.PLUGIN)
 
   let create_option options short_help lhelp ty default =
     Globals.Config.create_option options ~short_help [lhelp] ~level:0 ty default
+
+  module MakeLintPatch (C : Lint.LintPatchArg) = struct
+
+    let name = C.name
+    let short_name = C.short_name
+    let details = C.details
+    let patches = C.patches
+
+    let new_warning loc num cats ~short_name ~msg ~args = (* TODO *)
+      let msg = Utils.subsitute msg args in
+      Warning.add loc num cats short_name msg Plugin.warnings
+
+    (* TODO This function should be exported in ocp-sempatch. *)
+    let map_args env args =
+      List.map (fun str ->
+          try
+            match Std_utils.StringMap.find str env with
+            | Variable.Ident ident -> ("%" ^ str, ident)
+            | Variable.Expression expr ->
+              Pprintast.expression
+                Format.str_formatter
+                (Ast_helper.Exp.mk expr);
+              let expr_str = Format.flush_str_formatter () in
+              ("%" ^ str, expr_str)
+          with Not_found ->
+            ("%" ^ str, "xx"))
+        args
+
+    let report env loc patch_name kinds patch =
+      let open Parsed_patches in
+      let warn = patch.header in
+      let msg =
+        match warn.Parsed_patches.message with
+        (* TODO replace by the result of the patch. *)
+          None -> "You should use ... instead of ..."
+        | Some msg -> msg in
+      (* TODO Warning number can be override by the user. *)
+      new_warning loc 1 kinds
+        ~short_name:patch_name
+        ~msg
+        ~args:(map_args env patch.header.meta_expr)
+
+    let iter =
+      let module IterArg = struct
+        include ParsetreeIter.DefaultIteratorArgument
+        let enter_expression expr =
+          List.iter (fun filename ->
+              let ic = open_in filename in
+              let patches = Sempatch.from_channel ic in
+              let matches = Sempatch.get_matches_from_patches patches expr in
+              List.iter (fun (patch_name, (env, loc)) ->
+                  let patch = Std_utils.StringMap.find patch_name patches in
+                  report env loc patch_name [Warning.kind_code] patch)
+                matches)
+            patches
+      end in
+      (module IterArg : ParsetreeIter.IteratorArgument)
+
+    let () =
+      let input = Input.InStruct (ParsetreeIter.iter_structure iter) in
+      register_main plugin C.short_name (input)
+  end
 
   module MakeLint (C : Lint.LintArg) = struct
 
@@ -71,7 +132,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
 
     let new_warning loc num cats ~short_name ~msg ~args = (* TODO *)
       let msg = Utils.subsitute msg args in
-      Warning.add loc num cats short_name msg warnings
+      Warning.add loc num cats short_name msg Plugin.warnings
 
     let create_option option short_help lhelp ty default =
       let option = [P.short_name; short_name; option] in
