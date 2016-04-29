@@ -3,7 +3,7 @@ module StringMap = Std_utils.StringMap
 (**
    The type of semantic patches
 *)
-type t
+type t = Parsed_patches.t
 
 (**
    Parse the given channel and return the corresponding list of patches
