@@ -76,16 +76,14 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     (* TODO This function should be exported in ocp-sempatch. *)
     let map_args env args =
       List.map (fun str ->
-          try
-            match Std_utils.StringMap.find str env with
-            | Variable.Ident ident -> (str, ident)
-            | Variable.Expression expr ->
+            match Match.get_expr str env with
+            | Some expr ->
               Pprintast.expression
                 Format.str_formatter
                 (Ast_helper.Exp.mk expr);
               let expr_str = Format.flush_str_formatter () in
               (str, expr_str)
-          with Not_found -> (str, "xx"))
+            | None -> (str, "xx"))
         args
 
     let report env loc patch_name kinds patch =
