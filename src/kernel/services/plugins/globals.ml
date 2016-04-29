@@ -23,3 +23,7 @@ module LintMap = Map.Make (String)
 module Config = Configuration.DefaultConfig
 
 let plugins = Hashtbl.create 42
+
+let default_patches = [
+  "./src/analysis/plugins/sempatch.md"
+]
