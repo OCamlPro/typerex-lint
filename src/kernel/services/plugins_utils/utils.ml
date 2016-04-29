@@ -18,11 +18,9 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+
 let subsitute str substs =
-  let rec loop str = function
-    | [] -> str
-    | (pattern, replace) :: others ->
-      let str =
-        Str.global_substitute (Str.regexp pattern) (fun _ -> replace) str in
-      loop str others in
-  loop str substs
+  let replace substs str = try List.assoc str substs with Not_found -> str in
+  let buf = Buffer.create (String.length str) in
+  Buffer.add_substitute buf (replace substs) str;
+  Buffer.contents buf
