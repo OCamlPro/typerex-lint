@@ -1,9 +1,10 @@
 module StringMap = Std_utils.StringMap
+open Parsed_patches.Type
 
 (**
    The type of semantic patches
 *)
-type t = Parsed_patches.t
+type t = patch
 
 (**
    Parse the given channel and return the corresponding list of patches
@@ -13,12 +14,12 @@ val from_channel : in_channel -> t StringMap.t
 (**
    Parse the given channel as a patch_body
 *)
-val parse_body : in_channel -> Parsed_patches.body
+val parse_body : in_channel -> body
 
 (**
    Creates a patch out of the given name, body and headers
 *)
-val mk : Parsed_patches.body -> Parsed_patches.header -> t
+val mk : body -> header -> t
 
 (**
    Apply the patch to the expression and return the resulting expression

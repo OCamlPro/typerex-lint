@@ -1,4 +1,5 @@
 open Std_utils
+include Parsed_patches.Type
 
 module StringMap = StringMap
 
@@ -16,7 +17,7 @@ let parse_body chan =
     (Lexing.from_channel chan)
   |> Raw_patch.to_patch_body
 
-let mk body header = Parsed_patches.({ body; header; })
+let mk body header = ({ body; header; })
 
 let apply patch expression =
   Ast_pattern_matcher.apply patch expression

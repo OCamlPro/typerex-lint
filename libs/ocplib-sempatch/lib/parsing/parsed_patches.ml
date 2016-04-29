@@ -1,24 +1,29 @@
 open Parsetree
 
-type id = string
+module Type =
+struct
+  type header = {
+    meta_expr : string list;
+    message : string option;
+    name : string option;
+  }
 
-type header = {
-  meta_expr : string list;
-  message : string option;
-  name : string option;
-}
+  type body = Parsetree.expression
+
+  type patch = {
+    header: header;
+    body: body;
+  }
+end
+
+open Type
+
+type t = patch
 
 let void_header = {
   meta_expr = [];
   message = None;
   name = None;
-}
-
-type body = Parsetree.expression
-
-type t = {
-  header: header;
-  body: body;
 }
 
 type setting =

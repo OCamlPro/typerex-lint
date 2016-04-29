@@ -1,6 +1,8 @@
 open Parsetree
 open Std_utils
 
+open Parsed_patches.Type
+
 let apply_replacements tree attributes var_replacements =
   (* TODO : Keep location from the original AST *)
   let open Option.Infix in
@@ -27,7 +29,7 @@ let apply_replacements tree attributes var_replacements =
   mapper.Ast_mapper.expr mapper new_tree
 
 let apply patch expr =
-  let is_meta_expr e = List.mem e Parsed_patches.(patch.header.meta_expr)
+  let is_meta_expr e = List.mem e (patch.header.meta_expr)
   and merge_envs = Environment.merge in
   let rec match_at_root =
     let open Ast_maybe_mapper2 in
@@ -214,7 +216,7 @@ let apply patch expr =
   let expr = Parsed_patches.preprocess_src_expr expr
   and patch = Parsed_patches.preprocess patch
   in
-  apply_to_expr Environment.empty ~expr ~patch:Parsed_patches.(patch.body)
+  apply_to_expr Environment.empty ~expr ~patch:(patch.body)
   |> Res.map (fun (tree, env) -> Parsed_patches.postprocess tree, env)
      (* |> Error.map fst *)
      (* |> Error.map_err fst *)

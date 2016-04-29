@@ -87,10 +87,10 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
         args
 
     let report env loc patch_name kinds patch =
-      let open Parsed_patches in
+      let open Parsed_patches.Type in
       let warn = patch.header in
       let msg =
-        match warn.Parsed_patches.message with
+        match warn.message with
         (* TODO replace by the result of the patch. *)
           None -> "You should use ... instead of ..."
         | Some msg -> msg in
