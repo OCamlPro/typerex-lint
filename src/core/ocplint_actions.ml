@@ -85,15 +85,12 @@ let is_cmt file = Filename.check_suffix file "cmt"
 let register_default_sempatch () =
   (* TODO: Fabrice: vérifier que le fichier existe, sinon prendre celui dans
      l'exécutable par défaut*)
-  let default_patches = [
-    "./src/analysis/plugins/sempatch.md"
-  ] in
   let
     module Default = Plugin_sempatch.SempatchPlugin.MakeLintPatch(struct
       let name = "Lint from semantic patches (default)"
       let short_name = "sempatch-lint"
       let details = "Lint from semantic patches (default)."
-      let patches = default_patches
+      let patches = Globals.default_patches
     end) in
   ()
 

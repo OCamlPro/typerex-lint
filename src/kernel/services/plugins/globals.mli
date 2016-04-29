@@ -40,3 +40,5 @@ module Config : Configuration.CONFIG
     a [LintMap.t]. *)
 val plugins :
   ((module Plugin_types.PLUGIN), (Input.input list) LintMap.t) Hashtbl.t
+
+val default_patches : string list
