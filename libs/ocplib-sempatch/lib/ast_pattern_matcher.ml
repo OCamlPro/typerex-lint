@@ -20,7 +20,7 @@ let apply_replacements tree attributes var_replacements =
             match e.pexp_desc with
             | Pexp_ident { Asttypes.txt = Longident.Lident i; _} ->
               Environment.get_expr i var_replacements
-              >|= (fun desc -> { e with pexp_desc = desc; })
+              >|= (fun expr -> { e with pexp_desc = expr.pexp_desc; })
               |> Option.value e
             | _ -> default_mapper.expr self e
           );
@@ -39,16 +39,16 @@ let apply patch expr =
           let replacements =
             match e1, e2 with
             | Pexp_constant c1, Pexp_constant c2 when c1 = c2 -> Ok (expr1, env)
-            | e, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_expr j ->
+            | _, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_expr j ->
               (* TODO (one day...) treat the case where j is already defined as an expression *)
-              Ok (expr1, Environment.add_expr j e env)
+              Ok (expr1, Environment.add_expr j expr env)
             | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Ok (expr1, env)
             | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "__sempatch_inside" ->
               apply_to_expr env ~expr:expr1 ~patch:e
             | _ -> default.expr self env ~expr:expr1 ~patch:expr2
           in
           let result = match replacements with
-          | Ok (expr, attrs) -> Ok (expr, Environment.set_matches [attrs.Environment.current_match, expr.pexp_loc] attrs)
+          | Ok (expr, attrs) -> Ok (expr, Environment.set_matches [(Match.mk patch attrs.Environment.current_match expr.pexp_loc)] attrs)
           | Error (expr, attrs) -> Error (expr, Environment.set_matches [] attrs)
           in
           Error.map (fun (e, env) -> apply_replacements e attrs2 env, env) result
@@ -217,8 +217,4 @@ let apply patch expr =
   and patch = Parsed_patches.preprocess patch
   in
   apply_to_expr Environment.empty ~expr ~patch:(patch.body)
-  |> Res.map (fun (tree, env) -> Parsed_patches.postprocess tree, env)
-     (* |> Error.map fst *)
-     (* |> Error.map_err fst *)
-     (* |> (function Ok x -> x | Error x -> x) *)
-
+  |> Res.map (fun (tree, env) -> Parsed_patches.postprocess tree, env.Environment.matches)

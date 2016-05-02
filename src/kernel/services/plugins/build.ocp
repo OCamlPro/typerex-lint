@@ -32,7 +32,7 @@ begin library "plugin-api"
     "lint.mli"
     "warning.ml"
   ]
-  requires = [ "compiler-libs" ]
+  requires = [ "compiler-libs.common" ]
 end
 
 begin library "plugin-lib"
