@@ -83,18 +83,16 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
         args
 
     let report matching kinds patch =
-      let open Patch in
-      (* let warn = patch.header in *)
       let msg =
-        match get_msg patch with
+        match Patch.get_msg patch with
         (* TODO replace by the result of the patch. *)
           None -> "You should use ... instead of ..."
         | Some msg -> msg in
       (* TODO Warning number can be override by the user. *)
       new_warning (Match.get_location matching) 1 kinds
-        ~short_name:(Option.default "" (get_name patch))
+        ~short_name:(Option.default "" (Patch.get_name patch))
         ~msg
-        ~args:(map_args (Match.get_substitutions matching) (get_metavariables patch))
+        ~args:(map_args (Match.get_substitutions matching) (Patch.get_metavariables patch))
 
     let iter =
       let module IterArg = struct
