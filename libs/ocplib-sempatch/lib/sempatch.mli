@@ -65,3 +65,10 @@ sig
   val parallel_apply : t list -> Ast_element.t -> Match.t list
 end
 
+module Failure:
+sig
+  type t
+
+  exception SempatchException of t
+  val to_string : t -> string
+end

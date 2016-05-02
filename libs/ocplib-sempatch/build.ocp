@@ -3,6 +3,7 @@ comp += [ "-w" "+A-4" ]
 begin library "ocplib-sempatch"
     files = [
       "lib/std_utils.ml"
+      "lib/failure.ml"
       "lib/res.ml"
       "lib/ast_element.ml"
       "lib/substitution.ml"

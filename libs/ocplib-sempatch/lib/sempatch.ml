@@ -36,3 +36,5 @@ struct
     List.map (fun patch -> apply patch tree |> snd) patches
     |> List.concat
 end
+
+module Failure = Failure

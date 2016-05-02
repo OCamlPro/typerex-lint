@@ -145,9 +145,7 @@ let apply patch expr =
           )
 
       | _ ->
-        Pprintast.expression Format.std_formatter expr;
-        Format.print_newline ();
-        failwith "Not implemented yet"
+        raise Failure.(SempatchException (Non_implemented expr.pexp_loc))
     in desc_err
     >>= (fun (mapped_desc, env_exprs) ->
         let self_expr = { expr with pexp_desc = mapped_desc } in

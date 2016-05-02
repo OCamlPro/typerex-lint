@@ -31,9 +31,7 @@ type setting =
   | Message of string
   | Name of string
 
-exception PatchError of string
-
-let raisePatchError e = raise (PatchError e)
+let raisePatchError e = raise Failure.(SempatchException (Patch e))
 
 let add_header_field header = function
   | Expressions v -> { header with meta_expr = v @ header.meta_expr }
