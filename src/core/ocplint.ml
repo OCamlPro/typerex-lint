@@ -48,6 +48,25 @@ let add_spec ((cmd, _, _) as spec) =
   if List.for_all (fun (key, _, _) -> cmd <> key) !specs then
     specs := spec :: !specs
 
+let ( // ) = Filename.concat
+
+let rec load_plugins list =
+  List.iter (fun file ->
+      try
+        if Sys.is_directory file then begin
+          let files = ref [] in
+          Ocplint_actions.iter_files (fun f ->
+              files := (file // f) :: !files) file;
+          load_plugins (List.filter Ocplint_actions.is_cmxs !files)
+        end
+        else if Filename.check_suffix file "cmxs" then
+          Dynlink.loadfile file
+        else
+          Printf.eprintf "Cannot load %S\n%!" file
+      with _ ->
+        Printf.eprintf "%S: No such file or directory.\n%!" file)
+    list
+
 let () =
   specs := Arg.align [
       "--project", Arg.String (fun dir -> set_action (ActionLoad dir)),
@@ -66,7 +85,7 @@ let () =
 
     "--load", Arg.String (fun files ->
         let l = (Str.split (Str.regexp ",") files) in
-        List.iter Dynlink.loadfile l;
+        load_plugins l;
         List.iter add_spec (Globals.Config.simple_args ())),
     " Load dynamically plugins with their corresponding 'cmxs' files."
   ]

@@ -80,7 +80,7 @@ let is_source file = Filename.check_suffix file "ml"
 let is_interface file = Filename.check_suffix file "mli"
 let is_cmt file = Filename.check_suffix file "cmt"
 let is_cmt file = Filename.check_suffix file "cmt"
-
+let is_cmxs file = Filename.check_suffix file "cmxs"
 
 let register_default_sempatch () =
   (* TODO: Fabrice: vérifier que le fichier existe, sinon prendre celui dans
