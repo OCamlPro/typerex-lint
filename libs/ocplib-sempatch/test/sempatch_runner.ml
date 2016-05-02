@@ -1,4 +1,5 @@
 open Std_utils
+open Sempatch
 
 let test_progs = [
   "x", [ "simpleVar", "y" ];
@@ -15,43 +16,40 @@ let test_progs = [
 
 let in_file = open_in Sys.argv.(1)
 
-let patches = Sempatch.from_channel in_file
+let patches = Patch.from_channel in_file
 
 let string_to_expr s = Parser.parse_expression Lexer.token (Lexing.from_string s)
 let expr_to_string e =
   Pprintast.expression Format.str_formatter e;
   Format.flush_str_formatter ()
 
-let dump_env patch_name (env, _) =
+let dump_env patch_name env =
   Printf.eprintf "==========\n%s : \n" patch_name;
-      StringMap.iter (fun key value ->
+      List.iter (fun (key, value) ->
           let dump =
-            match value with
-            | Variable.Expression e ->
-              Pprintast.expression Format.str_formatter (Ast_helper.Exp.mk e);
-              Format.flush_str_formatter ();
-            | Variable.Ident i -> i
+            Ast_element.to_string value
           in
           Printf.eprintf "[%s=%s]" key dump
         )
-        env;
+        (Substitution.to_list (Match.get_substitutions env));
       Printf.eprintf "\n"
 
 let test patches (ast, expected_results) =
   let parsed_ast = string_to_expr ast in
-  StringMap.fold (fun patch_name patch accu ->
+  List.fold_left (fun accu patch ->
     List.map (fun (name, expected) ->
-        if (name = patch_name) then
-          let result = expr_to_string (Sempatch.apply patch parsed_ast) in
-          List.iter (dump_env name) (Sempatch.get_matches_from_patch patch parsed_ast);
-          Option.some_if (expected <> result) (name, result)
+        if (name = Patch.get_name patch) then
+          let patched_ast, matches = Patch.apply patch (Ast_element.Expression parsed_ast) in
+          List.iter (dump_env name) matches;
+          let pp_parsed_ast = Ast_element.to_string patched_ast in
+          Option.some_if (expected <> pp_parsed_ast) (name, pp_parsed_ast)
         else None
         )
     expected_results
     :: accu
   )
-  patches
   []
+  patches
   |> List.flatten
 
 let () =

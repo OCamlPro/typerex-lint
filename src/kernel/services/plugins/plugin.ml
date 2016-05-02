@@ -19,6 +19,7 @@
 (**************************************************************************)
 
 open Plugin_error
+open Sempatch
 
 let register_plugin plugin =
   try
@@ -76,31 +77,22 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     (* TODO This function should be exported in ocp-sempatch. *)
     let map_args env args =
       List.map (fun str ->
-          try
-            match Std_utils.StringMap.find str env with
-            | Variable.Ident ident -> (str, ident)
-            | Variable.Expression expr ->
-              Pprintast.expression
-                Format.str_formatter
-                (Ast_helper.Exp.mk expr);
-              let expr_str = Format.flush_str_formatter () in
-              (str, expr_str)
-          with Not_found -> (str, "xx"))
+            match Substitution.get str env with
+            | Some ast -> (str, Ast_element.to_string ast)
+            | None -> (str, "xx"))
         args
 
-    let report env loc patch_name kinds patch =
-      let open Parsed_patches in
-      let warn = patch.header in
+    let report matching kinds patch =
       let msg =
-        match warn.Parsed_patches.message with
+        match Patch.get_msg patch with
         (* TODO replace by the result of the patch. *)
           None -> "You should use ... instead of ..."
         | Some msg -> msg in
       (* TODO Warning number can be override by the user. *)
-      new_warning loc 1 kinds
-        ~short_name:patch_name
+      new_warning (Match.get_location matching) 1 kinds
+        ~short_name:(Patch.get_name patch)
         ~msg
-        ~args:(map_args env patch.header.meta_expr)
+        ~args:(map_args (Match.get_substitutions matching) (Patch.get_metavariables patch))
 
     let iter =
       let module IterArg = struct
@@ -108,11 +100,11 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
         let enter_expression expr =
           List.iter (fun filename ->
               let ic = open_in filename in
-              let patches = Sempatch.from_channel ic in
-              let matches = Sempatch.get_matches_from_patches patches expr in
-              List.iter (fun (patch_name, (env, loc)) ->
-                  let patch = Std_utils.StringMap.find patch_name patches in
-                  report env loc patch_name [Warning.kind_code] patch)
+              let patches = Patch.from_channel ic in
+              let matches = Patch.parallel_apply patches (Ast_element.Expression expr) in
+              List.iter (fun matching ->
+                  let patch = List.find (fun p -> Patch.get_name p = Match.get_patch_name matching) patches in
+                  report matching [Warning.kind_code] patch)
                 matches)
             patches
       end in

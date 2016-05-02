@@ -1,4 +1,0 @@
-PKG ppx_tools
-PKG findlib
-B _obuild/**/*
-FLG -w +a-4

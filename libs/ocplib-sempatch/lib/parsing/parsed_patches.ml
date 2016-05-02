@@ -1,24 +1,29 @@
 open Parsetree
 
-type id = string
+module Type =
+struct
+  type header = {
+    meta_expr : string list;
+    message : string option;
+    name : string;
+  }
 
-type header = {
-  meta_expr : string list;
-  message : string option;
-  name : string option;
-}
+  type body = Parsetree.expression
+
+  type patch = {
+    header: header;
+    body: body;
+  }
+end
+
+open Type
+
+type t = patch
 
 let void_header = {
   meta_expr = [];
   message = None;
-  name = None;
-}
-
-type body = Parsetree.expression
-
-type t = {
-  header: header;
-  body: body;
+  name = "";
 }
 
 type setting =
@@ -26,14 +31,12 @@ type setting =
   | Message of string
   | Name of string
 
-exception PatchError of string
-
-let raisePatchError e = raise (PatchError e)
+let raisePatchError e = raise Failure.(SempatchException (Patch e))
 
 let add_header_field header = function
   | Expressions v -> { header with meta_expr = v @ header.meta_expr }
   | Message m -> { header with message = Some m }
-  | Name m -> { header with name = Some m }
+  | Name m -> { header with name = m }
 
 let header_from_list l = List.fold_left add_header_field void_header l
 

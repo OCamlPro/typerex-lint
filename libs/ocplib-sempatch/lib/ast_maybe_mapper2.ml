@@ -160,7 +160,7 @@ let map_expr merge self env ~patch ~expr =
   | Pexp_constant _, _ | _, Pexp_constant _
   | Pexp_construct _, _ | _, Pexp_construct _
     -> Error (e.pexp_desc, env)
-  | _ -> failwith "Non implemented"
+  | _ -> raise Failure.(SempatchException (Non_implemented (e.pexp_loc)))
   in Res.map (fun (tree, env) -> { e with pexp_desc = tree; }, env) maybe_desc
 
 let map_maybe_pattern _merge self env ~patch ~pat =
@@ -182,7 +182,7 @@ let map_pattern merge self env ~patch ~pat =
     | Ppat_var _, _ | _, Ppat_var _
     | Ppat_construct _, _ | _, Ppat_construct _
       -> Error (pat.ppat_desc, env)
-    |_, _ -> failwith "Non implemented"
+    |_, _ -> raise Failure.(SempatchException (Non_implemented pat.ppat_loc))
   in Res.map (fun (tree, env) -> { pat with ppat_desc = tree; }, env) maybe_desc
 
 let mk merge = {

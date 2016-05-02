@@ -20,14 +20,11 @@ sempatch:
   | eols_option patches = list(patch) EOF { patches }
 
 patch:
-  | name = patch_name; header = patch_header; body = patch_body
-  { let open Parsed_patches in name, {header; body} }
-
-patch_name:
-  | TITLE_DELIM name = ID eols { name }
+  | header = patch_header; body = patch_body
+  { let open Parsed_patches.Type in header.name, {header; body} }
 
 patch_header:
-  | fields = list(header_def) { Parsed_patches.header_from_list fields }
+  | TITLE_DELIM name = ID eols fields = list(header_def) { Parsed_patches.header_from_list (Parsed_patches.Name name :: fields) }
 
 header_def:
   | EXPR_KW COLON exprs = separated_nonempty_list(COMMA, ID) eols

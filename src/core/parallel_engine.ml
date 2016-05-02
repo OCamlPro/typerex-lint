@@ -56,11 +56,8 @@ let lint all mls mlis asts_ml asts_mli cmts =
                         try
                           main input
                         with
-                        | Parsed_patches.PatchError err ->
-                          Printf.eprintf
-                            "Error when parsing patch file : %S\n%!" err
-                        | Failure err ->
-                          Printf.eprintf "Error with patch file: %S\n%!" err
+                        | Sempatch.Failure.SempatchException e ->
+                          Printf.eprintf "Error : got %s\n" (Sempatch.Failure.to_string e)
                     end
                   | _ -> ()) runs) checks))
     asts_ml;
