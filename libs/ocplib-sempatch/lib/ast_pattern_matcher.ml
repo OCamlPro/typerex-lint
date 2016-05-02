@@ -105,7 +105,7 @@ let apply patch expr =
                   )
               )
           )
-          (Ok ([], env))
+          (Error ([], env))
           expr_list
         >|= (fun (mapped_list, env_list) ->
             Pexp_tuple mapped_list, [ env_list ]
