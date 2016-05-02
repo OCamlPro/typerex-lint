@@ -41,7 +41,7 @@ sig
   val from_channel : in_channel -> t list
 
   (** Accessors for patch metadatas *)
-  val get_name : t -> string option
+  val get_name : t -> string
   val get_msg : t -> string option
   val get_metavariables : t -> string list
   (* val get_field : t -> string -> string *) (* When implemented *)

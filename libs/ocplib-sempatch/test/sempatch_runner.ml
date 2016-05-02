@@ -38,7 +38,7 @@ let test patches (ast, expected_results) =
   let parsed_ast = string_to_expr ast in
   List.fold_left (fun accu patch ->
     List.map (fun (name, expected) ->
-        if (name = (Patch.get_name patch |> Option.value "")) then
+        if (name = Patch.get_name patch) then
           let patched_ast, matches = Patch.apply patch (Ast_element.Expression parsed_ast) in
           List.iter (dump_env name) matches;
           let pp_parsed_ast = Ast_element.to_string patched_ast in

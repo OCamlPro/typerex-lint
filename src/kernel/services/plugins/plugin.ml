@@ -90,7 +90,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
         | Some msg -> msg in
       (* TODO Warning number can be override by the user. *)
       new_warning (Match.get_location matching) 1 kinds
-        ~short_name:(Option.default "" (Patch.get_name patch))
+        ~short_name:(Patch.get_name patch)
         ~msg
         ~args:(map_args (Match.get_substitutions matching) (Patch.get_metavariables patch))
 
@@ -103,7 +103,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
               let patches = Patch.from_channel ic in
               let matches = Patch.parallel_apply patches (Ast_element.Expression expr) in
               List.iter (fun matching ->
-                  let patch = List.find (fun p -> Patch.get_name p = Some (Match.get_patch_name matching)) patches in
+                  let patch = List.find (fun p -> Patch.get_name p = Match.get_patch_name matching) patches in
                   report matching [Warning.kind_code] patch)
                 matches)
             patches

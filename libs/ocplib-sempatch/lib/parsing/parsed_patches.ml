@@ -5,7 +5,7 @@ struct
   type header = {
     meta_expr : string list;
     message : string option;
-    name : string option;
+    name : string;
   }
 
   type body = Parsetree.expression
@@ -23,7 +23,7 @@ type t = patch
 let void_header = {
   meta_expr = [];
   message = None;
-  name = None;
+  name = "";
 }
 
 type setting =
@@ -38,7 +38,7 @@ let raisePatchError e = raise (PatchError e)
 let add_header_field header = function
   | Expressions v -> { header with meta_expr = v @ header.meta_expr }
   | Message m -> { header with message = Some m }
-  | Name m -> { header with name = Some m }
+  | Name m -> { header with name = m }
 
 let header_from_list l = List.fold_left add_header_field void_header l
 
