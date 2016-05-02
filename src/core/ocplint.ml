@@ -42,8 +42,15 @@ let usage_msg =
     "";
   ]
 
-let core_args_spec = Arg.align [
-    "--project", Arg.String (fun dir -> set_action (ActionLoad dir)),
+let specs : (Arg.key * Arg.spec * Arg.doc) list ref = ref []
+
+let add_spec ((cmd, _, _) as spec) =
+  if List.for_all (fun (key, _, _) -> cmd <> key) !specs then
+    specs := spec :: !specs
+
+let () =
+  specs := Arg.align [
+      "--project", Arg.String (fun dir -> set_action (ActionLoad dir)),
     "DIR   Give a project dir path";
 
     "--list-warnings", Arg.Unit (fun () -> set_action ActionList),
@@ -55,25 +62,20 @@ let core_args_spec = Arg.align [
 
     "--patches", Arg.String (fun files ->
         patches := (Str.split (Str.regexp ",") files)),
-    " List of user defined lint with the patch format."
-  ]
+    " List of user defined lint with the patch format.";
 
-let core_args () =
-  Arg.parse core_args_spec
-    (fun cmd ->
-       Printf.printf "Error: don't know what to do with %s\n%!" cmd;
-       exit 1)
-    usage_msg
+    "--load", Arg.String (fun files ->
+        let l = (Str.split (Str.regexp ",") files) in
+        List.iter Dynlink.loadfile l;
+        List.iter add_spec (Globals.Config.simple_args ())),
+    " Load dynamically plugins with their corresponding 'cmxs' files."
+  ]
 
 let main () =
   (* Getting all options declared in all registered plugins. *)
-  let all_args =
-    Hashtbl.fold (fun plugin _ args ->
-        Globals.Config.simple_args () @ args)
-      Globals.plugins core_args_spec in
-
-  Arg.parse all_args
-    (fun cmd ->
+  List.iter add_spec (Globals.Config.simple_args ());
+  Arg.parse_dynamic specs
+      (fun cmd ->
        Printf.printf "Error: don't know what to do with %s\n%!" cmd;
        exit 1)
     usage_msg;
@@ -88,7 +90,7 @@ let main () =
   | ActionList ->
     exit 0
   | ActionNone ->
-    Arg.usage all_args usage_msg;
+    Arg.usage !specs usage_msg;
     exit 0
 
 let () = main ()

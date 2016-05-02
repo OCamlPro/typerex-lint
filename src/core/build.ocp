@@ -25,6 +25,7 @@ begin program "ocp-lint"
     "ocplint.ml"
   ]
   requires = [
+    "dynlink"
     "lint-code"
     "lint-interface"
     "ocplib-system"

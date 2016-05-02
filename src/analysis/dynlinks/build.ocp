@@ -18,11 +18,9 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "lint-code"
+begin library "useless_if_dynlink"
   files = [
-    "code_identifier_length.ml"
-    "code_length.ml"
+    "code_useless_if.ml"
   ]
   requires = [ "plugins" ]
-  link = [ "-linkall" ]
 end
