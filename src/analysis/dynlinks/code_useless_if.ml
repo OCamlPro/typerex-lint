@@ -25,7 +25,7 @@ module Mascot = Plugin_mascot.PluginMascot
 
 let details = "Detects useless 'if'."
 
-module CodeIdentifierLength = Mascot.MakeLint(struct
+module CodeUseless = Mascot.MakeLint(struct
     let name = "Useless if"
     let short_name = "code-useless-if"
     let details = details
@@ -33,10 +33,10 @@ module CodeIdentifierLength = Mascot.MakeLint(struct
 
 type warnings = UselessIf | ConstantIf
 
-module Warnings = CodeIdentifierLength.MakeWarnings(struct
+module Warnings = CodeUseless.MakeWarnings(struct
     type t = warnings
 
-    let useless loc args = CodeIdentifierLength.new_warning
+    let useless loc args = CodeUseless.new_warning
         loc
         1
         [ Warning.kind_code ]
@@ -44,7 +44,7 @@ module Warnings = CodeIdentifierLength.MakeWarnings(struct
         ~msg:"Useless if-then-else construction."
         ~args
 
-    let constant loc args = CodeIdentifierLength.new_warning
+    let constant loc args = CodeUseless.new_warning
         loc
         2
         [ Warning.kind_code ]
@@ -102,6 +102,6 @@ let iter =
   (module IterArg : ParsetreeIter.IteratorArgument)
 
 (* Registering a main entry to the linter *)
-module MainML = CodeIdentifierLength.MakeInputStructure(struct
+module MainML = CodeUseless.MakeInputStructure(struct
     let main ast = ParsetreeIter.iter_structure iter ast
   end)
