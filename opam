@@ -1,0 +1,21 @@
+opam-version: "1.2"
+name: "ocp-lint"
+version: "~dev"
+maintainer: "OCamlPro <typerex@ocamlpro.com>"
+authors: "OCamlPro <typerex@ocamlpro.com>"
+license: "GPL 3.0"
+homepage: "https://github.com/ocamlpro/typerex-lint"
+bug-reports: "https://github.com/ocamlpro/typerex-lint/issues"
+depends: [
+  "ocp-build" {build}
+  "menhir" {build}
+  "yojson" {build}
+]
+available: ocaml-version >= "4.02"
+build: [
+  ["./configure" "--prefix=%{prefix}%"]
+  [make]
+]
+install: [make "install"]
+remove: [make "uninstall"]
+dev-repo: "git+https://github.com/ocamlpro/typerex-lint"
