@@ -26,6 +26,7 @@ type action =
 let action = ref ActionNone
 let exit_status = ref 0
 let patches = ref []
+let output_text = ref None
 
 let set_action new_action =
    if !action <> ActionNone then
@@ -52,6 +53,9 @@ let () =
   specs := Arg.align [
       "--project", Arg.String (fun dir -> set_action (ActionLoad dir)),
     "DIR   Give a project dir path";
+
+      "--output-txt", Arg.String (fun file -> output_text := Some file),
+      "FILE   Output results in a text file.";
 
     "--list-warnings", Arg.Unit (fun () -> set_action ActionList),
     " List of warnings";
@@ -82,7 +86,7 @@ let main () =
 
   match !action with
   | ActionLoad dir ->
-    Ocplint_actions.scan ~filters:"" !patches dir;
+    Ocplint_actions.scan ~filters:"" ?output_text:!output_text !patches dir;
     Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
       if Warning.length P.warnings > 0 then exit !exit_status);

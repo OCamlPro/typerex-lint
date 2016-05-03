@@ -23,5 +23,5 @@ begin program "testsuite"
   files = [
     "testsuite.ml"
   ]
-  requires = [ "unix" "checks" "str" ]
+  requires = [ "unix" "str" "plugins" ]
 end

@@ -25,4 +25,7 @@ val load_plugins : string list -> unit
 (** [scan ~filters patches path] creates a default plugin with the given
     sematic [patches] list files, scan the [path] and start the registered
     plugins/linters on the files in this path. *)
-val scan : ?filters:string -> string list -> string -> unit
+val scan :
+  ?filters:string ->
+  ?output_text:string ->
+  string list -> string -> unit

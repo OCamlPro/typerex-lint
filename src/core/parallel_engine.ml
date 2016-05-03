@@ -118,14 +118,4 @@ let lint all mls mlis asts_ml asts_mli cmts =
                         Plugin_error.print fmt err
                     end
                   | _ -> ()) runs) checks))
-    cmts;
-
-  (* TODO XX do not forget InTop case *)
-
-  (* TO REMOVE : just for testing fmtput *)
-  Plugin.iter_plugins (fun plugin checks ->
-      let module P = (val plugin : Plugin_types.PLUGIN) in
-
-      Warning.iter
-        (fun warning -> Warning.print fmt warning)
-        P.warnings)
+    cmts

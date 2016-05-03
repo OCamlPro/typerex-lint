@@ -1,0 +1,10 @@
+File "testsuite/code_length/test_code_length.ml", line 21, characters 4-5:
+  a is too short: it should be at least of size '2'.
+File "testsuite/code_length/test_code_length.ml", line 23:
+  This line is too long ('83'): it should be at most of size '80'.
+File "testsuite/code_length/test_code_length.ml", line 25:
+  This line is too long ('83'): it should be at most of size '80'.
+File "testsuite/code_length/test_code_length.ml", line 28:
+  This line is too long ('88'): it should be at most of size '80'.
+File "testsuite/code_length/test_code_length.ml", line 1:
+  Missing interface for 'testsuite/code_length/test_code_length.ml'.
