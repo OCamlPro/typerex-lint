@@ -18,22 +18,11 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+(** [load_plugins files] load dynamically files or files in a specific
+    directory given in the command line with '--load' option. *)
+val load_plugins : string list -> unit
 
-let iter_files ?(recdir=true) apply dirname =
-  let rec iter dirname dir =
-    let files = Sys.readdir (Filename.concat dirname dir) in
-    Array.iter (fun file ->
-        let file = Filename.concat dir file in
-        if Sys.is_directory (Filename.concat dirname file) then begin
-          if recdir then iter dirname file
-        end else
-          apply file)
-      files
-  in
-  iter dirname ""
-
-let subsitute str substs =
-  let replace substs str = try List.assoc str substs with Not_found -> str in
-  let buf = Buffer.create (String.length str) in
-  Buffer.add_substitute buf (replace substs) str;
-  Buffer.contents buf
+(** [scan ~filters patches path] creates a default plugin with the given
+    sematic [patches] list files, scan the [path] and start the registered
+    plugins/linters on the files in this path. *)
+val scan : ?filters:string -> string list -> string -> unit

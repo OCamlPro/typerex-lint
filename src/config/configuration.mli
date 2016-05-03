@@ -18,22 +18,17 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+module type CONFIG = sig
+  val config_file : SimpleConfig.config_file
+  val simple_args : unit -> (string * Arg.spec * string) list
+  val create_option :
+    string list ->
+    ?short_help:string ->
+    string list ->
+    ?level:int ->
+    'a SimpleConfig.option_class ->
+    'a ->
+    'a SimpleConfig.config_option
+end
 
-let iter_files ?(recdir=true) apply dirname =
-  let rec iter dirname dir =
-    let files = Sys.readdir (Filename.concat dirname dir) in
-    Array.iter (fun file ->
-        let file = Filename.concat dir file in
-        if Sys.is_directory (Filename.concat dirname file) then begin
-          if recdir then iter dirname file
-        end else
-          apply file)
-      files
-  in
-  iter dirname ""
-
-let subsitute str substs =
-  let replace substs str = try List.assoc str substs with Not_found -> str in
-  let buf = Buffer.create (String.length str) in
-  Buffer.add_substitute buf (replace substs) str;
-  Buffer.contents buf
+module DefaultConfig : CONFIG

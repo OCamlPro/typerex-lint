@@ -18,22 +18,12 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-let iter_files ?(recdir=true) apply dirname =
-  let rec iter dirname dir =
-    let files = Sys.readdir (Filename.concat dirname dir) in
-    Array.iter (fun file ->
-        let file = Filename.concat dir file in
-        if Sys.is_directory (Filename.concat dirname file) then begin
-          if recdir then iter dirname file
-        end else
-          apply file)
-      files
-  in
-  iter dirname ""
-
-let subsitute str substs =
-  let replace substs str = try List.assoc str substs with Not_found -> str in
-  let buf = Buffer.create (String.length str) in
-  Buffer.add_substitute buf (replace substs) str;
-  Buffer.contents buf
+(** [lint all mls mlis asts_ml asts_mli cmts] starts linting in all needed input
+    by the registered plugins. *)
+val lint :
+  string list ->
+  string list ->
+  string list ->
+  Parsetree.structure option Lazy.t list ->
+  Parsetree.signature option Lazy.t list ->
+  Cmt_format.cmt_infos Lazy.t list -> unit

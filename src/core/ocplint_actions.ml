@@ -28,24 +28,11 @@ let ignored_files = Globals.Config.create_option
     (SimpleConfig.list_option SimpleConfig.string_option)
     []
 
-let iter_files ?(recdir=true) apply dirname =
-  let rec iter dirname dir =
-    let files = Sys.readdir (Filename.concat dirname dir) in
-    Array.iter (fun file ->
-        let file = Filename.concat dir file in
-        if Sys.is_directory (Filename.concat dirname file) then begin
-          if recdir then iter dirname file
-        end else
-          apply file)
-      files
-  in
-  iter dirname ""
-
 let scan_project path = (* todo *)
   Format.printf "Scanning files in project %S...\n%!" path;
   let found_files =
     let files = ref [] in
-    iter_files (fun file ->
+    Utils.iter_files (fun file ->
         files := (Filename.concat path file) :: !files) path;
     !files in
   Format.printf "Found '%d' file(s)\n%!" (List.length found_files);
@@ -82,6 +69,25 @@ let is_cmt file = Filename.check_suffix file "cmt"
 let is_cmt file = Filename.check_suffix file "cmt"
 let is_cmxs file = Filename.check_suffix file "cmxs"
 
+let ( // ) = Filename.concat
+
+let rec load_plugins list =
+  List.iter (fun file ->
+      try
+        if Sys.is_directory file then begin
+          let files = ref [] in
+          Utils.iter_files (fun f ->
+              files := (file // f) :: !files) file;
+          load_plugins (List.filter is_cmxs !files)
+        end
+        else if Filename.check_suffix file "cmxs" then
+          Dynlink.loadfile file
+        else
+          Printf.eprintf "Cannot load %S\n%!" file
+      with _ ->
+        Printf.eprintf "%S: No such file or directory.\n%!" file)
+    list
+
 let register_default_sempatch () =
   (* TODO: Fabrice: vérifier que le fichier existe, sinon prendre celui dans
      l'exécutable par défaut*)
@@ -105,7 +111,7 @@ let register_default_plugins patches =
     end) in
   ()
 
-let scan ~filters path patches =
+let scan ?(filters="") patches path =
   (* XXX TODO : don't forget to read config file too ! *)
   (* let plugins = filter_plugins filters in *)
 

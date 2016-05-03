@@ -39,12 +39,16 @@ module type MapArgument = sig
 #else
   val enter_case : case -> case
   val leave_case : case -> case
-  val enter_module_type_declaration : module_type_declaration -> module_type_declaration
-  val leave_module_type_declaration : module_type_declaration -> module_type_declaration
+  val enter_module_type_declaration :
+    module_type_declaration -> module_type_declaration
+  val leave_module_type_declaration :
+    module_type_declaration -> module_type_declaration
   val enter_module_declaration : module_declaration -> module_declaration
   val leave_module_declaration : module_declaration -> module_declaration
-  val enter_constructor_declaration : constructor_declaration -> constructor_declaration
-  val leave_constructor_declaration : constructor_declaration -> constructor_declaration
+  val enter_constructor_declaration :
+    constructor_declaration -> constructor_declaration
+  val leave_constructor_declaration :
+    constructor_declaration -> constructor_declaration
   val enter_label_declaration : label_declaration -> label_declaration
   val leave_label_declaration : label_declaration -> label_declaration
   val enter_module_binding : module_binding -> module_binding
@@ -57,8 +61,10 @@ module type MapArgument = sig
   val enter_type_extension : type_extension -> type_extension
   val leave_type_extension : type_extension -> type_extension
 
-  val enter_extension_constructor : extension_constructor -> extension_constructor
-  val leave_extension_constructor : extension_constructor -> extension_constructor
+  val enter_extension_constructor :
+    extension_constructor -> extension_constructor
+  val leave_extension_constructor :
+    extension_constructor -> extension_constructor
 
 #endif
 
@@ -941,8 +947,10 @@ end = struct
      ptyext_attributes;
    } = Map.enter_type_extension c in
    let c = {
-     ptyext_params = List.map (fun (ct, var) -> (map_core_type ct, var)) ptyext_params;
-     ptyext_constructors = List.map map_extension_constructor ptyext_constructors;
+     ptyext_params =
+       List.map (fun (ct, var) -> (map_core_type ct, var)) ptyext_params;
+     ptyext_constructors =
+       List.map map_extension_constructor ptyext_constructors;
      ptyext_path;
      ptyext_private;
      ptyext_attributes;

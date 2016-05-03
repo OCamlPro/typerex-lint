@@ -18,22 +18,13 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+(** [iter_files ~recdir apply dirname] iters on the given dirname and apply
+    the function [apply] to all the found files. If [recdir] is set to false
+    it only scans the files in the given directory and does not iter recursively
+    in the subdirectories. *)
+val iter_files : ?recdir:bool -> (string -> unit) -> string -> unit
 
-let iter_files ?(recdir=true) apply dirname =
-  let rec iter dirname dir =
-    let files = Sys.readdir (Filename.concat dirname dir) in
-    Array.iter (fun file ->
-        let file = Filename.concat dir file in
-        if Sys.is_directory (Filename.concat dirname file) then begin
-          if recdir then iter dirname file
-        end else
-          apply file)
-      files
-  in
-  iter dirname ""
-
-let subsitute str substs =
-  let replace substs str = try List.assoc str substs with Not_found -> str in
-  let buf = Buffer.create (String.length str) in
-  Buffer.add_substitute buf (replace substs) str;
-  Buffer.contents buf
+(** [subsitute str substs] subsitutes the string [str] with the given subsitutes
+     list [substs]. It replaces all the '$ID' by the matching string in the
+     list. *)
+val subsitute : string -> (string * string) list -> string
