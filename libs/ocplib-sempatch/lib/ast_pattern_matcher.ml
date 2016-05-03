@@ -41,7 +41,7 @@ let apply patch expr =
             | Pexp_constant c1, Pexp_constant c2 when c1 = c2 -> Ok (expr1, env)
             | _, Pexp_ident { Asttypes.txt = Longident.Lident j; _ } when is_meta_expr j ->
               (* TODO (one day...) treat the case where j is already defined as an expression *)
-              Ok (expr1, Environment.add_expr j expr env)
+              Ok (expr1, Environment.add_expr j expr1 env)
             | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt -> Ok (expr1, env)
             | _, Pexp_extension (loc, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ]) when loc.Asttypes.txt = "__sempatch_inside" ->
               apply_to_expr env ~expr:expr1 ~patch:e
@@ -101,14 +101,14 @@ let apply patch expr =
             mapped >>= (fun (mapped_exprs, accu_env) ->
                 apply_to_expr env ~expr ~patch
                 >|= (fun (mapped_expr, env_expr) ->
-                    mapped_expr :: mapped_exprs, merge_envs accu_env env_expr
+                    mapped_expr :: mapped_exprs, env_expr :: accu_env
                   )
               )
           )
-          (Error ([], env))
+          (Error ([], []))
           expr_list
         >|= (fun (mapped_list, env_list) ->
-            Pexp_tuple mapped_list, [ env_list ]
+            Pexp_tuple mapped_list, env_list
           )
 
       | Pexp_ifthenelse (cif, cthen, celse) ->
@@ -137,7 +137,7 @@ let apply patch expr =
       | Pexp_match (expr, cases) ->
         apply_to_cases env patch cases
         >>= (fun (mapped_cases, env_cases) ->
-            apply_to_expr env_cases ~expr ~patch
+            apply_to_expr env ~expr ~patch
             >|= (fun (mapped_expr, env_expr) ->
                 Pexp_match (mapped_expr, mapped_cases),
                 [ env_cases; env_expr ]

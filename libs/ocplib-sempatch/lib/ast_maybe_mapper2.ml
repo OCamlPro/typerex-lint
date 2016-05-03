@@ -120,9 +120,9 @@ let map_expr merge self env ~patch ~expr =
   | Pexp_let (isrecl, bindingsl, exprl), Pexp_let (isrecr, bindingsr, exprr) when isrecl = isrecr ->
     map_bindings merge self env bindingsl bindingsr
     >>= (fun (mapped_bindings, env_bindings) ->
-        self.expr self env_bindings ~expr:exprl ~patch:exprr
+        self.expr self env ~expr:exprl ~patch:exprr
         >|= (fun (mapped_expr, env_expr) ->
-            Pexp_let (isrecl, mapped_bindings, mapped_expr), env_expr
+            Pexp_let (isrecl, mapped_bindings, mapped_expr), merge env_expr env_bindings
           )
       )
 
