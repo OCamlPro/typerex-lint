@@ -27,28 +27,39 @@ module type CONFIG = sig
   val simple_args : unit -> (string * Arg.spec * string) list
   val create_option :
     string list ->
-    ?short_help:string ->
-    string list ->
-    ?level:int ->
+    string ->
+    string ->
+    int ->
     'a SimpleConfig.option_class ->
     'a ->
     'a SimpleConfig.config_option
+  val save : unit -> unit
 end
+
+exception ConfigParseError of string
 
 module MakeConfig (C: ConfigArg) = struct
   let config_file = SimpleConfig.create_config_file (File.of_string C.filename)
 
-  let simple_args () = []
-    (* Uncomment this when ocp-build will be updated *)
-    (* SimpleConfig.LowLevel.simple_args "" config_file *)
+  let simple_args () =
+    SimpleConfig.LowLevel.simple_args "" config_file
 
   let create_option
-      opt_names ?short_help long_help ?level opt_class default_value =
+      opt_names short_help long_help level opt_class default_value =
+    let short_help = Some short_help in
+    let level = Some level in
       SimpleConfig.create_option config_file
-          opt_names ?short_help long_help ?level
+          opt_names ?short_help:short_help [long_help] ?level:level
           opt_class default_value
+
+  let save () =
+    SimpleConfig.save_with_help config_file
+
   let () =
-    SimpleConfig.load config_file
+    try
+      SimpleConfig.load config_file
+    with Failure msg -> raise (ConfigParseError msg)
+
   end
 
 module DefaultConfig : CONFIG = MakeConfig(struct let filename = ".ocplint" end)

@@ -61,7 +61,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
   let plugin = (module Plugin : Plugin_types.PLUGIN)
 
   let create_option options short_help lhelp ty default =
-    Globals.Config.create_option options ~short_help [lhelp] ~level:0 ty default
+    Globals.Config.create_option options short_help lhelp 0 ty default
 
   module MakeLintPatch (C : Lint.LintPatchArg) = struct
 
@@ -144,7 +144,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     let create_option option short_help lhelp ty default =
       let option = [P.short_name; short_name; option] in
       Globals.Config.create_option
-        option ~short_help [lhelp] ~level:0 ty default
+        option short_help lhelp 0 ty default
 
     module MakeWarnings (WA : Warning_types.WarningArg) = struct
       type t = WA.t
@@ -188,10 +188,10 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
   let () =
     (* Creating default options for plugins: "--plugin.enable" *)
     ignore (create_option
-        [P.short_name; "enable"]
+        [P.short_name]
         details
         details
-        SimpleConfig.bool_option true);
+        SimpleConfig.enable_option true);
 
     try
       register_plugin plugin

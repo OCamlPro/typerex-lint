@@ -10,6 +10,12 @@
 
 
 
+(* A style-checker for OCaml sources (code, documentation, interface, metrics, and typography). *)
+plugin_mascot = true
+
+(* Detect pattern with semantic patch *)
+sempatch = true
+
 (* Module to ignore during the lint. *)
 ignored_files = [
   "src/kernel/internal/parsing/parsetreeMap.ml";
@@ -17,6 +23,7 @@ ignored_files = [
   "src/kernel/internal/typing/typedtreeMap.ml";
   "src/kernel/internal/typing/typedtreeIter.ml";
 ]
+
 plugin_core = {
 
 (* A style-checker for OCaml sources (code, documentation, interface, metrics, and typography). *)

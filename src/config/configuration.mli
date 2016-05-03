@@ -23,12 +23,13 @@ module type CONFIG = sig
   val simple_args : unit -> (string * Arg.spec * string) list
   val create_option :
     string list ->
-    ?short_help:string ->
-    string list ->
-    ?level:int ->
+    string ->
+    string ->
+    int ->
     'a SimpleConfig.option_class ->
     'a ->
     'a SimpleConfig.config_option
+  val save : unit -> unit
 end
 
 module DefaultConfig : CONFIG
