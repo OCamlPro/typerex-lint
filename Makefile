@@ -16,6 +16,11 @@ all:
 	if [ ! -d "_obuild" ]; then $(OCPBUILD) init; fi
 	$(OCPBUILD)
 
+test:
+	@./_obuild/testsuite/testsuite.asm \
+	./_obuild/ocp-lint/ocp-lint.asm \
+	testsuite
+
 clean:
 	$(OCPBUILD) clean
 

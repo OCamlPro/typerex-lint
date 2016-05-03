@@ -1,2 +1,5 @@
 *~
 _obuild
+*.err
+*.out
+*.output

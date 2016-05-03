@@ -1,0 +1,12 @@
+File "testsuite/identifier_length/test_identifier_length.ml", line 21, characters 6-7:
+  a is too short: it should be at least of size '2'.
+File "testsuite/identifier_length/test_identifier_length.ml", line 21, characters 8-9:
+  b is too short: it should be at least of size '2'.
+File "testsuite/identifier_length/test_identifier_length.ml", line 21, characters 4-5:
+  f is too short: it should be at least of size '2'.
+File "testsuite/identifier_length/test_identifier_length.ml", line 1:
+  Missing interface for 'testsuite/identifier_length/test_identifier_length.ml'.
+File "testsuite/identifier_length/test_identifier_length.ml", line 23, characters 4-43:
+  very_very_very_long_long_variable_name1 is too long: it should be at most of size '30'.
+File "testsuite/identifier_length/test_identifier_length.ml", line 25, characters 4-43:
+  very_very_very_long_long_variable_name2 is too long: it should be at most of size '30'.
