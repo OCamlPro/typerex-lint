@@ -1,6 +1,7 @@
 @Incr
 expressions: e1, e2
 message: "Use 'incr $e1' instead of '$e1 := !$e2 + 1.'"
+when: "e1 = e2"
 ```
 e1 := !e2 + 1
 ```
@@ -8,21 +9,7 @@ e1 := !e2 + 1
 @Decr
 expressions: e1, e2
 message:  "Use 'decr $e1' instead of '$e1 := !$e2 - 1'."
-```
-- e1 := !e2 - 1
-+ decr e1
-```
-
-@Incr
-expressions: e1, e2
-message: "Use 'incr $e1' instead of '$e1 := !$e2 + 1.'"
-```
-e1 := !e2 + 1
-```
-
-@Decr
-expressions: e1, e2
-message:  "Use 'decr $e1' instead of '$e1 := !$e2 - 1'."
+when: "e1 = e2"
 ```
 - e1 := !e2 - 1
 + decr e1
@@ -85,6 +72,7 @@ List.length l = 0
 
 @ LetIdentity
 expressions: x1, x2, e
+when: "x1 = x2"
 ```
 - let x1 = e in x2
 + e

@@ -6,6 +6,7 @@ struct
     meta_expr : string list;
     message : string option;
     name : string;
+    guard : Guard.t list;
   }
 
   type body = Parsetree.expression
@@ -21,6 +22,7 @@ open Type
 type t = patch
 
 let void_header = {
+  guard = [];
   meta_expr = [];
   message = None;
   name = "";
@@ -30,10 +32,12 @@ type setting =
   | Expressions of string list
   | Message of string
   | Name of string
+  | Guard of Guard.t
 
 let raisePatchError e = raise Failure.(SempatchException (Patch e))
 
 let add_header_field header = function
+  | Guard g -> { header with guard = g :: header.guard }
   | Expressions v -> { header with meta_expr = v @ header.meta_expr }
   | Message m -> { header with message = Some m }
   | Name m -> { header with name = m }

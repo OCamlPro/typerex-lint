@@ -47,6 +47,31 @@ let apply patch expr =
               apply_to_expr env ~expr:expr1 ~patch:e
             | _ -> default.expr self env ~expr:expr1 ~patch:expr2
           in
+          let replacements = Error.bind (fun (e, env) ->
+              if
+                try
+                  Guard_evaluator.eval_union env.Environment.current_match patch.Parsed_patches.Type.header.guard
+                with
+                | Guard_evaluator.Undefined_var _ -> true
+                | Guard_evaluator.TypeError ->
+                  let patch_name = Parsed_patches.(patch.header.name) in
+                  let msg = Printf.sprintf
+                      "The guard of patch %s is incorrect"
+                      patch_name
+                  in
+                  raise (Failure.SempatchException (Failure.Guard msg))
+                | Guard_evaluator.Undefined_function f ->
+                  let patch_name = Parsed_patches.(patch.header.name) in
+                  let msg = Printf.sprintf
+                      "The function %s in the guard of the patch %s is undefined"
+                      f patch_name
+                  in
+                  raise Failure.( SempatchException (Guard msg))
+              then
+                Ok (e, env)
+              else
+                Error (e, env)) replacements
+          in
           let result = match replacements with
           | Ok (expr, attrs) -> Ok (expr, Environment.set_matches [(Match.mk patch attrs.Environment.current_match expr.pexp_loc)] attrs)
           | Error (expr, attrs) -> Error (expr, Environment.set_matches [] attrs)
