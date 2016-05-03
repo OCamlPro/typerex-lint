@@ -21,6 +21,8 @@
 type error =
   | Plugin_already_registered of (module Plugin_types.PLUGIN)
   | Plugin_not_found of (module Plugin_types.PLUGIN)
+  | Patch_file_not_found of string
+  | Syntax_error of string
 
 exception Plugin_error of error
 
@@ -33,3 +35,10 @@ let to_string = function
   | Plugin_not_found plugin ->
     let module P = (val plugin : Plugin_types.PLUGIN) in
     spf "Plugin '%s' is not found." P.name
+  | Patch_file_not_found filename ->
+    spf "Patch '%s' is not found." filename
+  | Syntax_error filename ->
+    spf "Syntax error in %S: cannot lint this file." filename
+
+let print fmt err =
+  Format.fprintf fmt "Plugin error: %s\n" (to_string err)

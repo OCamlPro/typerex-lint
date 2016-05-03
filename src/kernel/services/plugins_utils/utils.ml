@@ -23,14 +23,18 @@ let iter_files ?(recdir=true) apply dirname =
   let rec iter dirname dir =
     let files = Sys.readdir (Filename.concat dirname dir) in
     Array.iter (fun file ->
-        let file = Filename.concat dir file in
-        if Sys.is_directory (Filename.concat dirname file) then begin
-          if recdir then iter dirname file
-        end else
-          apply file)
+        try
+          let file = Filename.concat dir file in
+          if Sys.is_directory (Filename.concat dirname file) then begin
+            if recdir then iter dirname file
+          end else
+            apply file
+        with Sys_error err ->
+          Printf.eprintf "Scanning Error: %s\n%!" err)
       files
   in
   iter dirname ""
+
 
 let subsitute str substs =
   let replace substs str = try List.assoc str substs with Not_found -> str in

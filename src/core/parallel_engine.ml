@@ -19,11 +19,18 @@
 (**************************************************************************)
 
 let lint all mls mlis asts_ml asts_mli cmts =
+  let fmt = Format.err_formatter in
   (* Itering on all files in your project *)
   Plugin.iter_plugins (fun plugin checks ->
       Globals.LintMap.iter (fun cname runs ->
           List.iter (function
-              | Input.InAll main -> main all
+              | Input.InAll main ->
+                begin
+                  try
+                    main all
+                  with Plugin_error.Plugin_error err ->
+                    Plugin_error.print fmt err
+                end
               | _ -> ()) runs) checks);
 
   (* Itering on ml sources *)
@@ -31,7 +38,13 @@ let lint all mls mlis asts_ml asts_mli cmts =
       Plugin.iter_plugins (fun plugin checks ->
           Globals.LintMap.iter (fun cname runs ->
               List.iter (function
-                  | Input.InMl main -> main input
+                  | Input.InMl main ->
+                    begin
+                      try
+                        main input
+                      with Plugin_error.Plugin_error err ->
+                        Plugin_error.print fmt err
+                    end
                   | _ -> ()) runs) checks))
     mls;
 
@@ -40,7 +53,13 @@ let lint all mls mlis asts_ml asts_mli cmts =
       Plugin.iter_plugins (fun plugin checks ->
           Globals.LintMap.iter (fun cname runs ->
               List.iter (function
-                  | Input.InMli main -> main input
+                  | Input.InMli main ->
+                    begin
+                      try
+                        main input
+                      with Plugin_error.Plugin_error err ->
+                        Plugin_error.print fmt err
+                    end
                   | _ -> ()) runs) checks))
     mlis;
 
@@ -53,12 +72,16 @@ let lint all mls mlis asts_ml asts_mli cmts =
                     begin match Lazy.force input with
                       | None -> ()
                       | Some input ->
-                        try
-                          main input
-                        with
-                        | Sempatch.Failure.SempatchException e ->
-                          Printf.eprintf "Error : got %s\n"
-                            (Sempatch.Failure.to_string e)
+                        begin
+                          try
+                            main input
+                          with
+                          | Sempatch.Failure.SempatchException e ->
+                            Format.fprintf fmt "Sempatch error : %s\n"
+                              (Sempatch.Failure.to_string e)
+                          | Plugin_error.Plugin_error err ->
+                            Plugin_error.print fmt err
+                        end
                     end
                   | _ -> ()) runs) checks))
     asts_ml;
@@ -71,7 +94,13 @@ let lint all mls mlis asts_ml asts_mli cmts =
                   | Input.InInterf main ->
                     begin match Lazy.force input with
                       | None -> ()
-                      | Some input ->  main input
+                      | Some input ->
+                        begin
+                          try
+                            main input
+                          with Plugin_error.Plugin_error err ->
+                            Plugin_error.print fmt err
+                        end
                     end
                   | _ -> ()) runs) checks))
     asts_mli;
@@ -81,16 +110,22 @@ let lint all mls mlis asts_ml asts_mli cmts =
       Plugin.iter_plugins (fun plugin checks ->
           Globals.LintMap.iter (fun cname runs ->
               List.iter (function
-                  | Input.InCmt main -> main (Lazy.force input)
+                  | Input.InCmt main ->
+                    begin
+                      try
+                        main (Lazy.force input)
+                      with Plugin_error.Plugin_error err ->
+                        Plugin_error.print fmt err
+                    end
                   | _ -> ()) runs) checks))
     cmts;
 
   (* TODO XX do not forget InTop case *)
 
-  (* TO REMOVE : just for testing output *)
+  (* TO REMOVE : just for testing fmtput *)
   Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
 
       Warning.iter
-        (fun warning -> Warning.print Format.err_formatter warning)
+        (fun warning -> Warning.print fmt warning)
         P.warnings)
