@@ -24,7 +24,7 @@ plugin_core = {
   code_identifier_length = {
 
 (* Identifiers with a shorter name will trigger a warning *)
-    min_identifier_length = 1
+    min_identifier_length = 2
 
 (* Identifiers with a longer name will trigger a warning *)
     max_identifier_length = 30

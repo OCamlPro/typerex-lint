@@ -18,9 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-let f a = a + 1
+let my_function arg = arg + 1
 
 let _ =
-  let res = f 0 in
+  let res = my_function 0 in
   Printf.printf "%i" res
-  
