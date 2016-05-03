@@ -12,12 +12,12 @@
 
 (* Module to ignore during the lint. *)
 ignored_files = [
-  "src/internal/parsing/parsetreeMap.ml";
-  "src/internal/parsing/parsetreeIter.ml";
-  "src/internal/typing/typedtreeMap.ml";
-  "src/internal/typing/typedtreeIter.ml";
+  "src/kernel/internal/parsing/parsetreeMap.ml";
+  "src/kernel/internal/parsing/parsetreeIter.ml";
+  "src/kernel/internal/typing/typedtreeMap.ml";
+  "src/kernel/internal/typing/typedtreeIter.ml";
 ]
-plugin_mascot = {
+plugin_core = {
 
 (* A style-checker for OCaml sources (code, documentation, interface, metrics, and typography). *)
   enable = true

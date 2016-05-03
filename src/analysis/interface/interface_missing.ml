@@ -21,11 +21,11 @@
 open SimpleConfig (* for !! *)
 
 (* We will register this linter to the Mascot plugin. *)
-module Mascot = Plugin_mascot.PluginMascot
+module Core = Plugin_core.PluginCore
 
 let details = "Missing interface."
 
-module CodeLength = Mascot.MakeLint(struct
+module CodeLength = Core.MakeLint(struct
     let name = "Missing interface"
     let short_name = "interface-missing"
     let details = details

@@ -21,7 +21,7 @@
 open SimpleConfig (* for !! *)
 
 (* We will register this linter to the Mascot plugin. *)
-module Mascot = Plugin_mascot.PluginMascot
+module Core = Plugin_core.PluginCore
 
 let default_max = 30
 let default_min = 2
@@ -36,28 +36,15 @@ let details =
     default_min
     default_max
 
-module CodeIdentifierLength = Mascot.MakeLint(struct
+module CodeIdentifierLength = Core.MakeLint(struct
     let name = "Code Identifier Length"
     let short_name = "code_identifier_length"
     let details = details
   end)
 
-(* Defining/Using option from configuration file / command line *)
-let min_identifier_length = CodeIdentifierLength.create_option
-    "min_identifier_length"
-    "Identifiers with a shorter name will trigger a warning"
-    "Identifiers with a shorter name will trigger a warning"
-    SimpleConfig.int_option
-    default_min
-
-let max_identifier_length = CodeIdentifierLength.create_option
-     "max_identifier_length"
-    "Identifiers with a longer name will trigger a warning"
-    "Identifiers with a longer name will trigger a warning"
-    SimpleConfig.int_option
-    default_max
-
-type warnings = Short of string | Long of string
+type warnings =
+  | Short of (int * string)
+  | Long of (int * string)
 
 module Warnings = CodeIdentifierLength.MakeWarnings(struct
     type t = warnings
@@ -79,17 +66,17 @@ module Warnings = CodeIdentifierLength.MakeWarnings(struct
         ~args
 
     let report loc = function
-      | Short id ->
+      | Short (min, id) ->
         w_too_short
           loc
-          [("id", id); ("size", string_of_int !!min_identifier_length)]
-      | Long id ->
+          [("id", id); ("size", string_of_int min)]
+      | Long (max, id) ->
         w_too_long
           loc
-          [("id", id); ("size", string_of_int !!max_identifier_length)]
+          [("id", id); ("size", string_of_int max)]
   end)
 
-let iter =
+let iter min_identifier_length max_identifier_length =
   let module IterArg = struct
     include ParsetreeIter.DefaultIteratorArgument
 
@@ -101,16 +88,33 @@ let iter =
           let id_str = ident.txt in
           let id_loc = ident.loc in
           let id_len = String.length id_str in
-          if id_len < !!min_identifier_length then
-            Warnings.report id_loc (Short id_str);
-          if id_len > !!max_identifier_length then
-            Warnings.report id_loc (Long id_str)
+          if id_len < min_identifier_length then
+            Warnings.report id_loc (Short (min_identifier_length, id_str));
+          if id_len > max_identifier_length then
+            Warnings.report id_loc (Long (max_identifier_length, id_str))
         | _ -> ()
       end
   end in
   (module IterArg : ParsetreeIter.IteratorArgument)
 
+(* Defining/Using option from configuration file / command line *)
+let min_identifier_length = CodeIdentifierLength.create_option
+    "min_identifier_length"
+    "Identifiers with a shorter name will trigger a warning"
+    "Identifiers with a shorter name will trigger a warning"
+    SimpleConfig.int_option
+    default_min
+
+let max_identifier_length = CodeIdentifierLength.create_option
+     "max_identifier_length"
+    "Identifiers with a longer name will trigger a warning"
+    "Identifiers with a longer name will trigger a warning"
+    SimpleConfig.int_option
+    default_max
+
 (* Registering a main entry to the linter *)
 module MainML = CodeIdentifierLength.MakeInputStructure(struct
-    let main ast = ParsetreeIter.iter_structure iter ast
+    let main ast =
+      ParsetreeIter.iter_structure
+        (iter !!min_identifier_length !!max_identifier_length) ast
   end)
