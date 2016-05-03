@@ -57,7 +57,8 @@ let lint all mls mlis asts_ml asts_mli cmts =
                           main input
                         with
                         | Sempatch.Failure.SempatchException e ->
-                          Printf.eprintf "Error : got %s\n" (Sempatch.Failure.to_string e)
+                          Printf.eprintf "Error : got %s\n"
+                            (Sempatch.Failure.to_string e)
                     end
                   | _ -> ()) runs) checks))
     asts_ml;
