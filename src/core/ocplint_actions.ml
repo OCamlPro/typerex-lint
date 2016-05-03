@@ -52,7 +52,7 @@ let parse_source source =
     Some
       (Pparse.parse_implementation ~tool_name Format.err_formatter  source)
   with Syntaxerr.Error _ ->
-    Printf.printf "Cannot lint %S.\n" source;
+    Printf.printf "Syntax error in %S: cannot lint this file.\n" source;
     None
 
 let parse_interf source =
@@ -60,7 +60,7 @@ let parse_interf source =
   try
     Some (Pparse.parse_interface ~tool_name Format.err_formatter source)
   with Syntaxerr.Error _ ->
-    Printf.printf "Cannont lint %S.\n" source;
+    Printf.printf "Syntax error in %S: cannot lint this file\n" source;
     None
 
 let is_source file = Filename.check_suffix file "ml"
