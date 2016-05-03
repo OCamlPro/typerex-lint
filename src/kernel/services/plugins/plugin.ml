@@ -92,7 +92,9 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       new_warning (Match.get_location matching) 1 kinds
         ~short_name:(Patch.get_name patch)
         ~msg
-        ~args:(map_args (Match.get_substitutions matching) (Patch.get_metavariables patch))
+        ~args:(map_args
+                 (Match.get_substitutions matching)
+                 (Patch.get_metavariables patch))
 
     let iter =
       let module IterArg = struct
@@ -101,9 +103,14 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
           List.iter (fun filename ->
               let ic = open_in filename in
               let patches = Patch.from_channel ic in
-              let matches = Patch.parallel_apply patches (Ast_element.Expression expr) in
+              let matches =
+                Patch.parallel_apply patches (Ast_element.Expression expr) in
               List.iter (fun matching ->
-                  let patch = List.find (fun p -> Patch.get_name p = Match.get_patch_name matching) patches in
+                  let patch =
+                    List.find
+                      (fun p ->
+                         Patch.get_name p = Match.get_patch_name matching)
+                      patches in
                   report matching [Warning.kind_code] patch)
                 matches)
             patches

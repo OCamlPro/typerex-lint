@@ -28,9 +28,9 @@ val iter_plugins :
 
 
 (** [MakePlugin] is a functor which take a module of type
-    [Plugin_types.PluginArg] as an argument. It register the plugin to the
-    global [plugins] and all the linter associated and created with the functor
-    [MakeLint]. *)
+    [Plugin_types.PluginArg] as an argument. It registers the plugin to the
+    global [Globals.plugins] and all the linter associated and created with
+    the functor [MakeLint]. *)
 module MakePlugin : functor (Plugin : Plugin_types.PluginArg) ->
 sig
 
@@ -41,32 +41,33 @@ sig
   (** The details of the plugin.  *)
   val details : string
 
-  (** [MakeLintPatch] is a functor which take a module of type
-      [Lint.LintPatchArg] as an argument. It allows to create a linter based
-      on semantic patches. It takes the files names of patches as arguments and
-      automatically register the linter linter into a plugin. *)
+  (** [MakeLintPatch] is a functor which takes a module of type
+      [Lint.LintPatchArg] as argument. It allows to create a linter based
+      on semantic patches (see ocplib-sempatch). It takes the files names of
+      the patches as arguments and automatically register the linter
+      into a plugin. *)
   module MakeLintPatch : functor (CA : Lint.LintPatchArg) ->  sig  end
 
-  (** [MakeLint] is a functor which take a module of type [Lint.LintArg] as an
+  (** [MakeLint] is a functor which takes a module of type [Lint.LintArg] as
       argument. It allows to create a linter and automatically register it to
-      the plugin in the global [plugins]. The functor allows to create specific
-      options for each lint and register them to the [Config] of the associated
-      plugin. *)
+      the plugin in the global [Globals.plugins]. The functor allows to create
+      specific options for each lint and register them to the global
+      [Global.Config] module. *)
   module MakeLint :
     functor (CA : Lint.LintArg) ->
     sig
-      (** The name of the lint. *)
+      (** The name of the linter. *)
       val name : string
-      (** The short name of the lint. It must be unique for each linter. *)
+      (** The short name of the linter. It must be unique for each linter. *)
       val short_name : string
-      (** The details of the linter. *)
+      (** The details message of the linter. *)
       val details : string
 
-      (** [new_warning loc id kinds ~short_name ~msg ~args] register a warning
+      (** [new_warning loc id kinds ~short_name ~msg ~args] registers a warning
           with at the location [loc], the warning number [id], a short
           description [short_name], the message [msg] which will be displayed
-          and the [args] which is a couple of string which will be substitute
-          in the displayed message. *)
+          and the [args] which is a list of couple of string which will be
+          substitute in the displayed message. *)
       val new_warning :
         Location.t ->
         int ->
