@@ -124,7 +124,7 @@ let register_default_plugins patches =
     end) in
   ()
 
-let scan ~filters path patches =
+let scan ?(filters="") patches path =
   (* XXX TODO : don't forget to read config file too ! *)
   (* let plugins = filter_plugins filters in *)
 

@@ -82,7 +82,7 @@ let main () =
 
   match !action with
   | ActionLoad dir ->
-    Ocplint_actions.scan ~filters:"" dir !patches;
+    Ocplint_actions.scan ~filters:"" !patches dir;
     Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
       if Warning.length P.warnings > 0 then exit !exit_status);
