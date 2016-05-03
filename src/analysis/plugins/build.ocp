@@ -20,7 +20,7 @@
 
 begin library "plugins"
   files = [
-    "plugin_mascot.ml"
+    "plugin_core.ml"
     "plugin_sempatch.ml"
   ]
   requires = [ "plugin-lib" "ocplib-sempatch" ]

@@ -21,11 +21,11 @@
 open SimpleConfig (* for !! *)
 
 (* We will register this linter to the Mascot plugin. *)
-module Mascot = Plugin_mascot.PluginMascot
+module Core = Plugin_core.PluginCore
 
 let details = "Detects useless 'if'."
 
-module CodeUseless = Mascot.MakeLint(struct
+module CodeUseless = Core.MakeLint(struct
     let name = "Useless if"
     let short_name = "code-useless-if"
     let details = details

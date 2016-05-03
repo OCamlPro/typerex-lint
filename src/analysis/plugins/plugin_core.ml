@@ -21,8 +21,8 @@
 let details = "A style-checker for OCaml sources (code, documentation, \
 interface, metrics, and typography)."
 
-module PluginMascot = Plugin.MakePlugin (struct
-    let name = "Mascot"
-    let short_name = "plugin_mascot"
+module PluginCore = Plugin.MakePlugin (struct
+    let name = "Core plugin of typerex-lint"
+    let short_name = "plugin_core"
     let details = details
   end)
