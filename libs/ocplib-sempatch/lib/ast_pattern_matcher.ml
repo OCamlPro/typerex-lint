@@ -137,7 +137,7 @@ let apply patch expr =
       | Pexp_match (expr, cases) ->
         apply_to_cases env patch cases
         >>= (fun (mapped_cases, env_cases) ->
-            apply_to_expr env_cases ~expr ~patch
+            apply_to_expr env ~expr ~patch
             >|= (fun (mapped_expr, env_expr) ->
                 Pexp_match (mapped_expr, mapped_cases),
                 [ env_cases; env_expr ]
