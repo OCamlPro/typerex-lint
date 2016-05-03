@@ -28,24 +28,11 @@ let ignored_files = Globals.Config.create_option
     (SimpleConfig.list_option SimpleConfig.string_option)
     []
 
-let iter_files ?(recdir=true) apply dirname =
-  let rec iter dirname dir =
-    let files = Sys.readdir (Filename.concat dirname dir) in
-    Array.iter (fun file ->
-        let file = Filename.concat dir file in
-        if Sys.is_directory (Filename.concat dirname file) then begin
-          if recdir then iter dirname file
-        end else
-          apply file)
-      files
-  in
-  iter dirname ""
-
 let scan_project path = (* todo *)
   Format.printf "Scanning files in project %S...\n%!" path;
   let found_files =
     let files = ref [] in
-    iter_files (fun file ->
+    Utils.iter_files (fun file ->
         files := (Filename.concat path file) :: !files) path;
     !files in
   Format.printf "Found '%d' file(s)\n%!" (List.length found_files);
@@ -89,7 +76,7 @@ let rec load_plugins list =
       try
         if Sys.is_directory file then begin
           let files = ref [] in
-          iter_files (fun f ->
+          Utils.iter_files (fun f ->
               files := (file // f) :: !files) file;
           load_plugins (List.filter is_cmxs !files)
         end
