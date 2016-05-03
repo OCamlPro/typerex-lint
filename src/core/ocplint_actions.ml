@@ -111,7 +111,25 @@ let register_default_plugins patches =
     end) in
   ()
 
-let scan ?(filters="") patches path =
+let output fmt =
+  (* TO REMOVE : just for testing fmtput *)
+  Plugin.iter_plugins (fun plugin checks ->
+      let module P = (val plugin : Plugin_types.PLUGIN) in
+
+      Warning.iter
+        (fun warning -> Warning.print fmt warning)
+        P.warnings)
+
+let print () =
+  output Format.err_formatter
+
+let to_text file =
+  let oc = open_out file in
+  let fmt = Format.formatter_of_out_channel oc in
+  output fmt;
+  close_out oc
+
+let scan ?(filters="") ?output_text patches path =
   (* XXX TODO : don't forget to read config file too ! *)
   (* let plugins = filter_plugins filters in *)
 
@@ -132,4 +150,9 @@ let scan ?(filters="") patches path =
   Format.printf "Starting analyses...\n%!";
 
   register_default_plugins patches;
-  Parallel_engine.lint all mls mlis asts_ml asts_mli cmts
+  Parallel_engine.lint all mls mlis asts_ml asts_mli cmts;
+
+  (* TODO: do we want to print in stderr by default ? *)
+  match output_text with
+  | None -> print ()
+  | Some file -> to_text file
