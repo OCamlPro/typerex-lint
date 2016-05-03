@@ -22,8 +22,11 @@
 type error =
   | Plugin_already_registered of (module Plugin_types.PLUGIN)
   | Plugin_not_found of (module Plugin_types.PLUGIN)
+  | Patch_file_not_found of string
+  | Syntax_error of string
 
 (** [to_string err] returns a string representation of [err].  *)
 val to_string : error -> string
+val print : Format.formatter -> error -> unit
 
 exception Plugin_error of error
