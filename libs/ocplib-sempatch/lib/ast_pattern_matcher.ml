@@ -101,14 +101,14 @@ let apply patch expr =
             mapped >>= (fun (mapped_exprs, accu_env) ->
                 apply_to_expr env ~expr ~patch
                 >|= (fun (mapped_expr, env_expr) ->
-                    mapped_expr :: mapped_exprs, merge_envs accu_env env_expr
+                    mapped_expr :: mapped_exprs, env_expr :: accu_env
                   )
               )
           )
-          (Error ([], env))
+          (Error ([], []))
           expr_list
         >|= (fun (mapped_list, env_list) ->
-            Pexp_tuple mapped_list, [ env_list ]
+            Pexp_tuple mapped_list, env_list
           )
 
       | Pexp_ifthenelse (cif, cthen, celse) ->
