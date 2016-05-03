@@ -82,6 +82,25 @@ let is_cmt file = Filename.check_suffix file "cmt"
 let is_cmt file = Filename.check_suffix file "cmt"
 let is_cmxs file = Filename.check_suffix file "cmxs"
 
+let ( // ) = Filename.concat
+
+let rec load_plugins list =
+  List.iter (fun file ->
+      try
+        if Sys.is_directory file then begin
+          let files = ref [] in
+          iter_files (fun f ->
+              files := (file // f) :: !files) file;
+          load_plugins (List.filter is_cmxs !files)
+        end
+        else if Filename.check_suffix file "cmxs" then
+          Dynlink.loadfile file
+        else
+          Printf.eprintf "Cannot load %S\n%!" file
+      with _ ->
+        Printf.eprintf "%S: No such file or directory.\n%!" file)
+    list
+
 let register_default_sempatch () =
   (* TODO: Fabrice: vérifier que le fichier existe, sinon prendre celui dans
      l'exécutable par défaut*)
