@@ -63,17 +63,35 @@ message: "Use 'not $cond' instead of '$cond <> true'."
 + not cond
 ```
 
-@EmptyListComparison
-expressions: l
+@ EmptyListComparison
+expressions: l, e1, e2
 message: "Use a pattern matching instead of comparing to `0`."
 ```
 List.length l = 0
 ```
 
+@ ConstantIf
+expressions: cond, e1, e2
+message: "Constant if-then-else: there is no need to use a if-then-else."
+when: "e1 = e2"
+```
+if cond then e1 else e2
+```
+
+@ UselessIf
+expressions: cond
+message: "Useless if-then-else: use '$cond' instead of 'if $cond then true else false'."
+```
+- if cond then true else false
++ cond
+```
+
 @ LetIdentity
 expressions: x1, x2, e
+message: "Useless let-binding: use '$e' without let-binding."
 when: "x1 = x2"
 ```
 - let x1 = e in x2
 + e
 ```
+

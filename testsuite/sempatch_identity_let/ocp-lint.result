@@ -1,0 +1,4 @@
+File "testsuite/sempatch_identity_let/test_identity_let.ml", line 1:
+  Missing interface for 'testsuite/sempatch_identity_let/test_identity_let.ml'.
+File "testsuite/sempatch_identity_let/test_identity_let.ml", line 3, characters 2-26:
+  Useless let-binding: use '1 + 1' without let-binding.

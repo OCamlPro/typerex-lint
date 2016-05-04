@@ -1,0 +1,8 @@
+File "testsuite/sempatch_comp_to_false/test_sempatch_comp_to_false.ml", line 1:
+  Missing interface for 'testsuite/sempatch_comp_to_false/test_sempatch_comp_to_false.ml'.
+File "testsuite/sempatch_comp_to_false/test_sempatch_comp_to_false.ml", line 3, characters 5-22:
+  Use 'not condition' instead of 'condition = false'.
+File "testsuite/sempatch_comp_to_false/test_sempatch_comp_to_false.ml", line 7, characters 5-23:
+  Use 'condition' instead of 'condition != false'.
+File "testsuite/sempatch_comp_to_false/test_sempatch_comp_to_false.ml", line 11, characters 5-23:
+  Use 'not condition' instead of 'condition == false'.
