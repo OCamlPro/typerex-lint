@@ -87,8 +87,7 @@ let apply patch expr =
                 | Guard_evaluator.Undefined_function f ->
                   let patch_name = patch.header.name in
                   let msg = Printf.sprintf
-                      "The function %s in the guard of the patch %s"
-                            ^ " is undefined"
+                      "The function %s in the guard of patch %s is undefined"
                       f patch_name
                   in
                   raise Failure.( SempatchException (Guard msg))
@@ -382,8 +381,6 @@ let apply patch expr =
             [env]
           )
 
-      (* | _ -> *)
-      (*   raise Failure.(SempatchException (Non_implemented expr.pexp_loc)) *)
     in desc_err
     >>= (fun (mapped_desc, env_exprs) ->
         let self_expr = { expr with pexp_desc = mapped_desc } in
@@ -448,9 +445,44 @@ let apply patch expr =
       >|= (fun (expr, env) ->
           PPat (pat, expr), env
         )
+    | PStr str ->
+      apply_to_structure env patch str
+      >|= (fun (str, env) ->
+          PStr str, env
+        )
     | _ -> raise Failure.(SempatchException (Non_implemented (id.Asttypes.loc)))
 
-  (* and apply_to_structure_item =  *)
+  and apply_to_structure_item env patch str_item =
+    let submatch =
+      match str_item.pstr_desc with
+      | Pstr_eval (expr, attributes) ->
+        apply_to_expr env ~patch ~expr
+        >|= (fun (mapped_expr, env_expr) ->
+            Pstr_eval (mapped_expr, attributes),
+            [env_expr]
+          )
+      | Pstr_value (isrec, bindings) ->
+        apply_to_bindings env patch bindings
+        >|= (fun (bindings, envs) ->
+            Pstr_value (isrec, bindings),
+            envs
+          )
+
+      | _ -> raise Failure.(SempatchException
+                              (Non_implemented (str_item.pstr_loc)))
+    in
+    submatch
+    >|= (fun (desc, envs) ->
+        { str_item with pstr_desc = desc},
+        List.fold_left merge_envs Environment.empty envs
+        )
+
+  and apply_to_structure env patch structure =
+    apply_to_list apply_to_structure_item env patch structure
+    >|= (fun (structure, envs) ->
+        structure,
+        List.fold_left merge_envs Environment.empty envs
+      )
 
   in
   let expr = Parsed_patches.preprocess_src_expr expr
