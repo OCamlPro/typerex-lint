@@ -130,9 +130,7 @@ let to_text file =
   close_out oc
 
 let scan ?(filters="") ?output_text patches path =
-  (* XXX TODO : don't forget to read config file too ! *)
-  (* let plugins = filter_plugins filters in *)
-
+  register_default_plugins patches;
   let all = filter_modules (scan_project path) !!ignored_files in
 
   (* All inputs for each analyze *)
@@ -149,7 +147,6 @@ let scan ?(filters="") ?output_text patches path =
 
   Format.printf "Starting analyses...\n%!";
 
-  register_default_plugins patches;
   Parallel_engine.lint all mls mlis asts_ml asts_mli cmts;
 
   (* TODO: do we want to print in stderr by default ? *)
