@@ -1,0 +1,4 @@
+File "testsuite/sempatch_constant_if/test_constant_if.ml", line 1:
+  Missing interface for 'testsuite/sempatch_constant_if/test_constant_if.ml'.
+File "testsuite/sempatch_constant_if/test_constant_if.ml", line 3, characters 2-29:
+  Constant if-then-else: there is no need to use a if-then-else.

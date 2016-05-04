@@ -1,0 +1,4 @@
+File "testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml", line 1:
+  Missing interface for 'testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml'.
+File "testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml", line 3, characters 5-25:
+  Use a pattern matching instead of comparing to `0`.
