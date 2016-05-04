@@ -129,21 +129,12 @@ let apply patch expr =
         >>= (fun (mapped_bindings, env_bindings) ->
             apply_to_expr env ~expr ~patch
             >|= (fun (mapped_expr, env_expr) ->
-                Pexp_let (isrec, mapped_bindings, mapped_expr), [ env_bindings; env_expr ]
+                Pexp_let (isrec, mapped_bindings, mapped_expr), env_expr :: env_bindings
               )
           )
 
       | Pexp_tuple expr_list ->
-        List.fold_left (fun mapped expr ->
-            mapped >>= (fun (mapped_exprs, accu_env) ->
-                apply_to_expr env ~expr ~patch
-                >|= (fun (mapped_expr, env_expr) ->
-                    mapped_expr :: mapped_exprs, env_expr :: accu_env
-                  )
-              )
-          )
-          (Error ([], []))
-          expr_list
+        apply_to_exprs env patch expr_list
         >|= (fun (mapped_list, env_list) ->
             Pexp_tuple mapped_list, env_list
           )
@@ -177,7 +168,7 @@ let apply patch expr =
             apply_to_expr env ~expr ~patch
             >|= (fun (mapped_expr, env_expr) ->
                 Pexp_match (mapped_expr, mapped_cases),
-                [ env_cases; env_expr ]
+                env_expr :: env_cases
               )
           )
 
@@ -208,17 +199,8 @@ let apply patch expr =
           )
       )
 
-  and apply_to_list mapper env patch =
-    let open Res.Err_monad_infix in
-    List.fold_left (fun mapped elt ->
-        mapped >>= (fun (mapped_elts, accu_env) ->
-            mapper env patch elt
-            >|= (fun (mapped_elt, new_env) ->
-                mapped_elt :: mapped_elts, merge_envs accu_env new_env
-              )
-          )
-      )
-      (Res.fail ([], env))
+  and apply_to_exprs env patch =
+    apply_to_list (fun env patch expr -> apply_to_expr env ~patch ~expr) env patch
 
   and apply_to_cases env patch = apply_to_list apply_to_case env patch
 
@@ -228,17 +210,7 @@ let apply patch expr =
     >|= (fun (expr, env) -> { binding with pvb_expr = expr }, env)
 
   and apply_to_bindings env patch bindings =
-    let open Res.Err_monad_infix in
-    List.fold_left (fun mapped binding ->
-        mapped >>= (fun (mapped_bindings, accu_env) ->
-            apply_to_binding env patch binding
-            >|= (fun (mapped_binding, new_env) ->
-                mapped_binding :: mapped_bindings, merge_envs accu_env new_env
-                )
-          )
-      )
-      (Res.fail ([], env))
-      bindings
+    apply_to_list apply_to_binding env patch bindings
 
   and apply_to_maybe_expr env patch =
     let open Res.Err_monad_infix in
