@@ -30,4 +30,3 @@ val scan :
   string list ->
   string ->
   ((module Plugin_types.PLUGIN), (Input.input list) Globals.LintMap.t) Hashtbl.t
-

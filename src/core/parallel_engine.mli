@@ -27,5 +27,6 @@ val lint :
   Parsetree.structure option Lazy.t list ->
   Parsetree.signature option Lazy.t list ->
   Cmt_format.cmt_infos Lazy.t list ->
-  ((module Plugin_types.PLUGIN), (Input.input list) Globals.LintMap.t) Hashtbl.t ->
-unit
+  ((module Plugin_types.PLUGIN), (Input.input list) Globals.LintMap.t)
+    Hashtbl.t ->
+  unit
