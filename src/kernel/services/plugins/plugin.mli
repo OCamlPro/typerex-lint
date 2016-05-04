@@ -24,6 +24,7 @@
 val iter_plugins :
   ((module Plugin_types.PLUGIN) ->
    (Input.input list) Globals.LintMap.t -> unit) ->
+    ((module Plugin_types.PLUGIN), (Input.input list) Globals.LintMap.t) Hashtbl.t ->
   unit
 
 

@@ -20,5 +20,5 @@
 
 begin library "default-config"
   files = [ "configuration.ml" ]
-  requires = [ "ocplib-system" ]
+  requires = [ "ocplib-config" ]
 end

@@ -21,28 +21,36 @@
 open Plugin_error
 open Sempatch
 
+let create () = Hashtbl.create 42
+
+let add = Hashtbl.add
+
+let replace = Hashtbl.replace
+
+let find = Hashtbl.find
+
 let register_plugin plugin =
   try
-    let _ = Hashtbl.find Globals.plugins plugin in
+    let _ = find Globals.plugins plugin in
     raise (Plugin_error(Plugin_already_registered plugin))
   with Not_found ->
-    Hashtbl.add Globals.plugins plugin Globals.LintMap.empty
+    add Globals.plugins plugin Globals.LintMap.empty
 
 let register_main plugin cname main =
   try
-    let lints = Hashtbl.find Globals.plugins plugin in
+    let lints = find Globals.plugins plugin in
     try
       let runs = Globals.LintMap.find cname lints in
       let new_lints = Globals.LintMap.add cname (main :: runs) lints in
-      Hashtbl.replace Globals.plugins plugin new_lints
+      replace Globals.plugins plugin new_lints
     with Not_found ->
-      Hashtbl.replace
+      replace
         Globals.plugins plugin (Globals.LintMap.add cname [main] lints)
   with Not_found ->
     raise (Plugin_error(Plugin_not_found plugin))
 
-let iter_plugins apply =
-  Hashtbl.iter (fun plugin checks -> apply plugin checks) Globals.plugins
+let iter_plugins apply plugins =
+  Hashtbl.iter (fun plugin checks -> apply plugin checks) plugins
 
 module MakePlugin(P : Plugin_types.PluginArg) = struct
 
@@ -188,10 +196,10 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
   let () =
     (* Creating default options for plugins: "--plugin.enable" *)
     ignore (create_option
-        [P.short_name]
+        [P.short_name; "disable"]
         details
         details
-        SimpleConfig.enable_option true);
+        SimpleConfig.flag_option false);
 
     try
       register_plugin plugin

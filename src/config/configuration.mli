@@ -20,7 +20,9 @@
 
 module type CONFIG = sig
   val config_file : SimpleConfig.config_file
+
   val simple_args : unit -> (string * Arg.spec * string) list
+
   val create_option :
     string list ->
     string ->
@@ -29,6 +31,9 @@ module type CONFIG = sig
     'a SimpleConfig.option_class ->
     'a ->
     'a SimpleConfig.config_option
+
+  val get_option_value : string list -> string
+
   val save : unit -> unit
 end
 

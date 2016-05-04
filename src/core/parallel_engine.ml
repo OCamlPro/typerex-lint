@@ -18,7 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-let lint all mls mlis asts_ml asts_mli cmts =
+let lint all mls mlis asts_ml asts_mli cmts plugins =
   let fmt = Format.err_formatter in
   (* Itering on all files in your project *)
   Plugin.iter_plugins (fun plugin checks ->
@@ -31,7 +31,7 @@ let lint all mls mlis asts_ml asts_mli cmts =
                   with Plugin_error.Plugin_error err ->
                     Plugin_error.print fmt err
                 end
-              | _ -> ()) runs) checks);
+              | _ -> ()) runs) checks) plugins;
 
   (* Itering on ml sources *)
   List.iter (fun input ->
@@ -45,7 +45,8 @@ let lint all mls mlis asts_ml asts_mli cmts =
                       with Plugin_error.Plugin_error err ->
                         Plugin_error.print fmt err
                     end
-                  | _ -> ()) runs) checks))
+                  | _ -> ()) runs) checks)
+        plugins)
     mls;
 
   (* Itering on mli sources *)
@@ -60,7 +61,8 @@ let lint all mls mlis asts_ml asts_mli cmts =
                       with Plugin_error.Plugin_error err ->
                         Plugin_error.print fmt err
                     end
-                  | _ -> ()) runs) checks))
+                  | _ -> ()) runs) checks)
+        plugins)
     mlis;
 
   (* Itering on Parsetree.structure *)
@@ -83,7 +85,8 @@ let lint all mls mlis asts_ml asts_mli cmts =
                             Plugin_error.print fmt err
                         end
                     end
-                  | _ -> ()) runs) checks))
+                  | _ -> ()) runs) checks)
+        plugins)
     asts_ml;
 
   (* Itering on Parsetree.signature *)
@@ -102,7 +105,8 @@ let lint all mls mlis asts_ml asts_mli cmts =
                             Plugin_error.print fmt err
                         end
                     end
-                  | _ -> ()) runs) checks))
+                  | _ -> ()) runs) checks)
+        plugins)
     asts_mli;
 
   (* Itering on cmts *)
@@ -117,5 +121,6 @@ let lint all mls mlis asts_ml asts_mli cmts =
                       with Plugin_error.Plugin_error err ->
                         Plugin_error.print fmt err
                     end
-                  | _ -> ()) runs) checks))
+                  | _ -> ()) runs) checks)
+        plugins)
     cmts

@@ -22,10 +22,12 @@
     directory given in the command line with '--load' option. *)
 val load_plugins : string list -> unit
 
-(** [scan ~filters patches path] creates a default plugin with the given
+(** [scan patches path] creates a default plugin with the given
     sematic [patches] list files, scan the [path] and start the registered
     plugins/linters on the files in this path. *)
-val scan :
-  ?filters:string ->
+val scan : 
   ?output_text:string ->
-  string list -> string -> unit
+  string list ->
+  string ->
+  ((module Plugin_types.PLUGIN), (Input.input list) Globals.LintMap.t) Hashtbl.t
+
