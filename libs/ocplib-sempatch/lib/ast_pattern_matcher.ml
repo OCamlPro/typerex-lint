@@ -10,13 +10,13 @@ let apply_replacements tree attributes var_replacements =
   let new_tree = List.find_opt
       (fun x -> (fst x).Asttypes.txt = "__sempatch_replace")
       attributes
-    >|= snd
     >|= (function
-        | PStr [ { pstr_desc = Pstr_eval (e, _); _ } ] -> e
-        | _ ->
-          Parsed_patches.raisePatchError "Invalid replacement extension node"
+        | _, PStr [ { pstr_desc = Pstr_eval (e, _); _ } ] -> e
+        | id, _ -> raise Failure.(SempatchException
+                                    (Replacement (id.Asttypes.loc))
+                                 )
       )
-                 |> Option.value tree
+    |> Option.value tree
   in
   let mapper = Ast_mapper.(
       { default_mapper with
