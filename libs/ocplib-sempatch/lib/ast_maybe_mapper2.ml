@@ -16,17 +16,22 @@ let map_binding merge self env binding patch =
         )
     )
 
-let map_bindings merge self env =
-  List.fold_left2 (fun accu binding patch_binding ->
-      accu
-      >>= (fun (bind_list, env) ->
-          map_binding merge self env binding patch_binding
-          >|= (fun (mapped_binding, new_env) ->
-              mapped_binding :: bind_list, merge env new_env
-            )
-        )
-    )
-    (Ok ([], env))
+let map_bindings merge self env bindings patch =
+  try
+    List.fold_left2 (fun accu binding patch_binding ->
+        accu
+        >>= (fun (bind_list, env) ->
+            map_binding merge self env binding patch_binding
+            >|= (fun (mapped_binding, new_env) ->
+                mapped_binding :: bind_list, merge env new_env
+              )
+          )
+      )
+      (Ok ([], env))
+      bindings
+      patch
+  with
+    Invalid_argument "List.fold_left2" -> Error (bindings, env)
 
 let map_maybe_expr _merge self env expr_opt patch_opt =
   match expr_opt, patch_opt with
@@ -77,20 +82,24 @@ let map_expr merge self env ~patch ~expr =
   | Pexp_ident _, Pexp_ident _
   | Pexp_constant _, Pexp_constant _ -> Error (e.pexp_desc, env)
   | Pexp_tuple e1s, Pexp_tuple e2s ->
-      List.fold_left2 (fun accu expr patch_expr ->
-          accu >>= (fun (expr_list, accu_env) ->
-              self.expr self env ~expr ~patch:patch_expr
-              >|= (fun (mapped_expr, new_env) ->
-                  mapped_expr :: expr_list, merge accu_env new_env
-                )
-            )
-      )
-        (Ok ([], env))
-        e1s
-        e2s
-      >|= (fun (exprs, env) ->
-          Pexp_tuple exprs, env
-        )
+    begin
+      try
+        List.fold_left2 (fun accu expr patch_expr ->
+            accu >>= (fun (expr_list, accu_env) ->
+                self.expr self env ~expr ~patch:patch_expr
+                >|= (fun (mapped_expr, new_env) ->
+                    mapped_expr :: expr_list, merge accu_env new_env
+                  )
+              )
+          )
+          (Ok ([], env))
+          e1s
+          e2s
+        >|= (fun (exprs, env) ->
+            Pexp_tuple exprs, env
+          )
+      with Invalid_argument "List.fold_left2" -> Error.fail (e.pexp_desc, env)
+    end
 
   | Pexp_construct (identl, exprl), Pexp_construct (identr, exprr) when identl.Asttypes.txt = identr.Asttypes.txt ->
     map_maybe_expr merge self env exprl exprr
