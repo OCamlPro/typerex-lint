@@ -183,7 +183,10 @@ sig
   type 'a t = 'a list
 
   val foldmap: ('c -> 'b -> 'c) -> ('a -> 'b) -> 'c -> 'a t -> 'c
-  val foldmap2_exn: ('c -> 'b -> 'c) -> ('a -> 'd -> 'b) -> 'c -> 'a t -> 'd t -> 'c
+  val foldmap2_exn:
+    ('c -> 'b -> 'c) ->
+    ('a -> 'd -> 'b) ->
+    'c -> 'a t -> 'd t -> 'c
 
   val cons : 'a -> 'a list -> 'a list
 
@@ -198,9 +201,15 @@ struct
 
   type 'a t = 'a list
 
-  let foldmap foldFun mapFun ini = Fun.compose (List.fold_left foldFun ini) (List.map mapFun)
+  let foldmap foldFun mapFun ini =
+    Fun.compose
+      (List.fold_left foldFun ini)
+      (List.map mapFun)
 
-  let foldmap2_exn foldFun mapFun ini l = Fun.compose (List.fold_left foldFun ini) (List.map2 mapFun l)
+  let foldmap2_exn foldFun mapFun ini l =
+    Fun.compose
+      (List.fold_left foldFun ini)
+      (List.map2 mapFun l)
 
   let cons e l = e::l
 
@@ -221,7 +230,11 @@ struct
   module M = Map.Make(String)
   include M
 
-  let from_list_pair l = List.fold_left (fun map (k, e) -> M.add k e map) M.empty l
+  let from_list_pair l =
+    List.fold_left
+      (fun map (k, e) -> M.add k e map)
+      M.empty
+      l
 end
 
 module List = UList

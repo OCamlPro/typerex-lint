@@ -44,13 +44,16 @@ let add_header_field header = function
 
 let header_from_list l = List.fold_left add_header_field void_header l
 
-(** Checks wether l1 \subset l2 where l1 and l2 represents unordonned sets of elements *)
+(** Checks wether l1 \subset l2
+    where l1 and l2 represents unordonned sets of elements *)
 let testInclusion l1 l2 =
   let mem_exn elt lst = if List.mem elt lst then () else failwith elt in
   try
     List.iter (fun x -> mem_exn x l2) l1
   with
-    Failure x -> raisePatchError ("The meta-variable " ^ x ^ " is present in the substitution AST and not in the original one")
+    Failure x -> raisePatchError ("The meta-variable " ^ x
+                                  ^ " is present in the substitution AST"
+                                  ^ "and not in the original one")
 
 let curryfying_mapper =
   let open Ast_mapper in
@@ -62,7 +65,8 @@ let curryfying_mapper =
               {
                 arg with
                 pexp_desc = Pexp_apply (acc, [lbl, self.expr self arg]);
-                pexp_attributes = (Location.mknoloc "__sempatch_uncurryfy", PStr [])::[];
+                pexp_attributes =
+                  (Location.mknoloc "__sempatch_uncurryfy", PStr [])::[];
               }
             )
               (self.expr self f)
@@ -85,10 +89,18 @@ let uncurryfying_mapper =
   { default_mapper with
     expr = (fun self e ->
             match e.pexp_desc with
-            | Pexp_apply (f, args) when List.exists (fun (loc, _) -> loc.Location.txt = "__sempatch_uncurryfy") f.pexp_attributes ->
+            | Pexp_apply (f, args)
+              when List.exists
+                  (fun (loc, _) -> loc.Location.txt = "__sempatch_uncurryfy")
+                  f.pexp_attributes
+              ->
               (
                 match under_arg f with
-                | Some (next_fun, next_arg) -> self.expr self { e with pexp_desc = Pexp_apply (next_fun, next_arg @ args) }
+                | Some (next_fun, next_arg) ->
+                  self.expr self
+                    { e with
+                      pexp_desc = Pexp_apply (next_fun, next_arg @ args)
+                    }
                 | None -> default_mapper.expr self e
               )
             | _ -> default_mapper.expr self e
@@ -110,14 +122,26 @@ let preprocess { header; body} =
         expr = (fun self e ->
             let new_expr =
               match e.pexp_desc with
-              | Pexp_ident ({ Asttypes.txt = Longident.Lident v; _ }) when List.mem v header.meta_expr ->
+              | Pexp_ident ({ Asttypes.txt = Longident.Lident v; _ })
+                when List.mem v header.meta_expr ->
                 let new_var = v in
-                if not in_replacement && List.mem new_var !meta_exprs_in_pre_patch then
-                  (* For the moment, don't allow meta expressions to appear more than once in a patch *)
-                  raisePatchError ("The variable " ^ v ^ " appears more than once in the patch")
+                if
+                  not in_replacement
+                  && List.mem new_var !meta_exprs_in_pre_patch
+                then
+                  (* For the moment, don't allow meta expressions
+                     to appear more than once in a patch *)
+                  raisePatchError ("The variable " ^ v
+                                   ^ " appears more than once in the patch")
                 else
                   (
-                    let processed_vars = if in_replacement then metas_in_post_patch else meta_exprs_in_pre_patch in
+                    let processed_vars =
+                      if in_replacement
+                      then
+                        metas_in_post_patch
+                      else
+                        meta_exprs_in_pre_patch
+                    in
                     processed_vars := new_var :: !processed_vars;
                     e
                   )
@@ -127,12 +151,21 @@ let preprocess { header; body} =
         pat = (fun self pat ->
             let new_pattern =
               match pat.ppat_desc with
-              | Ppat_var { Asttypes.txt = i; _ } when List.mem i header.meta_expr ->
-                if not in_replacement && List.mem i !meta_exprs_in_pre_patch then
-                  raisePatchError ("The pattern " ^ i ^ " appears more than once in the patch")
+              | Ppat_var { Asttypes.txt = i; _ }
+                when List.mem i header.meta_expr ->
+                if not in_replacement && List.mem i !meta_exprs_in_pre_patch
+                then
+                  raisePatchError ("The pattern " ^ i
+                                   ^ " appears more than once in the patch")
                 else (* TODO : Check if the variable appears out of scope ? *)
                   (
-                    let processed_vars = if in_replacement then metas_in_post_patch else meta_exprs_in_pre_patch in
+                    let processed_vars =
+                      if in_replacement
+                      then
+                        metas_in_post_patch
+                      else
+                        meta_exprs_in_pre_patch
+                    in
                     processed_vars := i :: !processed_vars;
                     pat
                   )
@@ -153,8 +186,13 @@ let preprocess { header; body} =
   in
   let processed_before_patch = map body
   in
-  testInclusion !metas_in_post_patch (List.append !meta_exprs_in_pre_patch !meta_exprs_in_pre_patch);
-  { header = { header with meta_expr = !meta_exprs_in_pre_patch; }; body = processed_before_patch; }
+  testInclusion
+    !metas_in_post_patch
+    (List.append !meta_exprs_in_pre_patch !meta_exprs_in_pre_patch);
+  {
+    header = { header with meta_expr = !meta_exprs_in_pre_patch; };
+    body = processed_before_patch;
+  }
 
 let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper
 
