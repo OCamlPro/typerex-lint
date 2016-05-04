@@ -87,7 +87,8 @@ let apply patch expr =
                 | Guard_evaluator.Undefined_function f ->
                   let patch_name = patch.header.name in
                   let msg = Printf.sprintf
-                      "The function %s in the guard of the patch %s is undefined"
+                      "The function %s in the guard of the patch %s"
+                            ^ " is undefined"
                       f patch_name
                   in
                   raise Failure.( SempatchException (Guard msg))
@@ -107,7 +108,9 @@ let apply patch expr =
             | Error (expr, attrs) ->
               Error (expr, Environment.set_matches [] attrs)
           in
-          Error.map (fun (e, env) -> apply_replacements e attrs2 env, env) result
+          Error.map
+            (fun (e, env) -> apply_replacements e attrs2 env, env)
+            result
         );
       pattern = (fun self env ~patch:pat2 ~pat:pat1 ->
           let replacements =
@@ -418,7 +421,10 @@ let apply patch expr =
       )
 
   and apply_to_exprs env patch =
-    apply_to_list (fun env patch expr -> apply_to_expr env ~patch ~expr) env patch
+    apply_to_list
+      (fun env patch expr -> apply_to_expr env ~patch ~expr)
+      env
+      patch
 
   and apply_to_cases env patch = apply_to_list apply_to_case env patch
 

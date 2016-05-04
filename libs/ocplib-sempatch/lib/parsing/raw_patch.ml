@@ -24,10 +24,25 @@ let to_patch_body p =
       | SUBPATCH p -> (convert_patch p @ before, after, is_change)
   and convert_patch p =
     let (before, after, has_change) = convert_line p in
-    "[%__sempatch_inside (" :: before @ ")" :: (if has_change then " [@__sempatch_replace" :: after @ ["]"] else []) @ ["]"]
+    "[%__sempatch_inside ("
+    :: before
+    @ ")"
+      :: (if has_change then
+            " [@__sempatch_replace" :: after @ ["]"]
+          else
+            [])
+    @ ["]"]
   in
   let patch =
     let (before, after, has_change) = convert_line p in
-    before @ (if has_change then " [@__sempatch_replace" :: after @ ["]"] else [])
+    before @
+    (if has_change
+     then
+       " [@__sempatch_replace" :: after @ ["]"]
+     else
+       []
+    )
   in
-  Parser.parse_expression Lexer.token (Lexing.from_string (String.concat "\n" @@ patch))
+  Parser.parse_expression Lexer.token (Lexing.from_string
+                                         (String.concat "\n" @@ patch)
+                                      )

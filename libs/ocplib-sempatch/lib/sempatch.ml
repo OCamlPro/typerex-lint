@@ -21,7 +21,11 @@ struct
 
   let apply patch ast = let open Ast_element in
     match ast with
-    | Expression e -> let e, m = Ast_pattern_matcher.apply patch e |>Res.unwrap in Expression e, m
+    | Expression e ->
+      let
+        e, m = Ast_pattern_matcher.apply patch e |> Res.unwrap
+      in
+      Expression e, m
     | Ident _ -> assert false
 
   let sequential_apply patches ast_elt =

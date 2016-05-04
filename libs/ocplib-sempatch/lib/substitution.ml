@@ -17,7 +17,8 @@ let get_expr key vars =
   get key vars
   >>= (function
       | AE.Expression e -> Some e
-      | AE.Ident i -> Ast_helper.Exp.ident (Location.mknoloc (Longident.Lident i))
+      | AE.Ident i ->
+        Ast_helper.Exp.ident (Location.mknoloc (Longident.Lident i))
                       |> Option.some
     )
 

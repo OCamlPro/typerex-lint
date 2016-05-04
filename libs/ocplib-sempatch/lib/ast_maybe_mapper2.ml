@@ -3,8 +3,10 @@ open Parsetree
 open Res.Ok_monad_infix
 
 type 'a t = {
-  expr : 'a t -> 'a -> patch:expression -> expr:expression -> (expression * 'a, expression * 'a) Error.t;
-  pattern : 'a t -> 'a -> patch:pattern -> pat:pattern -> (pattern * 'a, pattern * 'a) Error.t;
+  expr : 'a t -> 'a -> patch:expression -> expr:expression
+    -> (expression * 'a, expression * 'a) Error.t;
+  pattern : 'a t -> 'a -> patch:pattern -> pat:pattern
+    -> (pattern * 'a, pattern * 'a) Error.t;
 }
 
 let map_binding merge self env binding patch =
@@ -12,7 +14,8 @@ let map_binding merge self env binding patch =
   >>= (fun (mapped_pattern, env_pattern) ->
       self.expr self env ~expr:binding.pvb_expr ~patch:patch.pvb_expr
       >|= (fun (mapped_expr, env_expr) ->
-          { binding with pvb_pat = mapped_pattern; pvb_expr = mapped_expr; }, merge env_pattern env_expr
+          { binding with pvb_pat = mapped_pattern; pvb_expr = mapped_expr; },
+          merge env_pattern env_expr
         )
     )
 
@@ -35,7 +38,8 @@ let map_bindings merge self env bindings patch =
 
 let map_maybe_expr _merge self env expr_opt patch_opt =
   match expr_opt, patch_opt with
-  | Some expr, Some patch -> self.expr self env ~expr ~patch >|= (fun (mapped, env) -> Some mapped, env)
+  | Some expr, Some patch ->
+    self.expr self env ~expr ~patch >|= (fun (mapped, env) -> Some mapped, env)
   | None, None -> Ok (None, env)
   | _ -> Error (expr_opt, env)
 
@@ -101,7 +105,8 @@ let map_expr merge self env ~patch ~expr =
       with Invalid_argument "List.fold_left2" -> Error.fail (e.pexp_desc, env)
     end
 
-  | Pexp_construct (identl, exprl), Pexp_construct (identr, exprr) when identl.Asttypes.txt = identr.Asttypes.txt ->
+  | Pexp_construct (identl, exprl), Pexp_construct (identr, exprr)
+    when identl.Asttypes.txt = identr.Asttypes.txt ->
     map_maybe_expr merge self env exprl exprr
     >|= (fun (mapped_expr, env_expr) ->
         Pexp_construct (identl, mapped_expr), env_expr
@@ -115,7 +120,8 @@ let map_expr merge self env ~patch ~expr =
             Pexp_apply (mapped_f, [lbl1, mapped_arg]), merge env_f env_arg
           )
       )
-  | Pexp_fun (lbl1, default1, pat1, expr1), Pexp_fun (_lbl2, _default2, pat2, expr2) ->
+  | Pexp_fun (lbl1, default1, pat1, expr1),
+    Pexp_fun (_lbl2, _default2, pat2, expr2) ->
     (* TODO: handle labels and default values *)
     let mapped_arg = self.pattern self env ~pat:pat1 ~patch:pat2 in
     let mapped_expr = mapped_arg
@@ -123,15 +129,18 @@ let map_expr merge self env ~patch ~expr =
     in
     begin
       match mapped_arg, mapped_expr with
-      | Ok (pat, env_pat), Ok (expr, env_expr) -> Ok (Pexp_fun (lbl1, default1, pat, expr), merge env_pat env_expr)
+      | Ok (pat, env_pat), Ok (expr, env_expr) ->
+        Ok (Pexp_fun (lbl1, default1, pat, expr), merge env_pat env_expr)
       | _, _ -> Error (e.pexp_desc, env)
     end
-  | Pexp_let (isrecl, bindingsl, exprl), Pexp_let (isrecr, bindingsr, exprr) when isrecl = isrecr ->
+  | Pexp_let (isrecl, bindingsl, exprl), Pexp_let (isrecr, bindingsr, exprr)
+    when isrecl = isrecr ->
     map_bindings merge self env bindingsl bindingsr
     >>= (fun (mapped_bindings, env_bindings) ->
         self.expr self env ~expr:exprl ~patch:exprr
         >|= (fun (mapped_expr, env_expr) ->
-            Pexp_let (isrecl, mapped_bindings, mapped_expr), merge env_expr env_bindings
+            Pexp_let (isrecl, mapped_bindings, mapped_expr),
+            merge env_expr env_bindings
           )
       )
 
@@ -142,7 +151,8 @@ let map_expr merge self env ~patch ~expr =
         >>= (fun (mapped_then, env_then) ->
             map_maybe_expr merge self env elsel elser
             >|= (fun (mapped_else, env_else) ->
-                Pexp_ifthenelse (mapped_if, mapped_then, mapped_else), merge env_if (merge env_then env_else)
+                Pexp_ifthenelse (mapped_if, mapped_then, mapped_else),
+                merge env_if (merge env_then env_else)
             )
           )
       )
