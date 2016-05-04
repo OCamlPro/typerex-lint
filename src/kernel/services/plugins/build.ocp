@@ -18,9 +18,21 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+begin library "static-files"
+  files = [
+   "global_static_files.ml"
+
+   (* All static linked files which is used in globals.ml *)
+     (file2string = [
+        "../../../analysis/plugins/sempatch.md"
+     ])
+  ]
+  requires = [ "default-config" "plugin-api"]
+end
+
 begin library "globals"
   files = [ "globals.ml" ]
-  requires = [ "default-config" "plugin-api"]
+  requires = [ "default-config" "plugin-api" "static-files" ]
 end
 
 begin library "plugin-api"

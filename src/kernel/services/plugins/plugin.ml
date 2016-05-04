@@ -96,26 +96,32 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
                  (Match.get_substitutions matching)
                  (Patch.get_metavariables patch))
 
+    let patches =
+      List.map (fun filename ->
+          if Sys.file_exists filename then
+            let ic = open_in filename in
+            let patches = Patch.from_channel ic in
+            close_in ic;
+            patches
+          else
+            (raise (Plugin_error(Patch_file_not_found filename))))
+        C.patches
+
     let iter =
       let module IterArg = struct
         include ParsetreeIter.DefaultIteratorArgument
         let enter_expression expr =
-          List.iter (fun filename ->
-              if Sys.file_exists filename then begin
-                let ic = open_in filename in
-                let patches = Patch.from_channel ic in
-                let matches =
-                  Patch.parallel_apply patches (Ast_element.Expression expr) in
-                List.iter (fun matching ->
-                    let patch =
-                      List.find
-                        (fun p ->
-                           Patch.get_name p = Match.get_patch_name matching)
-                        patches in
-                    report matching [Warning.kind_code] patch)
-                  matches
-              end else
-                raise (Plugin_error(Patch_file_not_found filename)))
+          List.iter (fun (patches) ->
+              let matches =
+                Patch.parallel_apply patches (Ast_element.Expression expr) in
+              List.iter (fun matching ->
+                  let patch =
+                    List.find
+                      (fun p ->
+                         Patch.get_name p = Match.get_patch_name matching)
+                      patches in
+                  report matching [Warning.kind_code] patch)
+                matches)
             patches
       end in
       (module IterArg : ParsetreeIter.IteratorArgument)
