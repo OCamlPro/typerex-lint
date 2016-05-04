@@ -84,6 +84,35 @@ let is_constant = apply_to_exprs @@ apply_to_1 @@ fun e ->
   | Pexp_construct (_, None) -> true
   | _ -> false
 
+let is_int_in_range = fun args ->
+  match args with
+  | [Expr e; Int min; Int max] ->
+    begin
+      let int_expr =
+      match e.pexp_desc with
+      | Pexp_constant (Asttypes.Const_int i) -> Some i
+      | _ -> None
+      in
+      Option.fold (fun _ i -> min <= i && max >= i) false int_expr
+    end
+  | _ -> false
+
+let is_in_range = fun args ->
+  match args with
+  | [Expr e; Int min; Int max] ->
+    begin
+      let int_expr =
+      match e.pexp_desc with
+      | Pexp_constant (Asttypes.Const_int i) -> Some i
+      | Pexp_constant (Asttypes.Const_int32 i) -> Some (Int32.to_int i)
+      | Pexp_constant (Asttypes.Const_int64 i) -> Some (Int64.to_int i)
+      | Pexp_constant (Asttypes.Const_nativeint i) -> Some (Nativeint.to_int i)
+      | _ -> None
+      in
+      Option.fold (fun _ i -> min <= i && max >= i) false int_expr
+    end
+  | _ -> false
+
 let is_integer_lit = apply_to_exprs @@ apply_to_1 @@ fun e ->
   match e.pexp_desc with
   | Pexp_constant (Asttypes.Const_int _)
@@ -119,6 +148,8 @@ let functions = [
   "is_integer_lit", bool @@ is_integer_lit;
   "is_string_lit", bool @@ is_string_lit;
   "is_bool_lit", bool @@ is_bool_lit;
+  "is_int_in_range", bool @@ is_int_in_range;
+  "is_in_range", bool @@ is_in_range;
 ]
 
 let rec eval_ env = function
