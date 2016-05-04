@@ -50,7 +50,7 @@ let add_spec ((cmd, _, _) as spec) =
     specs := spec :: !specs
 
 let () =
-  specs := Arg.align [
+  specs := [
       "--project", Arg.String (fun dir -> set_action (ActionLoad dir)),
     "DIR   Give a project dir path";
 
@@ -78,6 +78,7 @@ let () =
 let main () =
   (* Getting all options declared in all registered plugins. *)
   List.iter add_spec (Globals.Config.simple_args ());
+  specs := Arg.align !specs;
   Arg.parse_dynamic specs
       (fun cmd ->
        Printf.printf "Error: don't know what to do with %s\n%!" cmd;
