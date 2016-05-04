@@ -173,6 +173,10 @@ let map_expr merge self env ~patch ~expr =
           )
       )
 
+  | Pexp_fun _, _ | _, Pexp_fun _
+  | Pexp_function _, _ | _, Pexp_function _
+  | Pexp_match _, _ | _, Pexp_match _
+  | Pexp_ifthenelse _, _ | _, Pexp_ifthenelse _
   | Pexp_let _, _ | _, Pexp_let _
   | Pexp_apply _, _ | _, Pexp_apply _
   | Pexp_ident _, _ | _, Pexp_ident _
