@@ -5,6 +5,7 @@ open Guard
 type t =
   | Expr of Parsetree.expression
   | Bool of bool
+  | Int of int
 
 type fn = string * (t list -> t) (* name, fun *)
 
@@ -29,14 +30,14 @@ let find_var var_name env =
 let apply_to_bool f args =
   let unwrap_bool = function
     | Bool b -> b
-    | Expr _ -> raise TypeError
+    | _ -> raise TypeError
   in
   f (List.map unwrap_bool args)
 
 let apply_to_exprs f args =
   let unwrap_expr = function
-    | Bool _ -> raise TypeError
     | Expr e -> e
+    | _ -> raise TypeError
   in
   f (List.map unwrap_expr args)
 
@@ -125,11 +126,12 @@ let rec eval_ env = function
       try List.assoc f functions with Not_found -> raise (Undefined_function f)
     in
     fn (List.map (eval_ env) args)
+  | Litt_integer i -> Int i
 
 let eval env guard =
   match eval_ env guard with
   | Bool b -> b
-  | Expr _ -> raise TypeError
+  | _ -> raise TypeError
 
 let eval_union env guards =
   List.fold_left (fun accu guard -> accu && eval env guard) true guards

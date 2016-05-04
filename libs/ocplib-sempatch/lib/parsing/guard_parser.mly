@@ -1,5 +1,6 @@
 %token<string> ID
 %token<string> INFIX_OP
+%token<int> NUMBER
 %token OPENING_PAREN
 %token CLOSING_PAREN
 %token COMMA
@@ -19,3 +20,4 @@ expr:
   { Guard.Apply (fn, args) }
   | OPENING_PAREN e = expr CLOSING_PAREN { e }
   | var = ID { Guard.Variable var }
+  | number = NUMBER { Guard.Litt_integer number }
