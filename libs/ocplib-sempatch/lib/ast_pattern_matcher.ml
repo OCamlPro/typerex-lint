@@ -107,7 +107,11 @@ let apply patch expr =
 
     let desc_err =
       match expr.pexp_desc with
-      | Pexp_ident _ | Pexp_constant _ as d -> Error.fail (d, [env])
+      | Pexp_ident _ | Pexp_constant _
+      | Pexp_new _ | Pexp_pack _
+      | Pexp_object _
+        as d -> Error.fail (d, [env])
+
       | Pexp_apply (fct, [lbl, arg]) ->
         apply_to_expr env ~expr:fct ~patch
         >>= (fun (mapped_expr, env_expr) ->
@@ -116,6 +120,8 @@ let apply patch expr =
                 Pexp_apply (mapped_expr, [lbl, mapped_arg]), [env_expr; env_arg]
               )
           )
+
+      | Pexp_apply _ -> raise Failure.(SempatchException (Non_implemented (expr.pexp_loc)))
       | Pexp_fun(lbl, default, pat, expr) ->
         apply_to_maybe_expr env patch default
         >>= (fun (mapped_default, env_default) ->
@@ -162,6 +168,12 @@ let apply patch expr =
             Pexp_construct (ident, mapped_expr), [env_expr]
           )
 
+      | Pexp_variant (ident, expr) ->
+        apply_to_maybe_expr env patch expr
+        >|= (fun (mapped_expr, env_expr) ->
+            Pexp_variant (ident, mapped_expr), [env_expr]
+          )
+
       | Pexp_match (expr, cases) ->
         apply_to_cases env patch cases
         >>= (fun (mapped_cases, env_cases) ->
@@ -172,8 +184,178 @@ let apply patch expr =
               )
           )
 
-      | _ ->
-        raise Failure.(SempatchException (Non_implemented expr.pexp_loc))
+      | Pexp_try (expr, cases) ->
+        apply_to_cases env patch cases
+        >>= (fun (mapped_cases, env_cases) ->
+            apply_to_expr env ~expr ~patch
+            >|= (fun (mapped_expr, env_expr) ->
+                Pexp_try (mapped_expr, mapped_cases),
+                env_expr :: env_cases
+              )
+          )
+
+      | Pexp_record (fields, base_record) ->
+        List.fold_left (fun accu field ->
+            accu >>= (fun (accu_lst, accu_env) ->
+                apply_to_reverse_field env patch field
+                >|= (fun (mapped_field, env_field) ->
+                    mapped_field :: accu_lst, env_field :: accu_env
+                  )
+              )
+          )
+          (Error ([], []))
+          fields
+        >>= (fun (mapped_fields, envs_field) ->
+            apply_to_maybe_expr env patch base_record
+            >|= (fun (mapped_base, env_base) ->
+                Pexp_record (mapped_fields, mapped_base), env_base :: envs_field
+                )
+          )
+
+      | Pexp_field (expr, ident) ->
+        apply_to_field env patch (expr, ident)
+        >|= (fun ((expr, ident), env) ->
+            Pexp_field (expr, ident), [env]
+          )
+
+      | Pexp_setfield (expr1, ident, expr2) ->
+        apply_to_expr env ~expr:expr1 ~patch
+        >>= (fun (mapped_expr1, env_expr1) ->
+            apply_to_expr env ~expr:expr2 ~patch
+            >|= (fun (mapped_expr2, env_expr2) ->
+                Pexp_setfield (mapped_expr1, ident, mapped_expr2),
+                [env_expr1; env_expr2]
+              )
+          )
+
+      | Pexp_sequence (expr1, expr2) ->
+        apply_to_expr env ~expr:expr1 ~patch
+        >>= (fun (mapped_expr1, env_expr1) ->
+            apply_to_expr env ~expr:expr2 ~patch
+            >|= (fun (mapped_expr2, env_expr2) ->
+                Pexp_sequence (mapped_expr1, mapped_expr2),
+                [env_expr1; env_expr2]
+              )
+          )
+
+      | Pexp_array exprs ->
+        apply_to_exprs env patch exprs
+        >|= (fun (exprs, env) ->
+            Pexp_array exprs, env
+          )
+
+      | Pexp_assert expr ->
+        apply_to_expr env ~expr ~patch
+        >|= (fun (expr, env) ->
+            Pexp_assert expr, [env]
+          )
+
+      | Pexp_lazy expr ->
+        apply_to_expr env ~expr ~patch
+        >|= (fun (expr, env) ->
+            Pexp_lazy expr, [env]
+          )
+
+      | Pexp_while (cond, expr) ->
+        apply_to_expr env ~expr ~patch
+        >>= (fun (mapped_expr, env_expr) ->
+            apply_to_expr env ~expr:cond ~patch
+            >|= (fun (mapped_cond, env_cond) ->
+                Pexp_while (mapped_cond, mapped_expr), [env_expr; env_cond]
+              )
+            )
+
+      | Pexp_for (pat, e1, e2, direction, e3) ->
+        apply_to_expr env ~expr:e1 ~patch
+        >>= (fun (mapped_e1, env_e1) ->
+            apply_to_expr env ~expr:e2 ~patch
+            >>= (fun (mapped_e2, env_e2) ->
+                apply_to_expr env ~expr:e3 ~patch
+                >|= (fun (mapped_e3, env_e3) ->
+                      Pexp_for (pat, mapped_e1, mapped_e2, direction, mapped_e3),
+                      [env_e1; env_e2; env_e3]
+                    )
+              )
+          )
+
+      | Pexp_constraint (expr, typ) ->
+        apply_to_expr env ~expr ~patch
+        >|= (fun (mapped_expr, env_expr) ->
+            Pexp_constraint (mapped_expr, typ),
+            [env_expr]
+          )
+
+      | Pexp_poly (expr, typ_opt) ->
+        apply_to_expr env ~expr ~patch
+        >|= (fun (mapped_expr, env_expr) ->
+            Pexp_poly (mapped_expr, typ_opt),
+            [env_expr]
+          )
+
+
+      | Pexp_coerce (expr, typ_opt, typ) ->
+        apply_to_expr env ~expr ~patch
+        >|= (fun (mapped_expr, env_expr) ->
+            Pexp_coerce (mapped_expr, typ_opt, typ),
+            [env_expr]
+          )
+
+      | Pexp_send (expr, met) ->
+        apply_to_expr env ~expr ~patch
+        >|= (fun (mapped_expr, env_expr) ->
+            Pexp_send (mapped_expr, met),
+            [env_expr]
+          )
+
+      | Pexp_setinstvar (dest, expr) ->
+        apply_to_expr env ~expr ~patch
+        >|= (fun (mapped_expr, env_expr) ->
+            Pexp_setinstvar (dest, mapped_expr),
+            [env_expr]
+          )
+
+      | Pexp_override overrides ->
+        let apply_to_override env patch (name, expr) =
+          apply_to_expr env ~patch ~expr
+          >|= (fun (expr, env) ->
+              (name, expr), env
+            )
+        in
+        apply_to_list apply_to_override env patch overrides
+        >|= (fun (overrides, envs) ->
+            Pexp_override overrides, envs
+          )
+
+      | Pexp_letmodule (name, module_def, expr) ->
+        apply_to_expr env ~patch ~expr
+        >|= (fun (expr, env) ->
+            Pexp_letmodule (name, module_def, expr),
+            [env]
+          )
+
+      | Pexp_newtype (name, expr) ->
+        apply_to_expr env ~patch ~expr
+        >|= (fun (expr, env) ->
+            Pexp_newtype (name,  expr),
+            [env]
+          )
+
+      | Pexp_open (override, module_id, expr) ->
+        apply_to_expr env ~patch ~expr
+        >|= (fun (expr, env) ->
+            Pexp_open (override, module_id, expr),
+            [env]
+          )
+
+      | Pexp_extension (name, ext) ->
+        apply_to_ext env patch (name, ext)
+        >|= (fun (ext, env) ->
+            Pexp_extension (name, ext),
+            [env]
+          )
+
+      (* | _ -> *)
+      (*   raise Failure.(SempatchException (Non_implemented expr.pexp_loc)) *)
     in desc_err
     >>= (fun (mapped_desc, env_exprs) ->
         let self_expr = { expr with pexp_desc = mapped_desc } in
@@ -182,6 +364,20 @@ let apply patch expr =
             mapped_self, (List.fold_left merge_envs env_self env_exprs)
           )
 
+      )
+
+  and apply_to_field env patch (expr, ident) =
+    let open Res.Err_monad_infix in
+    apply_to_expr env ~expr ~patch
+    >|= (fun (mapped_expr, env_expr) ->
+        (mapped_expr, ident), env_expr
+      )
+
+  and apply_to_reverse_field env patch (i, e) =
+    let open Res.Err_monad_infix in
+    apply_to_field env patch (e, i)
+    >|= (fun ((e,i), env) ->
+        (i, e), env
       )
 
   and apply_to_case env patch { pc_lhs; pc_guard; pc_rhs } =
@@ -218,6 +414,18 @@ let apply patch expr =
     | Some expr -> apply_to_expr env ~expr ~patch
       >|= (fun (expr, env) -> Some expr, env)
     | None -> Error (None, env)
+
+  and apply_to_ext env patch (id, payload) =
+    let open Res.Err_monad_infix in
+    match payload with
+    | PPat (pat, expr_opt) ->
+      apply_to_maybe_expr env patch expr_opt
+      >|= (fun (expr, env) ->
+          PPat (pat, expr), env
+        )
+    | _ -> raise Failure.(SempatchException (Non_implemented (id.Asttypes.loc)))
+
+  (* and apply_to_structure_item =  *)
 
   in
   let expr = Parsed_patches.preprocess_src_expr expr
