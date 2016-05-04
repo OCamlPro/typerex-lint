@@ -62,18 +62,18 @@ let apply patch expr =
           let replacements = Error.bind (fun (e, env) ->
               if
                 try
-                  Guard_evaluator.eval_union env.Environment.current_match patch.Parsed_patches.Type.header.guard
+                  Guard_evaluator.eval_union env.Environment.current_match patch.header.guard
                 with
                 | Guard_evaluator.Undefined_var _ -> true
                 | Guard_evaluator.TypeError ->
-                  let patch_name = Parsed_patches.(patch.header.name) in
+                  let patch_name = patch.header.name in
                   let msg = Printf.sprintf
                       "The guard of patch %s is incorrect"
                       patch_name
                   in
                   raise (Failure.SempatchException (Failure.Guard msg))
                 | Guard_evaluator.Undefined_function f ->
-                  let patch_name = Parsed_patches.(patch.header.name) in
+                  let patch_name = patch.header.name in
                   let msg = Printf.sprintf
                       "The function %s in the guard of the patch %s is undefined"
                       f patch_name
