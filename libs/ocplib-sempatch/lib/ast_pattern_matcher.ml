@@ -1,11 +1,12 @@
 open Parsetree
 open Std_utils
+open Res.Err_monad_infix
 
 open Parsed_patches.Type
 
 let apply_replacements tree attributes var_replacements =
   (* TODO : Keep location from the original AST *)
-  let open Option.Infix in
+  let open! Option.Infix in
   let new_tree = List.find_opt (fun x -> (fst x).Asttypes.txt = "__sempatch_replace") attributes
                  >|= snd
                  >|= (function
@@ -31,7 +32,6 @@ let apply_replacements tree attributes var_replacements =
 let apply patch expr =
   let is_meta_expr e = List.mem e (patch.header.meta_expr)
   and apply_to_list mapper env patch elements =
-    let open Res.Err_monad_infix in
     List.fold_left (fun mapped elt ->
         mapped >>= (fun (mapped_elts, accu_env) ->
             mapper env patch elt
@@ -103,8 +103,6 @@ let apply patch expr =
     }
   and apply_to_expr env ~patch ~expr =
     let open Ast_maybe_mapper2 in
-    let open Res.Err_monad_infix in
-
     let desc_err =
       match expr.pexp_desc with
       | Pexp_ident _ | Pexp_constant _
@@ -367,21 +365,18 @@ let apply patch expr =
       )
 
   and apply_to_field env patch (expr, ident) =
-    let open Res.Err_monad_infix in
     apply_to_expr env ~expr ~patch
     >|= (fun (mapped_expr, env_expr) ->
         (mapped_expr, ident), env_expr
       )
 
   and apply_to_reverse_field env patch (i, e) =
-    let open Res.Err_monad_infix in
     apply_to_field env patch (e, i)
     >|= (fun ((e,i), env) ->
         (i, e), env
       )
 
   and apply_to_case env patch { pc_lhs; pc_guard; pc_rhs } =
-    let open Res.Err_monad_infix in
     apply_to_maybe_expr env patch pc_guard
     >>= (fun (mapped_guard, env_guard) ->
         apply_to_expr env ~expr:pc_rhs ~patch
@@ -401,7 +396,6 @@ let apply patch expr =
   and apply_to_cases env patch = apply_to_list apply_to_case env patch
 
   and apply_to_binding env patch binding =
-    let open Res.Err_monad_infix in
     apply_to_expr env ~expr:binding.pvb_expr ~patch
     >|= (fun (expr, env) -> { binding with pvb_expr = expr }, env)
 
@@ -409,14 +403,12 @@ let apply patch expr =
     apply_to_list apply_to_binding env patch bindings
 
   and apply_to_maybe_expr env patch =
-    let open Res.Err_monad_infix in
     function
     | Some expr -> apply_to_expr env ~expr ~patch
       >|= (fun (expr, env) -> Some expr, env)
     | None -> Error (None, env)
 
   and apply_to_ext env patch (id, payload) =
-    let open Res.Err_monad_infix in
     match payload with
     | PPat (pat, expr_opt) ->
       apply_to_maybe_expr env patch expr_opt
