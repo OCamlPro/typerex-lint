@@ -30,6 +30,18 @@ let apply_replacements tree attributes var_replacements =
 
 let apply patch expr =
   let is_meta_expr e = List.mem e (patch.header.meta_expr)
+  and apply_to_list mapper env patch elements =
+    let open Res.Err_monad_infix in
+    List.fold_left (fun mapped elt ->
+        mapped >>= (fun (mapped_elts, accu_env) ->
+            mapper env patch elt
+            >|= (fun (mapped_elt, new_env) ->
+                mapped_elt :: mapped_elts, new_env :: accu_env
+              )
+          )
+      )
+      (Res.fail ([], []))
+      elements
   and merge_envs = Environment.merge in
   let rec match_at_root =
     let open Ast_maybe_mapper2 in
@@ -150,7 +162,7 @@ let apply patch expr =
       | Pexp_function cases ->
         apply_to_cases env patch cases
         >|= (fun (mapped_cases, env_cases) ->
-            Pexp_function mapped_cases, [ env_cases ]
+            Pexp_function mapped_cases, env_cases
           )
 
       | Pexp_construct (ident, expr) ->
