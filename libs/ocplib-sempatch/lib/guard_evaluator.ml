@@ -71,6 +71,7 @@ let equiv_ast = apply_to_exprs @@ apply_to_2 @@ fun e1 e2 ->
 
 let (&&&) = apply_to_bool @@ apply_to_2 @@ (fun x y -> x&&y)
 let (|||) = apply_to_bool @@ apply_to_2 @@ (fun x y -> x||y)
+let (guard_not) = apply_to_bool @@ apply_to_1 @@ not
 
 let is_variable = apply_to_exprs @@ apply_to_1 @@ fun e ->
   match e.pexp_desc with
@@ -111,6 +112,7 @@ let functions = [
   "(=)", bool @@ equiv_ast;
   "(&&)", bool @@  (&&&);
   "(||)", bool @@ (|||);
+  "not", bool @@ (guard_not);
   "is_variable", bool @@ is_variable;
   "is_constant", bool @@ is_constant;
   "is_leaf", bool @@ (fun x -> (is_variable x || is_constant x));
