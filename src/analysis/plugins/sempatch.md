@@ -15,6 +15,14 @@ when: "e1 = e2"
 + decr e1
 ```
 
+@AddSmallInteger
+expressions: e1, e2
+when : "is_in_range(e2, -1, 1) && not(is_int_in_range(e2, -1, 1))"
+message : "use `succ`, `pred` or nothing instead of adding $e2"
+```
+add e1 e2
+```
+
 @CompToFalse
 expressions: cond
 message: "Use 'not $cond' instead of '$cond = false'."
@@ -64,10 +72,11 @@ message: "Use 'not $cond' instead of '$cond <> true'."
 ```
 
 @ EmptyListComparison
-expressions: l, e1, e2
-message: "Use a pattern matching instead of comparing to `0`."
+expressions: l, i
+message: "Use a pattern matching instead of comparing to `$i`."
+when : "is_int_in_range(i, 0, 5)"
 ```
-List.length l = 0
+List.length l = i
 ```
 
 @ ConstantIf
