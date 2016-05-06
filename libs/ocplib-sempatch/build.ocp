@@ -20,6 +20,15 @@ begin program "abc"
     comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
 end
 
+begin program "ppx_monad"
+    files = [
+      "src/ppx_monad.ml"
+    ]
+    requires = [
+    "compiler-libs.common"
+    ]
+end
+
 begin library "ocplib-sempatch"
     files = [
       "lib/automaton/generator/tree.ml"
@@ -48,8 +57,11 @@ begin library "ocplib-sempatch"
         "compiler-libs"
         "compiler-libs.common"
         "abc"
+        "ppx_monad"
     ]
     comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree.ml" ]
     comp_requires = "abc:asm"
+    comp_requires = "ppx_monad:asm"
+    comp += [ "-ppx" "%{ppx_monad_DST_DIR}%/ppx_monad.asm" ]
     ocamlyacc = "menhir"
 end
