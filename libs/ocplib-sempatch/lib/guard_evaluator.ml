@@ -5,6 +5,7 @@ open Guard
 type t =
   | Expr of Parsetree.expression
   | Bool of bool
+  | Int of int
 
 type fn = string * (t list -> t) (* name, fun *)
 
@@ -29,14 +30,14 @@ let find_var var_name env =
 let apply_to_bool f args =
   let unwrap_bool = function
     | Bool b -> b
-    | Expr _ -> raise TypeError
+    | _ -> raise TypeError
   in
   f (List.map unwrap_bool args)
 
 let apply_to_exprs f args =
   let unwrap_expr = function
-    | Bool _ -> raise TypeError
     | Expr e -> e
+    | _ -> raise TypeError
   in
   f (List.map unwrap_expr args)
 
@@ -70,6 +71,7 @@ let equiv_ast = apply_to_exprs @@ apply_to_2 @@ fun e1 e2 ->
 
 let (&&&) = apply_to_bool @@ apply_to_2 @@ (fun x y -> x&&y)
 let (|||) = apply_to_bool @@ apply_to_2 @@ (fun x y -> x||y)
+let (guard_not) = apply_to_bool @@ apply_to_1 @@ not
 
 let is_variable = apply_to_exprs @@ apply_to_1 @@ fun e ->
   match e.pexp_desc with
@@ -80,6 +82,35 @@ let is_constant = apply_to_exprs @@ apply_to_1 @@ fun e ->
   match e.pexp_desc with
   | Pexp_constant _ -> true
   | Pexp_construct (_, None) -> true
+  | _ -> false
+
+let is_int_in_range = fun args ->
+  match args with
+  | [Expr e; Int min; Int max] ->
+    begin
+      let int_expr =
+      match e.pexp_desc with
+      | Pexp_constant (Asttypes.Const_int i) -> Some i
+      | _ -> None
+      in
+      Option.fold (fun _ i -> min <= i && max >= i) false int_expr
+    end
+  | _ -> false
+
+let is_in_range = fun args ->
+  match args with
+  | [Expr e; Int min; Int max] ->
+    begin
+      let int_expr =
+      match e.pexp_desc with
+      | Pexp_constant (Asttypes.Const_int i) -> Some i
+      | Pexp_constant (Asttypes.Const_int32 i) -> Some (Int32.to_int i)
+      | Pexp_constant (Asttypes.Const_int64 i) -> Some (Int64.to_int i)
+      | Pexp_constant (Asttypes.Const_nativeint i) -> Some (Nativeint.to_int i)
+      | _ -> None
+      in
+      Option.fold (fun _ i -> min <= i && max >= i) false int_expr
+    end
   | _ -> false
 
 let is_integer_lit = apply_to_exprs @@ apply_to_1 @@ fun e ->
@@ -110,12 +141,15 @@ let functions = [
   "(=)", bool @@ equiv_ast;
   "(&&)", bool @@  (&&&);
   "(||)", bool @@ (|||);
+  "not", bool @@ (guard_not);
   "is_variable", bool @@ is_variable;
   "is_constant", bool @@ is_constant;
   "is_leaf", bool @@ (fun x -> (is_variable x || is_constant x));
   "is_integer_lit", bool @@ is_integer_lit;
   "is_string_lit", bool @@ is_string_lit;
   "is_bool_lit", bool @@ is_bool_lit;
+  "is_int_in_range", bool @@ is_int_in_range;
+  "is_in_range", bool @@ is_in_range;
 ]
 
 let rec eval_ env = function
@@ -125,11 +159,12 @@ let rec eval_ env = function
       try List.assoc f functions with Not_found -> raise (Undefined_function f)
     in
     fn (List.map (eval_ env) args)
+  | Litt_integer i -> Int i
 
 let eval env guard =
   match eval_ env guard with
   | Bool b -> b
-  | Expr _ -> raise TypeError
+  | _ -> raise TypeError
 
 let eval_union env guards =
   List.fold_left (fun accu guard -> accu && eval env guard) true guards
