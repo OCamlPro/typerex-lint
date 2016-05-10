@@ -18,16 +18,4 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** [load_plugins files] load dynamically files or files in a specific
-    directory given in the command line with '--load' option. *)
-val load_plugins : string list -> unit
-
-(** [load_sempatch_plugins files] load dynamically patch files in a specific
-    directory given in the command line with '--patches' option. *)
-val load_sempatch_plugins : string list -> unit
-
-val load_default_sempatch : unit -> unit
-
-(** [scan patches path] scan the [path] and start the registered
-    plugins/linters on the files in this path. *)
-val scan : ?output_text:string -> string -> Plugin.t
+val parse_options : bool -> string -> bool array

@@ -118,12 +118,16 @@ let load_sempatch_plugins patches =
   ()
 
 let output fmt plugins =
-  (* TO REMOVE : just for testing fmtput *)
   Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
       Lint.iter (fun cname (_runs, warnings) ->
+          let filters =
+            Globals.Config.get_option_value [P.short_name; cname; "warnings"] in
+          let arr = Parse_args.parse_options false filters in
           Warning.iter
-            (fun warning -> Warning.print fmt warning)
+            (fun warning ->
+               if arr.(warning.Warning_types.id - 1) then
+                 Warning.print fmt warning)
             warnings) checks)
     plugins
 
@@ -136,7 +140,7 @@ let to_text file plugins =
   output fmt plugins;
   close_out oc
 
-let scan ?output_text patches path =
+let scan ?output_text path =
   let plugins = filter_plugins Globals.plugins in
 
   let all = filter_modules (scan_project path) !!ignored_files in

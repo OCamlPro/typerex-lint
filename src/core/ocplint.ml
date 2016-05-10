@@ -92,7 +92,7 @@ let main () =
 
   match !action with
   | ActionLoad dir ->
-    let plugins = Ocplint_actions.scan ?output_text:!output_text !patches dir in
+    let plugins = Ocplint_actions.scan ?output_text:!output_text dir in
     Plugin.iter_plugins (fun _plugin checks ->
         Lint.iter (fun cname (_runs, warnings) ->
             if Warning.length warnings > 0 then exit !exit_status) checks)
