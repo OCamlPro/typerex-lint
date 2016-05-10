@@ -70,11 +70,11 @@ let parse_interf source =
     Plugin_error.(print Format.err_formatter (Syntax_error source));
     None
 
-let is_source file = Filename.check_suffix file "ml"
-let is_interface file = Filename.check_suffix file "mli"
-let is_cmt file = Filename.check_suffix file "cmt"
-let is_cmt file = Filename.check_suffix file "cmt"
-let is_cmxs file = Filename.check_suffix file "cmxs"
+let is_source file = Filename.check_suffix file ".ml"
+let is_interface file = Filename.check_suffix file ".mli"
+let is_cmt file = Filename.check_suffix file ".cmt"
+let is_cmt file = Filename.check_suffix file ".cmt"
+let is_cmxs file = Filename.check_suffix file ".cmxs"
 
 let ( // ) = Filename.concat
 
