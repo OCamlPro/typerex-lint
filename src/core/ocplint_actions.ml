@@ -137,7 +137,7 @@ let to_text file plugins =
   close_out oc
 
 let scan ?output_text patches path =
-  (* XXX TODO : don't forget to read config file too ! *)
+  register_default_plugins patches;
   let plugins = filter_plugins Globals.plugins in
 
   let all = filter_modules (scan_project path) !!ignored_files in
@@ -156,7 +156,6 @@ let scan ?output_text patches path =
 
   Format.printf "Starting analyses...\n%!";
 
-  register_default_plugins patches;
   Parallel_engine.lint all mls mlis asts_ml asts_mli cmts plugins;
 
   (* TODO: do we want to print in stderr by default ? *)
