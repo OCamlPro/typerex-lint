@@ -27,7 +27,7 @@ let details = "Missing interface."
 
 module CodeLength = Core.MakeLint(struct
     let name = "Missing interface"
-    let short_name = "interface-missing"
+    let short_name = "interface_missing"
     let details = details
   end)
 
@@ -40,7 +40,7 @@ module Warnings = CodeLength.MakeWarnings(struct
         loc
         1
         [ Warning.kind_interface ]
-        ~short_name:"missing-interface"
+        ~short_name:"missing_interface"
         ~msg:"Missing interface for '$file'."
         ~args
 

@@ -101,7 +101,7 @@ let load_default_sempatch () =
   let
     module Default = Plugin_sempatch.SempatchPlugin.MakeLintPatch(struct
       let name = "Lint from semantic patches (default)"
-      let short_name = "sempatch-lint-default"
+      let short_name = "sempatch_lint_default"
       let details = "Lint from semantic patches (default)."
       let patches = Globals.default_patches
     end) in
@@ -111,7 +111,7 @@ let load_sempatch_plugins patches =
   let
     module UserDefined = Plugin_sempatch.SempatchPlugin.MakeLintPatch(struct
       let name = "Lint from semantic patches (user defined)."
-      let short_name = "sempatch-lint-user-defined"
+      let short_name = "sempatch_lint_user_defined"
       let details = "Lint from semantic patches (user defined)."
       let patches = patches
     end) in
