@@ -50,10 +50,7 @@ sig
 
   (** [apply patch tree] applyes [patch] to [tree]
       and returns the couple [patched_tree, matches] *)
-  val apply : t -> Ast_element.t -> Ast_element.t * Match.t list
-
-  (** Same as [apply] except that it tries to match patches only at the root of the AST *)
-  val apply_nonrec : t -> Ast_element.t -> Ast_element.t * Match.t list
+  val apply : t -> Ast_element.t -> Match.t list
 
   (** [sequential_apply patches tree] applies applies all the patches in order
       to tree ({i ie} the first patch [p1] is applied to [tree], the second one
@@ -61,15 +58,12 @@ sig
       (So beware that the matches may match expressions who are the result of
       previous patches and aren't in the original AST)
   *)
-  val sequential_apply : t list -> Ast_element.t -> Ast_element.t * Match.t list
+  val sequential_apply : t list -> Ast_element.t -> Match.t list
 
   (** [parallel_apply patches tree] applies all the patches to [tree] and
       returns the concatenation of all the matches
   *)
   val parallel_apply : t list -> Ast_element.t -> Match.t list
-
-  (** Same as [parallel_apply] except that it tries to match patches only at the root of the AST *)
-  val parallel_apply_nonrec : t list -> Ast_element.t -> Match.t list
 end
 
 module Failure:

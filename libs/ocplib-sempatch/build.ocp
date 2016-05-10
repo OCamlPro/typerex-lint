@@ -9,6 +9,9 @@ begin library "ocplib-sempatch"
       "lib/substitution.ml"
       "lib/match.ml"
       "lib/environment.ml"
+      "lib/automaton/automaton.ml"
+      "lib/automaton/builder.ml"
+      "lib/automaton/eval.ml"
       "lib/parsing/guard.ml"
       "lib/parsing/guard_lexer.mll"
       "lib/parsing/guard_parser.mly"
@@ -31,7 +34,7 @@ begin library "ocplib-sempatch"
     ocamlyacc = "menhir"
 end
 
-begin program "sempatch-test"
+(* begin program "sempatch-test"
     files = [
       "test/sempatch_runner.ml"
     ]
@@ -42,3 +45,4 @@ begin program "sempatch-test"
     test_args = [ "test/sempatch.md" ]
     tests = [ "test" ]
 end
+*)

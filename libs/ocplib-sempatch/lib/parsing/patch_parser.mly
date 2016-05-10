@@ -14,7 +14,7 @@
 %token GUARD_KW
 %token<string> STRING
 
-%start <(string * Parsed_patches.t) list> sempatch
+%start <(string * Parsed_patches.unprocessed_patch) list> sempatch
 %%
 
 sempatch:
@@ -22,7 +22,7 @@ sempatch:
 
 patch:
   | header = patch_header; body = patch_body
-  { let open Parsed_patches.Type in header.name, {header; body} }
+  { let open Parsed_patches in header.Parsed_patches.Type.name, {unprocessed_header = header; unprocessed_body = body} }
 
 patch_header:
   | TITLE_DELIM name = ID eols fields = list(header_def)

@@ -9,7 +9,7 @@ struct
     guard : Guard.t list;
   }
 
-  type body = Parsetree.expression
+  type body = Automaton.t
 
   type patch = {
     header: header;
@@ -20,6 +20,13 @@ end
 open Type
 
 type t = patch
+
+type unprocessed_header = header
+type unprocessed_body = Parsetree.expression
+type unprocessed_patch = {
+  unprocessed_header : unprocessed_header;
+  unprocessed_body : unprocessed_body;
+}
 
 let void_header = {
   guard = [];
@@ -111,7 +118,7 @@ let uncurryfying_mapper =
 
     Currently, this just means curryfiying the world
 *)
-let preprocess { header; body} =
+let preprocess { unprocessed_header = header; unprocessed_body = body} =
   let open Ast_mapper in
   let meta_exprs_in_pre_patch  = ref []
   and metas_in_post_patch = ref []
@@ -191,7 +198,7 @@ let preprocess { header; body} =
     (List.append !meta_exprs_in_pre_patch !meta_exprs_in_pre_patch);
   {
     header = { header with meta_expr = !meta_exprs_in_pre_patch; };
-    body = processed_before_patch;
+    body = Builder.build_automaton processed_before_patch;
   }
 
 let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper

@@ -190,8 +190,10 @@ sig
 
   val cons : 'a -> 'a list -> 'a list
 
+  val bind : ('a -> 'b t) -> 'a t -> 'b t
   val sum : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
   val product : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
+  val product_bind : ('a -> 'b -> 'c t) -> 'a list -> 'b list -> 'c list
 
   val find_opt : ('a -> bool) -> 'a list -> 'a option
 end
@@ -215,7 +217,9 @@ struct
 
   let sum = map2
 
-  let product f l1 l2 = List.map (fun x -> List.map (f x) l2) l1 |> List.flatten
+  let bind f lst = List.map f lst |> List.flatten
+  let product_bind f l1 l2 = List.map (fun x -> bind (f x) l2) l1 |> List.flatten
+  let product f l1 l2 = product_bind (fun x y -> [f x y]) l1 l2
 
   let find_opt f l = try List.find f l |> Option.some with Not_found -> None
 end
