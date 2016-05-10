@@ -18,17 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module Config = Configuration.DefaultConfig
+module LintMap = Map.Make (String)
 
-let plugins = Hashtbl.create 42
-
-let default_patches =
-  (* To add a static file, edit src/kernel/services/plugins/build.ocp *)
-  List.map (fun (file, content) ->
-      let tmp = Filename.get_temp_dir_name () in
-      let file = Filename.basename file in
-      let destfile = Filename.concat tmp file in
-      File.Dir.make_all (File.of_string @@ Filename.dirname destfile);
-      File.file_of_string destfile content;
-      destfile)
-    Global_static_files.files
+include LintMap

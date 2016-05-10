@@ -26,18 +26,20 @@ let register_plugin plugin =
     let _ = Plugin.find Globals.plugins plugin in
     raise (Plugin_error(Plugin_already_registered plugin))
   with Not_found ->
-    Plugin.add Globals.plugins plugin Globals.LintMap.empty
+    Plugin.add Globals.plugins plugin Lint.empty
 
-let register_main plugin cname main =
+let register_main plugin cname main warnings =
   try
     let lints = Plugin.find Globals.plugins plugin in
     try
-      let runs = Globals.LintMap.find cname lints in
-      let new_lints = Globals.LintMap.add cname (main :: runs) lints in
+      let runs, _ = Lint.find cname lints in
+      let new_lints =
+        Lint.add cname ((main :: runs), warnings) lints in
       Plugin.add Globals.plugins plugin new_lints
     with Not_found ->
       Plugin.add
-        Globals.plugins plugin (Globals.LintMap.add cname [main] lints)
+        Globals.plugins
+        plugin (Lint.add cname ([main], warnings) lints)
   with Not_found ->
     raise (Plugin_error(Plugin_not_found plugin))
 
@@ -47,29 +49,31 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
   let short_name = P.short_name
   let details = P.details
 
-  let warnings = Warning.empty ()
-
   module Plugin = struct
     let name = name
     let short_name = short_name
     let details = details
-    let warnings = warnings
   end
   let plugin = (module Plugin : Plugin_types.PLUGIN)
 
   let create_option options short_help lhelp ty default =
     Globals.Config.create_option options short_help lhelp 0 ty default
 
-  module MakeLintPatch (C : Lint.LintPatchArg) = struct
+  module MakeLintPatch (C : Lint_types.LintPatchArg) = struct
 
     let name = C.name
     let short_name = C.short_name
     let details = C.details
+    let warnings = Warning.empty ()
     let patches = C.patches
+
+    let create_option option short_help lhelp ty default =
+      let option = [P.short_name; C.short_name; option] in
+      Globals.Config.create_option option short_help lhelp 0 ty default
 
     let new_warning loc num cats ~short_name ~msg ~args = (* TODO *)
       let msg = Utils.subsitute msg args in
-      Warning.add loc num cats short_name msg Plugin.warnings
+      Warning.add loc num cats short_name msg warnings
 
     (* TODO This function should be exported in ocp-sempatch. *)
     let map_args env args =
@@ -125,21 +129,25 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
 
     let () =
       let input = Input.InStruct (ParsetreeIter.iter_structure iter) in
-      register_main plugin C.short_name (input)
-  end
+      register_main plugin C.short_name input warnings;
+      let details =  Printf.sprintf "Enable/Disable warnings from %S" name in
+      ignore @@
+      create_option "warnings" details details SimpleConfig.string_option "+A"
+  end (* MakeLintPatch *)
 
-  module MakeLint (C : Lint.LintArg) = struct
+  module MakeLint (C : Lint_types.LintArg) = struct
 
     let name = C.name
     let short_name = C.short_name
     let details = C.details
+    let warnings = Warning.empty ()
 
     let new_warning loc num cats ~short_name ~msg ~args = (* TODO *)
       let msg = Utils.subsitute msg args in
-      Warning.add loc num cats short_name msg Plugin.warnings
+      Warning.add loc num cats short_name msg warnings
 
     let create_option option short_help lhelp ty default =
-      let option = [P.short_name; short_name; option] in
+      let option = [P.short_name; C.short_name; option] in
       Globals.Config.create_option option short_help lhelp 0 ty default
 
     module MakeWarnings (WA : Warning_types.WarningArg) = struct
@@ -149,7 +157,11 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
 
     module Register(I : Input.INPUT) =
     struct
-      let () = register_main plugin C.short_name (I.input)
+      let () =
+        register_main plugin C.short_name (I.input) warnings;
+        let details =  Printf.sprintf "Enable/Disable warnings from %S" name in
+        ignore @@
+        create_option "warnings" details details SimpleConfig.string_option "+A"
     end
 
     module MakeInputStructure(S : Input.STRUCTURE) = struct
@@ -183,11 +195,12 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
 
   let () =
     (* Creating default options for plugins: "--plugin.enable" *)
-    ignore (create_option
-        [P.short_name; "disable"]
-        details
-        details
-        SimpleConfig.flag_option false);
+    ignore @@
+    create_option
+      [P.short_name; "flag"]
+      details
+      details
+      SimpleConfig.enable_option true;
 
     try
       register_plugin plugin

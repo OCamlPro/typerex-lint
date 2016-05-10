@@ -18,16 +18,13 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** [LintArg] is a type module which is used by the functor [Plugin.MakeLint]. *)
-module type LintArg = sig
-  val name : string
-  val short_name : string
-  val details : string
-end
+(** [LintMap] is a Map containing all information about the linter.
+    The key is a [string] representing the linter name, and the value of the
+    map contains a list of [input] (registered mains). *)
 
-module type LintPatchArg = sig
-  val name : string
-  val short_name : string
-  val details : string
-  val patches : string list
-end
+type 'a t
+val empty : 'a t
+val add : string -> 'a -> 'a t -> 'a t
+val iter : (string -> 'a -> unit) -> 'a t -> unit
+val find : string -> 'a t -> 'a
+val cardinal : 'a t -> int

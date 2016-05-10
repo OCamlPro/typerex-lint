@@ -18,17 +18,18 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module Config = Configuration.DefaultConfig
+type lint = (Input.input list * Warning.t) Lint.t
 
-let plugins = Hashtbl.create 42
+(** [LintArg] is a type module which is used by the functor [Plugin.MakeLint]. *)
+module type LintArg = sig
+  val name : string
+  val short_name : string
+  val details : string
+end
 
-let default_patches =
-  (* To add a static file, edit src/kernel/services/plugins/build.ocp *)
-  List.map (fun (file, content) ->
-      let tmp = Filename.get_temp_dir_name () in
-      let file = Filename.basename file in
-      let destfile = Filename.concat tmp file in
-      File.Dir.make_all (File.of_string @@ Filename.dirname destfile);
-      File.file_of_string destfile content;
-      destfile)
-    Global_static_files.files
+module type LintPatchArg = sig
+  val name : string
+  val short_name : string
+  val details : string
+  val patches : string list
+end

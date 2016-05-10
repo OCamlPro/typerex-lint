@@ -42,9 +42,9 @@ let filter_plugins plugins =
   let activated_plugins = Hashtbl.create 42 in
   Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
-      let option_names = P.short_name :: [ "disable" ] in
+      let option_names = P.short_name :: [ "flag" ] in
       let opt_value = Globals.Config.get_option_value option_names in
-      if not (bool_of_string opt_value)
+      if (bool_of_string opt_value)
       then Hashtbl.add activated_plugins plugin checks
     ) plugins;
   activated_plugins
@@ -95,24 +95,23 @@ let rec load_plugins list =
         Printf.eprintf "%S: No such file or directory.\n%!" file)
     list
 
-let register_default_sempatch () =
+let load_default_sempatch () =
   (* TODO: Fabrice: vérifier que le fichier existe, sinon prendre celui dans
      l'exécutable par défaut*)
   let
     module Default = Plugin_sempatch.SempatchPlugin.MakeLintPatch(struct
       let name = "Lint from semantic patches (default)"
-      let short_name = "sempatch-lint"
+      let short_name = "sempatch-lint-default"
       let details = "Lint from semantic patches (default)."
       let patches = Globals.default_patches
     end) in
   ()
 
-let register_default_plugins patches =
-  register_default_sempatch ();
+let load_sempatch_plugins patches =
   let
     module UserDefined = Plugin_sempatch.SempatchPlugin.MakeLintPatch(struct
       let name = "Lint from semantic patches (user defined)."
-      let short_name = "sempatch-lint"
+      let short_name = "sempatch-lint-user-defined"
       let details = "Lint from semantic patches (user defined)."
       let patches = patches
     end) in
@@ -122,10 +121,11 @@ let output fmt plugins =
   (* TO REMOVE : just for testing fmtput *)
   Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
-
-      Warning.iter
-        (fun warning -> Warning.print fmt warning)
-        P.warnings) plugins
+      Lint.iter (fun cname (_runs, warnings) ->
+          Warning.iter
+            (fun warning -> Warning.print fmt warning)
+            warnings) checks)
+    plugins
 
 let print plugins =
   output Format.err_formatter plugins
@@ -137,7 +137,6 @@ let to_text file plugins =
   close_out oc
 
 let scan ?output_text patches path =
-  register_default_plugins patches;
   let plugins = filter_plugins Globals.plugins in
 
   let all = filter_modules (scan_project path) !!ignored_files in

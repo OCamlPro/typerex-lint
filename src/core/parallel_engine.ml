@@ -22,7 +22,7 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
   let fmt = Format.err_formatter in
   (* Itering on all files in your project *)
   Plugin.iter_plugins (fun plugin checks ->
-      Globals.LintMap.iter (fun cname runs ->
+      Lint.iter (fun cname (runs, _) ->
           List.iter (function
               | Input.InAll main ->
                 begin
@@ -36,7 +36,7 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
   (* Itering on ml sources *)
   List.iter (fun input ->
       Plugin.iter_plugins (fun plugin checks ->
-          Globals.LintMap.iter (fun cname runs ->
+          Lint.iter (fun cname (runs, _) ->
               List.iter (function
                   | Input.InMl main ->
                     begin
@@ -52,7 +52,7 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
   (* Itering on mli sources *)
   List.iter (fun input ->
       Plugin.iter_plugins (fun plugin checks ->
-          Globals.LintMap.iter (fun cname runs ->
+          Lint.iter (fun cname (runs, _) ->
               List.iter (function
                   | Input.InMli main ->
                     begin
@@ -68,7 +68,7 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
   (* Itering on Parsetree.structure *)
   List.iter (function input ->
       Plugin.iter_plugins (fun plugin checks ->
-          Globals.LintMap.iter (fun cname runs ->
+          Lint.iter (fun cname (runs, _) ->
               List.iter (function
                   | Input.InStruct main ->
                     begin match Lazy.force input with
@@ -92,7 +92,7 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
   (* Itering on Parsetree.signature *)
   List.iter (function input ->
       Plugin.iter_plugins (fun plugin checks ->
-          Globals.LintMap.iter (fun cname runs ->
+          Lint.iter (fun cname (runs, _) ->
               List.iter (function
                   | Input.InInterf main ->
                     begin match Lazy.force input with
@@ -112,7 +112,7 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
   (* Itering on cmts *)
   List.iter (fun input ->
       Plugin.iter_plugins (fun plugin checks ->
-          Globals.LintMap.iter (fun cname runs ->
+          Lint.iter (fun cname (runs, _) ->
               List.iter (function
                   | Input.InCmt main ->
                     begin
