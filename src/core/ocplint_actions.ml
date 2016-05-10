@@ -22,9 +22,9 @@ open SimpleConfig
 
 let ignored_files = Globals.Config.create_option
     ["ignored_files"]
-    ~short_help:"Module to ignore during the lint."
-    ["Module to ignore during the lint."]
-    ~level:0
+    "Module to ignore during the lint."
+    "Module to ignore during the lint."
+    0
     (SimpleConfig.list_option SimpleConfig.string_option)
     []
 
