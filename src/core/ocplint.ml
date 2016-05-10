@@ -87,10 +87,10 @@ let main () =
 
   match !action with
   | ActionLoad dir ->
-    Ocplint_actions.scan ~filters:"" ?output_text:!output_text !patches dir;
+    let plugins = Ocplint_actions.scan ?output_text:!output_text !patches dir in
     Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
-      if Warning.length P.warnings > 0 then exit !exit_status);
+      if Warning.length P.warnings > 0 then exit !exit_status) plugins;
     exit 0 (* No warning, we can exit successfully *)
   | ActionList ->
     exit 0

@@ -50,6 +50,7 @@ end
 begin library "plugin-lib"
   files = [
     "plugin.ml"
+    "plugin_API.ml"
   ]
   requires = [
     "compiler-libs.common"

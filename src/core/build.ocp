@@ -28,6 +28,5 @@ begin program "ocp-lint"
     "dynlink"
     "lint-code"
     "lint-interface"
-    "ocplib-system"
   ]
 end

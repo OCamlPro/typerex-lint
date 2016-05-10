@@ -38,13 +38,20 @@ let scan_project path = (* todo *)
   Format.printf "Found '%d' file(s)\n%!" (List.length found_files);
   found_files
 
-let filter_plugins filters =
-  (* TODO: xxx filter options in command-line or configuration file *)
-  Globals.plugins
+let filter_plugins plugins =
+  let activated_plugins = Hashtbl.create 42 in
+  Plugin.iter_plugins (fun plugin checks ->
+      let module P = (val plugin : Plugin_types.PLUGIN) in
+      let option_names = P.short_name :: [ "disable" ] in
+      let opt_value = Globals.Config.get_option_value option_names in
+      if not (bool_of_string opt_value)
+      then Hashtbl.add activated_plugins plugin checks
+    ) plugins;
+  activated_plugins
 
-let filter_modules sources filters =
+let filter_modules sources ignore_files =
   List.filter (fun source ->
-      not (List.exists (fun ignored -> ignored = source) filters)) sources
+      not (List.exists (fun ignored -> ignored = source) ignore_files)) sources
 
 let parse_source source =
   let tool_name = Ast_mapper.tool_name () in
@@ -111,26 +118,28 @@ let register_default_plugins patches =
     end) in
   ()
 
-let output fmt =
+let output fmt plugins =
   (* TO REMOVE : just for testing fmtput *)
   Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
 
       Warning.iter
         (fun warning -> Warning.print fmt warning)
-        P.warnings)
+        P.warnings) plugins
 
-let print () =
-  output Format.err_formatter
+let print plugins =
+  output Format.err_formatter plugins
 
-let to_text file =
+let to_text file plugins =
   let oc = open_out file in
   let fmt = Format.formatter_of_out_channel oc in
-  output fmt;
+  output fmt plugins;
   close_out oc
 
-let scan ?(filters="") ?output_text patches path =
+let scan ?output_text patches path =
   register_default_plugins patches;
+  let plugins = filter_plugins Globals.plugins in
+
   let all = filter_modules (scan_project path) !!ignored_files in
 
   (* All inputs for each analyze *)
@@ -147,9 +156,12 @@ let scan ?(filters="") ?output_text patches path =
 
   Format.printf "Starting analyses...\n%!";
 
-  Parallel_engine.lint all mls mlis asts_ml asts_mli cmts;
+  Parallel_engine.lint all mls mlis asts_ml asts_mli cmts plugins;
 
   (* TODO: do we want to print in stderr by default ? *)
-  match output_text with
-  | None -> print ()
-  | Some file -> to_text file
+  begin match output_text with
+  | None -> print plugins
+  | Some file -> to_text file plugins
+  end;
+
+  plugins
