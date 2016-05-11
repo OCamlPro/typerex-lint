@@ -25,7 +25,9 @@ module Config : Configuration.CONFIG
 (** [plugins] is a global data structure where all plugins are registered.
     The keys of the structure are a [Plugin_types.PLUGIN] and the value are
     a [LintMap.t]. *)
+(* val plugins : *)
+(*   ((module Plugin_types.PLUGIN), Lint_types.lint) Hashtbl.t *)
 val plugins :
-  ((module Plugin_types.PLUGIN), Lint_types.lint) Hashtbl.t
+  ((module Plugin_types.PLUGIN), (module Lint_types.LINT) Lint.t) Hashtbl.t
 
 val default_patches : string list

@@ -121,7 +121,9 @@ let load_sempatch_plugins patches =
 let output fmt plugins =
   Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
-      Lint.iter (fun cname (_runs, warnings) ->
+      Lint.iter (fun cname lint ->
+          let module Lint = (val lint : Lint_types.LINT) in
+          let warnings = Lint.warnings in
           let filters =
             Globals.Config.get_option_value [P.short_name; cname; "warnings"] in
           let arr = Parse_args.parse_options filters in

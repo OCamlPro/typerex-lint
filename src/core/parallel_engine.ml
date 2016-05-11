@@ -22,7 +22,8 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
   let fmt = Format.err_formatter in
   (* Itering on all files in your project *)
   Plugin.iter_plugins (fun plugin checks ->
-      Lint.iter (fun cname (runs, _) ->
+      Lint.iter (fun cname lint ->
+          let module Lint = (val lint : Lint_types.LINT) in
           List.iter (function
               | Input.InAll main ->
                 begin
@@ -31,12 +32,13 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                   with Plugin_error.Plugin_error err ->
                     Plugin_error.print fmt err
                 end
-              | _ -> ()) runs) checks) plugins;
+              | _ -> ()) Lint.inputs) checks) plugins;
 
   (* Itering on ml sources *)
   List.iter (fun input ->
       Plugin.iter_plugins (fun plugin checks ->
-          Lint.iter (fun cname (runs, _) ->
+          Lint.iter (fun cname lint ->
+              let module Lint = (val lint : Lint_types.LINT) in
               List.iter (function
                   | Input.InMl main ->
                     begin
@@ -45,14 +47,15 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                       with Plugin_error.Plugin_error err ->
                         Plugin_error.print fmt err
                     end
-                  | _ -> ()) runs) checks)
+                  | _ -> ()) Lint.inputs) checks)
         plugins)
     mls;
 
   (* Itering on mli sources *)
   List.iter (fun input ->
       Plugin.iter_plugins (fun plugin checks ->
-          Lint.iter (fun cname (runs, _) ->
+          Lint.iter (fun cname lint ->
+              let module Lint = (val lint : Lint_types.LINT) in
               List.iter (function
                   | Input.InMli main ->
                     begin
@@ -61,14 +64,15 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                       with Plugin_error.Plugin_error err ->
                         Plugin_error.print fmt err
                     end
-                  | _ -> ()) runs) checks)
+                  | _ -> ()) Lint.inputs) checks)
         plugins)
     mlis;
 
   (* Itering on Parsetree.structure *)
   List.iter (function input ->
       Plugin.iter_plugins (fun plugin checks ->
-          Lint.iter (fun cname (runs, _) ->
+          Lint.iter (fun cname lint ->
+              let module Lint = (val lint : Lint_types.LINT) in
               List.iter (function
                   | Input.InStruct main ->
                     begin match Lazy.force input with
@@ -85,14 +89,15 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                             Plugin_error.print fmt err
                         end
                     end
-                  | _ -> ()) runs) checks)
+                  | _ -> ()) Lint.inputs) checks)
         plugins)
     asts_ml;
 
   (* Itering on Parsetree.signature *)
   List.iter (function input ->
       Plugin.iter_plugins (fun plugin checks ->
-          Lint.iter (fun cname (runs, _) ->
+          Lint.iter (fun cname lint ->
+              let module Lint = (val lint : Lint_types.LINT) in
               List.iter (function
                   | Input.InInterf main ->
                     begin match Lazy.force input with
@@ -105,14 +110,15 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                             Plugin_error.print fmt err
                         end
                     end
-                  | _ -> ()) runs) checks)
+                  | _ -> ()) Lint.inputs) checks)
         plugins)
     asts_mli;
 
   (* Itering on cmts *)
   List.iter (fun input ->
       Plugin.iter_plugins (fun plugin checks ->
-          Lint.iter (fun cname (runs, _) ->
+          Lint.iter (fun cname lint ->
+              let module Lint = (val lint : Lint_types.LINT) in
               List.iter (function
                   | Input.InCmt main ->
                     begin
@@ -121,6 +127,6 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                       with Plugin_error.Plugin_error err ->
                         Plugin_error.print fmt err
                     end
-                  | _ -> ()) runs) checks)
+                  | _ -> ()) Lint.inputs) checks)
         plugins)
     cmts

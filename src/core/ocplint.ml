@@ -93,8 +93,9 @@ let main () =
   | ActionLoad dir ->
     let plugins = Ocplint_actions.scan ?output_text:!output_text dir in
     Plugin.iter_plugins (fun _plugin checks ->
-        Lint.iter (fun cname (_runs, warnings) ->
-            if Warning.length warnings > 0 then exit !exit_status) checks)
+        Lint.iter (fun cname lint ->
+            let module Lint = (val lint : Lint_types.LINT) in
+            if Warning.length Lint.warnings > 0 then exit !exit_status) checks)
       plugins;
     exit 0 (* No warning, we can exit successfully *)
   | ActionList ->

@@ -28,18 +28,22 @@ let register_plugin plugin =
   with Not_found ->
     Plugin.add Globals.plugins plugin Lint.empty
 
-let register_main plugin cname main warnings =
+let register_main plugin cname new_lint =
   try
     let lints = Plugin.find Globals.plugins plugin in
     try
-      let runs, _ = Lint.find cname lints in
+      let lint = Lint.find cname lints in
+      let module Old_Lint = (val lint : Lint_types.LINT) in
+      let module New_Lint = (val new_lint : Lint_types.LINT) in
+      let module Merge = struct
+        let inputs = Old_Lint.inputs @ New_Lint.inputs
+        let warnings = Old_Lint.warnings
+      end in
       let new_lints =
-        Lint.add cname ((main :: runs), warnings) lints in
+        Lint.add cname (module Merge : Lint_types.LINT) lints in
       Plugin.add Globals.plugins plugin new_lints
     with Not_found ->
-      Plugin.add
-        Globals.plugins
-        plugin (Lint.add cname ([main], warnings) lints)
+      Plugin.add Globals.plugins plugin (Lint.add cname new_lint lints)
   with Not_found ->
     raise (Plugin_error(Plugin_not_found plugin))
 
@@ -128,8 +132,13 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       (module IterArg : ParsetreeIter.IteratorArgument)
 
     let () =
-      let input = Input.InStruct (ParsetreeIter.iter_structure iter) in
-      register_main plugin C.short_name input warnings;
+      let module Lint = struct
+        let inputs = [Input.InStruct (ParsetreeIter.iter_structure iter)]
+        let warnings = warnings
+      end in
+      let lint = (module Lint : Lint_types.LINT) in
+
+      register_main plugin C.short_name lint;
       let details =  Printf.sprintf "Enable/Disable warnings from %S" name in
       ignore @@
       create_option "warnings" details details SimpleConfig.string_option "+A"
@@ -158,7 +167,12 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     module Register(I : Input.INPUT) =
     struct
       let () =
-        register_main plugin C.short_name (I.input) warnings;
+        let module Lint = struct
+          let inputs = [ I.input ]
+          let warnings = warnings
+        end in
+        let lint = (module Lint : Lint_types.LINT) in
+        register_main plugin C.short_name lint;
         let details =  Printf.sprintf "Enable/Disable warnings from %S" name in
         ignore @@
         create_option "warnings" details details SimpleConfig.string_option "+A"

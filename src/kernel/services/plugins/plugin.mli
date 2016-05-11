@@ -18,22 +18,25 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-type t = ((module Plugin_types.PLUGIN), Lint_types.lint) Hashtbl.t
+type t =
+  ((module Plugin_types.PLUGIN), (module Lint_types.LINT) Lint.t) Hashtbl.t
 
 val create : unit -> t
 
 val add : t ->
   (module Plugin_types.PLUGIN) ->
-  Lint_types.lint ->
+  (module Lint_types.LINT) Lint.t ->
   unit
 
 val find :
   t ->
   (module Plugin_types.PLUGIN) ->
-  Lint_types.lint
+  (module Lint_types.LINT) Lint.t
 
 (** [iter_plugins f] applies f to all bindings in the global data structure
     [plugins]. [f] receives the [plugin] as first argument and the [Lint_typesMap.t]
     associated to this plugin as second. *)
 val iter_plugins :
-  ((module Plugin_types.PLUGIN) -> Lint_types.lint -> unit) -> t -> unit
+  ((module Plugin_types.PLUGIN) -> (module Lint_types.LINT) Lint.t -> unit) ->
+  t ->
+  unit

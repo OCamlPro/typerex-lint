@@ -18,7 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-type lint = (Input.input list * Warning.t) Lint.t
 
 (** [LintArg] is a type module which is used by the functor [Plugin.MakeLint]. *)
 module type LintArg = sig
@@ -32,4 +31,9 @@ module type LintPatchArg = sig
   val short_name : string
   val details : string
   val patches : string list
+end
+
+module type LINT = sig
+  val inputs : Input.input list
+  val warnings : Warning.t
 end

@@ -19,7 +19,7 @@
 (**************************************************************************)
 
 type t =
-  ((module Plugin_types.PLUGIN), Lint_types.lint) Hashtbl.t
+  ((module Plugin_types.PLUGIN), (module Lint_types.LINT) Lint.t) Hashtbl.t
 
 let create () = Hashtbl.create 42
 
