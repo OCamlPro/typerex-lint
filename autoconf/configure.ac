@@ -37,7 +37,9 @@ if test "$VERSION_CHECK" = "yes" ; then
   OCAML_MINOR_VERSION=$AX_MINOR_VERSION
   OCAML_POINT_VERSION=$AX_POINT_VERSION
 
-  AX_COMPARE_VERSION( [$OCAMLVERSION], [lt], [3.12.1],
+  AX_COMPARE_VERSION( [$OCAMLVERSION], [lt], [4.02.1],
+     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
+  AX_COMPARE_VERSION( [$OCAMLVERSION], [ge], [4.03],
      AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported]))
 fi
 
@@ -59,6 +61,11 @@ AC_CHECK_OCAML_PKG([menhirLib])
 AC_CHECK_PROG([OCPBUILD],ocp-build,yes,no)
  if test "$OCAML_PKG_yojson" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'ocp-build'.])
+ fi
+
+AC_CHECK_OCAML_PKG([ocplib-config])
+ if test "$OCAML_PKG_ocplib_config" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'ocplib-config'.])
  fi
 
 if test "x$prefix" = "xNONE"; then
