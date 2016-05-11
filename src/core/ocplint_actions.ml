@@ -117,13 +117,14 @@ let load_sempatch_plugins patches =
     end) in
   ()
 
+(* TODO: cago: move these functions to output modules. *)
 let output fmt plugins =
   Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
       Lint.iter (fun cname (_runs, warnings) ->
           let filters =
             Globals.Config.get_option_value [P.short_name; cname; "warnings"] in
-          let arr = Parse_args.parse_options false filters in
+          let arr = Parse_args.parse_options filters in
           Warning.iter
             (fun warning ->
                if arr.(warning.Warning_types.id - 1) then
@@ -141,8 +142,11 @@ let to_text file plugins =
   close_out oc
 
 let scan ?output_text path =
+  (* We filter plugins by using the .ocplint config file and/or
+     command line arguments. *)
   let plugins = filter_plugins Globals.plugins in
 
+  (* We filter the global ignored modules/files.  *)
   let all = filter_modules (scan_project path) !!ignored_files in
 
   (* All inputs for each analyze *)

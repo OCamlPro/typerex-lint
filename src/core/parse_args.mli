@@ -18,4 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-val parse_options : bool -> string -> bool array
+(** [parse_options filters] parse the arguments given in the command line
+    or found in the config file to enable/disable warnings in a specific
+    linter. It returns a [bool array], each position in the array correspond
+    to a warning number. *)
+val parse_options : string -> bool array

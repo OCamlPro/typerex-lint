@@ -75,7 +75,6 @@ let () =
     "--save-config", Arg.Unit (fun () ->
         set_action (ActionSave)),
     " List of user defined lint with the patch format.";
-
   ]
 
 let main () =

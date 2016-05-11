@@ -18,7 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
 (** [MakePlugin] is a functor which take a module of type
     [Plugin_types.PluginArg] as an argument. It registers the plugin to the
     global [Globals.plugins] and all the linter associated and created with

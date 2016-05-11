@@ -26,6 +26,7 @@ val load_plugins : string list -> unit
     directory given in the command line with '--patches' option. *)
 val load_sempatch_plugins : string list -> unit
 
+(** [load_default_sempatch ()] load default semantic patch file. *)
 val load_default_sempatch : unit -> unit
 
 (** [scan patches path] scan the [path] and start the registered

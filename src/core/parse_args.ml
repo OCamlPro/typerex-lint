@@ -79,7 +79,7 @@ let parse_opt active flags s =
   in
   loop 0
 
-let parse_options errflag s =
+let parse_options s =
   Array.iteri (fun i _ -> active.(i) <- true) active;
   parse_opt active active s;
   active
