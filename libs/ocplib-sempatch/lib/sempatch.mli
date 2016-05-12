@@ -2,7 +2,8 @@ module Ast_element:
 sig
   type t = Ast_element.t =
     | Expression of Parsetree.expression
-    | Ident of string
+    | String of string
+    | Pattern of Parsetree.pattern
 
   val to_string : t -> string
 end

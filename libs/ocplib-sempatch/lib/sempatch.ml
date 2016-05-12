@@ -2,7 +2,14 @@ open Std_utils
 
 module Ast_element = Ast_element
 module Substitution = Substitution
-module Match = Match
+
+module Match =
+struct
+  include Match
+  let get_location m =
+    Match.get_location m
+    |> Option.value Location.none
+end
 
 module Patch =
 struct
@@ -26,21 +33,18 @@ struct
       let
         results = Ast_pattern_matcher.apply patch e
       in
-      List.bind
-        (fun (_, loc_opt) ->
-           match loc_opt with
-           | Some loc -> [
-               Match.{
-                 patch_name = patch.header.name;
-                 substitutions = Substitution.empty;
-                 location = loc
-               }
-             ]
-           | None -> []
-        )
+      List.map snd
+      (* List.bind *)
+      (*   (fun (_, match_opt) -> *)
+      (*      match match_opt with *)
+      (*      | Some matc -> [ *)
+      (*          matc *)
+      (*        ] *)
+      (*      | None -> [] *)
+      (*   ) *)
         results
 
-    | Ident _ -> assert false
+    | _ -> assert false
 
   let parallel_apply patches tree =
     List.map (fun patch -> apply patch tree) patches

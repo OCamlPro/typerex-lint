@@ -9,7 +9,7 @@ struct
     guard : Guard.t list;
   }
 
-  type body = Automaton.t
+  type body = Parsetree.expression Automaton.t
 
   type patch = {
     header: header;
@@ -198,7 +198,7 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
     (List.append !meta_exprs_in_pre_patch !meta_exprs_in_pre_patch);
   {
     header = { header with meta_expr = !meta_exprs_in_pre_patch; };
-    body = Builder.build_automaton processed_before_patch;
+    body = Builder.from_expr !meta_exprs_in_pre_patch processed_before_patch;
   }
 
 let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper

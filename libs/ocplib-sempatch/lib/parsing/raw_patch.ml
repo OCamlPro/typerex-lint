@@ -5,6 +5,13 @@ type patch_line =
   | SUBPATCH of t
 and t = patch_line list
 
+let inside expr = "[%__sempatch_inside " :: expr @ ["]"]
+let report expr = "[%__sempatch_report " :: expr @ ["]"]
+let replace expr replacement = "(" :: expr @ ") [@__sempatch_replace " :: replacement @ ["]"]
+let maybe_replace expr replacement has_change =
+  if has_change then replace expr replacement
+  else expr
+
 let rec filter_map f = function
   | [] -> []
   | hd::tl ->
@@ -24,24 +31,17 @@ let to_patch_body p =
       | SUBPATCH p -> (convert_patch p @ before, after, is_change)
   and convert_patch p =
     let (before, after, has_change) = convert_line p in
-    "[%__sempatch_inside ("
-    :: before
-    @ ")"
-      :: (if has_change then
-            " [@__sempatch_replace" :: after @ ["]"]
-          else
-            [])
-    @ ["]"]
-  in
-  let patch =
-    let (before, after, has_change) = convert_line p in
-    before @
-    (if has_change
-     then
-       " [@__sempatch_replace" :: after @ ["]"]
-     else
-       []
+    inside (
+      report (
+        maybe_replace before after has_change
+      )
     )
+  in
+  let patch = convert_patch p
+    (* let (before, after, has_change) = convert_line p in *)
+    (* report ( *)
+    (*   maybe_replace before after has_change *)
+    (* ) *)
   in
   Parser.parse_expression Lexer.token (Lexing.from_string
                                          (String.concat "\n" @@ patch)

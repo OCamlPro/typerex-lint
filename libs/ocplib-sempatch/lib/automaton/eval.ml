@@ -6,55 +6,69 @@ let both (s1, l1) (s2, l2) =
   if not A.(s1.final && s2.final) then
     []
   else
-    match l1, l2 with
-    | Some x, Some y when x != y ->
-      [s1, l1; s2, l2]
-    | Some _, _ ->
-      [s1, l1]
-    | None, Some _ ->
-      [s2, l2]
-    | _ -> []
+    let locations =
+      List.bind (Option.to_list)
+        [Match.get_location l1; Match.get_location l2]
+    and merged_matches = {
+      l1 with
+      Match.substitutions = Substitution.merge
+          (Match.get_substitutions l1)
+          (Match.get_substitutions l2)
+      ;
+    }
+    in
+    List.map (fun loc -> s1, { merged_matches with Match.location = Some loc })
+      locations
 
-let rec apply' begin_of_match state expr =
+let rec apply' : type a. A.meta_info -> a A.t -> a -> (a A.t * A.meta_info) list
+    = fun env state node ->
   if state.A.final then
-    [state, begin_of_match]
+    [state, env]
   else
     let new_states = List.bind
         (fun (update_loc, trans) ->
-           List.map
-             (fun x ->
-                (if update_loc then Some expr.pexp_loc else begin_of_match), x
-             )
-             (trans state expr)
+           let new_loc =
+             if update_loc then
+               Some (Match.get_current_location env)
+             else
+               Match.get_location env
+           in
+           let env = { env with Match.location = new_loc } in
+           (trans state env node)
         )
         state.A.transitions
     in
-    map2 new_states expr
+    dispatch new_states node
 
-and map2 states_expr expr =
-  List.bind (fun (loc, state_expr) ->
-      match state_expr, expr with
-      | [s1; s2], { pexp_desc = Pexp_let (_, [ { pvb_expr = e1; _ }], e2); _ }
-      | [s1; s2], { pexp_desc = Pexp_apply (e1, ["", e2]); _ } ->
-        List.product_bind both (apply' loc s1 e1) (apply' loc s2 e2)
-      | [l], _ -> [l, loc]
-      | _ -> []
-    )
-    states_expr
+and apply2 :
+  type a. a A.state_bundle -> A.meta_info -> a ->
+  (a A.t * A.meta_info) list =
+  fun state_bun env expr ->
+    match state_bun, expr with
+    | A.Final, _ -> [Builder.final, env]
+    | A.Expr (A.Apply (s1, s2)), {
+        pexp_desc = Pexp_apply (e1, ["", e2]);
+        pexp_loc = l;
+        _
+      } ->
+      let env = Match.set_current_location l env in
+      List.product_bind both
+        (apply' env s1 (e1))
+        (apply' env s2 (e2))
+    | A.Pattern _, {
+        ppat_loc = l;
+        _
+      } -> [Builder.final, Match.set_current_location l env]
+    | _ -> [Builder.final, env]
 
-let apply state expr =
-  let results = apply' None state expr in
-  List.iter
-    (
-      function
-      | (state, Some loc) ->
-        let loc_begin = loc.Location.loc_start in
-        if state.A.final then
-          Printf.printf "Match at %i:%i\n"
-            Lexing.(loc_begin.pos_lnum)
-            Lexing.(loc_begin.pos_cnum - loc_begin.pos_bol)
-        else assert false
-      | _ -> ()
-    )
-    results;
+and dispatch : type a. (a A.state_bundle * A.meta_info) list
+  -> a -> (a A.t * A.meta_info) list =
+  fun state_bundles expr ->
+  List.bind (fun (state_bun, env) -> apply2 state_bun env expr) state_bundles
+
+let apply name state expr =
+  let results = apply'
+      (Match.mk name Substitution.empty None expr.pexp_loc)
+      state expr
+  in
   results

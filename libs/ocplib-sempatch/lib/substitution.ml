@@ -17,22 +17,23 @@ let get_expr key vars =
   get key vars
   >>= (function
       | AE.Expression e -> Some e
-      | AE.Ident i ->
+      | AE.String i ->
         Ast_helper.Exp.ident (Location.mknoloc (Longident.Lident i))
                       |> Option.some
+      | _ -> assert false
     )
 
 let get_ident key vars =
   get key vars
   >>= (function
-      | AE.Ident p -> Some p
+      | AE.String p -> Some p
       | _ -> None
     )
 
 (* let is_defined_ident key vars = Option.is_some (get_ident key vars) *)
 
 let add_expr name value vars = M.add name (AE.Expression value) vars
-let add_ident name value vars = M.add name (AE.Ident value) vars
+let add_ident name value vars = M.add name (AE.String value) vars
 
 let merge m1 m2 =
   StringMap.merge (fun _ -> Option.merge_sup (fun _ x -> x)) m1 m2

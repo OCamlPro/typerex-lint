@@ -59,6 +59,8 @@ sig
 
   val bind : 'a t -> ('a -> 'b t) -> 'b t
 
+  val to_list : 'a t -> 'a list
+
   module Infix :
   sig
     val (|?) : 'a t -> 'a -> 'a
@@ -105,6 +107,10 @@ struct
 
   let is_none x = (=) None x
   let is_some x = (<>) None x
+
+  let to_list = function
+    | Some x -> [x]
+    | None -> []
 
   module Infix =
   struct

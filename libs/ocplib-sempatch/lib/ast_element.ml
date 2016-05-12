@@ -1,8 +1,7 @@
-(* module P = Parsetree *)
-
 type t =
   | Expression of Parsetree.expression
-  | Ident of string
+  | String of string
+  | Pattern of Parsetree.pattern
 
 let to_string =
   let open Pprintast in
@@ -12,4 +11,5 @@ let to_string =
   in
   function
   | Expression e -> to_string expression e
-  | Ident i -> i
+  | String i -> i
+  | Pattern p -> to_string pattern p

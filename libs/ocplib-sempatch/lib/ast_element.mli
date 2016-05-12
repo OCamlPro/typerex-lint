@@ -1,5 +1,6 @@
 type t =
   | Expression of Parsetree.expression
-  | Ident of string
+  | String of string
+  | Pattern of Parsetree.pattern
 
 val to_string : t -> string
