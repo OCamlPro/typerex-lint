@@ -19,6 +19,7 @@
 (**************************************************************************)
 
 open SimpleConfig
+open Warning
 
 let ignored_files = Globals.Config.create_option
     ["ignored_files"]
@@ -119,6 +120,7 @@ let load_sempatch_plugins patches =
 
 (* TODO: cago: move these functions to output modules. *)
 let output fmt plugins =
+  let open Warning_types in
   Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
       Lint.iter (fun cname lint ->
@@ -129,7 +131,7 @@ let output fmt plugins =
           let arr = Parse_args.parse_options filters in
           Warning.iter
             (fun warning ->
-               if arr.(warning.Warning_types.id - 1) then
+               if arr.(warning.instance.id - 1) then
                  Warning.print fmt warning)
             warnings) checks)
     plugins

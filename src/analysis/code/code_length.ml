@@ -38,24 +38,22 @@ module CodeLength = Core.MakeLint(struct
 
 type warning = LongLine of (int * int)
 
-module Warnings = CodeLength.MakeWarnings(struct
-    type t = warning
+let line_too_long = CodeLength.new_warning
+    [ Warning.kind_code ]
+    ~short_name:"long_line"
+    ~msg:"This line is too long ('$line'): it should be at \
+          most of size '$max'."
 
-    let line_too_long loc args = CodeLength.new_warning
-        loc
-        1
-        [ Warning.kind_code ]
-        ~short_name:"long_line"
-        ~msg:"This line is too long ('$line'): it should be at \
-              most of size '$max'."
-        ~args
+module Warnings = struct
 
-    let report loc = function
-      | LongLine (max, len) ->
-        line_too_long loc
-          [("line", string_of_int len);
-           ("max", string_of_int max)]
-  end)
+  let line_too_long = CodeLength.instanciate line_too_long
+
+  let report loc = function
+    | LongLine (max, len) ->
+      line_too_long loc
+        [("line", string_of_int len);
+         ("max", string_of_int max)]
+end
 
 let check_line lnum max_line_length file line =
   let line_len = String.length line in

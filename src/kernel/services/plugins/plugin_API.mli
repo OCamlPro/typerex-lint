@@ -54,19 +54,24 @@ sig
       (** The details message of the linter. *)
       val details : string
 
+      val instanciate :
+        Warning_types.warning_declaration ->
+        (Location.t -> args: (string * string) list -> unit)
+
       (** [new_warning loc id kinds ~short_name ~msg ~args] registers a warning
           with at the location [loc], the warning number [id], a short
           description [short_name], the message [msg] which will be displayed
           and the [args] which is a list of couple of string which will be
           substitute in the displayed message. *)
       val new_warning :
-        Location.t ->
-        int ->
         Warning_types.kind list ->
         short_name:string ->
         msg:string ->
-        args: (string * string) list ->
-        unit
+        Warning_types.warning_declaration
+        (* int -> *)
+        (* Location.t -> *)
+        (* args: (string * string) list -> *)
+        (* unit *)
 
       (** [create_option short_name short_details long_details ty default_value]
           creates an option for the configuration file and the command-line
@@ -78,15 +83,15 @@ sig
         'a SimpleConfig.option_class ->
         'a ->
         'a SimpleConfig.config_option
-
-      (** [MakeWarnings] is a functor which allows to register the warnings
-          automatically in the global data structure [plugins] with the
-          associated plugin and linter. *)
-      module MakeWarnings : functor (WA : Warning_types.WarningArg) ->
-      sig
-        type t
-        val report : Location.t -> WA.t -> unit
-      end
+      (* (\** [MakeWarnings] is a functor which allows to register the warnings *)
+      (*     automatically in the global data structure [plugins] with the *)
+      (*     associated plugin and linter. *\) *)
+      (* module MakeWarnings : functor (WA : Warning_types.WarningArg) -> *)
+      (* sig *)
+      (*   type t *)
+      (*   val report : Location.t -> WA.t -> unit *)
+      (*   val warnings : Warning_types.warning_decl list *)
+      (* end *)
 
       (** Input functors which are used to register a main function to the
           linter. This functor is organized to allow to take a specific input

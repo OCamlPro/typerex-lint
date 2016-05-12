@@ -33,29 +33,24 @@ module CodeUseless = Core.MakeLint(struct
 
 type warnings = UselessIf | ConstantIf
 
-module Warnings = CodeUseless.MakeWarnings(struct
-    type t = warnings
+let useless = CodeUseless.new_warning
+    [ Warning.kind_code ]
+    ~short_name:"useless-if"
+    ~msg:"Useless if-then-else construction."
 
-    let useless loc args = CodeUseless.new_warning
-        loc
-        1
-        [ Warning.kind_code ]
-        ~short_name:"useless-if"
-        ~msg:"Useless if-then-else construction."
-        ~args
+let constant = CodeUseless.new_warning
+    [ Warning.kind_code ]
+    ~short_name:"constant-if"
+    ~msg:"Constant if-then-else construction."
 
-    let constant loc args = CodeUseless.new_warning
-        loc
-        2
-        [ Warning.kind_code ]
-        ~short_name:"constant-if"
-        ~msg:"Constant if-then-else construction."
-        ~args
+module Warnings = struct
+  let useless = CodeUseless.instanciate useless
+  let constant = CodeUseless.instanciate constant
 
-    let report loc = function
-      | UselessIf -> useless loc []
-      | ConstantIf -> constant loc []
-  end)
+  let report loc = function
+    | UselessIf -> useless loc []
+    | ConstantIf -> constant loc []
+end
 
 let iter =
   let module IterArg = struct

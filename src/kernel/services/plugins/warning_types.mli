@@ -30,14 +30,18 @@ type kind =
 and kinds = kind list
 
 type warning = {
+  loc : Location.t;    (* The location of the warning *)
+  instance : warning_instance;
+  output: string;
+}
+
+and warning_instance = {
   id : int;            (* Warning number *)
+  decl : warning_declaration
+}
+
+and warning_declaration = {
   kinds : kinds;       (* Warning kinds *)
   short_name : string; (* A short name to identify a warning *)
   message : string;    (* The displayed message *)
-  loc : Location.t;    (* The location of the warning *)
 }
-
-module type WarningArg = sig
-  type t
-  val report : Location.t -> t -> unit
-end

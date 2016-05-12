@@ -95,7 +95,8 @@ let main () =
     Plugin.iter_plugins (fun _plugin checks ->
         Lint.iter (fun cname lint ->
             let module Lint = (val lint : Lint_types.LINT) in
-            if Warning.length Lint.warnings > 0 then exit !exit_status) checks)
+            if Warning.Warning.length Lint.warnings > 0 then
+              exit !exit_status) checks)
       plugins;
     exit 0 (* No warning, we can exit successfully *)
   | ActionList ->

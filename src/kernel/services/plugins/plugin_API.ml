@@ -20,6 +20,7 @@
 
 open Plugin_error
 open Sempatch
+open Warning
 
 let register_plugin plugin =
   try
@@ -63,6 +64,11 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
   let create_option options short_help lhelp ty default =
     Globals.Config.create_option options short_help lhelp 0 ty default
 
+  let new_warning kinds ~short_name ~msg = (* TODO *)
+    let open Warning_types in
+    let warning_decl = { kinds; short_name; message = msg } in
+    warning_decl
+
   module MakeLintPatch (C : Lint_types.LintPatchArg) = struct
 
     let name = C.name
@@ -70,14 +76,20 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     let details = C.details
     let warnings = Warning.empty ()
     let patches = C.patches
+    let decls = WarningDeclaration.empty ()
 
     let create_option option short_help lhelp ty default =
       let option = [P.short_name; C.short_name; option] in
       Globals.Config.create_option option short_help lhelp 0 ty default
 
-    let new_warning loc num cats ~short_name ~msg ~args = (* TODO *)
-      let msg = Utils.subsitute msg args in
-      Warning.add loc num cats short_name msg warnings
+    let new_warning loc kinds ~short_name ~msg ~args = (* TODO *)
+      let open Warning_types in
+      let decl = new_warning kinds ~short_name ~msg in
+      WarningDeclaration.add decl decls;
+      (* TODO: cago: here we have to re-set the long help with the id and the
+         short_name of the warning. It will be displayed in the config file. *)
+      let msg = Utils.subsitute decl.message args in
+      Warning.add loc 1 decl msg warnings
 
     (* TODO This function should be exported in ocp-sempatch. *)
     let map_args env args =
@@ -87,19 +99,21 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
             | None -> (str, "xx"))
         args
 
-    let report matching kinds patch =
-      let msg =
-        match Patch.get_msg patch with
-        (* TODO replace by the result of the patch. *)
-          None -> "You should use ... instead of ..."
-        | Some msg -> msg in
-      (* TODO Warning number can be override by the user. *)
-      new_warning (Match.get_location matching) 1 kinds
-        ~short_name:(Patch.get_name patch)
-        ~msg
-        ~args:(map_args
-                 (Match.get_substitutions matching)
-                 (Patch.get_metavariables patch))
+    module Warnings = struct
+      let report matching kinds patch =
+        let msg =
+          match Patch.get_msg patch with
+          (* TODO replace by the result of the patch. *)
+            None -> "You should use ... instead of ..."
+          | Some msg -> msg in
+        (* TODO Warning number can be override by the user. *)
+        new_warning (Match.get_location matching) kinds
+          ~short_name:(Patch.get_name patch)
+          ~msg
+          ~args:(map_args
+                   (Match.get_substitutions matching)
+                   (Patch.get_metavariables patch))
+    end
 
     let patches =
       List.map (fun filename ->
@@ -118,14 +132,15 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
         let enter_expression expr =
           List.iter (fun patches ->
               let matches =
-                Patch.parallel_apply_nonrec patches (Ast_element.Expression expr) in
+                Patch.parallel_apply_nonrec
+                  patches (Ast_element.Expression expr) in
               List.iter (fun matching ->
                   let patch =
                     List.find
                       (fun p ->
                          Patch.get_name p = Match.get_patch_name matching)
                       patches in
-                  report matching [Warning.kind_code] patch)
+                  Warnings.report matching [kind_code] patch)
                 matches)
             patches
       end in
@@ -137,9 +152,8 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
         let warnings = warnings
       end in
       let lint = (module Lint : Lint_types.LINT) in
-
       register_main plugin C.short_name lint;
-      let details =  Printf.sprintf "Enable/Disable warnings from %S" name in
+      let details = Printf.sprintf "Enable/Disable warnings from %S" name in
       ignore @@
       create_option "warnings" details details SimpleConfig.string_option "+A"
   end (* MakeLintPatch *)
@@ -150,19 +164,29 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     let short_name = C.short_name
     let details = C.details
     let warnings = Warning.empty ()
-
-    let new_warning loc num cats ~short_name ~msg ~args = (* TODO *)
-      let msg = Utils.subsitute msg args in
-      Warning.add loc num cats short_name msg warnings
+    let decls = WarningDeclaration.empty ()
 
     let create_option option short_help lhelp ty default =
       let option = [P.short_name; C.short_name; option] in
       Globals.Config.create_option option short_help lhelp 0 ty default
 
-    module MakeWarnings (WA : Warning_types.WarningArg) = struct
-      type t = WA.t
-      let report = WA.report
-    end
+    let fresh_id =
+      let cpt = ref 0 in
+      fun () -> incr cpt; !cpt
+
+    let instanciate decl =
+      let open Warning_types in
+      let id = fresh_id () in
+      (* TODO: cago: here we have to re-set the long help with the id and the
+         short_name of the warning. It will be displayed in the config file. *)
+      fun loc ~args ->
+        let msg = Utils.subsitute decl.message args in
+        Warning.add loc id decl msg warnings
+
+    let new_warning kinds ~short_name ~msg = (* TODO *)
+      let decl = new_warning kinds ~short_name ~msg in
+      WarningDeclaration.add decl decls;
+      decl
 
     module Register(I : Input.INPUT) =
     struct
@@ -172,10 +196,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
           let warnings = warnings
         end in
         let lint = (module Lint : Lint_types.LINT) in
-        register_main plugin C.short_name lint;
-        let details =  Printf.sprintf "Enable/Disable warnings from %S" name in
-        ignore @@
-        create_option "warnings" details details SimpleConfig.string_option "+A"
+        register_main plugin C.short_name lint
     end
 
     module MakeInputStructure(S : Input.STRUCTURE) = struct
@@ -205,7 +226,11 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     module MakeInputAll (All : Input.ALL) = struct
       module R = Register (struct let input = Input.InAll All.main end)
     end
-  end (* MakeCheck *)
+    let () =
+      let details = Printf.sprintf "Enable/Disable warnings from %S" name in
+      ignore @@
+      create_option "warnings" details details SimpleConfig.string_option "+A"
+  end (* MakeLint *)
 
   let () =
     (* Creating default options for plugins: "--plugin.enable" *)
@@ -215,7 +240,6 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       details
       details
       SimpleConfig.enable_option true;
-
     try
       register_plugin plugin
     with Plugin_error(error) ->

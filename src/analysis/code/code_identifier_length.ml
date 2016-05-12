@@ -46,24 +46,20 @@ type warnings =
   | Short of (int * string)
   | Long of (int * string)
 
-module Warnings = CodeIdentifierLength.MakeWarnings(struct
-    type t = warnings
 
-    let w_too_short loc args = CodeIdentifierLength.new_warning
-        loc
-        1
-        [ Warning.kind_code ]
-        ~short_name:"identifier_too_short"
-        ~msg:"$id is too short: it should be at least of size '$size'."
-        ~args
+let w_too_short = CodeIdentifierLength.new_warning
+    [ Warning.kind_code ]
+    ~short_name:"identifier_too_short"
+    ~msg:"$id is too short: it should be at least of size '$size'."
 
-    let w_too_long loc args = CodeIdentifierLength.new_warning
-        loc
-        2
-        [ Warning.kind_code ]
-        ~short_name:"identifier_too_long"
-        ~msg:"$id is too long: it should be at most of size '$size'."
-        ~args
+let w_too_long = CodeIdentifierLength.new_warning
+    [ Warning.kind_code ]
+    ~short_name:"identifier_too_long"
+    ~msg:"$id is too long: it should be at most of size '$size'."
+
+ module Warnings = struct
+    let w_too_short = CodeIdentifierLength.instanciate w_too_short
+    let w_too_long = CodeIdentifierLength.instanciate w_too_long
 
     let report loc = function
       | Short (min, id) ->
@@ -74,7 +70,7 @@ module Warnings = CodeIdentifierLength.MakeWarnings(struct
         w_too_long
           loc
           [("id", id); ("size", string_of_int max)]
-  end)
+  end
 
 let iter min_identifier_length max_identifier_length =
   let module IterArg = struct

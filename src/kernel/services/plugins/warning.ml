@@ -34,30 +34,48 @@ let kind_to_string = function
   | Metrics -> "metrics"
   | Custom kind -> kind
 
-(* Warning Set *)
-module WarningSet = Set.Make (struct
-    type t = warning
-    let compare = Pervasives.compare
-  end)
+module Warning = struct
 
-type t = WarningSet.t ref
+  (* Warning Set *)
+  module WarningSet = Set.Make (struct
+      type t = Warning_types.warning
+      let compare = Pervasives.compare
+    end)
 
-let empty () = ref WarningSet.empty
+  type t = WarningSet.t ref
 
-let add_warning warning wset =
-  wset := WarningSet.add warning !wset
+  let empty () = ref WarningSet.empty
 
-let add loc id kinds short_name message wset =
-  let warning = { id; kinds; short_name; message; loc } in
-  add_warning warning wset
+  let add_warning warning wset =
+    wset := WarningSet.add warning !wset
 
-let length wset = WarningSet.cardinal !wset
+  let add loc id decl output wset =
+    let instance = {id; decl} in
+    let warning = {loc; instance; output} in
+    add_warning warning wset
 
-let iter apply wset = WarningSet.iter apply !wset
+  let length wset = WarningSet.cardinal !wset
 
-let print ppf warning =
-  if warning.loc <> Location.none then
-    Format.fprintf ppf "%a" Location.print warning.loc;
+  let iter apply wset = WarningSet.iter apply !wset
 
-  Format.fprintf ppf "  %s" warning.message;
-  Format.fprintf ppf "@."
+  let print ppf warning =
+    if warning.loc <> Location.none then
+      Format.fprintf ppf "%a" Location.print warning.loc;
+
+    Format.fprintf ppf "  Warning %d: %s" warning.instance.id warning.output;
+    Format.fprintf ppf "@."
+end
+
+module WarningDeclaration = struct
+  (* Warning declaration Set *)
+  module WDeclSet = Set.Make (struct
+      type t = Warning_types.warning_declaration
+      let compare = Pervasives.compare
+    end)
+
+  type t = WDeclSet.t ref
+
+  let empty () = ref WDeclSet.empty
+
+  let add decl decls = decls := WDeclSet.add decl !decls
+end
