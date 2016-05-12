@@ -2,6 +2,8 @@ open Parsetree
 open Std_utils
 module A = Automaton
 
+let setloc = Match.set_current_location
+
 let both (s1, l1) (s2, l2) =
   if not A.(s1.final && s2.final) then
     []
@@ -48,18 +50,16 @@ and apply2 :
     | A.Final, _ -> [Builder.final, env]
     | A.Expr (A.Apply (s1, s2)), {
         pexp_desc = Pexp_apply (e1, ["", e2]);
-        pexp_loc = l;
         _
       } ->
-      let env = Match.set_current_location l env in
       List.product_bind both
-        (apply' env s1 (e1))
-        (apply' env s2 (e2))
+        (apply' (setloc e1.pexp_loc env) s1 (e1))
+        (apply' (setloc e2.pexp_loc env) s2 (e2))
     | A.Pattern _, {
         ppat_loc = l;
         _
-      } -> [Builder.final, Match.set_current_location l env]
-    | _ -> [Builder.final, env]
+      } -> [Builder.final, setloc l env]
+    | _ -> []
 
 and dispatch : type a. (a A.state_bundle * A.meta_info) list
   -> a -> (a A.t * A.meta_info) list =

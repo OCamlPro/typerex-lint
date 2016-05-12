@@ -14,7 +14,6 @@ when: "e1 = e2"
 - e1 := !e2 - 1
 + decr e1
 ```
-
 @CompToFalse
 expressions: cond
 message: "Use 'not $cond' instead of '$cond = false'."
@@ -27,8 +26,8 @@ message: "Use 'not $cond' instead of '$cond = false'."
 expressions: cond
 message: "Use '$cond' instead of '$cond != false'."
 ```
-- cond != false 
-+ cond 
+- cond != false
++ cond
 ```
 
 @ CompToFalse3
