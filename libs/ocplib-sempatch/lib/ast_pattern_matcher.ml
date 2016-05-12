@@ -32,7 +32,7 @@ let apply_replacements tree attributes var_replacements =
   in
   mapper.Ast_mapper.expr mapper new_tree
 
-let apply patch expr =
+let apply recurse patch expr =
   let is_meta_expr e = List.mem e (patch.header.meta_expr)
   and apply_to_list mapper env patch elements =
     List.fold_left (fun mapped elt ->
@@ -487,8 +487,13 @@ let apply patch expr =
   in
   let expr = Parsed_patches.preprocess_src_expr expr
   and patch = Parsed_patches.preprocess patch
+  and apply_fun =
+  if recurse then
+    apply_to_expr
+  else
+    match_at_root.Ast_maybe_mapper2.expr match_at_root
   in
-  apply_to_expr Environment.empty ~expr ~patch:(patch.body)
+  apply_fun Environment.empty ~expr ~patch:(patch.body)
   |> Res.map (fun (tree, env) ->
       Parsed_patches.postprocess tree, env.Environment.matches
     )
