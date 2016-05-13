@@ -39,7 +39,6 @@ let usage_msg =
   String.concat "\n" [
     "Usage:";
     Printf.sprintf "   %s [OPTIONS] --project DIR" name;
-    Printf.sprintf "   %s [OPTIONS] --project DIR --patches foo.md,bar.md" name;
     "";
   ]
 
