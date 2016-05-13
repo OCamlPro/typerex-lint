@@ -46,13 +46,15 @@ let get key vars =
     Not_found -> None
 
 let get_expr key vars =
+  let open Parsetree in
   get key vars
   >>= (function
       | AE.Expression e -> Some e
+      | AE.Pattern { ppat_desc = Ppat_var { Asttypes.txt = i; _ }; _ }
       | AE.String i ->
         Ast_helper.Exp.ident (Location.mknoloc (Longident.Lident i))
                       |> Option.some
-      | _ -> assert false
+      | _ -> None
     )
 
 let get_ident key vars =

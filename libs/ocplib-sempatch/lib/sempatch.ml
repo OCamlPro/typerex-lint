@@ -34,15 +34,12 @@ struct
         results = Ast_pattern_matcher.apply patch e
       in
       List.map snd
-      (* List.bind *)
-      (*   (fun (_, match_opt) -> *)
-      (*      match match_opt with *)
-      (*      | Some matc -> [ *)
-      (*          matc *)
-      (*        ] *)
-      (*      | None -> [] *)
-      (*   ) *)
         results
+      |> List.filter (fun mat ->
+          try
+            Guard_evaluator.eval_union (Match.get_substitutions mat) patch.header.guard
+          with Guard_evaluator.Undefined_var _ -> false
+        )
 
     | _ -> assert false
 
