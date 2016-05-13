@@ -110,7 +110,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
         let enter_expression expr =
           List.iter (fun patches ->
               let matches =
-                Patch.parallel_apply patches (Ast_element.Expression expr) in
+                Patch.parallel_apply_nonrec patches (Ast_element.Expression expr) in
               List.iter (fun matching ->
                   let patch =
                     List.find

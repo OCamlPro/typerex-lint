@@ -19,14 +19,20 @@ struct
   let get_msg p = p.header.message
   let get_metavariables p = p.header.meta_expr
 
-  let apply patch ast = let open Ast_element in
+  let apply' apply_fun patch ast = let open Ast_element in
     match ast with
     | Expression e ->
       let
-        e, m = Ast_pattern_matcher.apply patch e |> Res.unwrap
+        e, m = apply_fun patch e |> Res.unwrap
       in
       Expression e, m
     | Ident _ -> assert false
+
+  let apply patch ast =
+    apply' (Ast_pattern_matcher.apply true) patch ast
+
+  let apply_nonrec patch ast =
+    apply' (Ast_pattern_matcher.apply false) patch ast
 
   let sequential_apply patches ast_elt =
     List.fold_left (fun (accu_ast, accu_matches) patch ->
@@ -38,6 +44,10 @@ struct
 
   let parallel_apply patches tree =
     List.map (fun patch -> apply patch tree |> snd) patches
+    |> List.concat
+
+  let parallel_apply_nonrec patches tree =
+    List.map (fun patch -> apply_nonrec patch tree |> snd) patches
     |> List.concat
 end
 
