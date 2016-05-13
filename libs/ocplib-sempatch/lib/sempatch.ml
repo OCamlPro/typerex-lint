@@ -37,7 +37,9 @@ struct
         results
       |> List.filter (fun mat ->
           try
-            Guard_evaluator.eval_union (Match.get_substitutions mat) patch.header.guard
+            Guard_evaluator.eval_union
+              (Match.get_substitutions mat)
+              patch.header.guard
           with Guard_evaluator.Undefined_var _ -> false
         )
 

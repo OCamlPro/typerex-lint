@@ -236,7 +236,8 @@ struct
     take new_length l1
 
   let bind f lst = List.map f lst |> List.flatten
-  let product_bind f l1 l2 = List.map (fun x -> bind (f x) l2) l1 |> List.flatten
+  let product_bind f l1 l2 = List.map (fun x -> bind (f x) l2) l1
+                             |> List.flatten
   let product f l1 l2 = product_bind (fun x y -> [f x y]) l1 l2
 
   let find_opt f l = try List.find f l |> Option.some with Not_found -> None

@@ -20,7 +20,10 @@ let both
       ;
     }
     in
-    List.map (fun loc -> Builder.final, { merged_matches with Match.location = Some loc })
+    List.map (
+      fun loc -> Builder.final,
+                 { merged_matches with Match.location = Some loc }
+      )
       locations
 
 let rec apply' : type a. A.meta_info -> a A.t -> a -> (a A.t * A.meta_info) list

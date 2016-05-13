@@ -7,7 +7,8 @@ and t = patch_line list
 
 let inside expr = "[%__sempatch_inside " :: expr @ ["]"]
 let report expr = "[%__sempatch_report " :: expr @ ["]"]
-let replace expr replacement = "(" :: expr @ ") [@__sempatch_replace " :: replacement @ ["]"]
+let replace expr replacement = "(" :: expr @ ") [@__sempatch_replace "
+                                             :: replacement @ ["]"]
 let maybe_replace expr replacement has_change =
   if has_change then replace expr replacement
   else expr

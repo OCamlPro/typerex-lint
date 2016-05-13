@@ -3,7 +3,9 @@ type meta_info = Match.t
 type expr_states =
   | Apply of Parsetree.expression t * Parsetree.expression t
   | Let of (Parsetree.value_binding) t list * Parsetree.expression t
-  | Ifthenelse of Parsetree.expression t * Parsetree.expression t * Parsetree.expression t option
+  | Ifthenelse of Parsetree.expression t
+                  * Parsetree.expression t
+                  * Parsetree.expression t option
   | Construct of Parsetree.expression t option
 
 and val_binding = {
