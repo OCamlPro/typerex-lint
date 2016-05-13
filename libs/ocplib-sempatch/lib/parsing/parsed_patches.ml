@@ -86,34 +86,6 @@ let curryfying_mapper =
       );
   }
 
-let under_arg { pexp_desc = desc; _ } =
-  match desc with
-  | Pexp_apply (f, arg) -> Some (f, arg)
-  | _ -> None
-
-let uncurryfying_mapper =
-  let open Ast_mapper in
-  { default_mapper with
-    expr = (fun self e ->
-            match e.pexp_desc with
-            | Pexp_apply (f, args)
-              when List.exists
-                  (fun (loc, _) -> loc.Location.txt = "__sempatch_uncurryfy")
-                  f.pexp_attributes
-              ->
-              (
-                match under_arg f with
-                | Some (next_fun, next_arg) ->
-                  self.expr self
-                    { e with
-                      pexp_desc = Pexp_apply (next_fun, next_arg @ args)
-                    }
-                | None -> default_mapper.expr self e
-              )
-            | _ -> default_mapper.expr self e
-      );
-  }
-
 (** preprocess the patch before applying it
 
     Currently, this just means curryfiying the world
@@ -202,5 +174,3 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
   }
 
 let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper
-
-let postprocess = uncurryfying_mapper.Ast_mapper.expr uncurryfying_mapper
