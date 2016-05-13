@@ -101,8 +101,8 @@ let find_directories parent =
 let print_result res =
   List.iter (fun (diff, dir) ->
       if diff
-      then Printf.printf "  [PASS] %S\n%!" dir
-      else Printf.printf "  [FAIL] %S\n%!" dir)
+      then Printf.printf "  \027[32m[PASS]\027[m %S\n%!" dir
+      else Printf.printf "  \027[31m[FAIL]\027[m %S\n%!" dir)
     res;
   let succeed = List.filter (fun (diff, _) -> diff) res in
   let n_succ = List.length succeed in
