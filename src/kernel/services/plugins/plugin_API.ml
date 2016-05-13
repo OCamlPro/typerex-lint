@@ -82,14 +82,14 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       let option = [P.short_name; C.short_name; option] in
       Globals.Config.create_option option short_help lhelp 0 ty default
 
-    let new_warning loc kinds ~short_name ~msg ~args = (* TODO *)
+    let new_warning loc warn_id kinds ~short_name ~msg ~args = (* TODO *)
       let open Warning_types in
       let decl = new_warning kinds ~short_name ~msg in
       WarningDeclaration.add decl decls;
       (* TODO: cago: here we have to re-set the long help with the id and the
          short_name of the warning. It will be displayed in the config file. *)
       let msg = Utils.subsitute decl.message args in
-      Warning.add loc 1 decl msg warnings
+      Warning.add loc warn_id decl msg warnings
 
     (* TODO This function should be exported in ocp-sempatch. *)
     let map_args env args =
@@ -100,14 +100,14 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
         args
 
     module Warnings = struct
-      let report matching kinds patch =
+      let report warn_id matching kinds patch =
         let msg =
           match Patch.get_msg patch with
           (* TODO replace by the result of the patch. *)
             None -> "You should use ... instead of ..."
           | Some msg -> msg in
         (* TODO Warning number can be override by the user. *)
-        new_warning (Match.get_location matching) kinds
+        new_warning (Match.get_location matching) warn_id kinds
           ~short_name:(Patch.get_name patch)
           ~msg
           ~args:(map_args
@@ -130,7 +130,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       let module IterArg = struct
         include ParsetreeIter.DefaultIteratorArgument
         let enter_expression expr =
-          List.iter (fun patches ->
+          List.iteri (fun i patches ->
               let matches =
                 Patch.parallel_apply_nonrec
                   patches (Ast_element.Expression expr) in
@@ -140,7 +140,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
                       (fun p ->
                          Patch.get_name p = Match.get_patch_name matching)
                       patches in
-                  Warnings.report matching [kind_code] patch)
+                  Warnings.report (i + 1) matching [kind_code] patch)
                 matches)
             patches
       end in
