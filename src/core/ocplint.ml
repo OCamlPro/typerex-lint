@@ -26,7 +26,6 @@ type action =
 
 let action = ref ActionNone
 let exit_status = ref 0
-let patches = ref []
 let output_text = ref None
 
 let set_action new_action =
@@ -48,7 +47,8 @@ let specs : (Arg.key * Arg.spec * Arg.doc) list ref = ref []
 
 let add_spec ((cmd, _, _) as spec) =
   if List.for_all (fun (key, _, _) -> cmd <> key) !specs then
-    specs := spec :: !specs
+    specs := spec :: !specs;
+  specs := Arg.align !specs
 
 let () =
   specs := [
@@ -63,7 +63,9 @@ let () =
     " Every warning returns an error status code.";
 
     "--load-patches", Arg.String (fun files ->
-        patches := (Str.split (Str.regexp ",") files)),
+        let patches = (Str.split (Str.regexp ",") files) in
+        Ocplint_actions.load_sempatch_plugins patches;
+        List.iter add_spec (Globals.Config.simple_args ())),
     " List of user defined lint with the patch format.";
 
     "--load-plugins", Arg.String (fun files ->
@@ -80,9 +82,7 @@ let () =
 let main () =
   (* Getting all options declared in all registered plugins. *)
   Ocplint_actions.load_default_sempatch ();
-  Ocplint_actions.load_sempatch_plugins !patches;
   List.iter add_spec (Globals.Config.simple_args ());
-  specs := Arg.align !specs;
   Arg.parse_dynamic specs
       (fun cmd ->
        Printf.printf "Error: don't know what to do with %s\n%!" cmd;
