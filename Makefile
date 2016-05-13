@@ -41,4 +41,7 @@ opam-deps:
 install:
 	cp _obuild/ocp-lint/ocp-lint.asm $(BINDIR)/ocp-lint
 
+uninstall:
+	rm $(BINDIR)/ocp-lint
+
 

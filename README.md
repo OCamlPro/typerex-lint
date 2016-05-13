@@ -1,3 +1,5 @@
+[![Travis-CI Build Status](https://travis-ci.org/OCamlPro/typerex-lint.svg?branch=master)](https://travis-ci.org/OCamlPro/typerex-lint)
+
 # The OCaml Style Checker
 
 A style checker for [OCaml](http://ocaml.org/) language.
