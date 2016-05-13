@@ -1,4 +1,4 @@
 File "testsuite/sempatch_useless_if/test_sempatch_useless_if.ml", line 1:
-  Missing interface for 'testsuite/sempatch_useless_if/test_sempatch_useless_if.ml'.
+  Warning 1: Missing interface for 'testsuite/sempatch_useless_if/test_sempatch_useless_if.ml'.
 File "testsuite/sempatch_useless_if/test_sempatch_useless_if.ml", line 3, characters 2-30:
-  Useless if-then-else: use 'cond' instead of 'if cond then true else false'.
+  Warning 1: Useless if-then-else: use 'cond' instead of 'if cond then true else false'.

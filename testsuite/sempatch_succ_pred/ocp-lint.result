@@ -1,8 +1,8 @@
 File "testsuite/sempatch_succ_pred/test_sempatch_succ_pred.ml", line 1:
-  Missing interface for 'testsuite/sempatch_succ_pred/test_sempatch_succ_pred.ml'.
-File "testsuite/sempatch_succ_pred/test_sempatch_succ_pred.ml", line 2, characters 22-31:
-  use `succ`, `pred` or nothing instead of adding 1L
+  Warning 1: Missing interface for 'testsuite/sempatch_succ_pred/test_sempatch_succ_pred.ml'.
 File "testsuite/sempatch_succ_pred/test_sempatch_succ_pred.ml", line 1, characters 22-31:
-  use `succ`, `pred` or nothing instead of adding 1l
+  Warning 1: use `succ`, `pred` or nothing instead of adding 1l
+File "testsuite/sempatch_succ_pred/test_sempatch_succ_pred.ml", line 2, characters 22-31:
+  Warning 1: use `succ`, `pred` or nothing instead of adding 1L
 File "testsuite/sempatch_succ_pred/test_sempatch_succ_pred.ml", line 3, characters 26-35:
-  use `succ`, `pred` or nothing instead of adding 1n
+  Warning 1: use `succ`, `pred` or nothing instead of adding 1n

@@ -1,6 +1,6 @@
 File "testsuite/sempatch_incr_decr/test_sempatch_incr_decr.ml", line 1:
-  Missing interface for 'testsuite/sempatch_incr_decr/test_sempatch_incr_decr.ml'.
-File "testsuite/sempatch_incr_decr/test_sempatch_incr_decr.ml", line 8, characters 2-17:
-  Use 'decr cpt' instead of 'cpt := !cpt - 1'.
+  Warning 1: Missing interface for 'testsuite/sempatch_incr_decr/test_sempatch_incr_decr.ml'.
 File "testsuite/sempatch_incr_decr/test_sempatch_incr_decr.ml", line 4, characters 2-17:
-  Use 'incr cpt' instead of 'cpt := !cpt + 1.'
+  Warning 1: Use 'incr cpt' instead of 'cpt := !cpt + 1.'
+File "testsuite/sempatch_incr_decr/test_sempatch_incr_decr.ml", line 8, characters 2-17:
+  Warning 1: Use 'decr cpt' instead of 'cpt := !cpt - 1'.

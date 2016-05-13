@@ -21,11 +21,11 @@
 type action =
 | ActionNone
 | ActionList
+| ActionSave
 | ActionLoad of string
 
 let action = ref ActionNone
 let exit_status = ref 0
-let patches = ref []
 let output_text = ref None
 
 let set_action new_action =
@@ -47,38 +47,42 @@ let specs : (Arg.key * Arg.spec * Arg.doc) list ref = ref []
 
 let add_spec ((cmd, _, _) as spec) =
   if List.for_all (fun (key, _, _) -> cmd <> key) !specs then
-    specs := spec :: !specs
+    specs := spec :: !specs;
+  specs := Arg.align !specs
 
 let () =
   specs := [
-      "--project", Arg.String (fun dir -> set_action (ActionLoad dir)),
+    "--project", Arg.String (fun dir -> set_action (ActionLoad dir)),
     "DIR   Give a project dir path";
 
-      "--output-txt", Arg.String (fun file -> output_text := Some file),
-      "FILE   Output results in a text file.";
-
-    "--list-warnings", Arg.Unit (fun () -> set_action ActionList),
-    " List of warnings";
+    "--output-txt", Arg.String (fun file -> output_text := Some file),
+    "FILE   Output results in a text file.";
 
     "--warn-error", Arg.Unit (fun () ->
         exit_status := 1),
     " Every warning returns an error status code.";
 
-    "--patches", Arg.String (fun files ->
-        patches := (Str.split (Str.regexp ",") files)),
+    "--load-patches", Arg.String (fun files ->
+        let patches = (Str.split (Str.regexp ",") files) in
+        Ocplint_actions.load_sempatch_plugins patches;
+        List.iter add_spec (Globals.Config.simple_args ())),
     " List of user defined lint with the patch format.";
 
-    "--load", Arg.String (fun files ->
+    "--load-plugins", Arg.String (fun files ->
         let l = (Str.split (Str.regexp ",") files) in
         Ocplint_actions.load_plugins l;
         List.iter add_spec (Globals.Config.simple_args ())),
-    " Load dynamically plugins with their corresponding 'cmxs' files."
+    " Load dynamically plugins with their corresponding 'cmxs' files.";
+
+    "--save-config", Arg.Unit (fun () ->
+        set_action (ActionSave)),
+    " List of user defined lint with the patch format.";
   ]
 
 let main () =
   (* Getting all options declared in all registered plugins. *)
+  Ocplint_actions.load_default_sempatch ();
   List.iter add_spec (Globals.Config.simple_args ());
-  specs := Arg.align !specs;
   Arg.parse_dynamic specs
       (fun cmd ->
        Printf.printf "Error: don't know what to do with %s\n%!" cmd;
@@ -87,12 +91,18 @@ let main () =
 
   match !action with
   | ActionLoad dir ->
-    let plugins = Ocplint_actions.scan ?output_text:!output_text !patches dir in
-    Plugin.iter_plugins (fun plugin checks ->
-      let module P = (val plugin : Plugin_types.PLUGIN) in
-      if Warning.length P.warnings > 0 then exit !exit_status) plugins;
+    let plugins = Ocplint_actions.scan ?output_text:!output_text dir in
+    Plugin.iter_plugins (fun _plugin checks ->
+        Lint.iter (fun cname lint ->
+            let module Lint = (val lint : Lint_types.LINT) in
+            if Warning.Warning.length Lint.warnings > 0 then
+              exit !exit_status) checks)
+      plugins;
     exit 0 (* No warning, we can exit successfully *)
   | ActionList ->
+    exit 0
+  | ActionSave ->
+    Globals.Config.save ();
     exit 0
   | ActionNone ->
     Arg.usage !specs usage_msg;

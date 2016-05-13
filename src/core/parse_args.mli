@@ -18,30 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** [kind] is the category of the warning. A warning can be about the code, a
-    typography (for example the line length), interface, metrics and custom. *)
-type kind =
-  | Code
-  | Typo
-  | Interface
-  | Metrics
-  | Custom of string
-
-and kinds = kind list
-
-type warning = {
-  loc : Location.t;    (* The location of the warning *)
-  instance : warning_instance;
-  output: string;
-}
-
-and warning_instance = {
-  id : int;            (* Warning number *)
-  decl : warning_declaration
-}
-
-and warning_declaration = {
-  kinds : kinds;       (* Warning kinds *)
-  short_name : string; (* A short name to identify a warning *)
-  message : string;    (* The displayed message *)
-}
+(** [parse_options filters] parse the arguments given in the command line
+    or found in the config file to enable/disable warnings in a specific
+    linter. It returns a [bool array], each position in the array correspond
+    to a warning number. *)
+val parse_options : string -> bool array

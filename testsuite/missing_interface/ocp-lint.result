@@ -1,2 +1,2 @@
 File "testsuite/missing_interface/test_interface_missing.ml", line 1:
-  Missing interface for 'testsuite/missing_interface/test_interface_missing.ml'.
+  Warning 1: Missing interface for 'testsuite/missing_interface/test_interface_missing.ml'.

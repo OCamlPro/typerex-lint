@@ -19,6 +19,7 @@
 (**************************************************************************)
 
 open SimpleConfig
+open Warning
 
 let ignored_files = Globals.Config.create_option
     ["ignored_files"]
@@ -42,9 +43,9 @@ let filter_plugins plugins =
   let activated_plugins = Hashtbl.create 42 in
   Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
-      let option_names = P.short_name :: [ "disable" ] in
+      let option_names = P.short_name :: [ "flag" ] in
       let opt_value = Globals.Config.get_option_value option_names in
-      if not (bool_of_string opt_value)
+      if (bool_of_string opt_value)
       then Hashtbl.add activated_plugins plugin checks
     ) plugins;
   activated_plugins
@@ -70,11 +71,11 @@ let parse_interf source =
     Plugin_error.(print Format.err_formatter (Syntax_error source));
     None
 
-let is_source file = Filename.check_suffix file "ml"
-let is_interface file = Filename.check_suffix file "mli"
-let is_cmt file = Filename.check_suffix file "cmt"
-let is_cmt file = Filename.check_suffix file "cmt"
-let is_cmxs file = Filename.check_suffix file "cmxs"
+let is_source file = Filename.check_suffix file ".ml"
+let is_interface file = Filename.check_suffix file ".mli"
+let is_cmt file = Filename.check_suffix file ".cmt"
+let is_cmt file = Filename.check_suffix file ".cmt"
+let is_cmxs file = Filename.check_suffix file ".cmxs"
 
 let ( // ) = Filename.concat
 
@@ -95,37 +96,45 @@ let rec load_plugins list =
         Printf.eprintf "%S: No such file or directory.\n%!" file)
     list
 
-let register_default_sempatch () =
+let load_default_sempatch () =
   (* TODO: Fabrice: vérifier que le fichier existe, sinon prendre celui dans
      l'exécutable par défaut*)
   let
     module Default = Plugin_sempatch.SempatchPlugin.MakeLintPatch(struct
       let name = "Lint from semantic patches (default)"
-      let short_name = "sempatch-lint"
+      let short_name = "sempatch_lint_default"
       let details = "Lint from semantic patches (default)."
       let patches = Globals.default_patches
     end) in
   ()
 
-let register_default_plugins patches =
-  register_default_sempatch ();
+let load_sempatch_plugins patches =
   let
     module UserDefined = Plugin_sempatch.SempatchPlugin.MakeLintPatch(struct
       let name = "Lint from semantic patches (user defined)."
-      let short_name = "sempatch-lint"
+      let short_name = "sempatch_lint_user_defined"
       let details = "Lint from semantic patches (user defined)."
       let patches = patches
     end) in
   ()
 
+(* TODO: cago: move these functions to output modules. *)
 let output fmt plugins =
-  (* TO REMOVE : just for testing fmtput *)
+  let open Warning_types in
   Plugin.iter_plugins (fun plugin checks ->
       let module P = (val plugin : Plugin_types.PLUGIN) in
-
-      Warning.iter
-        (fun warning -> Warning.print fmt warning)
-        P.warnings) plugins
+      Lint.iter (fun cname lint ->
+          let module Lint = (val lint : Lint_types.LINT) in
+          let warnings = Lint.warnings in
+          let filters =
+            Globals.Config.get_option_value [P.short_name; cname; "warnings"] in
+          let arr = Parse_args.parse_options filters in
+          Warning.iter
+            (fun warning ->
+               if arr.(warning.instance.id - 1) then
+                 Warning.print fmt warning)
+            warnings) checks)
+    plugins
 
 let print plugins =
   output Format.err_formatter plugins
@@ -136,10 +145,12 @@ let to_text file plugins =
   output fmt plugins;
   close_out oc
 
-let scan ?output_text patches path =
-  register_default_plugins patches;
+let scan ?output_text path =
+  (* We filter plugins by using the .ocplint config file and/or
+     command line arguments. *)
   let plugins = filter_plugins Globals.plugins in
 
+  (* We filter the global ignored modules/files.  *)
   let all = filter_modules (scan_project path) !!ignored_files in
 
   (* All inputs for each analyze *)
@@ -148,11 +159,11 @@ let scan ?output_text patches path =
 
   let cmts =
     let files = List.filter is_cmt all in
-    List.map (fun file -> lazy (Cmt_format.read_cmt file)) files in
+    List.map (fun file -> file, lazy (Cmt_format.read_cmt file)) files in
 
   let asts_ml, asts_mli =
-    List.map (fun file -> lazy (parse_source file)) mls,
-    List.map (fun file -> lazy (parse_interf file)) mlis in
+    List.map (fun file -> file, lazy (parse_source file)) mls,
+    List.map (fun file -> file, lazy (parse_interf file)) mlis in
 
   Format.printf "Starting analyses...\n%!";
 

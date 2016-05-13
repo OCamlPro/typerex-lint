@@ -1,6 +1,6 @@
 File "testsuite/sempatch_comp_to_true/test_sempatch_comp_to_true.ml", line 1:
-  Missing interface for 'testsuite/sempatch_comp_to_true/test_sempatch_comp_to_true.ml'.
+  Warning 1: Missing interface for 'testsuite/sempatch_comp_to_true/test_sempatch_comp_to_true.ml'.
 File "testsuite/sempatch_comp_to_true/test_sempatch_comp_to_true.ml", line 3, characters 5-21:
-  Use 'condition' instead of 'condition = true'.
+  Warning 1: Use 'condition' instead of 'condition = true'.
 File "testsuite/sempatch_comp_to_true/test_sempatch_comp_to_true.ml", line 11, characters 5-22:
-  Use 'condition' instead of 'condition == true'.
+  Warning 1: Use 'condition' instead of 'condition == true'.

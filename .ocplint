@@ -10,12 +10,6 @@
 
 
 
-(* A style-checker for OCaml sources (code, documentation, interface, metrics, and typography). *)
-plugin_mascot = true
-
-(* Detect pattern with semantic patch *)
-sempatch = true
-
 (* Module to ignore during the lint. *)
 ignored_files = [
   "src/kernel/internal/parsing/parsetreeMap.ml";
@@ -23,12 +17,32 @@ ignored_files = [
   "src/kernel/internal/typing/typedtreeMap.ml";
   "src/kernel/internal/typing/typedtreeIter.ml";
 ]
+plugin_sempatch = {
 
+(* Detect pattern with semantic patch *)
+  flag = true
+  sempatch_lint_default = {
+
+(* Module to ignore durint the lint of "Lint from semantic patches (default)" *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "Lint from semantic patches (default)" *)
+    warnings = "+A"
+  }
+}
 plugin_core = {
 
 (* A style-checker for OCaml sources (code, documentation, interface, metrics, and typography). *)
-  enable = true
+  flag = true
   code_identifier_length = {
+
+(* Module to ignore durint the lint of "Code Identifier Length" *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "Code Identifier Length" *)
+    warnings = "+A"
 
 (* Identifiers with a shorter name will trigger a warning *)
     min_identifier_length = 2
@@ -38,7 +52,23 @@ plugin_core = {
   }
   code_length = {
 
+(* Module to ignore durint the lint of "Code Length" *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "Code Length" *)
+    warnings = "+A"
+
 (* Maximum line length *)
     max_line_length = 80
+  }
+  interface_missing = {
+
+(* Module to ignore durint the lint of "Missing interface" *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "Missing interface" *)
+    warnings = "+A"
   }
 }

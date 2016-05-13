@@ -1,14 +1,14 @@
 File "testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml", line 1:
-  Missing interface for 'testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml'.
+  Warning 1: Missing interface for 'testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml'.
 File "testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml", line 4, characters 5-25:
-  Use a pattern matching instead of comparing to `0`.
+  Warning 1: Use a pattern matching instead of comparing to `0`.
 File "testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml", line 6, characters 5-25:
-  Use a pattern matching instead of comparing to `1`.
+  Warning 1: Use a pattern matching instead of comparing to `1`.
 File "testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml", line 8, characters 5-25:
-  Use a pattern matching instead of comparing to `2`.
+  Warning 1: Use a pattern matching instead of comparing to `2`.
 File "testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml", line 10, characters 5-25:
-  Use a pattern matching instead of comparing to `3`.
+  Warning 1: Use a pattern matching instead of comparing to `3`.
 File "testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml", line 12, characters 5-25:
-  Use a pattern matching instead of comparing to `4`.
+  Warning 1: Use a pattern matching instead of comparing to `4`.
 File "testsuite/sempatch_empty_list_compare/test_sempatch_empty_list_cmp.ml", line 14, characters 5-25:
-  Use a pattern matching instead of comparing to `5`.
+  Warning 1: Use a pattern matching instead of comparing to `5`.

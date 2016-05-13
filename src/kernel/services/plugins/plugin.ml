@@ -18,6 +18,9 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+type t =
+  ((module Plugin_types.PLUGIN), (module Lint_types.LINT) Lint.t) Hashtbl.t
+
 let create () = Hashtbl.create 42
 
 let add = Hashtbl.replace

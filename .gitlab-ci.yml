@@ -14,7 +14,8 @@ build:
       if [ ! -d ${OPAMROOT} ]; then
         opam init default /var/cache/opam-repository
       fi
+    - opam switch 4.02.3
     - eval $(opam config env)
+    - opam install ocp-build menhir yojson
     - ./configure
-    - make opam-deps
     - make

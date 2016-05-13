@@ -22,11 +22,13 @@
     directory given in the command line with '--load' option. *)
 val load_plugins : string list -> unit
 
-(** [scan patches path] creates a default plugin with the given
-    sematic [patches] list files, scan the [path] and start the registered
+(** [load_sempatch_plugins files] load dynamically patch files in a specific
+    directory given in the command line with '--patches' option. *)
+val load_sempatch_plugins : string list -> unit
+
+(** [load_default_sempatch ()] load default semantic patch file. *)
+val load_default_sempatch : unit -> unit
+
+(** [scan patches path] scan the [path] and start the registered
     plugins/linters on the files in this path. *)
-val scan : 
-  ?output_text:string ->
-  string list ->
-  string ->
-  ((module Plugin_types.PLUGIN), (Input.input list) Globals.LintMap.t) Hashtbl.t
+val scan : ?output_text:string -> string -> Plugin.t
