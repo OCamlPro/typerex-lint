@@ -61,9 +61,15 @@ and apply2 :
         _
       } ->
       let bindings_final_states =
-        let states_list = List.map2 (fun binding_state binding ->
-            apply' (setloc binding.pvb_loc env) binding_state binding)
-          bindings_state bindings
+        let states_list =
+          Option.map
+            (
+              List.map2 (fun binding_state binding ->
+                  apply' (setloc binding.pvb_loc env) binding_state binding)
+                bindings_state
+            )
+            (List.truncate_as bindings bindings_state)
+          |> Option.value []
         in match states_list with
         | [] -> []
         | hd::tl -> List.fold_left (List.product_bind both) hd tl

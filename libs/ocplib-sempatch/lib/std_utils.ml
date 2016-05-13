@@ -196,6 +196,8 @@ sig
 
   val cons : 'a -> 'a list -> 'a list
 
+  val truncate_as : 'a list -> 'b list -> 'a list option
+
   val bind : ('a -> 'b t) -> 'a t -> 'b t
   val sum : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
   val product : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
@@ -222,6 +224,16 @@ struct
   let cons e l = e::l
 
   let sum = map2
+
+  let rec take n l = match n, l with
+    | 0, _ -> Some []
+    | n, (hd::tl) when n > 0 ->
+      Option.bind (take (n-1) tl) (fun l -> Some (cons hd l))
+    | _ -> None
+
+  let truncate_as l1 l2 =
+    let new_length = List.length l2 in
+    take new_length l1
 
   let bind f lst = List.map f lst |> List.flatten
   let product_bind f l1 l2 = List.map (fun x -> bind (f x) l2) l1 |> List.flatten
