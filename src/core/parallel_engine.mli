@@ -24,8 +24,8 @@ val lint :
   string list ->
   string list ->
   string list ->
-  Parsetree.structure option Lazy.t list ->
-  Parsetree.signature option Lazy.t list ->
-  Cmt_format.cmt_infos Lazy.t list ->
+  (string * Parsetree.structure option Lazy.t) list ->
+  (string * Parsetree.signature option Lazy.t) list ->
+  (string * Cmt_format.cmt_infos Lazy.t) list ->
   Plugin.t ->
   unit

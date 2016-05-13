@@ -159,11 +159,11 @@ let scan ?output_text path =
 
   let cmts =
     let files = List.filter is_cmt all in
-    List.map (fun file -> lazy (Cmt_format.read_cmt file)) files in
+    List.map (fun file -> file, lazy (Cmt_format.read_cmt file)) files in
 
   let asts_ml, asts_mli =
-    List.map (fun file -> lazy (parse_source file)) mls,
-    List.map (fun file -> lazy (parse_interf file)) mlis in
+    List.map (fun file -> file, lazy (parse_source file)) mls,
+    List.map (fun file -> file, lazy (parse_interf file)) mlis in
 
   Format.printf "Starting analyses...\n%!";
 

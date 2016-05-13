@@ -64,6 +64,24 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
   let create_option options short_help lhelp ty default =
     Globals.Config.create_option options short_help lhelp 0 ty default
 
+  let create_default_lint_option lint_short_name lint_long_name =
+    let details =
+      Printf.sprintf "Module to ignore durint the lint of %S" lint_long_name in
+    ignore @@
+    create_option [P.short_name; lint_short_name; "ignored_files"]
+      details
+      details
+      (SimpleConfig.list_option SimpleConfig.string_option)
+      [];
+    let details =
+      Printf.sprintf "Enable/Disable warnings from %S" lint_long_name in
+    ignore @@
+    create_option [P.short_name; lint_short_name; "warnings"]
+      details
+      details
+      SimpleConfig.string_option
+      "+A"
+
   let new_warning kinds ~short_name ~msg = (* TODO *)
     let open Warning_types in
     let warning_decl = { kinds; short_name; message = msg } in
@@ -153,9 +171,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       end in
       let lint = (module Lint : Lint_types.LINT) in
       register_main plugin C.short_name lint;
-      let details = Printf.sprintf "Enable/Disable warnings from %S" name in
-      ignore @@
-      create_option "warnings" details details SimpleConfig.string_option "+A"
+      create_default_lint_option C.short_name C.name
   end (* MakeLintPatch *)
 
   module MakeLint (C : Lint_types.LintArg) = struct
@@ -227,9 +243,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       module R = Register (struct let input = Input.InAll All.main end)
     end
     let () =
-      let details = Printf.sprintf "Enable/Disable warnings from %S" name in
-      ignore @@
-      create_option "warnings" details details SimpleConfig.string_option "+A"
+      create_default_lint_option C.short_name C.name
   end (* MakeLint *)
 
   let () =
