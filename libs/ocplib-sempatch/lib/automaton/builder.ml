@@ -52,11 +52,14 @@ and match_apply left right =
     [A.(Expr (Apply (left, right)))]
   | _ -> []
 
-let match_let left right =
+let match_let isrec left right =
   basic_state @@ fun _self expr ->
   match expr with
-  | { pexp_desc = Pexp_let _; _ } ->
-    [A.(Expr (Let (left, right)))]
+  | { pexp_desc = Pexp_let (rec_flag, _, _); _ } ->
+    if rec_flag = isrec then
+      [A.(Expr (Let (left, right)))]
+    else
+      []
   | _ -> []
 
 and match_var_pattern var =
@@ -142,8 +145,8 @@ let rec from_expr metas expr =
     match_const c
   | Pexp_apply (f, ["", arg]) ->
     match_apply (from_expr metas f) (from_expr metas arg)
-  | Pexp_let (_, bindings, expr) ->
-    match_let (from_value_bindings metas bindings) (from_expr metas expr)
+  | Pexp_let (isrec, bindings, expr) ->
+    match_let isrec (from_value_bindings metas bindings) (from_expr metas expr)
   | Pexp_extension ({ Asttypes.txt = "__sempatch_inside"; _},
                     PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
     states_or catchall_expr (from_expr metas e)
