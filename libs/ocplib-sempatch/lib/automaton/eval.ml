@@ -95,7 +95,12 @@ and apply2 :
             (apply' (setloc e_then.pexp_loc env) s_then (e_then))
         )
         (apply' (setloc e_else.pexp_loc env) s_else e_else)
-
+    | A.Expr (A.Construct None), _ -> [Builder.final, env]
+    | A.Expr (A.Construct (Some expr_state)), {
+        pexp_desc = Pexp_construct (_, (Some expr));
+        _
+      } ->
+      apply' (setloc expr.pexp_loc env) expr_state expr
     | A.Pattern _, {
         ppat_loc = l;
         _

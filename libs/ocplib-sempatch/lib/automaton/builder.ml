@@ -60,6 +60,14 @@ and match_ifthenelse eif ethen eelse =
     [A.(Expr (Ifthenelse (eif, ethen, eelse)))]
   | _ -> []
 
+and match_construct id sub_state =
+  basic_state @@ fun _self expr ->
+  match expr with
+  | { pexp_desc = Pexp_construct ({ Asttypes.txt = ast_id; _ }, _); _}
+    when id = ast_id ->
+    [A.(Expr (Construct sub_state))]
+  | _ -> []
+
 let match_let isrec left right =
   basic_state @@ fun _self expr ->
   match expr with
@@ -151,6 +159,8 @@ let rec from_expr metas expr =
     match_var id
   | Pexp_constant c ->
     match_const c
+  | Pexp_construct ({ Asttypes.txt = id; _ }, expr_opt) ->
+    match_construct id (Option.map (from_expr metas) expr_opt)
   | Pexp_apply (f, ["", arg]) ->
     match_apply (from_expr metas f) (from_expr metas arg)
   | Pexp_let (isrec, bindings, expr) ->
