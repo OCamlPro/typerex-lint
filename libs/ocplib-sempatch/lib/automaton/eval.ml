@@ -77,6 +77,25 @@ and apply2 :
       List.product_bind both
         (apply' (setloc expr.pexp_loc env) expr_state (expr))
         bindings_final_states
+    | A.Expr (A.Ifthenelse (s_if, s_then, None)), {
+        pexp_desc = Pexp_ifthenelse (e_if, e_then, None);
+        _
+      } ->
+      List.product_bind both
+        (apply' (setloc e_if.pexp_loc env) s_if (e_if))
+        (apply' (setloc e_then.pexp_loc env) s_then (e_then))
+    | A.Expr (A.Ifthenelse (s_if, s_then, Some s_else)), {
+        pexp_desc = Pexp_ifthenelse (e_if, e_then, Some e_else);
+        _
+      } ->
+      List.product_bind both
+        (
+          List.product_bind both
+            (apply' (setloc e_if.pexp_loc env) s_if (e_if))
+            (apply' (setloc e_then.pexp_loc env) s_then (e_then))
+        )
+        (apply' (setloc e_else.pexp_loc env) s_else e_else)
+
     | A.Pattern _, {
         ppat_loc = l;
         _

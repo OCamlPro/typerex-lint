@@ -1,6 +1,7 @@
 module A = Automaton
 module AE = Ast_element
 open Parsetree
+open Std_utils
 
 let final = A.{
     transitions = [];
@@ -50,6 +51,13 @@ and match_apply left right =
   match expr with
   | { pexp_desc = Pexp_apply _; _} ->
     [A.(Expr (Apply (left, right)))]
+  | _ -> []
+
+and match_ifthenelse eif ethen eelse =
+  basic_state @@ fun _self expr ->
+  match expr.pexp_desc with
+  | Pexp_ifthenelse _ ->
+    [A.(Expr (Ifthenelse (eif, ethen, eelse)))]
   | _ -> []
 
 let match_let isrec left right =
@@ -147,6 +155,8 @@ let rec from_expr metas expr =
     match_apply (from_expr metas f) (from_expr metas arg)
   | Pexp_let (isrec, bindings, expr) ->
     match_let isrec (from_value_bindings metas bindings) (from_expr metas expr)
+  | Pexp_ifthenelse (eif, ethen, eelse) ->
+    match_ifthenelse (from_expr metas eif) (from_expr metas ethen) (Option.map (from_expr metas) eelse)
   | Pexp_extension ({ Asttypes.txt = "__sempatch_inside"; _},
                     PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
     states_or catchall_expr (from_expr metas e)
