@@ -4,7 +4,8 @@ module A = Automaton
 
 let setloc = Match.set_current_location
 
-let both (s1, l1) (s2, l2) =
+let both
+  = fun (s1, l1) (s2, l2) ->
   if not A.(s1.final && s2.final) then
     []
   else
@@ -12,14 +13,14 @@ let both (s1, l1) (s2, l2) =
       List.bind (Option.to_list)
         [Match.get_location l1; Match.get_location l2]
     and merged_matches = {
-      l1 with
+      l2 with
       Match.substitutions = Substitution.merge
           (Match.get_substitutions l1)
           (Match.get_substitutions l2)
       ;
     }
     in
-    List.map (fun loc -> s1, { merged_matches with Match.location = Some loc })
+    List.map (fun loc -> Builder.final, { merged_matches with Match.location = Some loc })
       locations
 
 let rec apply' : type a. A.meta_info -> a A.t -> a -> (a A.t * A.meta_info) list
@@ -55,10 +56,33 @@ and apply2 :
       List.product_bind both
         (apply' (setloc e1.pexp_loc env) s1 (e1))
         (apply' (setloc e2.pexp_loc env) s2 (e2))
+    | A.Expr (A.Let (bindings_state, expr_state)), {
+        pexp_desc = Pexp_let (_, bindings, expr);
+        _
+      } ->
+      let bindings_final_states =
+        let states_list = List.map2 (fun binding_state binding ->
+            apply' (setloc binding.pvb_loc env) binding_state binding)
+          bindings_state bindings
+        in match states_list with
+        | [] -> []
+        | hd::tl -> List.fold_left (List.product_bind both) hd tl
+      in
+      List.product_bind both
+        (apply' (setloc expr.pexp_loc env) expr_state (expr))
+        bindings_final_states
     | A.Pattern _, {
         ppat_loc = l;
         _
       } -> [Builder.final, setloc l env]
+    | A.Value_binding { A.vb_pat; vb_expr; }, {
+        pvb_pat = pat;
+        pvb_expr = expr;
+        _
+      } ->
+      List.product_bind both
+        (apply' (setloc expr.pexp_loc env) vb_expr expr)
+        (apply' (setloc pat.ppat_loc env) vb_pat pat)
     | _ -> []
 
 and dispatch : type a. (a A.state_bundle * A.meta_info) list

@@ -14,6 +14,7 @@ when: "e1 = e2"
 - e1 := !e2 - 1
 + decr e1
 ```
+<<<<<<< a40eee8674b0cb18f07eb4eca2ee8d0102ed4478
 @CompToFalse
 expressions: cond
 message: "Use 'not $cond' instead of '$cond = false'."

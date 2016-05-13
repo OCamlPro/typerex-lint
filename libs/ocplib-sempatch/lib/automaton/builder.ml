@@ -89,6 +89,24 @@ and match_any_expr id = A.{
     final = false;
   }
 
+and match_any_pattern id = A.{
+    transitions = [
+      false,
+      fun _self meta pat ->
+        [
+          Final,
+          {meta with
+           Match.substitutions =
+             Substitution.add_pattern
+               id
+               pat
+               meta.Match.substitutions
+          }
+        ]
+    ];
+    final = false;
+  }
+
 let catchall_expr =
   A.{
     transitions = [
@@ -112,24 +130,42 @@ let trash = A.{
     final = false;
   }
 
-let from_expr metas expression =
-  let rec build_automaton expr =
-    match expr.pexp_desc with
-    | Pexp_ident { Asttypes.txt = Longident.Lident id; _ }
-      when List.mem id metas
-      ->
-      match_any_expr id
-    | Pexp_ident { Asttypes.txt = id; _ } ->
-      match_var id
-    | Pexp_constant c ->
-      match_const c
-    | Pexp_apply (f, ["", arg]) ->
-      match_apply (build_automaton f) (build_automaton arg)
-    | Pexp_extension ({ Asttypes.txt = "__sempatch_inside"; _},
-                      PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
-      states_or catchall_expr (build_automaton e)
-    | Pexp_extension ({ Asttypes.txt = "__sempatch_report"; _},
-                      PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
-      (build_automaton e |> make_report)
-    | _ -> assert false
-  in build_automaton expression
+let rec from_expr metas expr =
+  match expr.pexp_desc with
+  | Pexp_ident { Asttypes.txt = Longident.Lident id; _ }
+    when List.mem id metas
+    ->
+    match_any_expr id
+  | Pexp_ident { Asttypes.txt = id; _ } ->
+    match_var id
+  | Pexp_constant c ->
+    match_const c
+  | Pexp_apply (f, ["", arg]) ->
+    match_apply (from_expr metas f) (from_expr metas arg)
+  | Pexp_let (_, bindings, expr) ->
+    match_let (from_value_bindings metas bindings) (from_expr metas expr)
+  | Pexp_extension ({ Asttypes.txt = "__sempatch_inside"; _},
+                    PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
+    states_or catchall_expr (from_expr metas e)
+  | Pexp_extension ({ Asttypes.txt = "__sempatch_report"; _},
+                    PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
+    (from_expr metas e |> make_report)
+  | _ -> assert false
+
+and from_pattern metas pattern =
+  match pattern.ppat_desc with
+  | Ppat_var { Asttypes.txt = id; _ }
+    when List.mem id metas
+    ->
+    match_any_pattern id
+  | Ppat_var { Asttypes.txt = id; _ } ->
+    match_var_pattern id
+  | _ -> assert false
+
+and from_value_binding metas { pvb_expr; pvb_pat; _ } =
+  match_value_binding
+    (from_pattern metas pvb_pat)
+    (from_expr metas pvb_expr)
+
+and from_value_bindings metas =
+  List.map (from_value_binding metas)

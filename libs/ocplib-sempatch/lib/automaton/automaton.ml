@@ -2,7 +2,7 @@ type meta_info = Match.t
 
 type expr_states =
   | Apply of Parsetree.expression t * Parsetree.expression t
-  | Let of (Parsetree.value_binding list) t * Parsetree.expression t
+  | Let of (Parsetree.value_binding) t list * Parsetree.expression t
 
 and val_binding = {
   vb_pat: Parsetree.pattern t;
