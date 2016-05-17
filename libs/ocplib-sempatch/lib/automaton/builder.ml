@@ -42,59 +42,54 @@ let match_var var =
   match_expr @@ function
   | { pexp_desc = Pexp_ident ({ Asttypes.txt = id; _ }); _ }
     when id = var ->
-    [A.Final]
+    [[final ()]]
   | _ -> []
 
 and match_const const =
   match_expr @@ function
   | { pexp_desc = Pexp_constant cst; _ }
     when cst = const ->
-    [A.Final]
+    [[final ()]]
   | _ -> []
 
 and match_apply left right =
-  match_expr @@ fun expr ->
-  match expr with
+  match_expr @@ function
   | { pexp_desc = Pexp_apply _; _} ->
-    [A.(Expr (Apply (left, right)))]
+    [[left; right]]
   | _ -> []
 
 and match_ifthenelse eif ethen eelse =
-  match_expr @@ fun expr ->
-  match expr.pexp_desc with
-  | Pexp_ifthenelse _ ->
-    [A.(Expr (Ifthenelse (eif, ethen, eelse)))]
+  match_expr @@ function
+  | { pexp_desc = Pexp_ifthenelse _; _ } ->
+    [[eif; ethen; eelse]]
   | _ -> []
 
 and match_construct id sub_state =
-  match_expr @@ fun expr ->
-  match expr with
+  match_expr @@ function
   | { pexp_desc = Pexp_construct ({ Asttypes.txt = ast_id; _ }, _); _}
     when id = ast_id ->
-    [A.(Expr (Construct sub_state))]
+    [[sub_state]]
   | _ -> []
 
-let match_let isrec left right =
-  match_expr @@ fun expr ->
-  match expr with
+let match_let isrec bindings_states expr_state =
+  match_expr @@ function
   | { pexp_desc = Pexp_let (rec_flag, _, _); _ } ->
     if rec_flag = isrec then
-      [A.(Expr (Let (left, right)))]
+      [expr_state :: bindings_states]
     else
       []
   | _ -> []
 
 and match_var_pattern var =
-  match_pat @@ fun pat ->
-  match pat with
+  match_pat @@ function
   | { ppat_desc = Ppat_var ({ Asttypes.txt = id; _ }); _ }
     when id = var ->
-    [A.Final]
+    [[final ()]]
   | _ -> []
 
 and match_value_binding pattern expr =
   basic_state @@ fun _ ->
-  [A.(Value_binding { vb_pat = pattern; vb_expr = expr; } ) ]
+  [[pattern; expr]]
 
 and match_any_expr id = A.{
     transitions = [
@@ -103,7 +98,7 @@ and match_any_expr id = A.{
         match ast_elt with
         | AE.Expression expr ->
         [
-          Final,
+          [final ()],
           {meta with
            Match.substitutions =
              Substitution.add_expr
@@ -124,7 +119,7 @@ and match_any_pattern id = A.{
         match ast_elt with
         | AE.Pattern pat ->
         [
-          Final,
+          [final ()],
           {meta with
            Match.substitutions =
              Substitution.add_pattern
@@ -139,18 +134,51 @@ and match_any_pattern id = A.{
   }
 
 let catchall () =
+  let open A in
   let state =
-    A.{
+    {
       transitions = [];
       final = false;
     }
-  in state.A.transitions <-
-    A.[
+  in
+  let dispatch_list length =
+    let rec list_make = function
+      | 0 -> []
+      | n when n > 0 -> () :: list_make (n-1)
+      | _ -> raise (Invalid_argument "list_make")
+    in
+    let l = list_make length
+    in
+    List.mapi (fun idx _ ->
+        List.mapi (fun jdx _ ->
+            if idx = jdx then state else final ()
+          )
+          l
+      )
+      l
+  in
+  let catchall_expressions = function
+    | Pexp_apply _ ->
+      dispatch_list 2
+    | Pexp_construct _ ->
+      dispatch_list 1
+    | Pexp_ifthenelse _ ->
+      dispatch_list 3
+    | Pexp_let _ ->
+      dispatch_list 2
+    | _ -> []
+  and catchall_str_items = function
+    | Pstr_eval _ ->
+      dispatch_list 1
+    | _ -> []
+  in
+    state.transitions <-
+    [
       false,
-      ignore_meta @@ fun expr ->
-      match expr with
-      | AE.Expression { pexp_desc = Pexp_apply _; _ } ->
-        [ Expr (Apply (final (), state)); Expr (Apply (state, final ())); ]
+      ignore_meta @@ function
+      | AE.Expression e -> catchall_expressions e.pexp_desc
+      | AE.Structure_item i -> catchall_str_items i.pstr_desc
+      | AE.Structure s -> dispatch_list (List.length s)
       | _ -> []
     ];
   state
@@ -171,7 +199,7 @@ let rec from_expr metas expr =
   | Pexp_constant c ->
     match_const c
   | Pexp_construct ({ Asttypes.txt = id; _ }, expr_opt) ->
-    match_construct id (Option.map (from_expr metas) expr_opt)
+    match_construct id (from_maybe_expr metas expr_opt)
   | Pexp_apply (f, ["", arg]) ->
     match_apply (from_expr metas f) (from_expr metas arg)
   | Pexp_let (isrec, bindings, expr) ->
@@ -180,7 +208,7 @@ let rec from_expr metas expr =
     match_ifthenelse
       (from_expr metas eif)
       (from_expr metas ethen)
-      (Option.map (from_expr metas) eelse)
+      (from_maybe_expr metas eelse)
   | Pexp_extension ({ Asttypes.txt = "__sempatch_inside"; _},
                     PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
     add_elements_from (catchall ()) (from_expr metas e)
@@ -188,6 +216,21 @@ let rec from_expr metas expr =
                     PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
     (from_expr metas e |> make_report)
   | _ -> assert false
+
+and from_maybe_expr metas = function
+  | None ->
+    begin
+      basic_state @@ function
+      | AE.Expression_opt None -> [[final ()]]
+      | _ -> []
+    end
+  | Some expr ->
+    begin
+      let next_state = [[from_expr metas expr]] in
+      basic_state @@ function
+      | AE.Expression_opt (Some _) -> next_state
+      | _ -> []
+    end
 
 and from_pattern metas pattern =
   match pattern.ppat_desc with

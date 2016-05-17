@@ -48,15 +48,15 @@ let rec apply' = fun env state node ->
 
 and apply2 = fun state_bun env expr ->
     match state_bun, expr with
-    | A.Final, _ -> [Builder.final (), env]
-    | A.Expr (A.Apply (s1, s2)), AE.Expression {
+      | [single], _ when single.A.final -> [single, env]
+      | [s1; s2], AE.Expression {
         pexp_desc = Pexp_apply (e1, ["", e2]);
         _
       } ->
       List.product_bind both
         (apply' (setloc e1.pexp_loc env) s1 (AE.Expression e1))
         (apply' (setloc e2.pexp_loc env) s2 (AE.Expression e2))
-    | A.Expr (A.Let (bindings_state, expr_state)), AE.Expression {
+      | expr_state :: bindings_state, AE.Expression {
         pexp_desc = Pexp_let (_, bindings, expr);
         _
       } ->
@@ -65,7 +65,10 @@ and apply2 = fun state_bun env expr ->
           Option.map
             (
               List.map2 (fun binding_state binding ->
-                  apply' (setloc binding.pvb_loc env) binding_state (AE.Value_binding binding))
+                  apply'
+                    (setloc binding.pvb_loc env)
+                    binding_state
+                    (AE.Value_binding binding))
                 bindings_state
             )
             (List.truncate_as bindings bindings_state)
@@ -77,35 +80,27 @@ and apply2 = fun state_bun env expr ->
       List.product_bind both
         (apply' (setloc expr.pexp_loc env) expr_state (AE.Expression expr))
         bindings_final_states
-    | A.Expr (A.Ifthenelse (s_if, s_then, None)), AE.Expression {
-        pexp_desc = Pexp_ifthenelse (e_if, e_then, None);
+      | [s_if; s_then; s_else], AE.Expression {
+          pexp_desc = Pexp_ifthenelse (e_if, e_then, e_else);
+          _
+        } ->
+        List.product_bind both
+          (
+            List.product_bind both
+              (apply' (setloc e_if.pexp_loc env) s_if (AE.Expression e_if))
+              (apply' (setloc e_then.pexp_loc env) s_then (AE.Expression e_then))
+          )
+          (apply' (setloc e_then.pexp_loc env) s_else (AE.Expression_opt e_else))
+      | [expr_state], AE.Expression {
+        pexp_desc = Pexp_construct (_, expr);
         _
       } ->
-      List.product_bind both
-        (apply' (setloc e_if.pexp_loc env) s_if (AE.Expression e_if))
-        (apply' (setloc e_then.pexp_loc env) s_then (AE.Expression e_then))
-    | A.Expr (A.Ifthenelse (s_if, s_then, Some s_else)), AE.Expression {
-        pexp_desc = Pexp_ifthenelse (e_if, e_then, Some e_else);
-        _
-      } ->
-      List.product_bind both
-        (
-          List.product_bind both
-            (apply' (setloc e_if.pexp_loc env) s_if (AE.Expression e_if))
-            (apply' (setloc e_then.pexp_loc env) s_then (AE.Expression e_then))
-        )
-        (apply' (setloc e_else.pexp_loc env) s_else (AE.Expression e_else))
-    | A.Expr (A.Construct None), _ -> [Builder.final (), env]
-    | A.Expr (A.Construct (Some expr_state)), AE.Expression {
-        pexp_desc = Pexp_construct (_, (Some expr));
-        _
-      } ->
-      apply' (setloc expr.pexp_loc env) expr_state (AE.Expression expr)
-    | A.Pattern _, AE.Pattern {
+      apply' env expr_state (AE.Expression_opt expr)
+    | _, AE.Pattern {
         ppat_loc = l;
         _
       } -> [Builder.final (), setloc l env]
-    | A.Value_binding { A.vb_pat; vb_expr; }, AE.Value_binding {
+    | [vb_pat; vb_expr;], AE.Value_binding {
         pvb_pat = pat;
         pvb_expr = expr;
         _
@@ -113,6 +108,8 @@ and apply2 = fun state_bun env expr ->
       List.product_bind both
         (apply' (setloc expr.pexp_loc env) vb_expr (AE.Expression expr))
         (apply' (setloc pat.ppat_loc env) vb_pat (AE.Pattern pat))
+    | [state], AE.Expression_opt (Some expr_opt) ->
+      apply' env state (AE.Expression expr_opt)
     | _ -> []
 
 and dispatch = fun state_bundles expr ->
