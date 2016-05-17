@@ -21,7 +21,7 @@ let both
     }
     in
     List.map (
-      fun loc -> Builder.final,
+      fun loc -> Builder.final (),
                  { merged_matches with Match.location = Some loc }
       )
       locations
@@ -40,7 +40,7 @@ let rec apply' : type a. A.meta_info -> a A.t -> a -> (a A.t * A.meta_info) list
                Match.get_location env
            in
            let env = { env with Match.location = new_loc } in
-           (trans state env node)
+           (trans env node)
         )
         state.A.transitions
     in
@@ -51,7 +51,7 @@ and apply2 :
   (a A.t * A.meta_info) list =
   fun state_bun env expr ->
     match state_bun, expr with
-    | A.Final, _ -> [Builder.final, env]
+    | A.Final, _ -> [Builder.final (), env]
     | A.Expr (A.Apply (s1, s2)), {
         pexp_desc = Pexp_apply (e1, ["", e2]);
         _
@@ -98,7 +98,7 @@ and apply2 :
             (apply' (setloc e_then.pexp_loc env) s_then (e_then))
         )
         (apply' (setloc e_else.pexp_loc env) s_else e_else)
-    | A.Expr (A.Construct None), _ -> [Builder.final, env]
+    | A.Expr (A.Construct None), _ -> [Builder.final (), env]
     | A.Expr (A.Construct (Some expr_state)), {
         pexp_desc = Pexp_construct (_, (Some expr));
         _
@@ -107,7 +107,7 @@ and apply2 :
     | A.Pattern _, {
         ppat_loc = l;
         _
-      } -> [Builder.final, setloc l env]
+      } -> [Builder.final (), setloc l env]
     | A.Value_binding { A.vb_pat; vb_expr; }, {
         pvb_pat = pat;
         pvb_expr = expr;

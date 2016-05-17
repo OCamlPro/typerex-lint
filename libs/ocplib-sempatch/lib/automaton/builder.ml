@@ -3,7 +3,7 @@ module AE = Ast_element
 open Parsetree
 open Std_utils
 
-let final = A.{
+let final () = A.{
     transitions = [];
     final = true;
   }
@@ -14,13 +14,13 @@ let make_report s =
     }
 
 
-let states_or s1 s2 =
-  A.{
-    transitions = s1.transitions @ s2.transitions;
-    final = s1.final || s2.final;
-  }
+let add_elements_from s1 s2 =
+  let open A in
+  s1.transitions <- s1.transitions @ s2.transitions;
+  s1.final <- s1.final || s2.final;
+  s1
 
-let ignore_meta f x m y = List.map (fun elt -> elt, m) (f x y)
+let ignore_meta f m y = List.map (fun elt -> elt, m) (f y)
 
 let basic_state f = A.{
     transitions = [
@@ -31,7 +31,7 @@ let basic_state f = A.{
   }
 
 let match_var var =
-  basic_state @@ fun _self expr ->
+  basic_state @@ fun expr ->
   match expr with
   | { pexp_desc = Pexp_ident ({ Asttypes.txt = id; _ }); _ }
     when id = var ->
@@ -39,7 +39,7 @@ let match_var var =
   | _ -> []
 
 and match_const const =
-  basic_state @@ fun _self expr ->
+  basic_state @@ fun expr ->
   match expr with
   | { pexp_desc = Pexp_constant cst; _ }
     when cst = const ->
@@ -47,21 +47,21 @@ and match_const const =
   | _ -> []
 
 and match_apply left right =
-  basic_state @@ fun _self expr ->
+  basic_state @@ fun expr ->
   match expr with
   | { pexp_desc = Pexp_apply _; _} ->
     [A.(Expr (Apply (left, right)))]
   | _ -> []
 
 and match_ifthenelse eif ethen eelse =
-  basic_state @@ fun _self expr ->
+  basic_state @@ fun expr ->
   match expr.pexp_desc with
   | Pexp_ifthenelse _ ->
     [A.(Expr (Ifthenelse (eif, ethen, eelse)))]
   | _ -> []
 
 and match_construct id sub_state =
-  basic_state @@ fun _self expr ->
+  basic_state @@ fun expr ->
   match expr with
   | { pexp_desc = Pexp_construct ({ Asttypes.txt = ast_id; _ }, _); _}
     when id = ast_id ->
@@ -69,7 +69,7 @@ and match_construct id sub_state =
   | _ -> []
 
 let match_let isrec left right =
-  basic_state @@ fun _self expr ->
+  basic_state @@ fun expr ->
   match expr with
   | { pexp_desc = Pexp_let (rec_flag, _, _); _ } ->
     if rec_flag = isrec then
@@ -79,7 +79,7 @@ let match_let isrec left right =
   | _ -> []
 
 and match_var_pattern var =
-  basic_state @@ fun _self pat ->
+  basic_state @@ fun pat ->
   match pat with
   | { ppat_desc = Ppat_var ({ Asttypes.txt = id; _ }); _ }
     when id = var ->
@@ -87,13 +87,13 @@ and match_var_pattern var =
   | _ -> []
 
 and match_value_binding pattern expr =
-  basic_state @@ fun _self _ ->
+  basic_state @@ fun _ ->
   [A.(Value_binding { vb_pat = pattern; vb_expr = expr; } ) ]
 
 and match_any_expr id = A.{
     transitions = [
       false,
-      fun _self meta expr ->
+      fun meta expr ->
         [
           Final,
           {meta with
@@ -111,7 +111,7 @@ and match_any_expr id = A.{
 and match_any_pattern id = A.{
     transitions = [
       false,
-      fun _self meta pat ->
+      fun meta pat ->
         [
           Final,
           {meta with
@@ -126,25 +126,29 @@ and match_any_pattern id = A.{
     final = false;
   }
 
-let catchall_expr =
-  A.{
-    transitions = [
+let catchall_expr () =
+  let state =
+    A.{
+      transitions = [];
+      final = false;
+    }
+  in state.A.transitions <-
+    A.[
       false,
-      ignore_meta @@ fun self expr ->
+      ignore_meta @@ fun expr ->
       match expr with
       | { pexp_desc = Pexp_apply _; _ } ->
         [
-          Expr (Apply (final, self));
-          Expr (Apply (self, final));
+          Expr (Apply (final (), state));
+          Expr (Apply (state, final ()));
         ]
       | { pexp_desc = Pexp_ident _; _} ->
         []
       | _ -> []
     ];
-    final = false;
-  }
+  state
 
-let trash = A.{
+let trash () = A.{
     transitions = [];
     final = false;
   }
@@ -172,7 +176,7 @@ let rec from_expr metas expr =
       (Option.map (from_expr metas) eelse)
   | Pexp_extension ({ Asttypes.txt = "__sempatch_inside"; _},
                     PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
-    states_or catchall_expr (from_expr metas e)
+    add_elements_from (catchall_expr ()) (from_expr metas e)
   | Pexp_extension ({ Asttypes.txt = "__sempatch_report"; _},
                     PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
     (from_expr metas e |> make_report)

@@ -23,13 +23,13 @@ and _ state_bundle =
 
 and 'a transition =
   (bool *
-   ('a t -> meta_info -> 'a  -> ('a state_bundle * meta_info) list)
+   (meta_info -> 'a  -> ('a state_bundle * meta_info) list)
   )
 
 and 'a t = {
   (* The boolean indicates whether the transition starts an expression
      to be reported *)
-  transitions : 'a transition list;
+  mutable transitions : 'a transition list;
   (* Whether this state is a final state *)
-  final: bool;
+  mutable final: bool;
 }
