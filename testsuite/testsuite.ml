@@ -25,6 +25,7 @@ let out = "ocp-lint.out"
 let err = "ocp-lint.err"
 let output = "ocp-lint.output"
 let result = "ocp-lint.result"
+let sempatch_file = "sempatch.md"
 
 (* Testsuite programs *)
 let diff = "diff"
@@ -62,11 +63,25 @@ let check_tests test_dirs =
   let check_test dir = run_diff dir, dir in
   List.map check_test test_dirs
 
+let starts_with str ~substring =
+  let len_sub = String.length substring in
+  str = (String.sub str 0 len_sub)
+
 let run_ocp_lint ocplint dir =
   let output = dir // output in
   let project_arg = "--project" in
   let output_arg = "--output-txt" in
-  let args = [| ocplint; project_arg; dir; output_arg; output |] in
+  let sempatch_args =
+    if Sys.file_exists (dir // sempatch_file)
+    then
+      [| "--load-patches"; dir //sempatch_file |]
+    else
+      [||]
+  in
+  let args = Array.append
+      [| ocplint; project_arg; dir; output_arg; output |]
+      sempatch_args
+  in
   let status = run_command ocplint args dir in
   match status with
   | Unix.WEXITED 0   -> ()
@@ -86,8 +101,8 @@ let find_directories parent =
 let print_result res =
   List.iter (fun (diff, dir) ->
       if diff
-      then Printf.printf "  [PASS] %S\n%!" dir
-      else Printf.printf "  [FAIL] %S\n%!" dir)
+      then Printf.printf "  \027[32m[PASS]\027[m %S\n%!" dir
+      else Printf.printf "  \027[31m[FAIL]\027[m %S\n%!" dir)
     res;
   let succeed = List.filter (fun (diff, _) -> diff) res in
   let n_succ = List.length succeed in
