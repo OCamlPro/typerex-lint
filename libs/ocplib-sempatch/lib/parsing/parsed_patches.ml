@@ -9,7 +9,7 @@ struct
     guard : Guard.t list;
   }
 
-  type body = Parsetree.expression Automaton.t
+  type body = Automaton.t
 
   type patch = {
     header: header;

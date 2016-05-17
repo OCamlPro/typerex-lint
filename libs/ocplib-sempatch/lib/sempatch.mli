@@ -1,11 +1,10 @@
 module Ast_element:
 sig
-  type t = Ast_element.t =
-    | Expression of Parsetree.expression
-    | String of string
-    | Pattern of Parsetree.pattern
+  type t = Ast_element.t
 
   val to_string : t -> string
+
+  val from_expr : Parsetree.expression -> t
 end
 
 module Substitution:

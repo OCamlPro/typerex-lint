@@ -1,35 +1,31 @@
 type meta_info = Match.t
 
 type expr_states =
-  | Apply of Parsetree.expression t * Parsetree.expression t
-  | Let of (Parsetree.value_binding) t list * Parsetree.expression t
-  | Ifthenelse of Parsetree.expression t
-                  * Parsetree.expression t
-                  * Parsetree.expression t option
-  | Construct of Parsetree.expression t option
+  | Apply of t * t
+  | Let of t list * t
+  | Ifthenelse of t * t * t option
+  | Construct of t option
 
 and val_binding = {
-  vb_pat: Parsetree.pattern t;
-  vb_expr : Parsetree.expression t;
+  vb_pat: t;
+  vb_expr : t;
 }
 
 and pattern
 
-and _ state_bundle =
-  | Expr : expr_states -> Parsetree.expression state_bundle
-  | Value_binding : val_binding -> Parsetree.value_binding state_bundle
-  | Pattern : pattern -> Parsetree.pattern state_bundle
-  | Final : 'a state_bundle
+and state_bundle =
+  | Expr of expr_states
+  | Value_binding of val_binding
+  | Pattern of pattern
+  | Final
 
-and 'a transition =
-  (bool *
-   (meta_info -> 'a  -> ('a state_bundle * meta_info) list)
-  )
+and transition =
+  bool * (meta_info -> Ast_element.t -> (state_bundle * meta_info) list)
 
-and 'a t = {
+and t = {
   (* The boolean indicates whether the transition starts an expression
      to be reported *)
-  mutable transitions : 'a transition list;
+  mutable transitions : transition list;
   (* Whether this state is a final state *)
   mutable final: bool;
 }

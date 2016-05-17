@@ -167,7 +167,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
           List.iteri (fun i patches ->
               let matches =
                 Patch.parallel_apply
-                  patches (Ast_element.Expression expr) in
+                  patches (Ast_element.from_expr expr) in
               List.iter (fun matching ->
                   let patch =
                     List.find
