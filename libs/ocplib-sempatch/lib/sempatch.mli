@@ -4,7 +4,7 @@ sig
 
   val to_string : t -> string
 
-  val from_expr : Parsetree.expression -> t
+  val from_structure : Parsetree.structure -> t
 end
 
 module Substitution:

@@ -170,6 +170,8 @@ let catchall () =
   and catchall_str_items = function
     | Pstr_eval _ ->
       dispatch_list 1
+    | Pstr_value _ ->
+       dispatch_list 2
     | _ -> []
   in
     state.transitions <-
@@ -178,7 +180,7 @@ let catchall () =
       ignore_meta @@ function
       | AE.Expression e -> catchall_expressions e.pexp_desc
       | AE.Structure_item i -> catchall_str_items i.pstr_desc
-      | AE.Structure s -> dispatch_list (List.length s)
+      | AE.Structure _ -> dispatch_list 2
       | _ -> []
     ];
   state

@@ -173,4 +173,4 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
     body = Builder.from_expr !meta_exprs_in_pre_patch processed_before_patch;
   }
 
-let preprocess_src_expr = curryfying_mapper.Ast_mapper.expr curryfying_mapper
+let preprocess_src_expr = curryfying_mapper.Ast_mapper.structure curryfying_mapper

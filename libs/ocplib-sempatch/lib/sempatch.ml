@@ -29,7 +29,7 @@ struct
 
   let apply patch ast = let open Ast_element in
     match ast with
-    | Expression e ->
+    | Structure e ->
       let
         results = Ast_pattern_matcher.apply patch e
       in
