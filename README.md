@@ -1,4 +1,5 @@
 [![Travis-CI Build Status](https://travis-ci.org/OCamlPro/typerex-lint.svg?branch=master)](https://travis-ci.org/OCamlPro/typerex-lint)
+[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/9b6liqyly6fcp3s0/branch/master?svg=true)](https://ci.appveyor.com/project/OCamlPro-Bozman/typerex-lint)
 
 # The OCaml Style Checker
 
