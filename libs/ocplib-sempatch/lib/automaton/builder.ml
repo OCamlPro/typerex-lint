@@ -94,6 +94,13 @@ and match_var_pattern var =
     [[final ()]]
   | _ -> []
 
+and match_pat_construct id_ref sub_pat_state =
+  match_pat @@ function
+  | { ppat_desc = Ppat_construct ({Asttypes.txt = id; _ }, _); _ }
+    when id_ref = id ->
+    [[sub_pat_state]]
+  | _ -> []
+
 and match_value_binding pattern expr =
   basic_state @@ fun _ ->
   [[pattern; expr]]
@@ -261,7 +268,25 @@ and from_pattern metas pattern =
     match_any_pattern id
   | Ppat_var { Asttypes.txt = id; _ } ->
     match_var_pattern id
+  | Ppat_construct ({ Asttypes.txt = constr; _ }, sub_pat_opt)
+    ->
+    match_pat_construct constr (from_pattern_opt metas sub_pat_opt)
   | _ -> assert false
+
+and from_pattern_opt metas = function
+  | None ->
+    begin
+      basic_state @@ function
+      | AE.Pattern_opt None -> [[final ()]]
+      | _ -> []
+    end
+  | Some expr ->
+    begin
+      let next_state = [[from_pattern metas expr]] in
+      basic_state @@ function
+      | AE.Pattern_opt (Some _) -> next_state
+      | _ -> []
+    end
 
 and from_value_binding metas { pvb_expr; pvb_pat; _ } =
   match_value_binding

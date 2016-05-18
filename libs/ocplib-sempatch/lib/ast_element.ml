@@ -3,6 +3,7 @@ type t =
   | Expression_opt of Parsetree.expression option
   | String of string
   | Pattern of Parsetree.pattern
+  | Pattern_opt of Parsetree.pattern option
   | Value_binding of Parsetree.value_binding
   | Value_bindings of Parsetree.value_binding list
   | Structure_item of Parsetree.structure_item
