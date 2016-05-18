@@ -39,6 +39,28 @@ let uncurryfying_mapper =
 
 let postprocess = uncurryfying_mapper.Ast_mapper.expr uncurryfying_mapper
 
+let rec pat_to_expr pat =
+  let open Parsetree in
+  let desc = match pat.ppat_desc with
+    | Ppat_var { Asttypes.txt = v; _ } ->
+      Some (Pexp_ident (Location.mknoloc (Longident.Lident v)))
+    | Ppat_constant c -> Some (Pexp_constant c)
+    | Ppat_construct (constr, Some arg) ->
+      pat_to_expr arg
+      >|= (fun arg_expr ->
+          Pexp_construct (constr, Some arg_expr)
+        )
+    | Ppat_construct (constr, None) ->
+      Some (Pexp_construct (constr, None))
+    | Ppat_tuple sub_patterns ->
+      List.flip_opt (List.map pat_to_expr sub_patterns)
+      >|= (fun sub_expr ->
+          Pexp_tuple sub_expr
+        )
+    | _ -> None
+  in
+  desc >|= (fun desc -> Ast_helper.Exp.mk desc)
+
 let get key vars =
   try
     M.find key vars |> Option.some
@@ -46,11 +68,10 @@ let get key vars =
     Not_found -> None
 
 let get_expr key vars =
-  let open Parsetree in
   get key vars
   >>= (function
       | AE.Expression e -> Some e
-      | AE.Pattern { ppat_desc = Ppat_var { Asttypes.txt = i; _ }; _ }
+      | AE.Pattern p -> pat_to_expr p
       | AE.String i ->
         Ast_helper.Exp.ident (Location.mknoloc (Longident.Lident i))
                       |> Option.some
