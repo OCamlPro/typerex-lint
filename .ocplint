@@ -14,8 +14,12 @@
 ignored_files = [
   "src/kernel/internal/parsing/parsetreeMap.ml";
   "src/kernel/internal/parsing/parsetreeIter.ml";
+  "src/kernel/internal/parsing/parsetreeMap.mli";
+  "src/kernel/internal/parsing/parsetreeIter.mli";
   "src/kernel/internal/typing/typedtreeMap.ml";
   "src/kernel/internal/typing/typedtreeIter.ml";
+  "src/kernel/internal/typing/typedtreeMap.mli";
+  "src/kernel/internal/typing/typedtreeIter.mli";
 ]
 plugin_sempatch = {
 
@@ -62,6 +66,15 @@ plugin_core = {
 (* Maximum line length *)
     max_line_length = 80
   }
+  code_list_on_singleton = {
+
+(* Module to ignore durint the lint of "List function on singleton" *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "List function on singleton" *)
+    warnings = "+A"
+  }
   interface_missing = {
 
 (* Module to ignore durint the lint of "Missing interface" *)
@@ -69,6 +82,15 @@ plugin_core = {
     ]
 
 (* Enable/Disable warnings from "Missing interface" *)
+    warnings = "+A"
+  }
+  "interface-module-type-name" = {
+
+(* Module to ignore durint the lint of "Checks on module type name." *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "Checks on module type name." *)
     warnings = "+A"
   }
 }
