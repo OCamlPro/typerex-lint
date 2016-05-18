@@ -33,7 +33,7 @@ module ModuleTypeName = Core.MakeLint(struct
 type warning = Module_name of (string * string)
 
 let w_name = ModuleTypeName.new_warning
-    [ Warning.kind_interface ]
+    [ Warning.kind_code; Warning.kind_interface ]
     ~short_name:"interface-module-type-name-check"
     ~msg:"Module type name '$badmodname' should be uppercase as '$goodmodname'."
 
