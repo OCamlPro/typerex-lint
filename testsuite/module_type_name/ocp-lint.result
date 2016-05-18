@@ -1,0 +1,6 @@
+File "testsuite/module_type_name/test_module_type_name.ml", line 5, characters 0-53:
+  Warning 1: Module type name 'NotCorrect' should be uppercase as 'NOTCORRECT'.
+File "testsuite/module_type_name/test_module_type_name.mli", line 5, characters 0-53:
+  Warning 1: Module type name 'NotCorrect' should be uppercase as 'NOTCORRECT'.
+File "testsuite/module_type_name/test_module_type_name.mli", line 9, characters 0-54:
+  Warning 1: Module type name 'NOT_cORRECT' should be uppercase as 'NOT_CORRECT'.

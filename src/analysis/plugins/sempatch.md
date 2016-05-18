@@ -76,7 +76,8 @@ expressions: cond, e1, e2
 message: "Constant if-then-else: there is no need to use a if-then-else."
 when: "e1 = e2"
 ```
-if cond then e1 else e2
+- if cond then e1 else e2
++ e1
 ```
 
 @ UselessIf
@@ -87,6 +88,22 @@ message: "Useless if-then-else: use '$cond' instead of 'if $cond then true else 
 + cond
 ```
 
+@ UselessElse
+expressions: cond, e
+message: "Useless else: use 'if $cond then $e' instead of 'if $cond then $e else ()'."
+```
+- if cond then e else ()
++ if cond then e
+```
+
+@ BackwardIf
+expressions: cond, e
+message: "Backward if: use 'if not $cond then $e' then $e' instead of 'if $cond then () else $e'."
+```
+- if cond then () else e
++ if not cond then e
+```
+
 @ LetIdentity
 expressions: x1, x2, e
 message: "Useless let-binding: use '$e' without let-binding."
@@ -95,4 +112,3 @@ when: "x1 = x2"
 - let x1 = e in x2
 + e
 ```
-
