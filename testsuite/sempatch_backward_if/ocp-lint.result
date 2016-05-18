@@ -1,0 +1,4 @@
+File "testsuite/sempatch_backward_if/test_sempatch_backward_if.ml", line 1:
+  Warning 1: Missing interface for 'testsuite/sempatch_backward_if/test_sempatch_backward_if.ml'.
+File "testsuite/sempatch_backward_if/test_sempatch_backward_if.ml", line 3, characters 2-27:
+  Warning 1: Backward if: use 'if not cond then expr' then expr' instead of 'if cond then () else expr'.

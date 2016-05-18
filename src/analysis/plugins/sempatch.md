@@ -87,6 +87,14 @@ message: "Useless if-then-else: use '$cond' instead of 'if $cond then true else 
 + cond
 ```
 
+@ BackwardIf
+expressions: cond, e
+message: "Backward if: use 'if not $cond then $e' then $e' instead of 'if $cond then () else $e'."
+```
+- if cond then () else e
++ if not cond then e
+```
+
 @ LetIdentity
 expressions: x1, x2, e
 message: "Useless let-binding: use '$e' without let-binding."
@@ -95,4 +103,3 @@ when: "x1 = x2"
 - let x1 = e in x2
 + e
 ```
-
