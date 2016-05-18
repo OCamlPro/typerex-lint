@@ -80,6 +80,13 @@ let match_let isrec bindings_states expr_state =
       []
   | _ -> []
 
+let match_fun lbl_ref default_arg_s arg_s body_s =
+  match_expr @@ function
+  | { pexp_desc = Pexp_fun (lbl, _, _, _); _ }
+    when lbl = lbl_ref ->
+    [[default_arg_s; arg_s; body_s]]
+  | _ -> []
+
 and match_var_pattern var =
   match_pat @@ function
   | { ppat_desc = Ppat_var ({ Asttypes.txt = id; _ }); _ }
@@ -158,20 +165,23 @@ let catchall () =
       l
   in
   let catchall_expressions = function
-    | Pexp_apply _ ->
-      dispatch_list 2
     | Pexp_construct _ ->
-      dispatch_list 1
-    | Pexp_ifthenelse _ ->
-      dispatch_list 3
-    | Pexp_let _ ->
-      dispatch_list 2
+       dispatch_list 1
+
+    | Pexp_let _
+    | Pexp_apply _
+    | Pexp_sequence _
+      -> dispatch_list 2
+
+    | Pexp_ifthenelse _
+    | Pexp_fun _
+      -> dispatch_list 3
+
     | _ -> []
   and catchall_str_items = function
-    | Pstr_eval _ ->
-      dispatch_list 1
+    | Pstr_eval _
     | Pstr_value _ ->
-       dispatch_list 2
+       dispatch_list 1
     | _ -> []
   in
     state.transitions <-
@@ -180,7 +190,10 @@ let catchall () =
       ignore_meta @@ function
       | AE.Expression e -> catchall_expressions e.pexp_desc
       | AE.Structure_item i -> catchall_str_items i.pstr_desc
-      | AE.Structure _ -> dispatch_list 2
+      | AE.Structure _
+      | AE.Value_bindings _
+      | AE.Value_binding _
+        -> dispatch_list 2
       | _ -> []
     ];
   state
@@ -211,6 +224,12 @@ let rec from_expr metas expr =
       (from_expr metas eif)
       (from_expr metas ethen)
       (from_maybe_expr metas eelse)
+  | Pexp_fun (lbl, default_arg, arg, body) ->
+     match_fun
+       lbl
+       (from_maybe_expr metas default_arg)
+       (from_pattern metas arg)
+       (from_expr metas body)
   | Pexp_extension ({ Asttypes.txt = "__sempatch_inside"; _},
                     PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
     add_elements_from (catchall ()) (from_expr metas e)
@@ -249,5 +268,9 @@ and from_value_binding metas { pvb_expr; pvb_pat; _ } =
     (from_pattern metas pvb_pat)
     (from_expr metas pvb_expr)
 
-and from_value_bindings metas =
-  List.map (from_value_binding metas)
+and from_value_bindings metas vbs =
+  let aux accu vb =
+    basic_state @@ fun _ -> [[from_value_binding metas vb; accu]]
+  and terminal = basic_state @@ fun _ -> [[final ()]]
+  in
+  [List.fold_left aux terminal vbs]
