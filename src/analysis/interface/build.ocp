@@ -21,6 +21,7 @@
 begin library "lint-interface"
   files = [
     "interface_missing.ml"
+    "interface_module_type_name.ml"
   ]
   requires = [ "plugins" ]
   link = [ "-linkall" ]
