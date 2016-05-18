@@ -1,0 +1,118 @@
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 4, characters 15-16:
+  Warning 2: List.hd is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 5, characters 10-12:
+  Warning 1: List.hd is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 9, characters 15-16:
+  Warning 2: List.tl is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 10, characters 10-12:
+  Warning 1: List.tl is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 14, characters 16-17:
+  Warning 2: List.rev is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 15, characters 11-13:
+  Warning 1: List.rev is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 18, characters 14-16:
+  Warning 1: List.concat is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 21, characters 15-17:
+  Warning 1: List.flatten is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 25, characters 20-21:
+  Warning 2: List.map is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 26, characters 15-17:
+  Warning 1: List.map is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 30, characters 21-22:
+  Warning 2: List.mapi is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 31, characters 16-18:
+  Warning 1: List.mapi is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 35, characters 21-22:
+  Warning 2: List.iter is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 36, characters 16-18:
+  Warning 1: List.iter is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 40, characters 22-23:
+  Warning 2: List.iteri is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 41, characters 17-19:
+  Warning 1: List.iteri is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 45, characters 24-25:
+  Warning 2: List.for_all is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 46, characters 19-21:
+  Warning 1: List.for_all is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 50, characters 23-24:
+  Warning 2: List.exists is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 51, characters 18-20:
+  Warning 1: List.exists is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 55, characters 20-21:
+  Warning 2: List.mem is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 56, characters 15-17:
+  Warning 1: List.mem is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 60, characters 21-22:
+  Warning 2: List.memq is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 61, characters 16-18:
+  Warning 1: List.memq is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 65, characters 21-22:
+  Warning 2: List.find is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 66, characters 16-18:
+  Warning 1: List.find is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 70, characters 23-24:
+  Warning 2: List.filter is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 71, characters 18-20:
+  Warning 1: List.filter is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 75, characters 25-26:
+  Warning 2: List.find_all is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 76, characters 20-22:
+  Warning 1: List.find_all is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 80, characters 22-23:
+  Warning 2: List.assoc is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 81, characters 17-19:
+  Warning 1: List.assoc is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 85, characters 21-22:
+  Warning 2: List.assq is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 86, characters 16-18:
+  Warning 1: List.assq is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 90, characters 26-27:
+  Warning 2: List.mem_assoc is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 91, characters 21-23:
+  Warning 1: List.mem_assoc is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 95, characters 25-26:
+  Warning 2: List.mem_assq is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 96, characters 20-22:
+  Warning 1: List.mem_assq is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 100, characters 29-30:
+  Warning 2: List.remove_assoc is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 101, characters 24-26:
+  Warning 1: List.remove_assoc is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 105, characters 28-29:
+  Warning 2: List.remove_assq is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 106, characters 23-25:
+  Warning 1: List.remove_assq is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 110, characters 21-22:
+  Warning 2: List.sort is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 111, characters 16-18:
+  Warning 1: List.sort is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 115, characters 28-29:
+  Warning 2: List.stable_sort is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 116, characters 23-25:
+  Warning 1: List.stable_sort is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 120, characters 26-27:
+  Warning 2: List.fast_sort is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 121, characters 21-23:
+  Warning 1: List.fast_sort is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 125, characters 26-27:
+  Warning 2: List.sort_uniq is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 126, characters 21-23:
+  Warning 1: List.sort_uniq is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 130, characters 30-31:
+  Warning 2: List.fold_left is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 131, characters 25-27:
+  Warning 1: List.fold_left is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 135, characters 27-28:
+  Warning 2: List.fold_right is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 136, characters 22-24:
+  Warning 1: List.fold_right is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 140, characters 18-19:
+  Warning 2: List.split is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 141, characters 13-15:
+  Warning 1: List.split is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 145, characters 24-25:
+  Warning 2: String.concat is used on a singleton.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 146, characters 20-22:
+  Warning 1: String.concat is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 1:
+  Warning 1: Missing interface for 'testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml'.

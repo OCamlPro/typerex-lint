@@ -22,6 +22,7 @@ begin library "lint-code"
   files = [
     "code_identifier_length.ml"
     "code_length.ml"
+    "code_list_on_singleton.ml"
   ]
   requires = [ "plugins" ]
   link = [ "-linkall" ]
