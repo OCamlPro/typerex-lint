@@ -87,6 +87,14 @@ message: "Useless if-then-else: use '$cond' instead of 'if $cond then true else 
 + cond
 ```
 
+@ UselessElse
+expressions: cond, e
+message: "Useless else: use 'if $cond then $e' instead of 'if $cond then $e else ()'."
+```
+- if cond then e else ()
++ if cond then e
+```
+
 @ BackwardIf
 expressions: cond, e
 message: "Backward if: use 'if not $cond then $e' then $e' instead of 'if $cond then () else $e'."

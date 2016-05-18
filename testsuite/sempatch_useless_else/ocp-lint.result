@@ -1,0 +1,4 @@
+File "testsuite/sempatch_useless_else/test_sempatch_useless_else.ml", line 1:
+  Warning 1: Missing interface for 'testsuite/sempatch_useless_else/test_sempatch_useless_else.ml'.
+File "testsuite/sempatch_useless_else/test_sempatch_useless_else.ml", line 3, characters 2-27:
+  Warning 1: Useless else: use 'if cond then expr' instead of 'if cond then expr else ()'.
