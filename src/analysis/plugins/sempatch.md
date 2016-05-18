@@ -76,7 +76,8 @@ expressions: cond, e1, e2
 message: "Constant if-then-else: there is no need to use a if-then-else."
 when: "e1 = e2"
 ```
-if cond then e1 else e2
+- if cond then e1 else e2
++ e1
 ```
 
 @ UselessIf
