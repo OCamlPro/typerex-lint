@@ -27,18 +27,19 @@ type action =
 let action = ref ActionNone
 let exit_status = ref 0
 let output_text = ref None
+let default_dir = "."
 
 let set_action new_action =
    if !action <> ActionNone then
      raise @@ Arg.Bad
-       "Options --project or --list-warnings cannot be used together";
+       "Options --path or --list-warnings cannot be used together";
    action := new_action
 
 let usage_msg =
   let name = Filename.basename Sys.argv.(0) in
   String.concat "\n" [
     "Usage:";
-    Printf.sprintf "   %s [OPTIONS] --project DIR" name;
+    Printf.sprintf "   %s [OPTIONS] --path DIR" name;
     "";
   ]
 
@@ -51,7 +52,7 @@ let add_spec ((cmd, _, _) as spec) =
 
 let () =
   specs := [
-    "--project", Arg.String (fun dir -> set_action (ActionLoad dir)),
+    "--path", Arg.String (fun dir -> set_action (ActionLoad dir)),
     "DIR   Give a project dir path";
 
     "--output-txt", Arg.String (fun file -> output_text := Some file),
@@ -78,6 +79,15 @@ let () =
     " List of user defined lint with the patch format.";
   ]
 
+let start_lint dir =
+  let plugins = Ocplint_actions.scan ?output_text:!output_text dir in
+  Plugin.iter_plugins (fun _plugin checks ->
+      Lint.iter (fun cname lint ->
+          let module Lint = (val lint : Lint_types.LINT) in
+          if Warning.Warning.length Lint.warnings > 0 then
+              exit !exit_status) checks)
+    plugins
+
 let main () =
   (* Getting all options declared in all registered plugins. *)
   Ocplint_actions.load_default_sempatch ();
@@ -90,13 +100,7 @@ let main () =
 
   match !action with
   | ActionLoad dir ->
-    let plugins = Ocplint_actions.scan ?output_text:!output_text dir in
-    Plugin.iter_plugins (fun _plugin checks ->
-        Lint.iter (fun cname lint ->
-            let module Lint = (val lint : Lint_types.LINT) in
-            if Warning.Warning.length Lint.warnings > 0 then
-              exit !exit_status) checks)
-      plugins;
+    start_lint dir;
     exit 0 (* No warning, we can exit successfully *)
   | ActionList ->
     exit 0
@@ -104,7 +108,7 @@ let main () =
     Globals.Config.save ();
     exit 0
   | ActionNone ->
-    Arg.usage !specs usage_msg;
+    start_lint default_dir;
     exit 0
 
 let () = main ()
