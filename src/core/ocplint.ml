@@ -74,9 +74,8 @@ let () =
         List.iter add_spec (Globals.Config.simple_args ())),
     " Load dynamically plugins with their corresponding 'cmxs' files.";
 
-    "--save-config", Arg.Unit (fun () ->
-        set_action (ActionSave)),
-    " List of user defined lint with the patch format.";
+    "--init", Arg.Unit (fun () -> set_action (ActionSave)),
+    " Initialize ocp-lint with a default config file.";
   ]
 
 let start_lint dir =
@@ -105,6 +104,7 @@ let main () =
   | ActionList ->
     exit 0
   | ActionSave ->
+    (* TODO: pour mika: création des répertoires de sauvegarde de DB *)
     Globals.Config.save ();
     exit 0
   | ActionNone ->
