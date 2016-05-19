@@ -75,6 +75,15 @@ plugin_core = {
 (* Enable/Disable warnings from "List function on singleton" *)
     warnings = "+A"
   }
+  "phys-comp-allocated-lit" = {
+
+(* Module to ignore durint the lint of "Physical comparison between allocated litterals." *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "Physical comparison between allocated litterals." *)
+    warnings = "+A"
+  }
   interface_missing = {
 
 (* Module to ignore durint the lint of "Missing interface" *)

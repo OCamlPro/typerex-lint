@@ -80,7 +80,10 @@ let is_singleton f args =
   | _ -> ()
 
 let check_args f i args =
-  is_singleton f (List.nth args i)
+  try
+    is_singleton f (List.nth args i)
+  with _ ->
+    () (* Partial application or |> ? *)
 
 let check_fun f args =
   match f with
@@ -89,7 +92,8 @@ let check_fun f args =
   | "List.tl"
   | "List.flatten"
   | "List.split"
-  | "List.concat" -> check_args f 0 args
+  | "List.concat"
+  | "|>" -> check_args f 0 args
   | "List.map"
   | "List.mapi"
   | "String.concat"

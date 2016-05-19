@@ -1,0 +1,4 @@
+File "testsuite/sempatch_test_list_op_on_lit/test_sempatch_list_op_on_lit.ml", line 1:
+  Warning 1: Missing interface for 'testsuite/sempatch_test_list_op_on_lit/test_sempatch_list_op_on_lit.ml'.
+File "testsuite/sempatch_test_list_op_on_lit/test_sempatch_list_op_on_lit.ml", line 4, characters 14-28:
+  Warning 1: List operation on singleton: use 'expr :: _list' instead of '[expr] @ _list'.
