@@ -1,0 +1,12 @@
+File "testsuite/physical_comp_on_allocated_lit/test_phys_comp_on_allocated_lit.ml", line 1:
+  Warning 1: Missing interface for 'testsuite/physical_comp_on_allocated_lit/test_phys_comp_on_allocated_lit.ml'.
+File "testsuite/physical_comp_on_allocated_lit/test_phys_comp_on_allocated_lit.ml", line 6, characters 9-27:
+  Warning 1: Physical comparison on 'Strings'.
+File "testsuite/physical_comp_on_allocated_lit/test_phys_comp_on_allocated_lit.ml", line 7, characters 9-27:
+  Warning 1: Physical comparison on 'Tuples'.
+File "testsuite/physical_comp_on_allocated_lit/test_phys_comp_on_allocated_lit.ml", line 8, characters 9-36:
+  Warning 1: Physical comparison on 'Some constructors'.
+File "testsuite/physical_comp_on_allocated_lit/test_phys_comp_on_allocated_lit.ml", line 9, characters 9-77:
+  Warning 1: Physical comparison on 'Records'.
+File "testsuite/physical_comp_on_allocated_lit/test_phys_comp_on_allocated_lit.ml", line 10, characters 9-38:
+  Warning 1: Physical comparison on 'Arrays'.

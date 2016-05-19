@@ -23,6 +23,7 @@ begin library "lint-code"
     "code_identifier_length.ml"
     "code_length.ml"
     "code_list_on_singleton.ml"
+    "code_phys_comp_on_allocated_lit.ml"
   ]
   requires = [ "plugins" ]
   link = [ "-linkall" ]
