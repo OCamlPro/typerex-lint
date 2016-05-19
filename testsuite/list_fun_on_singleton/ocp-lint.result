@@ -114,5 +114,7 @@ File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 145, 
   Warning 2: String.concat is used on a singleton.
 File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 146, characters 20-22:
   Warning 1: String.concat is used on an empty list.
+File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 149, characters 7-8:
+  Warning 2: |> is used on a singleton.
 File "testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml", line 1:
   Warning 1: Missing interface for 'testsuite/list_fun_on_singleton/test_list_fun_on_singleton.ml'.

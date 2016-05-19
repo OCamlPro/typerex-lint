@@ -144,3 +144,7 @@ let string_concat sep elt =
   String.concat sep [elt; elt];
   String.concat sep [elt];
   String.concat sep []
+
+let test_reverse_app expr =
+  [expr]
+  |> List.iter print_int
