@@ -69,7 +69,7 @@ let starts_with str ~substring =
 
 let run_ocp_lint ocplint dir =
   let output = dir // output in
-  let project_arg = "--project" in
+  let project_arg = "--path" in
   let output_arg = "--output-txt" in
   let sempatch_args =
     if Sys.file_exists (dir // sempatch_file)
