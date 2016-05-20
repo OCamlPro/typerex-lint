@@ -267,7 +267,8 @@ let rec from_expr metas expr =
   | Pexp_extension ({ Asttypes.txt = "__sempatch_report"; _},
                     PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
     (from_expr metas e |> make_report)
-  | _ -> assert false
+  | _ ->
+    raise Failure.(SempatchException (Non_implemented expr.pexp_loc))
 
 and from_maybe_expr metas = function
   | None ->
@@ -304,7 +305,8 @@ and from_pattern metas pattern =
   | Ppat_construct ({ Asttypes.txt = constr; _ }, sub_pat_opt)
     ->
     match_pat_construct constr (from_pattern_opt metas sub_pat_opt)
-  | _ -> assert false
+  | _ ->
+    raise Failure.(SempatchException (Non_implemented pattern.ppat_loc))
 
 and from_pattern_opt metas = function
   | None ->

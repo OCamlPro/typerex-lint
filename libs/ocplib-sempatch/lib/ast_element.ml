@@ -22,6 +22,6 @@ let to_string =
   | Expression e -> to_string expression e
   | String i -> i
   | Pattern p -> to_string pattern p
-  | _ -> assert false
+  | _ -> "???"
 
 let from_structure e = Structure e

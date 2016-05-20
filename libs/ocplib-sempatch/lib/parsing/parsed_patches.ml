@@ -170,7 +170,18 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
     (List.append !meta_exprs_in_pre_patch !meta_exprs_in_pre_patch);
   {
     header = { header with meta_expr = !meta_exprs_in_pre_patch; };
-    body = Builder.from_expr !meta_exprs_in_pre_patch processed_before_patch;
+    body =
+      try
+        Builder.from_expr !meta_exprs_in_pre_patch processed_before_patch
+      with
+        Failure.SempatchException (Failure.Non_implemented pos) ->
+        raise Failure.(SempatchException (Non_implemented {
+            pos with Location.loc_start = {
+            pos.Location.loc_start
+            with Lexing.pos_fname = "\"Patch " ^ header.name ^ "\"";
+          }
+          };
+          ))
   }
 
 let preprocess_src_expr = curryfying_mapper.Ast_mapper.structure curryfying_mapper

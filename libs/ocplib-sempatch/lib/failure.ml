@@ -12,7 +12,7 @@ let in_file_pos_to_string pos =
 let position_to_string pos =
   Lexing.(Printf.sprintf
             "file %s at position %s"
-            pos.pos_fname
+            (if pos.pos_fname = "" then "NONE" else pos.pos_fname)
             (in_file_pos_to_string pos)
          )
 
