@@ -75,7 +75,7 @@ let match_let isrec bindings_states expr_state =
   match_expr @@ function
   | { pexp_desc = Pexp_let (rec_flag, _, _); _ } ->
     if rec_flag = isrec then
-      [expr_state :: bindings_states]
+      [[expr_state; bindings_states]]
     else
       []
   | _ -> []
@@ -312,4 +312,4 @@ and from_value_bindings metas vbs =
     basic_state @@ fun _ -> [[from_value_binding metas vb; accu]]
   and terminal = basic_state @@ fun _ -> [[final ()]]
   in
-  [List.fold_left aux terminal vbs]
+  List.fold_left aux terminal vbs
