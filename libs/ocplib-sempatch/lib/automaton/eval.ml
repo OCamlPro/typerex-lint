@@ -11,7 +11,7 @@ let both
     []
   else
     let locations =
-      List.bind (Option.to_list)
+      List.sort_uniq compare
         [Match.get_location l1; Match.get_location l2]
     and merged_matches = {
       l2 with
@@ -24,7 +24,7 @@ let both
     match
     List.map (
       fun loc -> Builder.final (),
-                 { merged_matches with Match.location = Some loc }
+                 { merged_matches with Match.location = loc }
       )
       locations
     with
@@ -80,25 +80,25 @@ and apply2 = fun state_bun env expr ->
     | [state], AE.Structure_item { pstr_desc = Pstr_value (_, bindings); _ } ->
        [apply' env state (AE.Value_bindings bindings)]
 
-    | [state_item; state_struct], AE.Structure (item::tl) ->
+    | [item_s; tl_s], AE.Structure (item::tl) ->
        [
-         (apply' (setloc item.pstr_loc env) state_item
+         (apply' (setloc item.pstr_loc env) item_s
                  (AE.Structure_item item));
-         (apply' env state_struct (AE.Structure tl));
+         (apply' env tl_s (AE.Structure tl));
        ]
 
-    | [vb_pat; vb_expr;], AE.Value_binding {
+    | [pat_s; expr_s;], AE.Value_binding {
                               pvb_pat = pat; pvb_expr = expr; _
                             } ->
        [
-         (apply' (setloc pat.ppat_loc env) vb_pat (AE.Pattern pat));
-         (apply' (setloc expr.pexp_loc env) vb_expr (AE.Expression expr));
+         (apply' (setloc pat.ppat_loc env) pat_s (AE.Pattern pat));
+         (apply' (setloc expr.pexp_loc env) expr_s (AE.Expression expr));
        ]
 
-    | [state_vb; state_tail], AE.Value_bindings (vb::tl) ->
+    | [vb_s; tail_s], AE.Value_bindings (vb::tl) ->
        [
-         (apply' (setloc vb.pvb_loc env) state_vb (AE.Value_binding vb));
-         (apply' env state_tail (AE.Value_bindings tl));
+         (apply' (setloc vb.pvb_loc env) vb_s (AE.Value_binding vb));
+         (apply' env tail_s (AE.Value_bindings tl));
        ]
 
     | [lhs_s; guard_s; rhs_s], AE.Case {
@@ -138,22 +138,22 @@ and apply_expr state_bun env exp_desc =
       (apply' (setloc e2.pexp_loc env) s2 (AE.Expression e2))
     ]
 
-  | [default_arg_state; arg_state; body_state],
+  | [default_arg_s; arg_s; body_s],
     Pexp_fun (_lbl, default_arg, arg, body)
       ->
     [
-      (apply' (setloc arg.ppat_loc env) arg_state (AE.Pattern arg));
-      (apply' (setloc body.pexp_loc env) body_state (AE.Expression body));
-      (apply' env default_arg_state (AE.Expression_opt default_arg));
+      (apply' (setloc arg.ppat_loc env) arg_s (AE.Pattern arg));
+      (apply' (setloc body.pexp_loc env) body_s (AE.Expression body));
+      (apply' env default_arg_s (AE.Expression_opt default_arg));
     ]
 
-  | [cases_state], Pexp_function cases ->
-    [apply' env cases_state (AE.Cases cases)]
+  | [cases_s], Pexp_function cases ->
+    [apply' env cases_s (AE.Cases cases)]
 
-  | [expr_state; bindings_state], Pexp_let (_, bindings, expr) ->
+  | [expr_s; bindings_s], Pexp_let (_, bindings, expr) ->
     [
-      (apply' (setloc expr.pexp_loc env) expr_state (AE.Expression expr));
-      (apply' env bindings_state (AE.Value_bindings bindings));
+      (apply' (setloc expr.pexp_loc env) expr_s (AE.Expression expr));
+      (apply' env bindings_s (AE.Value_bindings bindings));
     ]
 
   | [s_if; s_then; s_else], Pexp_ifthenelse (e_if, e_then, e_else) ->
@@ -163,11 +163,11 @@ and apply_expr state_bun env exp_desc =
       (apply' (setloc e_then.pexp_loc env) s_else (AE.Expression_opt e_else));
     ]
 
-  | [expr_state], Pexp_construct (_, expr) ->
-    [apply' env expr_state (AE.Expression_opt expr)]
+  | [expr_s], Pexp_construct (_, expr) ->
+    [apply' env expr_s (AE.Expression_opt expr)]
 
-  | [body_state], Pexp_tuple body ->
-    [apply' env body_state (AE.Expressions body)]
+  | [body_s], Pexp_tuple body ->
+    [apply' env body_s (AE.Expressions body)]
 
   | [s1; s2], Pexp_sequence (e1, e2) ->
     [
@@ -181,9 +181,7 @@ and apply_expr state_bun env exp_desc =
 and dispatch = fun state_bundles expr ->
   List.bind (fun (state_bun, env) -> apply2 state_bun env expr) state_bundles
 
-let apply name state expr =
-  let results = apply'
-      (Match.mk name Substitution.empty None Location.none)
-      state (AE.Structure expr)
-  in
-  results
+let apply name state elt =
+  apply'
+    (Match.mk name Substitution.empty None Location.none)
+    state elt

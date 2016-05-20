@@ -3,14 +3,6 @@ open Std_utils
 module Ast_element = Ast_element
 module Substitution = Substitution
 
-module Match =
-struct
-  include Match
-  let get_location m =
-    Match.get_location m
-    |> Option.value Location.none
-end
-
 module Patch =
 struct
   open Parsed_patches.Type
@@ -31,11 +23,13 @@ struct
     match ast with
     | Structure e ->
       let
-        results = Ast_pattern_matcher.apply patch e
+        results = Eval.apply patch.header.name patch.body
+          (Ast_element.Structure (Parsed_patches.preprocess_src_expr e))
       in
       List.map snd
         results
       |> List.filter (fun mat ->
+          (Option.is_some (Match.get_location mat)) &&
           try
             Guard_evaluator.eval_union
               (Match.get_substitutions mat)
@@ -49,15 +43,14 @@ struct
     List.map (fun patch -> apply patch tree) patches
     |> List.concat
 
-  let sequential_apply patches ast_elt =
-    parallel_apply patches ast_elt
-    (* List.fold_left (fun (accu_ast, accu_matches) patch -> *)
-    (*     let (new_ast, new_matches) = apply patch accu_ast in *)
-    (*     new_ast, new_matches @ accu_matches *)
-    (*   ) *)
-    (*   (ast_elt, []) *)
-    (*   patches *)
+end
 
+module Match =
+struct
+  include Match
+  let get_location m =
+    Match.get_location m
+    |> Option.value Location.none
 end
 
 module Failure = Failure

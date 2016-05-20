@@ -49,16 +49,8 @@ sig
   (** {2 Application of patches} *)
 
   (** [apply patch tree] applyes [patch] to [tree]
-      and returns the couple [patched_tree, matches] *)
+      and returns the list of matches *)
   val apply : t -> Ast_element.t -> Match.t list
-
-  (** [sequential_apply patches tree] applies applies all the patches in order
-      to tree ({i ie} the first patch [p1] is applied to [tree], the second one
-      to the result [tree'] of the application of [p1] to [tree], and so on.
-      (So beware that the matches may match expressions who are the result of
-      previous patches and aren't in the original AST)
-  *)
-  val sequential_apply : t list -> Ast_element.t -> Match.t list
 
   (** [parallel_apply patches tree] applies all the patches to [tree] and
       returns the concatenation of all the matches

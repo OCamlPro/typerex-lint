@@ -54,7 +54,7 @@ let header_from_list l = List.fold_left add_header_field void_header l
 (** Checks wether l1 \subset l2
     where l1 and l2 represents unordonned sets of elements *)
 let testInclusion l1 l2 =
-  let mem_exn elt lst = if List.mem elt lst then () else failwith elt in
+  let mem_exn elt lst = if not (List.mem elt lst) then failwith elt in
   try
     List.iter (fun x -> mem_exn x l2) l1
   with
