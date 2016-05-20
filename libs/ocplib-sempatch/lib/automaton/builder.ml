@@ -331,4 +331,4 @@ and from_value_bindings metas vbs =
     basic_state @@ fun _ -> [[from_value_binding metas vb; accu]]
   and terminal = basic_state @@ fun _ -> [[final ()]]
   in
-  List.fold_left aux terminal vbs
+  List.fold_left aux terminal (List.rev vbs)

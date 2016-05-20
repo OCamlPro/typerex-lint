@@ -1,0 +1,4 @@
+File "testsuite/sempatch_parallel_let_bindings/test_parallel_let_bindings.ml", line 1:
+  Warning 1: Missing interface for 'testsuite/sempatch_parallel_let_bindings/test_parallel_let_bindings.ml'.
+File "testsuite/sempatch_parallel_let_bindings/test_parallel_let_bindings.ml", line 2, characters 2-48:
+  Warning 1: You should use ... instead of ...
