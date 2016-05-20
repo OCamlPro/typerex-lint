@@ -361,7 +361,10 @@ let rec from_expr metas expr =
                     PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
     (from_expr metas e |> make_report)
   | _ ->
-    raise Failure.(SempatchException (Non_implemented expr.pexp_loc))
+    Printf.eprintf "Unimplemented expression %s\n"
+      Failure.(to_string (Non_implemented expr.pexp_loc));
+    trash ()
+  (*   raise Failure.(SempatchException (Non_implemented expr.pexp_loc)) *)
 
 and from_maybe_expr metas = function
   | None ->
@@ -414,7 +417,10 @@ and from_pattern metas pattern =
     ->
     match_pat_construct constr (from_pattern_opt metas sub_pat_opt)
   | _ ->
-    raise Failure.(SempatchException (Non_implemented pattern.ppat_loc))
+    Printf.eprintf "Unimplemented pattern %s\n"
+      Failure.(to_string (Non_implemented pattern.ppat_loc));
+    trash ()
+    (* raise Failure.(SempatchException (Non_implemented pattern.ppat_loc)) *)
 
 and from_pattern_opt metas = function
   | None ->
