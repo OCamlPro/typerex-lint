@@ -106,6 +106,12 @@ let match_match expr_s cases_s =
     [[expr_s; cases_s]]
   | _ -> []
 
+let match_try expr_s cases_s =
+  match_expr @@ function
+  | { pexp_desc = Pexp_try _; _ } ->
+    [[expr_s; cases_s]]
+  | _ -> []
+
 let match_sequence left_s right_s =
   match_expr @@ function
   | { pexp_desc = Pexp_sequence _; _ } ->
@@ -131,6 +137,19 @@ let match_open isoverride name_ref expr_s =
     when override = isoverride
       && name = name_ref ->
     [[expr_s]]
+  | _ -> []
+
+let match_variant lbl_ref body_s =
+  match_expr @@ function
+  | { pexp_desc = Pexp_variant (lbl, _ ); _ }
+    when lbl = lbl_ref ->
+    [[body_s]]
+  | _ -> []
+
+and match_assert body_s =
+  match_expr @@ function
+  | { pexp_desc = Pexp_assert _; _ } ->
+    [[body_s]]
   | _ -> []
 
 and match_var_pattern var =
@@ -319,6 +338,12 @@ let rec from_expr metas expr =
     match_field (from_expr metas e) field
   | Pexp_open (override, { Asttypes.txt = module_name; _ }, expr) ->
     match_open override module_name (from_expr metas expr)
+  | Pexp_variant (name, body) ->
+    match_variant name (from_maybe_expr metas body)
+  | Pexp_try (expression, cases) ->
+    match_try (from_expr metas expression) (from_cases metas cases)
+  | Pexp_assert expr ->
+    match_assert (from_expr metas expr)
   | Pexp_record (fields, model) ->
     match_record
       (from_record_fields metas fields)

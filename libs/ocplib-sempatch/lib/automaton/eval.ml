@@ -159,6 +159,12 @@ and apply_expr state_bun env exp_desc =
   | [cases_s], Pexp_function cases ->
     [apply' env cases_s (AE.Cases cases)]
 
+  | [expr_s; cases_s], Pexp_match (expr, cases) ->
+    [
+      apply' (setloc expr.pexp_loc env) expr_s (AE.Expression expr);
+      apply' env cases_s (AE.Cases cases);
+    ]
+
   | [expr_s; bindings_s], Pexp_let (_, bindings, expr) ->
     [
       (apply' (setloc expr.pexp_loc env) expr_s (AE.Expression expr));
@@ -171,6 +177,9 @@ and apply_expr state_bun env exp_desc =
       (apply' (setloc e_if.pexp_loc env) s_if (AE.Expression e_if));
       (apply' (setloc e_then.pexp_loc env) s_else (AE.Expression_opt e_else));
     ]
+
+  | [expr_s], Pexp_variant (_, expr) ->
+    [apply' env expr_s (AE.Expression_opt expr)]
 
   | [expr_s], Pexp_construct (_, expr) ->
     [apply' env expr_s (AE.Expression_opt expr)]
@@ -194,6 +203,9 @@ and apply_expr state_bun env exp_desc =
     ]
 
   | [body_s], Pexp_open (_, _, body) ->
+    [apply' (setloc body.pexp_loc env) body_s (AE.Expression body)]
+
+  | [body_s], Pexp_assert body ->
     [apply' (setloc body.pexp_loc env) body_s (AE.Expression body)]
 
   | _ -> []
