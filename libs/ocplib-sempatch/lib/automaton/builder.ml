@@ -52,9 +52,10 @@ and match_const const =
     [[final ()]]
   | _ -> []
 
-and match_apply left right =
+and match_apply ref_lbl left right =
   match_expr @@ function
-  | { pexp_desc = Pexp_apply _; _} ->
+  | { pexp_desc = Pexp_apply (_, [lbl, _ ]); _}
+    when ref_lbl = lbl ->
     [[left; right]]
   | _ -> []
 
@@ -246,8 +247,8 @@ let rec from_expr metas expr =
     match_construct id (from_maybe_expr metas expr_opt)
   | Pexp_tuple exprs ->
     match_tuple (from_expr_list metas exprs)
-  | Pexp_apply (f, ["", arg]) ->
-    match_apply (from_expr metas f) (from_expr metas arg)
+  | Pexp_apply (f, [lbl, arg]) ->
+    match_apply lbl (from_expr metas f) (from_expr metas arg)
   | Pexp_let (isrec, bindings, expr) ->
     match_let isrec (from_value_bindings metas bindings) (from_expr metas expr)
   | Pexp_ifthenelse (eif, ethen, eelse) ->
