@@ -71,6 +71,12 @@ and match_construct id sub_state =
     [[sub_state]]
   | _ -> []
 
+and match_tuple sub_state =
+  match_expr @@ function
+  | { pexp_desc = Pexp_tuple _; _ } ->
+    [[sub_state]]
+  | _ -> []
+
 let match_let isrec bindings_states expr_state =
   match_expr @@ function
   | { pexp_desc = Pexp_let (rec_flag, _, _); _ } ->
@@ -174,6 +180,7 @@ let catchall () =
   let catchall_expressions = function
     | Pexp_construct _
     | Pexp_function _
+    | Pexp_tuple _
       ->
        dispatch_list 1
 
@@ -212,6 +219,7 @@ let catchall () =
       | AE.Value_bindings _
       | AE.Value_binding _
       | AE.Cases _
+      | AE.Expressions _
         -> dispatch_list 2
       | AE.Case _
         -> dispatch_list 3
@@ -236,6 +244,8 @@ let rec from_expr metas expr =
     match_const c
   | Pexp_construct ({ Asttypes.txt = id; _ }, expr_opt) ->
     match_construct id (from_maybe_expr metas expr_opt)
+  | Pexp_tuple exprs ->
+    match_tuple (from_expr_list metas exprs)
   | Pexp_apply (f, ["", arg]) ->
     match_apply (from_expr metas f) (from_expr metas arg)
   | Pexp_let (isrec, bindings, expr) ->
@@ -273,6 +283,15 @@ and from_maybe_expr metas = function
       | AE.Expression_opt (Some _) -> next_state
       | _ -> []
     end
+
+and from_expr_list metas exprs =
+  let aux accu expr =
+    basic_state @@ fun _ -> [[from_expr metas expr; accu]]
+  and terminal = basic_state @@ function
+    | AE.Expressions [] -> [[final ()]]
+    | _ -> []
+  in
+  List.fold_left aux terminal (List.rev exprs)
 
 and from_pattern metas pattern =
   match pattern.ppat_desc with

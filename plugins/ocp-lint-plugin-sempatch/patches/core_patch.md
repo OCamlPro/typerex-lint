@@ -102,6 +102,7 @@ when: "x1 = x2"
 - let x1 = e in x2
 + e
 ```
+
 @ ListOpOnLit
 expressions: expr, list
 message: "List operation on singleton: use '$expr :: $list' instead of '[$expr] @ $list'."

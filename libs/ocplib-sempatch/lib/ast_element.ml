@@ -1,5 +1,6 @@
 type t =
   | Expression of Parsetree.expression
+  | Expressions of Parsetree.expression list
   | Expression_opt of Parsetree.expression option
   | String of string
   | Pattern of Parsetree.pattern

@@ -65,6 +65,12 @@ and apply2 = fun state_bun env expr ->
     | [state], AE.Expression_opt (Some expr_opt) ->
        [apply' (setloc expr_opt.pexp_loc env) state (AE.Expression expr_opt)]
 
+    | [expr_s; tl_s], AE.Expressions (expr::tl) ->
+       [
+         apply' (setloc expr.pexp_loc env) expr_s (AE.Expression expr);
+         apply' env tl_s (AE.Expressions tl);
+       ]
+
     | [state], AE.Pattern_opt (Some pat_opt) ->
        [apply' (setloc pat_opt.ppat_loc env) state (AE.Pattern pat_opt)]
 
@@ -159,6 +165,9 @@ and apply_expr state_bun env exp_desc =
 
   | [expr_state], Pexp_construct (_, expr) ->
     [apply' env expr_state (AE.Expression_opt expr)]
+
+  | [body_state], Pexp_tuple body ->
+    [apply' env body_state (AE.Expressions body)]
 
   | [s1; s2], Pexp_sequence (e1, e2) ->
     [
