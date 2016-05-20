@@ -94,6 +94,12 @@ let match_fun lbl_ref default_arg_s arg_s body_s =
     [[default_arg_s; arg_s; body_s]]
   | _ -> []
 
+let match_function cases_s =
+  match_expr @@ function
+  | { pexp_desc = Pexp_function _; _ } ->
+    [[cases_s]]
+  | _ -> []
+
 and match_var_pattern var =
   match_pat @@ function
   | { ppat_desc = Ppat_var ({ Asttypes.txt = id; _ }); _ }
@@ -111,6 +117,12 @@ and match_pat_construct id_ref sub_pat_state =
 and match_value_binding pattern expr =
   basic_state @@ fun _ ->
   [[pattern; expr]]
+
+and match_case lhs guard rhs =
+  basic_state @@ function
+  | AE.Case _ ->
+  [[lhs; guard; rhs]]
+  | _ -> []
 
 and match_any_expr id = A.{
     transitions = [
@@ -188,6 +200,7 @@ let catchall () =
     | Pexp_let _
     | Pexp_apply _
     | Pexp_sequence _
+    | Pexp_match _
       -> dispatch_list 2
 
     | Pexp_ifthenelse _
@@ -256,6 +269,8 @@ let rec from_expr metas expr =
       (from_expr metas eif)
       (from_expr metas ethen)
       (from_maybe_expr metas eelse)
+  | Pexp_function cases ->
+    match_function (from_cases metas cases)
   | Pexp_fun (lbl, default_arg, arg, body) ->
      match_fun
        lbl
@@ -294,6 +309,21 @@ and from_expr_list metas exprs =
     | _ -> []
   in
   List.fold_left aux terminal (List.rev exprs)
+
+and from_case metas case =
+  match_case
+    (from_pattern metas case.pc_lhs)
+    (from_maybe_expr metas case.pc_guard)
+    (from_expr metas case.pc_rhs)
+
+and from_cases metas cases =
+  let aux accu case =
+    basic_state @@ function
+    | AE.Cases _ -> [[from_case metas case; accu]]
+    | _ -> []
+  and terminal = basic_state @@ fun _ -> [[final ()]]
+  in
+  List.fold_left aux terminal (List.rev cases)
 
 and from_pattern metas pattern =
   match pattern.ppat_desc with
