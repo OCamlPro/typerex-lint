@@ -100,6 +100,25 @@ let match_function cases_s =
     [[cases_s]]
   | _ -> []
 
+let match_match expr_s cases_s =
+  match_expr @@ function
+  | { pexp_desc = Pexp_match _; _ } ->
+    [[expr_s; cases_s]]
+  | _ -> []
+
+let match_sequence left_s right_s =
+  match_expr @@ function
+  | { pexp_desc = Pexp_sequence _; _ } ->
+    [[left_s; right_s]]
+  | _ -> []
+
+let match_field expr_s field_patch =
+  match_expr @@ function
+  | { pexp_desc = Pexp_field (_, { Asttypes.txt = field; _ }); _ }
+    when field = field_patch ->
+    [[expr_s]]
+  | _ -> []
+
 and match_var_pattern var =
   match_pat @@ function
   | { ppat_desc = Ppat_var ({ Asttypes.txt = id; _ }); _ }
@@ -269,8 +288,14 @@ let rec from_expr metas expr =
       (from_expr metas eif)
       (from_expr metas ethen)
       (from_maybe_expr metas eelse)
+  | Pexp_sequence (e1, e2) ->
+    match_sequence (from_expr metas e1) (from_expr metas e2)
   | Pexp_function cases ->
     match_function (from_cases metas cases)
+  | Pexp_match (e, cases) ->
+    match_match (from_expr metas e) (from_cases metas cases)
+  | Pexp_field (e, { Asttypes.txt = field; _}) ->
+    match_field (from_expr metas e) field
   | Pexp_fun (lbl, default_arg, arg, body) ->
      match_fun
        lbl

@@ -169,6 +169,9 @@ and apply_expr state_bun env exp_desc =
   | [body_s], Pexp_tuple body ->
     [apply' env body_s (AE.Expressions body)]
 
+  | [body_s], Pexp_field (expr, _) ->
+    [apply' (setloc expr.pexp_loc env) body_s (AE.Expression expr)]
+
   | [s1; s2], Pexp_sequence (e1, e2) ->
     [
       apply' (setloc e1.pexp_loc env) s1 (AE.Expression e1);
