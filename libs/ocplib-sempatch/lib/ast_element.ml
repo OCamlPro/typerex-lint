@@ -8,6 +8,8 @@ type t =
   | Value_bindings of Parsetree.value_binding list
   | Structure_item of Parsetree.structure_item
   | Structure of Parsetree.structure
+  | Case of Parsetree.case
+  | Cases of Parsetree.case list
 
 let to_string =
   let open Pprintast in

@@ -172,7 +172,9 @@ let catchall () =
       l
   in
   let catchall_expressions = function
-    | Pexp_construct _ ->
+    | Pexp_construct _
+    | Pexp_function _
+      ->
        dispatch_list 1
 
     | Pexp_let _
@@ -190,6 +192,11 @@ let catchall () =
     | Pstr_value _ ->
        dispatch_list 1
     | _ -> []
+
+  and catchall_patterns = function
+    | Ppat_construct _
+        -> dispatch_list 1
+    | _ -> []
   in
     state.transitions <-
     [
@@ -197,10 +204,17 @@ let catchall () =
       ignore_meta @@ function
       | AE.Expression e -> catchall_expressions e.pexp_desc
       | AE.Structure_item i -> catchall_str_items i.pstr_desc
+      | AE.Pattern p -> catchall_patterns p.ppat_desc
+      | AE.Pattern_opt _
+      | AE.Expression_opt _
+        -> dispatch_list 1
       | AE.Structure _
       | AE.Value_bindings _
       | AE.Value_binding _
+      | AE.Cases _
         -> dispatch_list 2
+      | AE.Case _
+        -> dispatch_list 3
       | _ -> []
     ];
   state

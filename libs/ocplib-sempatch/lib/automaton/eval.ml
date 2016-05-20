@@ -53,44 +53,61 @@ let rec apply' = fun env state node ->
 and apply2 = fun state_bun env expr ->
   let sub_results =
     match state_bun, expr with
-  | [single], _ when single.A.final -> [[single, env]]
+    | [single], _ when single.A.final ->
+       [[single, env]]
 
-  | _, AE.Expression { pexp_desc = d; _ } ->
-    apply_expr state_bun env d
+    | _, AE.Expression { pexp_desc = d; _ } ->
+       apply_expr state_bun env d
 
-  | _, AE.Pattern {ppat_desc = d; _} ->
-    apply_pat state_bun env d
+    | _, AE.Pattern {ppat_desc = d; _} ->
+       apply_pat state_bun env d
 
-  | [state], AE.Expression_opt (Some expr_opt) ->
-    [apply' env state (AE.Expression expr_opt)]
+    | [state], AE.Expression_opt (Some expr_opt) ->
+       [apply' (setloc expr_opt.pexp_loc env) state (AE.Expression expr_opt)]
 
-  | [state], AE.Pattern_opt (Some pat_opt) ->
-    [apply' env state (AE.Pattern pat_opt)]
+    | [state], AE.Pattern_opt (Some pat_opt) ->
+       [apply' (setloc pat_opt.ppat_loc env) state (AE.Pattern pat_opt)]
 
-  | [state], AE.Structure_item { pstr_desc = Pstr_eval (expr, _); _ } ->
-    [apply' (setloc expr.pexp_loc env) state (AE.Expression expr)]
+    | [state], AE.Structure_item { pstr_desc = Pstr_eval (expr, _); _ } ->
+       [apply' (setloc expr.pexp_loc env) state (AE.Expression expr)]
 
-  | [state], AE.Structure_item { pstr_desc = Pstr_value (_, bindings); _ } ->
-    [apply' env state (AE.Value_bindings bindings)]
+    | [state], AE.Structure_item { pstr_desc = Pstr_value (_, bindings); _ } ->
+       [apply' env state (AE.Value_bindings bindings)]
 
-  | [state_item; state_struct], AE.Structure (item::tl) ->
-    [
-      (apply' (setloc item.pstr_loc env) state_item (AE.Structure_item item));
-      (apply' env state_struct (AE.Structure tl));
-    ]
+    | [state_item; state_struct], AE.Structure (item::tl) ->
+       [
+         (apply' (setloc item.pstr_loc env) state_item
+                 (AE.Structure_item item));
+         (apply' env state_struct (AE.Structure tl));
+       ]
 
-  | [vb_pat; vb_expr;], AE.Value_binding {
-      pvb_pat = pat; pvb_expr = expr; _
-    } ->
-    [
-      (apply' (setloc pat.ppat_loc env) vb_pat (AE.Pattern pat));
-      (apply' (setloc expr.pexp_loc env) vb_expr (AE.Expression expr));
-    ]
+    | [vb_pat; vb_expr;], AE.Value_binding {
+                              pvb_pat = pat; pvb_expr = expr; _
+                            } ->
+       [
+         (apply' (setloc pat.ppat_loc env) vb_pat (AE.Pattern pat));
+         (apply' (setloc expr.pexp_loc env) vb_expr (AE.Expression expr));
+       ]
 
-  | [state_vb; state_tail], AE.Value_bindings (vb::tl) ->
-    [
-      (apply' (setloc vb.pvb_loc env) state_vb (AE.Value_binding vb));
-      (apply' env state_tail (AE.Value_bindings tl));
+    | [state_vb; state_tail], AE.Value_bindings (vb::tl) ->
+       [
+         (apply' (setloc vb.pvb_loc env) state_vb (AE.Value_binding vb));
+         (apply' env state_tail (AE.Value_bindings tl));
+       ]
+
+    | [lhs_s; guard_s; rhs_s], AE.Case {
+                                   pc_lhs; pc_guard; pc_rhs
+                                 } ->
+       [
+         apply' (setloc pc_lhs.ppat_loc env) lhs_s (AE.Pattern pc_lhs);
+         apply' env guard_s (AE.Expression_opt pc_guard);
+         apply' (setloc pc_rhs.pexp_loc env) rhs_s (AE.Expression pc_rhs);
+       ]
+
+    | [case_s; tl_s], AE.Cases (case::tl) ->
+       [
+      (apply' env case_s (AE.Case case));
+      (apply' env tl_s (AE.Cases tl));
     ]
 
     | _ -> []
@@ -123,6 +140,9 @@ and apply_expr state_bun env exp_desc =
       (apply' (setloc body.pexp_loc env) body_state (AE.Expression body));
       (apply' env default_arg_state (AE.Expression_opt default_arg));
     ]
+
+  | [cases_state], Pexp_function cases ->
+    [apply' env cases_state (AE.Cases cases)]
 
   | [expr_state; bindings_state], Pexp_let (_, bindings, expr) ->
     [
