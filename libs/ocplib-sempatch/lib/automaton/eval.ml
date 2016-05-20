@@ -112,9 +112,18 @@ and apply2 = fun state_bun env expr ->
 
     | [case_s; tl_s], AE.Cases (case::tl) ->
        [
-      (apply' env case_s (AE.Case case));
-      (apply' env tl_s (AE.Cases tl));
-    ]
+         (apply' env case_s (AE.Case case));
+         (apply' env tl_s (AE.Cases tl));
+       ]
+
+    | [val_s], AE.Record_field (_, value) ->
+      [apply' env val_s (AE.Expression value)]
+
+    | [field_s; tl_s], AE.Record_fields (field::tl) ->
+      [
+        apply' env field_s (AE.Record_field field);
+        apply' env tl_s (AE.Record_fields tl);
+      ]
 
     | _ -> []
   in
@@ -166,6 +175,12 @@ and apply_expr state_bun env exp_desc =
   | [expr_s], Pexp_construct (_, expr) ->
     [apply' env expr_s (AE.Expression_opt expr)]
 
+  | [fields_s; model_s], Pexp_record (fields, model) ->
+    [
+      apply' env fields_s (AE.Record_fields fields);
+      apply' env model_s (AE.Expression_opt model);
+    ]
+
   | [body_s], Pexp_tuple body ->
     [apply' env body_s (AE.Expressions body)]
 
@@ -177,6 +192,9 @@ and apply_expr state_bun env exp_desc =
       apply' (setloc e1.pexp_loc env) s1 (AE.Expression e1);
       apply' (setloc e2.pexp_loc env) s2 (AE.Expression e2);
     ]
+
+  | [body_s], Pexp_open (_, _, body) ->
+    [apply' (setloc body.pexp_loc env) body_s (AE.Expression body)]
 
   | _ -> []
 

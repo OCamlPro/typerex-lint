@@ -1,3 +1,4 @@
+type record_field = Longident.t Asttypes.loc * Parsetree.expression
 type t =
   | Expression of Parsetree.expression
   | Expressions of Parsetree.expression list
@@ -11,6 +12,8 @@ type t =
   | Structure of Parsetree.structure
   | Case of Parsetree.case
   | Cases of Parsetree.case list
+  | Record_field of record_field
+  | Record_fields of record_field list
 
 let to_string =
   let open Pprintast in

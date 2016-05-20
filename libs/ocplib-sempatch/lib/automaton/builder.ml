@@ -119,6 +119,20 @@ let match_field expr_s field_patch =
     [[expr_s]]
   | _ -> []
 
+let match_record fields_s model_s =
+  match_expr @@ function
+  | { pexp_desc = Pexp_record _; _ } ->
+    [[fields_s; model_s]]
+  | _ -> []
+
+let match_open isoverride name_ref expr_s =
+  match_expr @@ function
+  | { pexp_desc = Pexp_open (override, { Asttypes.txt = name; _ }, _ ); _ }
+    when override = isoverride
+      && name = name_ref ->
+    [[expr_s]]
+  | _ -> []
+
 and match_var_pattern var =
   match_pat @@ function
   | { ppat_desc = Ppat_var ({ Asttypes.txt = id; _ }); _ }
@@ -141,6 +155,13 @@ and match_case lhs guard rhs =
   basic_state @@ function
   | AE.Case _ ->
   [[lhs; guard; rhs]]
+  | _ -> []
+
+and match_record_field id_ref expr_s =
+  basic_state @@ function
+  | AE.Record_field ({ Asttypes.txt = id; _ }, _)
+    when id = id_ref ->
+    [[expr_s]]
   | _ -> []
 
 and match_any_expr id = A.{
@@ -296,6 +317,12 @@ let rec from_expr metas expr =
     match_match (from_expr metas e) (from_cases metas cases)
   | Pexp_field (e, { Asttypes.txt = field; _}) ->
     match_field (from_expr metas e) field
+  | Pexp_open (override, { Asttypes.txt = module_name; _ }, expr) ->
+    match_open override module_name (from_expr metas expr)
+  | Pexp_record (fields, model) ->
+    match_record
+      (from_record_fields metas fields)
+      (from_maybe_expr metas model)
   | Pexp_fun (lbl, default_arg, arg, body) ->
      match_fun
        lbl
@@ -390,3 +417,15 @@ and from_value_bindings metas vbs =
   and terminal = basic_state @@ fun _ -> [[final ()]]
   in
   List.fold_left aux terminal (List.rev vbs)
+
+and from_record_field metas ({ Asttypes.txt = lbl; _ }, expr) =
+  match_record_field lbl (from_expr metas expr)
+
+and from_record_fields metas fields =
+  let aux accu field =
+    basic_state @@ fun _ -> [[from_record_field metas field; accu]]
+and terminal = basic_state @@ function
+  | AE.Record_fields [] -> [[final ()]]
+  | _ -> []
+  in
+  List.fold_left aux terminal (List.rev fields)
