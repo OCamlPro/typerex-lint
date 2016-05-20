@@ -21,11 +21,15 @@ let both
       ;
     }
     in
+    match
     List.map (
       fun loc -> Builder.final (),
                  { merged_matches with Match.location = Some loc }
       )
       locations
+    with
+    | [] -> [Builder.final (), merged_matches]
+    | l -> l
 
 let rec apply' = fun env state node ->
   if state.A.final then
