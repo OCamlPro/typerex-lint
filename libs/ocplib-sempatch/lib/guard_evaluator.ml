@@ -53,9 +53,10 @@ let bool f x = Bool (f x)
 let expr f x = Expr (f x)
 
 let equiv_ast = apply_to_exprs @@ apply_to_2 @@ fun e1 e2 ->
-  let patch = Parsed_patches.Type.{
-      header = Parsed_patches.void_header;
-      body = Builder.from_expr [] e1;
+  let patch = Parsed_patches.preprocess Parsed_patches.{
+      unprocessed_header =
+        { Parsed_patches.void_header with Type.name = "guard"};
+      unprocessed_body = e1;
     }
   in
   match
