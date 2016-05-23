@@ -1,5 +1,15 @@
 comp += [ "-w" "+A-4" ]
 
+begin program "abc"
+    files = [
+      "lib/automaton/generator/gen.ml"
+    ]
+    requires = [
+      "compiler-libs.common"
+      "str"
+    ]
+end
+
 begin library "ocplib-sempatch"
     files = [
       "lib/std_utils.ml"
@@ -28,6 +38,9 @@ begin library "ocplib-sempatch"
     requires = [
         "compiler-libs"
         "compiler-libs.common"
+        "abc"
     ]
+    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm" ]
+    comp_requires = "abc:asm"
     ocamlyacc = "menhir"
 end

@@ -178,7 +178,7 @@ and match_case lhs guard rhs =
 
 and match_record_field id_ref expr_s =
   basic_state @@ function
-  | AE.Record_field ({ Asttypes.txt = id; _ }, _)
+  | AE.LPAR_Longident_DOT_t_loc_AND__expression_RPAR ({ Asttypes.txt = id; _ }, _)
     when id = id_ref ->
     [[expr_s]]
   | _ -> []
@@ -285,14 +285,14 @@ let catchall () =
       | AE.Expression e -> catchall_expressions e.pexp_desc
       | AE.Structure_item i -> catchall_str_items i.pstr_desc
       | AE.Pattern p -> catchall_patterns p.ppat_desc
-      | AE.Pattern_opt _
-      | AE.Expression_opt _
+      | AE.Pattern_option _
+      | AE.Expression_option _
         -> dispatch_list 1
       | AE.Structure _
-      | AE.Value_bindings _
+      | AE.Value_binding_list _
       | AE.Value_binding _
-      | AE.Cases _
-      | AE.Expressions _
+      | AE.Case_list _
+      | AE.Expression_list _
         -> dispatch_list 2
       | AE.Case _
         -> dispatch_list 3
@@ -344,10 +344,10 @@ let rec from_expr metas expr =
     match_try (from_expr metas expression) (from_cases metas cases)
   | Pexp_assert expr ->
     match_assert (from_expr metas expr)
-  | Pexp_record (fields, model) ->
-    match_record
-      (from_record_fields metas fields)
-      (from_maybe_expr metas model)
+  (* | Pexp_record (fields, model) -> *)
+  (*   match_record *)
+  (*     (from_record_fields metas fields) *)
+  (*     (from_maybe_expr metas model) *)
   | Pexp_fun (lbl, default_arg, arg, body) ->
      match_fun
        lbl
@@ -370,14 +370,14 @@ and from_maybe_expr metas = function
   | None ->
     begin
       basic_state @@ function
-      | AE.Expression_opt None -> [[final ()]]
+      | AE.Expression_option None -> [[final ()]]
       | _ -> []
     end
   | Some expr ->
     begin
       let next_state = [[from_expr metas expr]] in
       basic_state @@ function
-      | AE.Expression_opt (Some _) -> next_state
+      | AE.Expression_option (Some _) -> next_state
       | _ -> []
     end
 
@@ -385,7 +385,7 @@ and from_expr_list metas exprs =
   let aux accu expr =
     basic_state @@ fun _ -> [[from_expr metas expr; accu]]
   and terminal = basic_state @@ function
-    | AE.Expressions [] -> [[final ()]]
+    | AE.Expression_list [] -> [[final ()]]
     | _ -> []
   in
   List.fold_left aux terminal (List.rev exprs)
@@ -399,7 +399,7 @@ and from_case metas case =
 and from_cases metas cases =
   let aux accu case =
     basic_state @@ function
-    | AE.Cases _ -> [[from_case metas case; accu]]
+    | AE.Case_list _ -> [[from_case metas case; accu]]
     | _ -> []
   and terminal = basic_state @@ fun _ -> [[final ()]]
   in
@@ -426,14 +426,14 @@ and from_pattern_opt metas = function
   | None ->
     begin
       basic_state @@ function
-      | AE.Pattern_opt None -> [[final ()]]
+      | AE.Pattern_option None -> [[final ()]]
       | _ -> []
     end
   | Some expr ->
     begin
       let next_state = [[from_pattern metas expr]] in
       basic_state @@ function
-      | AE.Pattern_opt (Some _) -> next_state
+      | AE.Pattern_option (Some _) -> next_state
       | _ -> []
     end
 
@@ -449,14 +449,14 @@ and from_value_bindings metas vbs =
   in
   List.fold_left aux terminal (List.rev vbs)
 
-and from_record_field metas ({ Asttypes.txt = lbl; _ }, expr) =
-  match_record_field lbl (from_expr metas expr)
+(* and from_record_field metas ({ Asttypes.txt = lbl; _ }, expr) = *)
+(*   match_record_field lbl (from_expr metas expr) *)
 
-and from_record_fields metas fields =
-  let aux accu field =
-    basic_state @@ fun _ -> [[from_record_field metas field; accu]]
-and terminal = basic_state @@ function
-  | AE.Record_fields [] -> [[final ()]]
-  | _ -> []
-  in
-  List.fold_left aux terminal (List.rev fields)
+(* and from_record_fields metas fields = *)
+(*   let aux accu field = *)
+(*     basic_state @@ fun _ -> [[from_record_field metas field; accu]] *)
+(* and terminal = basic_state @@ function *)
+(*   | AE.Record_fields [] -> [[final ()]] *)
+(*   | _ -> [] *)
+(*   in *)
+(*   List.fold_left aux terminal (List.rev fields) *)

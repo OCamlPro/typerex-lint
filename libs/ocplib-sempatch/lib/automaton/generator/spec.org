@@ -98,7 +98,7 @@ This can be split in several parts
 
 The goal is to generate the ~tree~ aut ~automaton_tree~ types
 
-** TODO Generate the ~tree~ :
+** DONE Generate the ~tree~ :
    The only required think is to collect all the types defined in the
    file and make a big sum of it
 
@@ -111,7 +111,7 @@ The goal is to generate the ~tree~ aut ~automaton_tree~ types
     - if ~t~ is a product type or a record, ~automaton_t~ must be a sum
       type whith the same number of fields (all of type ~automaton~)
 
-    - if ~t~ is a sum typem ~automaton_t~ must be a sum type whose
+    - if ~t~ is a sum type then ~automaton_t~ must be a sum type whose
       fields arre the conversion of ~t~ fields (whith names prefixed
       by ~Aut_~ to ensure unicity)
 
