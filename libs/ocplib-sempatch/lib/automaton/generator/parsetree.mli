@@ -12,9 +12,51 @@
 
 (** Abstract syntax tree produced by parsing *)
 
-open Asttypes
 
 (** {2 Extension points} *)
+type int
+type char
+type string
+type int32
+type int64
+type nativeint
+type bool
+
+type constant =
+    Const_int of int
+  | Const_char of char
+  | Const_string of string * string option
+  | Const_float of string
+  | Const_int32 of int32
+  | Const_int64 of int64
+  | Const_nativeint of nativeint
+
+type rec_flag = Nonrecursive | Recursive
+
+type direction_flag = Upto | Downto
+
+type private_flag = Private | Public
+
+type mutable_flag = Immutable | Mutable
+
+type virtual_flag = Virtual | Concrete
+
+type override_flag = Override | Fresh
+
+type closed_flag = Closed | Open
+
+type label = string
+
+type 'a loc = {
+  txt : 'a;
+  loc : Location.t;
+}
+
+type variance =
+  | Covariant
+  | Contravariant
+  | Invariant
+
 
 type attribute = string loc * payload
        (* [@id ARG]

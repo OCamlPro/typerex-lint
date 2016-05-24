@@ -104,7 +104,7 @@ The goal is to generate the ~tree~ aut ~automaton_tree~ types
 
 ** TODO Generate the ~automaton_tree~
 
-*** TODO Reproduct the original tree in the automaton
+*** DONE Reproduct the original tree in the automaton
     For every type ~t~ in the original tree, create a new
     ~automaton_t~ type, defined like this :
 
@@ -115,5 +115,5 @@ The goal is to generate the ~tree~ aut ~automaton_tree~ types
       fields arre the conversion of ~t~ fields (whith names prefixed
       by ~Aut_~ to ensure unicity)
 
-*** TODO Generate the sum type of all the above
+*** DONE Generate the sum type of all the above
     Exactly the same thing as generating the ~tree~ type
