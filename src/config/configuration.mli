@@ -34,6 +34,8 @@ module type CONFIG = sig
 
   val get_option_value : string list -> string
 
+  val get_linter_options : string -> string -> (string list * string) list
+
   val save : unit -> unit
 end
 

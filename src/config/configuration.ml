@@ -18,10 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module type ConfigArg = sig
-  val filename : string
-end
-
 module type CONFIG = sig
   val config_file : SimpleConfig.config_file
   val simple_args : unit -> (string * Arg.spec * string) list
@@ -34,13 +30,14 @@ module type CONFIG = sig
     'a ->
     'a SimpleConfig.config_option
   val get_option_value : string list -> string
+  val get_linter_options : string -> string -> (string list * string) list
   val save : unit -> unit
 end
 
 exception ConfigParseError of string
 
-module MakeConfig (C: ConfigArg) = struct
-  let config_file = SimpleConfig.create_config_file (File.of_string C.filename)
+module DefaultConfig = struct
+  let config_file = SimpleConfig.create_config_file (File.of_string ".ocplint")
 
   let simple_args () =
     SimpleConfig.LowLevel.simple_args "" config_file
@@ -56,6 +53,35 @@ module MakeConfig (C: ConfigArg) = struct
   let get_option_value option_name =
     SimpleConfig.LowLevel.get_simple_option config_file option_name
 
+  let string_of_string_list list =
+    let rec iter s list =
+      match list with
+        [] -> s
+      | ss :: tail ->
+        iter (Printf.sprintf "%s.%s" s ss) tail
+    in
+    match list with
+      [] -> ""
+    | s :: tail -> iter s tail
+
+  let is_option_of name oi =
+    try
+      let diff =
+        List.mapi (fun i n ->
+            (List.nth oi.SimpleConfig.LowLevel.option_name i) = n)
+          name in
+      List.for_all (fun b -> b) diff
+    with _ -> false
+
+  let get_linter_options plugin_name linter_name =
+    let name = [ plugin_name; linter_name ] in
+    let options = SimpleConfig.LowLevel.simple_options "" config_file in
+    let plugin_options = List.filter (fun oi -> is_option_of name oi) options in
+    List.map (fun oi ->
+        oi.SimpleConfig.LowLevel.option_name,
+        oi.SimpleConfig.LowLevel.option_value)
+      plugin_options
+
   let save () =
     SimpleConfig.save_with_help config_file
 
@@ -66,4 +92,3 @@ module MakeConfig (C: ConfigArg) = struct
 
   end
 
-module DefaultConfig : CONFIG = MakeConfig(struct let filename = ".ocplint" end)
