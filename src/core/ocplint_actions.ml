@@ -133,36 +133,23 @@ let load_sempatch_plugins patches =
     end) in
   ()
 
-(* TODO: cago: move these functions to output modules. *)
-let output fmt plugins =
-  let open Warning_types in
-  Plugin.iter_plugins (fun plugin checks ->
-      let module P = (val plugin : Plugin_types.PLUGIN) in
-      Lint.iter (fun cname lint ->
-          let module Lint = (val lint : Lint_types.LINT) in
-          let warnings = Lint.warnings in
-          let filters =
-            Globals.Config.get_option_value [P.short_name; cname; "warnings"] in
-          let arr = Parse_args.parse_options filters in
-          Warning.iter
-            (fun warning ->
-               if arr.(warning.instance.id - 1) then
-                 Warning.print fmt warning)
-            warnings) checks)
-    plugins
+let output print_only_new fmt = match print_only_new with
+  | true -> Db.DefaultDB.print_only_new fmt
+  | _ -> Db.DefaultDB.print fmt
 
-let print plugins =
-  output Format.err_formatter plugins
+let print print_only_new =
+  output print_only_new Format.err_formatter
 
-let to_text file plugins =
+let to_text file =
   let oc = open_out file in
   let fmt = Format.formatter_of_out_channel oc in
-  output fmt plugins;
+  output false fmt;
   close_out oc
 
-let scan ?output_text path =
+let scan ?output_text print_only_new path =
   (* We filter plugins by using the .ocplint config file and/or
      command line arguments. *)
+
   let plugins = filter_plugins Globals.plugins in
 
   (* We filter the global ignored modules/files.  *)
@@ -186,8 +173,8 @@ let scan ?output_text path =
 
   (* TODO: do we want to print in stderr by default ? *)
   begin match output_text with
-  | None -> print plugins
-  | Some file -> to_text file plugins
-  end;
+    | None -> print print_only_new
+    | Some file -> to_text file
+  end
 
-  plugins
+let init_db () = File.RawIO.safe_mkdir ".typerex-lint"

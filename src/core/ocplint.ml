@@ -21,6 +21,7 @@
 type action =
 | ActionNone
 | ActionList
+| ActionInit
 | ActionSave
 | ActionLoad of string
 
@@ -28,6 +29,8 @@ let action = ref ActionNone
 let exit_status = ref 0
 let output_text = ref None
 let default_dir = "."
+let print_only_new = ref false
+let no_db = ref false
 
 let set_action new_action =
    if !action <> ActionNone then
@@ -52,6 +55,9 @@ let add_spec ((cmd, _, _) as spec) =
 
 let () =
   specs := [
+    "--init", Arg.Unit (fun dir -> set_action ActionInit),
+    " Init a project";
+
     "--path", Arg.String (fun dir -> set_action (ActionLoad dir)),
     "DIR   Give a project dir path";
 
@@ -74,25 +80,31 @@ let () =
         List.iter add_spec (Globals.Config.simple_args ())),
     " Load dynamically plugins with their corresponding 'cmxs' files.";
 
-    "--init", Arg.Unit (fun () -> set_action (ActionSave)),
-    " Initialize ocp-lint with a default config file.";
+    "--save-config", Arg.Unit (fun () -> set_action (ActionSave)),
+    " Save ocp-lint default config file.";
+
+    "--no-db-cache", Arg.Set no_db,
+    " Ignore the DB file.";
+
+    "--print-only-new", Arg.Unit (fun () -> print_only_new := true),
+    " Print only new warnings.";
   ]
 
 let start_lint dir =
-  let plugins = Ocplint_actions.scan ?output_text:!output_text dir in
-  Plugin.iter_plugins (fun _plugin checks ->
-      Lint.iter (fun cname lint ->
-          let module Lint = (val lint : Lint_types.LINT) in
-          if Warning.Warning.length Lint.warnings > 0 then
-              exit !exit_status) checks)
-    plugins
+  Globals.init !no_db dir;
+  Ocplint_actions.scan
+    ?output_text:!output_text
+    !print_only_new
+    dir;
+  if not !no_db then Db.DefaultDB.save ();
+  if Db.DefaultDB.has_warning () then exit !exit_status
 
 let main () =
   (* Getting all options declared in all registered plugins. *)
   Ocplint_actions.load_default_sempatch ();
   List.iter add_spec (Globals.Config.simple_args ());
   Arg.parse_dynamic specs
-      (fun cmd ->
+    (fun cmd ->
        Printf.printf "Error: don't know what to do with %s\n%!" cmd;
        exit 1)
     usage_msg;
@@ -103,8 +115,8 @@ let main () =
     exit 0 (* No warning, we can exit successfully *)
   | ActionList ->
     exit 0
+  | ActionInit -> Ocplint_actions.init_db ()
   | ActionSave ->
-    (* TODO: pour mika: création des répertoires de sauvegarde de DB *)
     Globals.Config.save ();
     exit 0
   | ActionNone ->

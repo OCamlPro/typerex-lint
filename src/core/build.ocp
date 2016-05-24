@@ -29,5 +29,6 @@ begin program "ocp-lint"
     "dynlink"
     "lint-code"
     "lint-interface"
+    "output-text"
   ]
 end

@@ -32,8 +32,12 @@ let is_in_ignored_files file files =
 let lint all mls mlis asts_ml asts_mli cmts plugins =
   let fmt = Format.err_formatter in
   (* Itering on all files in your project *)
+
+  Db.DefaultDB.clean all;
+
   Plugin.iter_plugins (fun plugin checks ->
       Lint.iter (fun cname lint ->
+          let module P = (val plugin : Plugin_types.PLUGIN) in
           let module Lint = (val lint : Lint_types.LINT) in
           List.iter (function
               | Input.InAll main ->
@@ -56,10 +60,14 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                 List.iter (function
                     | Input.InMl main ->
                       begin
-                        try
-                          main input
-                        with Plugin_error.Plugin_error err ->
-                          Plugin_error.print fmt err
+                        if not
+                            (Db.DefaultDB.already_run input
+                               Plugin.short_name cname) then
+                          (Db.DefaultDB.add_entry input Plugin.short_name cname;
+                           try
+                             main input
+                           with Plugin_error.Plugin_error err ->
+                             Plugin_error.print fmt err)
                       end
                     | _ -> ()) Lint.inputs) checks)
         plugins)
@@ -76,10 +84,14 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                 List.iter (function
                     | Input.InMli main ->
                       begin
-                        try
-                          main input
-                        with Plugin_error.Plugin_error err ->
-                          Plugin_error.print fmt err
+                        if not
+                            (Db.DefaultDB.already_run
+                               input Plugin.short_name cname) then
+                          (Db.DefaultDB.add_entry input Plugin.short_name cname;
+                           try
+                             main input
+                           with Plugin_error.Plugin_error err ->
+                             Plugin_error.print fmt err)
                       end
                     | _ -> ()) Lint.inputs) checks)
         plugins)
@@ -99,14 +111,19 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                         | None -> ()
                         | Some input ->
                           begin
-                            try
-                              main input
-                            with
-                            | Sempatch.Failure.SempatchException e ->
-                              Format.fprintf fmt "Sempatch error : %s\n"
-                                (Sempatch.Failure.to_string e)
-                            | Plugin_error.Plugin_error err ->
-                              Plugin_error.print fmt err
+                            if not
+                                (Db.DefaultDB.already_run file
+                                   Plugin.short_name cname) then
+                              (Db.DefaultDB.add_entry file Plugin.short_name cname;
+                               try
+                                 main input
+                               with
+                               | Db_error.Db_error err -> Db_error.print fmt err
+                               | Sempatch.Failure.SempatchException e ->
+                                 Format.fprintf fmt "Sempatch error : %s\n"
+                                   (Sempatch.Failure.to_string e)
+                               | Plugin_error.Plugin_error err ->
+                                 Plugin_error.print fmt err)
                           end
                       end
                     | _ -> ()) Lint.inputs) checks)
@@ -127,10 +144,14 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                         | None -> ()
                         | Some input ->
                           begin
-                            try
-                              main input
-                            with Plugin_error.Plugin_error err ->
-                              Plugin_error.print fmt err
+                            if not
+                                (Db.DefaultDB.already_run
+                                   file Plugin.short_name cname) then
+                              (Db.DefaultDB.add_entry file Plugin.short_name cname;
+                               try
+                                 main input
+                               with Plugin_error.Plugin_error err ->
+                                 Plugin_error.print fmt err)
                           end
                       end
                     | _ -> ()) Lint.inputs) checks)
@@ -148,10 +169,14 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                 List.iter (function
                     | Input.InCmt main ->
                       begin
-                        try
-                          main (Lazy.force input)
-                        with Plugin_error.Plugin_error err ->
-                          Plugin_error.print fmt err
+                        if not
+                            (Db.DefaultDB.already_run
+                               file Plugin.short_name cname) then
+                          (Db.DefaultDB.add_entry file Plugin.short_name cname;
+                           try
+                             main (Lazy.force input)
+                           with Plugin_error.Plugin_error err ->
+                             Plugin_error.print fmt err)
                       end
                     | _ -> ()) Lint.inputs) checks)
         plugins)

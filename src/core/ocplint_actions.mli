@@ -29,6 +29,13 @@ val load_sempatch_plugins : string list -> unit
 (** [load_default_sempatch ()] load default semantic patch file. *)
 val load_default_sempatch : unit -> unit
 
-(** [scan patches path] scan the [path] and start the registered
-    plugins/linters on the files in this path. *)
-val scan : ?output_text:string -> string -> Plugin.t
+(** [scan patches ?output_text no_db path] scan the [path] and start the
+    registered plugins/linters on the files in this path. *)
+val scan :
+  ?output_text:string ->
+  bool ->
+  string ->
+  unit
+
+(** [init_db ()] create dir to dump the db. *)
+val init_db : unit -> unit
