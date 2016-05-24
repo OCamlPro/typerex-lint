@@ -102,7 +102,7 @@ The goal is to generate the ~tree~ aut ~automaton_tree~ types
    The only required think is to collect all the types defined in the
    file and make a big sum of it
 
-** TODO Generate the ~automaton_tree~
+** DONE Generate the ~automaton_tree~
 
 *** DONE Reproduct the original tree in the automaton
     For every type ~t~ in the original tree, create a new
@@ -117,3 +117,23 @@ The goal is to generate the ~tree~ aut ~automaton_tree~ types
 
 *** DONE Generate the sum type of all the above
     Exactly the same thing as generating the ~tree~ type
+
+* Code generation
+
+The goal is to generate the ~Builder~ anv ~Eval~ modules.
+
+** TODO Generate the ~Builder~ module :
+*** TODO Generate the match_* functions
+    For each node ~Node~ of arity n in the AST, generate a function
+    ~match_node~ (of arity n) in the form :
+
+#+BEGIN_SRC ocaml
+  let match_node_subnode sub_1 (* .. *) sub_n =
+    basic_state @@ function
+    | Node (Subnode _) ->
+      Automaton_node_subnode (sub1, .., subn)
+    | _ -> Trash
+#+END_SRC
+*** TODO Generate the from_* functions
+
+*** TODO Generate the catchall state

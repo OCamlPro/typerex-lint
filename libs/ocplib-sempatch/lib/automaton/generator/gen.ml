@@ -192,7 +192,10 @@ let build_automaton_types loc tree_types tree_types_def =
       tree_types
   in
   let sum_of_all =
-    H.Type.mk ~kind:(Ptype_variant (List.map (fun typ ->
+    H.Type.mk ~kind:(Ptype_variant (
+        H.Type.constructor (Location.mknoloc "Trash") ::
+        H.Type.constructor (Location.mknoloc "Final") ::
+        List.map (fun typ ->
         {
           pcd_name = String.capitalize typ.ptype_name.Asttypes.txt
                      |> Location.mknoloc;
@@ -225,7 +228,6 @@ let build_automaton_types loc tree_types tree_types_def =
             ~mut:Asttypes.Mutable
             (Location.mknoloc "transitions")
             (type_of_string "transition list");
-            (* (H.Typ.constr (Location.mknoloc (Longident.Lident "transition")) []); *)
           H.Type.field
             ~mut:Asttypes.Mutable
             (Location.mknoloc "final")
