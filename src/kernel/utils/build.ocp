@@ -22,5 +22,5 @@ begin library "plugin-utils"
   files = [
     "utils.ml"
   ]
-  requires = [ "str" ]
+  requires = [ "str" "ocplib-system" ]
 end

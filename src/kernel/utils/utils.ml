@@ -35,9 +35,30 @@ let iter_files ?(recdir=true) apply dirname =
   in
   iter dirname ""
 
-
 let subsitute str substs =
   let replace substs str = try List.assoc str substs with Not_found -> str in
   let buf = Buffer.create (String.length str) in
   Buffer.add_substitute buf (replace substs) str;
   Buffer.contents buf
+
+let absolute file =
+  let file_t = File.of_string file in
+  if File.is_absolute file_t then (File.to_string file_t)
+  else
+    let file = File.concat (File.getcwd ()) file_t in
+    File.to_string file
+
+let find_root root_dir basenames =
+  let rec find dirname (basenames : string list) =
+    let file = File.add_basenames dirname basenames in
+    if File.X.exists file then dirname else
+      let new_dirname = File.dirname dirname in
+      if new_dirname == dirname then raise Not_found;
+      find new_dirname basenames
+  in
+  let root_dir = if File.is_absolute root_dir then root_dir else
+      File.concat (File.X.getcwd ()) root_dir
+  in
+  find root_dir basenames
+
+let spf = Printf.sprintf

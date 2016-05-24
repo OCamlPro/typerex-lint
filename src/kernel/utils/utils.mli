@@ -28,3 +28,13 @@ val iter_files : ?recdir:bool -> (string -> unit) -> string -> unit
      list [substs]. It replaces all the '$ID' by the matching string in the
      list. *)
 val subsitute : string -> (string * string) list -> string
+
+(** [absolute filename] give the absolute path to a file. *)
+val absolute : string -> string
+
+(** [find_root root_dir basenames] recurcively looks for the basenames in the
+     path which marks the root of a project and contains the db file. *)
+val find_root : File.t -> string list -> File.t
+
+(** [spf format] utility function to call sprintf. *)
+val spf : ('a, unit, string) format -> 'a
