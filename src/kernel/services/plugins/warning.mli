@@ -44,11 +44,6 @@ module WarningDeclaration : sig
 end
 
 module Warning : sig
-  (** Abstract type representation the warnings data structure. *)
-  type t
-
-  (** The empty set of warning. *)
-  val empty : unit -> t
 
   (** [add loc id kinds short_name message wset] adds the warning to [wset] with
       the location [loc], warning number [id], kinds [kinds], a short message
@@ -56,19 +51,15 @@ module Warning : sig
       file and the message [message] which represents the message displayed when
       the warning will be emit.*)
   val add :
-    Location.t -> int -> Warning_types.warning_declaration -> string -> t -> unit
+    string ->
+    string ->
+    Location.t ->
+    int ->
+    Warning_types.warning_declaration ->
+    string ->
+    unit
 
   (** [add_warning warning wset] adds the warning [warning] to [wset]. *)
-  val add_warning : Warning_types.warning -> t -> unit
+  val add_warning : string -> string -> Warning_types.warning -> unit
 
-  (** [length wset] returns the size of [wset].  *)
-  val length : t -> int
-
-  (** [iter f wset] applies [f] in turn to all elements of [wset]. The elements
-      of [wset] are presented to [f] in increasing order with respect to the
-      ordering over the type of elements. *)
-  val iter : (Warning_types.warning -> unit) -> t -> unit
-
-  (** A printing function over the type [Warning_types.warning].  *)
-  val print : Format.formatter -> Warning_types.warning -> unit
 end

@@ -35,5 +35,4 @@ end
 
 module type LINT = sig
   val inputs : Input.input list
-  val warnings : Warning.Warning.t
 end

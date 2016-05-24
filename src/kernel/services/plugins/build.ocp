@@ -32,7 +32,7 @@ end
 
 begin library "globals"
   files = [ "globals.ml" ]
-  requires = [ "default-config" "static-files" ]
+  requires = [ "default-config" "static-files" "database" "plugin-api"  "warning" "lint"]
 end
 
 begin library "plugin-api"
@@ -41,11 +41,21 @@ begin library "plugin-api"
     "plugin_error.ml"
     "input.mli"
     "warning_types.mli"
+  ]
+  requires = [ "compiler-libs.common" "plugin-utils" ]
+end
+
+begin library "lint"
+  files = [
     "lint.ml"
     "lint_types.mli"
-    "warning.ml"
   ]
-  requires = [ "compiler-libs.common" ]
+  requires = [ "plugin-api" "warning"]
+end
+
+begin library "warning"
+    files = [ "warning.ml" ]
+    requires = [ "compiler-libs.common" "plugin-api" "database" ]
 end
 
 begin library "plugin-lib"
