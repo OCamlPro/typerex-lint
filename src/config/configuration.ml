@@ -53,17 +53,6 @@ module DefaultConfig = struct
   let get_option_value option_name =
     SimpleConfig.LowLevel.get_simple_option config_file option_name
 
-  let string_of_string_list list =
-    let rec iter s list =
-      match list with
-        [] -> s
-      | ss :: tail ->
-        iter (Printf.sprintf "%s.%s" s ss) tail
-    in
-    match list with
-      [] -> ""
-    | s :: tail -> iter s tail
-
   let is_option_of name oi =
     try
       let diff =
@@ -84,11 +73,6 @@ module DefaultConfig = struct
 
   let save () =
     SimpleConfig.save_with_help config_file
-
-  let () =
-    try
-      SimpleConfig.load config_file
-    with Failure msg -> raise (ConfigParseError msg)
 
   end
 

@@ -42,6 +42,7 @@ end
 
 module type DATABASE = sig
   val init : File.t -> unit
+  val load : string -> t
   val save : unit -> unit
   val reset : unit -> unit
   val print : Format.formatter -> unit
@@ -60,6 +61,8 @@ module MakeDB (DB : DATABASE_IO) = struct
 
   let db = empty_db ()
 
+  let load = DB.load
+
   let init path =
     try
       let file = Filename.concat (File.to_string path) "db" in
@@ -67,10 +70,8 @@ module MakeDB (DB : DATABASE_IO) = struct
       let db2 = DB.load !database_file in
       Hashtbl.iter (fun k v -> Hashtbl.add db k v) db2
     with Not_found ->
-      Printf.eprintf
-         "%s, %s"
-         "Can't find .typerex-lint dir"
-         "use ocplint init if you want to use db support.\n%!"
+      Printf.eprintf "Can't find .typerex-lint dir \
+                      use ocplint init if you want to use db support.\n%!"
 
   let save () =
     Hashtbl.iter (fun file (hash, pres) ->
@@ -155,11 +156,11 @@ module MakeDB (DB : DATABASE_IO) = struct
   let clean files =
     List.iter (fun file ->
         let file = Utils.absolute file in
-        if Hashtbl.mem db file then
-          let hash = Digest.file file in
+        try
           let (old_hash, _old_fres) = Hashtbl.find db file in
-          if old_hash = hash then ()
-          else remove_entry file)
+          let hash = Digest.file file in
+          if old_hash <> hash then remove_entry file
+        with Not_found -> ())
       files
 
   let update pname lname warn =
@@ -189,15 +190,13 @@ module MakeDB (DB : DATABASE_IO) = struct
     let new_hash = Digest.file file in
     if Hashtbl.mem db file then
       let (hash, old_fres) = Hashtbl.find db file in
-      if hash = new_hash then
-        if StringMap.mem pname old_fres then
-          let old_pres = StringMap.find pname old_fres in
-          if StringMap.mem lname old_pres then
-            let _src, opt, _warn = StringMap.find lname old_pres in
-            let options =
-              Configuration.DefaultConfig.get_linter_options pname lname in
-            options = opt
-          else false
+      if hash = new_hash && StringMap.mem pname old_fres then
+        let old_pres = StringMap.find pname old_fres in
+        if StringMap.mem lname old_pres then
+          let _src, opt, _warn = StringMap.find lname old_pres in
+          let options =
+            Configuration.DefaultConfig.get_linter_options pname lname in
+          options = opt
         else false
       else false
     else false
@@ -215,15 +214,16 @@ module MakeDB (DB : DATABASE_IO) = struct
 
 end
 
-module Marshal_io : DATABASE_IO = struct
+module Marshal_IO : DATABASE_IO = struct
 
   let load file =
     if Sys.file_exists file then
       try
         let ic = open_in file in
         input_value ic
-      with _ ->
+      with exn ->
         (Printf.eprintf "Can't read DB file, using a fresh DB\n%!";
+         Printf.eprintf "%s\n%!" (Printexc.to_string exn);
          empty_db ())
     else
       (Printf.eprintf "No DB file found, using a fresh DB\n%!";
@@ -235,4 +235,4 @@ module Marshal_io : DATABASE_IO = struct
 
 end
 
-module DefaultDB : DATABASE = MakeDB (Marshal_io)
+module DefaultDB : DATABASE = MakeDB (Marshal_IO)

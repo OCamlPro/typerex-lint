@@ -133,9 +133,10 @@ let load_sempatch_plugins patches =
     end) in
   ()
 
-let output print_only_new fmt = match print_only_new with
-  | true -> Db.DefaultDB.print_only_new fmt
-  | _ -> Db.DefaultDB.print fmt
+let output print_only_new fmt =
+  if print_only_new then
+    Db.DefaultDB.print_only_new fmt
+  else Db.DefaultDB.print fmt
 
 let print print_only_new =
   output print_only_new Format.err_formatter

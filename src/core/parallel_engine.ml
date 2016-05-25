@@ -31,13 +31,13 @@ let is_in_ignored_files file files =
 
 let lint all mls mlis asts_ml asts_mli cmts plugins =
   let fmt = Format.err_formatter in
-  (* Itering on all files in your project *)
 
   Db.DefaultDB.clean all;
 
+  (* Itering on all files in your project *)
   Plugin.iter_plugins (fun plugin checks ->
       Lint.iter (fun cname lint ->
-          let module P = (val plugin : Plugin_types.PLUGIN) in
+          let module Plugin = (val plugin : Plugin_types.PLUGIN) in
           let module Lint = (val lint : Lint_types.LINT) in
           List.iter (function
               | Input.InAll main ->

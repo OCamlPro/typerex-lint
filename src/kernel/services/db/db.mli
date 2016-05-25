@@ -1,6 +1,14 @@
-module StringMap : Map.S
+module StringMap : Map.S with type key = string
 
-type t
+type source = Cache | Analyse
+
+type warning_list =
+  source * (string list * string) list * Warning_types.warning list
+type linter_map = warning_list StringMap.t
+type plugin_map = linter_map StringMap.t
+type file_map = Digest.t * plugin_map
+type t = (string, file_map) Hashtbl.t
+
 
 module type DATABASE_IO = sig
   val load : string -> t
@@ -9,6 +17,7 @@ end
 
 module type DATABASE = sig
   val init : File.t -> unit
+  val load : string -> t
   val save : unit -> unit
   val reset : unit -> unit
   val print : Format.formatter -> unit
