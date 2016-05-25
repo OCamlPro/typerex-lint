@@ -59,6 +59,9 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
               if not (is_in_ignored_files input ignored_files) then
                 List.iter (function
                     | Input.InMl main ->
+                      Printf.eprintf "x1: %s %s %s\n%!" input
+                        Plugin.short_name cname
+                      ;
                       begin
                         if not
                             (Db.DefaultDB.already_run input

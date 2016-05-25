@@ -234,6 +234,8 @@ and expression =
 
 and expression_desc =
   | Pexp_paren of expression
+  | Pexp_begin of expression
+  | Pexp_list of expression list
   | Pexp_ident of Longident.t loc
         (* x
            M.x

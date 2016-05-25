@@ -1483,9 +1483,9 @@ simple_expr:
   | LPAREN seq_expr error
       { unclosed "(" 1 ")" 3 }
   | BEGIN ext_attributes seq_expr END
-      { wrap_exp_attrs (reloc_exp $3) $2 (* check location *) }
+      { mkexp_attrs (Pexp_begin (reloc_exp $3)) $2 (* check location *) }
   | BEGIN ext_attributes END
-      { mkexp_attrs (Pexp_construct (mkloc (Lident "()") (symbol_rloc ()),
+      { mkexp_attrs (Pexp_construct (mkloc (Lident "begin end") (symbol_rloc ()),
                                None)) $2 }
   | BEGIN ext_attributes seq_expr error
       { unclosed "begin" 1 "end" 4 }
@@ -1537,7 +1537,8 @@ simple_expr:
   | mod_longident DOT LBRACKETBAR expr_semi_list opt_semi error
       { unclosed "[|" 3 "|]" 6 }
   | LBRACKET expr_semi_list opt_semi RBRACKET
-      { reloc_exp (mktailexp (rhs_loc 4) (List.rev $2)) }
+  /*      { reloc_exp (mktailexp (rhs_loc 4) (List.rev $2)) } */
+      { mkexp( Pexp_list $2 ) }
   | LBRACKET expr_semi_list opt_semi error
       { unclosed "[" 1 "]" 4 }
   | mod_longident DOT LBRACKET expr_semi_list opt_semi RBRACKET

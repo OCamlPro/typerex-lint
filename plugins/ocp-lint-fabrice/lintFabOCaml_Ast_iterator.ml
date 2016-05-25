@@ -310,6 +310,9 @@ module E = struct
     sub.attributes sub attrs;
     match desc with
     | Pexp_paren e -> sub.expr sub e
+    | Pexp_begin e -> sub.expr sub e
+    | Pexp_list exprs ->
+      List.iter (sub.expr sub) exprs
     | Pexp_ident x -> iter_loc sub x
     | Pexp_constant x -> ()
     | Pexp_let (r, vbs, e) ->

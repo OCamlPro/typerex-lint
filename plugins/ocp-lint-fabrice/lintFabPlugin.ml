@@ -18,10 +18,14 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+let plugin_name = "Fabrice's Linters"
+
+let () = Printf.eprintf "Loading plugin %S\n%!" plugin_name
+
 let details = "Specific linters for Fabrice's projects"
 
 module Plugin = Plugin_API.MakePlugin (struct
-    let name = "Fabrice plugin"
+    let name = plugin_name
     let short_name = "plugin_fabrice"
     let details = details
   end)
