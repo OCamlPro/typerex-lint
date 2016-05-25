@@ -27,6 +27,9 @@ plugin_sempatch = {
   flag = true
   sempatch_lint_default = {
 
+(* Enable/Disable linter "Lint from semantic patches (default)". *)
+    flag = true
+
 (* Module to ignore durint the lint of "Lint from semantic patches (default)" *)
     ignored_files = [
     ]
@@ -41,6 +44,9 @@ plugin_core = {
   flag = true
   code_identifier_length = {
 
+(* Enable/Disable linter "Code Identifier Length". *)
+    flag = true
+
 (* Module to ignore durint the lint of "Code Identifier Length" *)
     ignored_files = [
     ]
@@ -49,12 +55,15 @@ plugin_core = {
     warnings = "+A"
 
 (* Identifiers with a shorter name will trigger a warning *)
-    min_identifier_length = 2
+    min_identifier_length = 1
 
 (* Identifiers with a longer name will trigger a warning *)
-    max_identifier_length = 30
+    max_identifier_length = 35
   }
   code_length = {
+
+(* Enable/Disable linter "Code Length". *)
+    flag = true
 
 (* Module to ignore durint the lint of "Code Length" *)
     ignored_files = [
@@ -68,6 +77,9 @@ plugin_core = {
   }
   code_list_on_singleton = {
 
+(* Enable/Disable linter "List function on singleton". *)
+    flag = true
+
 (* Module to ignore durint the lint of "List function on singleton" *)
     ignored_files = [
     ]
@@ -76,6 +88,9 @@ plugin_core = {
     warnings = "+A"
   }
   "phys-comp-allocated-lit" = {
+
+(* Enable/Disable linter "Physical comparison between allocated litterals.". *)
+    flag = true
 
 (* Module to ignore durint the lint of "Physical comparison between allocated litterals." *)
     ignored_files = [
@@ -86,6 +101,9 @@ plugin_core = {
   }
   interface_missing = {
 
+(* Enable/Disable linter "Missing interface". *)
+    flag = true
+
 (* Module to ignore durint the lint of "Missing interface" *)
     ignored_files = [
     ]
@@ -94,6 +112,9 @@ plugin_core = {
     warnings = "+A"
   }
   "interface-module-type-name" = {
+
+(* Enable/Disable linter "Checks on module type name.". *)
+    flag = true
 
 (* Module to ignore durint the lint of "Checks on module type name." *)
     ignored_files = [
