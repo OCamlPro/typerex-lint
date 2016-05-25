@@ -42,12 +42,27 @@ let scan_project path = (* todo *)
 let filter_plugins plugins =
   let activated_plugins = Hashtbl.create 42 in
   Plugin.iter_plugins (fun plugin checks ->
-      let module P = (val plugin : Plugin_types.PLUGIN) in
-      let option_names = P.short_name :: [ "flag" ] in
-      let opt_value = Globals.Config.get_option_value option_names in
-      if (bool_of_string opt_value)
-      then Hashtbl.add activated_plugins plugin checks
-    ) plugins;
+      let module Plugin = (val plugin : Plugin_types.PLUGIN) in
+      let plugin_short_name = Plugin.short_name in
+      let plugin_opt_names = plugin_short_name :: [ "flag" ] in
+      let plugin_opt_value = Globals.Config.get_option_value plugin_opt_names in
+      (* if the plugin is disable, don't try to add any linter attached to it *)
+      if (bool_of_string plugin_opt_value) then begin
+        Lint.iter (fun cname lint ->
+            let lint_opt_names = plugin_short_name :: cname :: [ "flag" ] in
+            let lint_opt_value =
+              Globals.Config.get_option_value lint_opt_names in
+            (* if the linter is disable, don't try to use it. *)
+            if (bool_of_string lint_opt_value) then begin
+              let old_lints =
+                try Hashtbl.find activated_plugins plugin
+                with Not_found -> Lint.empty in
+              Hashtbl.replace activated_plugins plugin
+                (Lint.add cname lint old_lints)
+            end)
+          checks
+      end)
+    plugins;
   activated_plugins
 
 let filter_modules sources ignore_files =
