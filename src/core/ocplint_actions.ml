@@ -135,8 +135,8 @@ let load_sempatch_plugins patches =
 
 let output print_only_new fmt =
   if print_only_new then
-    Db.DefaultDB.print_only_new fmt
-  else Db.DefaultDB.print fmt
+    Text.print_only_new fmt Db.DefaultDB.db
+  else Text.print fmt Db.DefaultDB.db
 
 let print print_only_new =
   output print_only_new Format.err_formatter

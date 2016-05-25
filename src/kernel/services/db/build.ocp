@@ -21,9 +21,14 @@
 begin library "database"
   files = [ "db_error.ml" "db.ml" ]
   requires = [
+    "db-types"
     "ocplib-system"
-    "output-text"
     "plugin-api"
     "plugin-utils"
     "default-config" ]
+end
+
+begin library "db-types"
+  files = [ "db_types.ml" ]
+  requires = [ "plugin-api" ]
 end

@@ -19,4 +19,6 @@
 (**************************************************************************)
 
 (** A printing function over the type [Warning_types.warning].  *)
-val print : Format.formatter -> Warning_types.warning -> unit
+val print : Format.formatter -> Db_types.t -> unit
+
+val print_only_new : Format.formatter -> Db_types.t -> unit

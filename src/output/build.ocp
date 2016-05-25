@@ -20,5 +20,5 @@
 
 begin library "output-text"
   files = [ "text.ml" ]
-  requires = [ "compiler-libs.common" "plugin-api" ]
+  requires = [ "compiler-libs.common" "plugin-api" "db-types" "parse-args" "globals" ]
 end

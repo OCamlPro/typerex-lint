@@ -18,43 +18,13 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module StringMap = Map.Make (String)
-
-type source = Cache | Analyse
-
-type warning_list =
-  source * (string list * string) list * Warning_types.warning list
-type linter_map = warning_list StringMap.t
-type plugin_map = linter_map StringMap.t
-type file_map = Digest.t * plugin_map
-type t = (string, file_map) Hashtbl.t
+open Db_types
 
 let empty_db () = Hashtbl.create 42
 
 let string_of_source = function
   | Cache -> "Cache"
   | Analyse -> "Analyse"
-
-module type DATABASE_IO = sig
-  val load : string -> t
-  val save : string -> t -> unit
-end
-
-module type DATABASE = sig
-  val init : File.t -> unit
-  val load : string -> t
-  val save : unit -> unit
-  val reset : unit -> unit
-  val print : Format.formatter -> unit
-  val print_only_new : Format.formatter -> unit
-  val print_debug : unit -> unit
-  val remove_entry : string -> unit
-  val add_entry : string -> string -> string -> unit
-  val clean : string list -> unit
-  val update : string -> string -> Warning_types.warning -> unit
-  val already_run : string -> string -> string -> bool
-  val has_warning : unit -> bool
-end
 
 module MakeDB (DB : DATABASE_IO) = struct
   let database_file = ref ""
@@ -106,23 +76,6 @@ module MakeDB (DB : DATABASE_IO) = struct
       db;
     Printf.printf "=========================\n%!"
 
-  let print fmt =
-    Hashtbl.iter (fun file (hash, pres) ->
-        StringMap.iter (fun pname lres ->
-            StringMap.iter  (fun lname (_source, _opt, ws) ->
-                List.iter (Text.print fmt) ws)
-              lres)
-          pres)
-      db
-
-  let print_only_new fmt =
-    Hashtbl.iter (fun file (hash, pres) ->
-        StringMap.iter (fun pname lres ->
-            StringMap.iter  (fun lname (source, _opt, ws) ->
-                if source = Analyse then List.iter (Text.print fmt) ws)
-              lres)
-          pres)
-      db
 
   let remove_entry file =
     let file = Utils.absolute file in

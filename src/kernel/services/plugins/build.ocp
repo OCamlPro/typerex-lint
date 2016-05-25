@@ -32,7 +32,7 @@ end
 
 begin library "globals"
   files = [ "globals.ml" ]
-  requires = [ "default-config" "static-files" "database" "plugin-api"  "warning" "lint"]
+  requires = [ "default-config" "static-files" "database" "plugin-api" "lint"]
 end
 
 begin library "plugin-api"

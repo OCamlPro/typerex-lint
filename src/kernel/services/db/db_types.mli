@@ -18,37 +18,33 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Warning_types
-open Db_types
+module StringMap : Map.S with type key = string
 
-let print_warning ppf warning =
-  if warning.loc <> Location.none then
-    Format.fprintf ppf "%a" Location.print warning.loc;
+type source = Cache | Analyse
 
-  Format.fprintf ppf "  %s" warning.output;
-  Format.fprintf ppf "@."
+type warning_list =
+  source * (string list * string) list * Warning_types.warning list
+type linter_map = warning_list StringMap.t
+type plugin_map = linter_map StringMap.t
+type file_map = Digest.t * plugin_map
+type t = (string, file_map) Hashtbl.t
 
-let print fmt db =
-  Hashtbl.iter (fun file (hash, pres) ->
-      StringMap.iter (fun pname lres ->
-          StringMap.iter  (fun lname (_source, _opt, ws) ->
-              let filters =
-                Globals.Config.get_option_value [pname; lname; "warnings"] in
-              let arr = Parse_args.parse_options filters in
-              List.iter
-                (fun warning ->
-                   if arr.(warning.instance.id - 1) then
-                     print_warning fmt warning)
-                ws)
-            lres)
-        pres)
-    db
 
-let print_only_new fmt db =
-  Hashtbl.iter (fun file (hash, pres) ->
-      StringMap.iter (fun pname lres ->
-          StringMap.iter  (fun lname (source, _opt, ws) ->
-              if source = Analyse then List.iter (print_warning fmt) ws)
-            lres)
-        pres)
-    db
+module type DATABASE_IO = sig
+  val load : string -> t
+  val save : string -> t -> unit
+end
+
+module type DATABASE = sig
+  val db : t
+  val init : File.t -> unit
+  val load : string -> t
+  val save : unit -> unit
+  val reset : unit -> unit
+  val remove_entry : string -> unit
+  val add_entry : string -> string -> string -> unit
+  val clean : string list -> unit
+  val update : string -> string -> Warning_types.warning -> unit
+  val already_run : string -> string -> string -> bool
+  val has_warning : unit -> bool
+end

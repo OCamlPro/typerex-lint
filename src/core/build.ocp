@@ -18,15 +18,19 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+begin library "parse-args"
+  files = [ "parse_args.ml" ]
+end
+
 begin program "ocp-lint"
   files = [
-    "parse_args.ml"
     "parallel_engine.ml"
     "ocplint_actions.ml"
     "ocplint.ml"
   ]
   requires = [
     "dynlink"
+    "parse-args"
     "lint-code"
     "lint-interface"
     "output-text"
