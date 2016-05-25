@@ -38,7 +38,6 @@ let register_main plugin cname new_lint =
       let module New_Lint = (val new_lint : Lint_types.LINT) in
       let module Merge = struct
         let inputs = Old_Lint.inputs @ New_Lint.inputs
-        let warnings = Old_Lint.warnings
       end in
       let new_lints =
         Lint.add cname (module Merge : Lint_types.LINT) lints in
@@ -99,7 +98,6 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     let name = C.name
     let short_name = C.short_name
     let details = C.details
-    let warnings = Warning.empty ()
     let patches = C.patches
     let decls = WarningDeclaration.empty ()
 
@@ -114,7 +112,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       (* TODO: cago: here we have to re-set the long help with the id and the
          short_name of the warning. It will be displayed in the config file. *)
       let msg = Utils.subsitute decl.message args in
-      Warning.add loc warn_id decl msg warnings
+      Warning.add P.short_name C.short_name loc warn_id decl msg
 
     (* TODO This function should be exported in ocp-sempatch. *)
     let map_args env args =
@@ -174,7 +172,6 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     let () =
       let module Lint = struct
         let inputs = [Input.InStruct (ParsetreeIter.iter_structure iter)]
-        let warnings = warnings
       end in
       let lint = (module Lint : Lint_types.LINT) in
       register_main plugin C.short_name lint;
@@ -186,7 +183,6 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     let name = C.name
     let short_name = C.short_name
     let details = C.details
-    let warnings = Warning.empty ()
     let decls = WarningDeclaration.empty ()
 
     let create_option option short_help lhelp ty default =
@@ -204,7 +200,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
          short_name of the warning. It will be displayed in the config file. *)
       fun loc ~args ->
         let msg = Utils.subsitute decl.message args in
-        Warning.add loc id decl msg warnings
+        Warning.add P.short_name C.short_name loc id decl msg
 
     let new_warning kinds ~short_name ~msg = (* TODO *)
       let decl = new_warning kinds ~short_name ~msg in
@@ -216,7 +212,6 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       let () =
         let module Lint = struct
           let inputs = [ I.input ]
-          let warnings = warnings
         end in
         let lint = (module Lint : Lint_types.LINT) in
         register_main plugin C.short_name lint

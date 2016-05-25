@@ -32,3 +32,25 @@ let default_patches =
       File.file_of_string destfile content;
       destfile)
     Global_static_files.files
+
+let init_config file =
+  SimpleConfig.set_config_file Config.config_file file;
+  SimpleConfig.load Config.config_file
+
+let init no_db path =
+  let path_t = File.of_string path in
+  (try
+     let root_path_t = Utils.find_root path_t [".ocplint"] in
+     let file_t = File.concat root_path_t (File.of_string ".ocplint") in
+     init_config file_t;
+   with Not_found -> ());
+  try
+    if not no_db then
+      let root_path_dir_t = Utils.find_root path_t [".typerex-lint"] in
+      let root_t =
+        File.concat root_path_dir_t (File.of_string ".typerex-lint") in
+      Db.DefaultDB.init root_t
+  with Not_found ->
+    Printf.eprintf
+      "No DB file found, you should use --init option to use DB features.\n%!";
+    exit 1

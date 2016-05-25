@@ -36,34 +36,13 @@ let kind_to_string = function
 
 module Warning = struct
 
-  (* Warning Set *)
-  module WarningSet = Set.Make (struct
-      type t = Warning_types.warning
-      let compare = Pervasives.compare
-    end)
+  let add_warning pname lname warning =
+    Db.DefaultDB.update pname lname warning
 
-  type t = WarningSet.t ref
-
-  let empty () = ref WarningSet.empty
-
-  let add_warning warning wset =
-    wset := WarningSet.add warning !wset
-
-  let add loc id decl output wset =
+  let add pname lname loc id decl output =
     let instance = {id; decl} in
     let warning = {loc; instance; output} in
-    add_warning warning wset
-
-  let length wset = WarningSet.cardinal !wset
-
-  let iter apply wset = WarningSet.iter apply !wset
-
-  let print ppf warning =
-    if warning.loc <> Location.none then
-      Format.fprintf ppf "%a" Location.print warning.loc;
-
-    Format.fprintf ppf "  Warning %d: %s" warning.instance.id warning.output;
-    Format.fprintf ppf "@."
+    add_warning pname lname warning
 end
 
 module WarningDeclaration = struct

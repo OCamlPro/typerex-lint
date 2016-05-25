@@ -31,3 +31,7 @@ val plugins :
   ((module Plugin_types.PLUGIN), (module Lint_types.LINT) Lint.t) Hashtbl.t
 
 val default_patches : string list
+
+(** [init no_db path] initialize the db and config modules with the path
+     given in the command line *)
+val init : bool -> string -> unit

@@ -18,48 +18,32 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** Values representing the kind of warnings. See [Warning_types.kind] for more
-    details. *)
-val kind_code : Warning_types.kind
-val kind_typo : Warning_types.kind
-val kind_interface : Warning_types.kind
-val kind_metrics : Warning_types.kind
-val new_kind : string -> Warning_types.kind
+open Utils
 
-(** [kind_to_string kind] returns the string representation of
-    [Warning_types.kind]. *)
-val kind_to_string : Warning_types.kind -> string
+type error =
+  | File_not_found of string
+  | File_not_in_db of string
+  | Plugin_not_in_db of (string * string)
+  | Linter_not_in_db of (string * string * string)
+  | No_db_found
 
-(**** Warnings data structure. ****)
+exception Db_error of error
 
-module WarningDeclaration : sig
-  (** Abstract type representation the warning declaration data structure. *)
-  type t
+let to_string = function
+  | No_db_found ->
+    spf "No DB file found, you should use --init option to use DB features."
+  | File_not_found filename ->
+    spf "Ignoring warnings on %S. This file may be generated." filename
+  | File_not_in_db filename ->
+    spf "Ignoring warnings on %S. This file is not in the db." filename
+  | Plugin_not_in_db (fname, pname) ->
+    spf "Ignoring warnings on %S. The plugin %s is not in the db." fname pname
+  | Linter_not_in_db  (fname, pname, lname) ->
+    spf
+      "Ignoring warnings on %S. The linter %s.%s is not in the db."
+      fname
+      pname
+      lname
 
-  (** The empty set of warning declaration. *)
-  val empty : unit -> t
-
-  (** [add wdecl wdecl_set] adds the warning declaration [wdecl] to [wset]. *)
-  val add : Warning_types.warning_declaration -> t -> unit
-end
-
-module Warning : sig
-
-  (** [add loc id kinds short_name message wset] adds the warning to [wset] with
-      the location [loc], warning number [id], kinds [kinds], a short message
-      [short_message] which will be display at command line or in configuration
-      file and the message [message] which represents the message displayed when
-      the warning will be emit.*)
-  val add :
-    string ->
-    string ->
-    Location.t ->
-    int ->
-    Warning_types.warning_declaration ->
-    string ->
-    unit
-
-  (** [add_warning warning wset] adds the warning [warning] to [wset]. *)
-  val add_warning : string -> string -> Warning_types.warning -> unit
-
-end
+let print fmt err =
+  Format.fprintf fmt "Db error: %s\n" (to_string err)

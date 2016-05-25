@@ -18,48 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** Values representing the kind of warnings. See [Warning_types.kind] for more
-    details. *)
-val kind_code : Warning_types.kind
-val kind_typo : Warning_types.kind
-val kind_interface : Warning_types.kind
-val kind_metrics : Warning_types.kind
-val new_kind : string -> Warning_types.kind
-
-(** [kind_to_string kind] returns the string representation of
-    [Warning_types.kind]. *)
-val kind_to_string : Warning_types.kind -> string
-
-(**** Warnings data structure. ****)
-
-module WarningDeclaration : sig
-  (** Abstract type representation the warning declaration data structure. *)
-  type t
-
-  (** The empty set of warning declaration. *)
-  val empty : unit -> t
-
-  (** [add wdecl wdecl_set] adds the warning declaration [wdecl] to [wset]. *)
-  val add : Warning_types.warning_declaration -> t -> unit
-end
-
-module Warning : sig
-
-  (** [add loc id kinds short_name message wset] adds the warning to [wset] with
-      the location [loc], warning number [id], kinds [kinds], a short message
-      [short_message] which will be display at command line or in configuration
-      file and the message [message] which represents the message displayed when
-      the warning will be emit.*)
-  val add :
-    string ->
-    string ->
-    Location.t ->
-    int ->
-    Warning_types.warning_declaration ->
-    string ->
-    unit
-
-  (** [add_warning warning wset] adds the warning [warning] to [wset]. *)
-  val add_warning : string -> string -> Warning_types.warning -> unit
-
+begin library "output-text"
+  files = [ "text.ml" ]
+  requires = [ "compiler-libs.common" "plugin-api" "db-types" "parse-args" "globals" ]
 end

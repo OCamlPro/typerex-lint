@@ -18,6 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open Utils
+
 type error =
   | Plugin_already_registered of (module Plugin_types.PLUGIN)
   | Plugin_not_found of (module Plugin_types.PLUGIN)
@@ -25,8 +27,6 @@ type error =
   | Syntax_error of string
 
 exception Plugin_error of error
-
-let spf = Printf.sprintf
 
 let to_string = function
   | Plugin_already_registered plugin ->

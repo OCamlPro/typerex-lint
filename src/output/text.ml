@@ -18,48 +18,37 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** Values representing the kind of warnings. See [Warning_types.kind] for more
-    details. *)
-val kind_code : Warning_types.kind
-val kind_typo : Warning_types.kind
-val kind_interface : Warning_types.kind
-val kind_metrics : Warning_types.kind
-val new_kind : string -> Warning_types.kind
+open Warning_types
+open Db_types
 
-(** [kind_to_string kind] returns the string representation of
-    [Warning_types.kind]. *)
-val kind_to_string : Warning_types.kind -> string
+let print_warning ppf warning =
+  if warning.loc <> Location.none then
+    Format.fprintf ppf "%a" Location.print warning.loc;
 
-(**** Warnings data structure. ****)
+  Format.fprintf ppf "  %s" warning.output;
+  Format.fprintf ppf "@."
 
-module WarningDeclaration : sig
-  (** Abstract type representation the warning declaration data structure. *)
-  type t
+let print fmt db =
+  Hashtbl.iter (fun file (hash, pres) ->
+      StringMap.iter (fun pname lres ->
+          StringMap.iter  (fun lname (_source, _opt, ws) ->
+              let filters =
+                Globals.Config.get_option_value [pname; lname; "warnings"] in
+              let arr = Parse_args.parse_options filters in
+              List.iter
+                (fun warning ->
+                   if arr.(warning.instance.id - 1) then
+                     print_warning fmt warning)
+                ws)
+            lres)
+        pres)
+    db
 
-  (** The empty set of warning declaration. *)
-  val empty : unit -> t
-
-  (** [add wdecl wdecl_set] adds the warning declaration [wdecl] to [wset]. *)
-  val add : Warning_types.warning_declaration -> t -> unit
-end
-
-module Warning : sig
-
-  (** [add loc id kinds short_name message wset] adds the warning to [wset] with
-      the location [loc], warning number [id], kinds [kinds], a short message
-      [short_message] which will be display at command line or in configuration
-      file and the message [message] which represents the message displayed when
-      the warning will be emit.*)
-  val add :
-    string ->
-    string ->
-    Location.t ->
-    int ->
-    Warning_types.warning_declaration ->
-    string ->
-    unit
-
-  (** [add_warning warning wset] adds the warning [warning] to [wset]. *)
-  val add_warning : string -> string -> Warning_types.warning -> unit
-
-end
+let print_only_new fmt db =
+  Hashtbl.iter (fun file (hash, pres) ->
+      StringMap.iter (fun pname lres ->
+          StringMap.iter  (fun lname (source, _opt, ws) ->
+              if source = Analyse then List.iter (print_warning fmt) ws)
+            lres)
+        pres)
+    db

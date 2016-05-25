@@ -18,48 +18,33 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** Values representing the kind of warnings. See [Warning_types.kind] for more
-    details. *)
-val kind_code : Warning_types.kind
-val kind_typo : Warning_types.kind
-val kind_interface : Warning_types.kind
-val kind_metrics : Warning_types.kind
-val new_kind : string -> Warning_types.kind
+module StringMap : Map.S with type key = string
 
-(** [kind_to_string kind] returns the string representation of
-    [Warning_types.kind]. *)
-val kind_to_string : Warning_types.kind -> string
+type source = Cache | Analyse
 
-(**** Warnings data structure. ****)
+type warning_list =
+  source * (string list * string) list * Warning_types.warning list
+type linter_map = warning_list StringMap.t
+type plugin_map = linter_map StringMap.t
+type file_map = Digest.t * plugin_map
+type t = (string, file_map) Hashtbl.t
 
-module WarningDeclaration : sig
-  (** Abstract type representation the warning declaration data structure. *)
-  type t
 
-  (** The empty set of warning declaration. *)
-  val empty : unit -> t
-
-  (** [add wdecl wdecl_set] adds the warning declaration [wdecl] to [wset]. *)
-  val add : Warning_types.warning_declaration -> t -> unit
+module type DATABASE_IO = sig
+  val load : string -> t
+  val save : string -> t -> unit
 end
 
-module Warning : sig
-
-  (** [add loc id kinds short_name message wset] adds the warning to [wset] with
-      the location [loc], warning number [id], kinds [kinds], a short message
-      [short_message] which will be display at command line or in configuration
-      file and the message [message] which represents the message displayed when
-      the warning will be emit.*)
-  val add :
-    string ->
-    string ->
-    Location.t ->
-    int ->
-    Warning_types.warning_declaration ->
-    string ->
-    unit
-
-  (** [add_warning warning wset] adds the warning [warning] to [wset]. *)
-  val add_warning : string -> string -> Warning_types.warning -> unit
-
+module type DATABASE = sig
+  val db : t
+  val init : File.t -> unit
+  val load : string -> t
+  val save : unit -> unit
+  val reset : unit -> unit
+  val remove_entry : string -> unit
+  val add_entry : string -> string -> string -> unit
+  val clean : string list -> unit
+  val update : string -> string -> Warning_types.warning -> unit
+  val already_run : string -> string -> string -> bool
+  val has_warning : unit -> bool
 end
