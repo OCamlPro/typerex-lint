@@ -134,6 +134,10 @@ The goal is to generate the ~Builder~ anv ~Eval~ modules.
       Automaton_node_subnode (sub1, .., subn)
     | _ -> Trash
 #+END_SRC
+
+A simple way to handle cases where those functions have to be
+overriden is to redefine them after
+
 *** TODO Generate the from_* functions
 
 *** TODO Generate the catchall state

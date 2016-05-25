@@ -1,5 +1,7 @@
 module A = Automaton
 module AE = Ast_element
+open Asttypes
+open Ast_element
 open Parsetree
 open Std_utils
 
@@ -30,167 +32,169 @@ let basic_state f = A.{
     final = false;
   }
 
-let match_expr f = basic_state @@ function
-  | AE.Expression e -> f e
-  | _ -> []
+(* let match_expr f = basic_state @@ function *)
+(*   | AE.Expression e -> f e *)
+(*   | _ -> [] *)
 
-let match_pat f = basic_state @@ function
-  | AE.Pattern e -> f e
-  | _ -> []
+(* let match_pat f = basic_state @@ function *)
+(*   | AE.Pattern e -> f e *)
+(*   | _ -> [] *)
 
-let match_var var =
-  match_expr @@ function
-  | { pexp_desc = Pexp_ident ({ Asttypes.txt = id; _ }); _ }
-    when id = var ->
-    [[final ()]]
-  | _ -> []
+[%%build_automaton_matchers]
 
-and match_const const =
-  match_expr @@ function
-  | { pexp_desc = Pexp_constant cst; _ }
-    when cst = const ->
-    [[final ()]]
-  | _ -> []
+(* let match_var var = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_ident ({ Asttypes.txt = id; _ }); _ } *)
+(*     when id = var -> *)
+(*     [[final ()]] *)
+(*   | _ -> [] *)
 
-and match_apply ref_lbl left right =
-  match_expr @@ function
-  | { pexp_desc = Pexp_apply (_, [lbl, _ ]); _}
-    when ref_lbl = lbl ->
-    [[left; right]]
-  | _ -> []
+(* and match_const const = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_constant cst; _ } *)
+(*     when cst = const -> *)
+(*     [[final ()]] *)
+(*   | _ -> [] *)
 
-and match_ifthenelse eif ethen eelse =
-  match_expr @@ function
-  | { pexp_desc = Pexp_ifthenelse _; _ } ->
-    [[eif; ethen; eelse]]
-  | _ -> []
+(* and match_apply ref_lbl left right = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_apply (_, [lbl, _ ]); _} *)
+(*     when ref_lbl = lbl -> *)
+(*     [[left; right]] *)
+(*   | _ -> [] *)
 
-and match_construct id sub_state =
-  match_expr @@ function
-  | { pexp_desc = Pexp_construct ({ Asttypes.txt = ast_id; _ }, _); _}
-    when id = ast_id ->
-    [[sub_state]]
-  | _ -> []
+(* and match_ifthenelse eif ethen eelse = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_ifthenelse _; _ } -> *)
+(*     [[eif; ethen; eelse]] *)
+(*   | _ -> [] *)
 
-and match_tuple sub_state =
-  match_expr @@ function
-  | { pexp_desc = Pexp_tuple _; _ } ->
-    [[sub_state]]
-  | _ -> []
+(* and match_construct id sub_state = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_construct ({ Asttypes.txt = ast_id; _ }, _); _} *)
+(*     when id = ast_id -> *)
+(*     [[sub_state]] *)
+(*   | _ -> [] *)
 
-let match_let isrec bindings_states expr_state =
-  match_expr @@ function
-  | { pexp_desc = Pexp_let (rec_flag, _, _); _ } ->
-    if rec_flag = isrec then
-      [[expr_state; bindings_states]]
-    else
-      []
-  | _ -> []
+(* and match_tuple sub_state = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_tuple _; _ } -> *)
+(*     [[sub_state]] *)
+(*   | _ -> [] *)
 
-let match_fun lbl_ref default_arg_s arg_s body_s =
-  match_expr @@ function
-  | { pexp_desc = Pexp_fun (lbl, _, _, _); _ }
-    when lbl = lbl_ref ->
-    [[default_arg_s; arg_s; body_s]]
-  | _ -> []
+(* let match_let isrec bindings_states expr_state = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_let (rec_flag, _, _); _ } -> *)
+(*     if rec_flag = isrec then *)
+(*       [[expr_state; bindings_states]] *)
+(*     else *)
+(*       [] *)
+(*   | _ -> [] *)
 
-let match_function cases_s =
-  match_expr @@ function
-  | { pexp_desc = Pexp_function _; _ } ->
-    [[cases_s]]
-  | _ -> []
+(* let match_fun lbl_ref default_arg_s arg_s body_s = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_fun (lbl, _, _, _); _ } *)
+(*     when lbl = lbl_ref -> *)
+(*     [[default_arg_s; arg_s; body_s]] *)
+(*   | _ -> [] *)
 
-let match_match expr_s cases_s =
-  match_expr @@ function
-  | { pexp_desc = Pexp_match _; _ } ->
-    [[expr_s; cases_s]]
-  | _ -> []
+(* let match_function cases_s = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_function _; _ } -> *)
+(*     [[cases_s]] *)
+(*   | _ -> [] *)
 
-let match_try expr_s cases_s =
-  match_expr @@ function
-  | { pexp_desc = Pexp_try _; _ } ->
-    [[expr_s; cases_s]]
-  | _ -> []
+(* let match_match expr_s cases_s = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_match _; _ } -> *)
+(*     [[expr_s; cases_s]] *)
+(*   | _ -> [] *)
 
-let match_sequence left_s right_s =
-  match_expr @@ function
-  | { pexp_desc = Pexp_sequence _; _ } ->
-    [[left_s; right_s]]
-  | _ -> []
+(* let match_try expr_s cases_s = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_try _; _ } -> *)
+(*     [[expr_s; cases_s]] *)
+(*   | _ -> [] *)
 
-let match_field expr_s field_patch =
-  match_expr @@ function
-  | { pexp_desc = Pexp_field (_, { Asttypes.txt = field; _ }); _ }
-    when field = field_patch ->
-    [[expr_s]]
-  | _ -> []
+(* let match_sequence left_s right_s = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_sequence _; _ } -> *)
+(*     [[left_s; right_s]] *)
+(*   | _ -> [] *)
 
-let match_record fields_s model_s =
-  match_expr @@ function
-  | { pexp_desc = Pexp_record _; _ } ->
-    [[fields_s; model_s]]
-  | _ -> []
+(* let match_field expr_s field_patch = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_field (_, { Asttypes.txt = field; _ }); _ } *)
+(*     when field = field_patch -> *)
+(*     [[expr_s]] *)
+(*   | _ -> [] *)
 
-let match_open isoverride name_ref expr_s =
-  match_expr @@ function
-  | { pexp_desc = Pexp_open (override, { Asttypes.txt = name; _ }, _ ); _ }
-    when override = isoverride
-      && name = name_ref ->
-    [[expr_s]]
-  | _ -> []
+(* let match_record fields_s model_s = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_record _; _ } -> *)
+(*     [[fields_s; model_s]] *)
+(*   | _ -> [] *)
 
-let match_variant lbl_ref body_s =
-  match_expr @@ function
-  | { pexp_desc = Pexp_variant (lbl, _ ); _ }
-    when lbl = lbl_ref ->
-    [[body_s]]
-  | _ -> []
+(* let match_open isoverride name_ref expr_s = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_open (override, { Asttypes.txt = name; _ }, _ ); _ } *)
+(*     when override = isoverride *)
+(*       && name = name_ref -> *)
+(*     [[expr_s]] *)
+(*   | _ -> [] *)
 
-and match_assert body_s =
-  match_expr @@ function
-  | { pexp_desc = Pexp_assert _; _ } ->
-    [[body_s]]
-  | _ -> []
+(* let match_variant lbl_ref body_s = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_variant (lbl, _ ); _ } *)
+(*     when lbl = lbl_ref -> *)
+(*     [[body_s]] *)
+(*   | _ -> [] *)
 
-and match_var_pattern var =
-  match_pat @@ function
-  | { ppat_desc = Ppat_var ({ Asttypes.txt = id; _ }); _ }
-    when id = var ->
-    [[final ()]]
-  | _ -> []
+(* and match_assert body_s = *)
+(*   match_expr @@ function *)
+(*   | { pexp_desc = Pexp_assert _; _ } -> *)
+(*     [[body_s]] *)
+(*   | _ -> [] *)
 
-and match_pat_construct id_ref sub_pat_state =
-  match_pat @@ function
-  | { ppat_desc = Ppat_construct ({Asttypes.txt = id; _ }, _); _ }
-    when id_ref = id ->
-    [[sub_pat_state]]
-  | _ -> []
+(* and match_var_pattern var = *)
+(*   match_pat @@ function *)
+(*   | { ppat_desc = Ppat_var ({ Asttypes.txt = id; _ }); _ } *)
+(*     when id = var -> *)
+(*     [[final ()]] *)
+(*   | _ -> [] *)
 
-and match_value_binding pattern expr =
-  basic_state @@ fun _ ->
-  [[pattern; expr]]
+(* and match_pat_construct id_ref sub_pat_state = *)
+(*   match_pat @@ function *)
+(*   | { ppat_desc = Ppat_construct ({Asttypes.txt = id; _ }, _); _ } *)
+(*     when id_ref = id -> *)
+(*     [[sub_pat_state]] *)
+(*   | _ -> [] *)
 
-and match_case lhs guard rhs =
-  basic_state @@ function
-  | AE.Case _ ->
-  [[lhs; guard; rhs]]
-  | _ -> []
+(* and match_value_binding pattern expr = *)
+(*   basic_state @@ fun _ -> *)
+(*   [[pattern; expr]] *)
 
-and match_record_field id_ref expr_s =
-  basic_state @@ function
-  | AE.LPAR_Longident_DOT_t_loc_AND__expression_RPAR ({ Asttypes.txt = id; _ }, _)
-    when id = id_ref ->
-    [[expr_s]]
-  | _ -> []
+(* and match_case lhs guard rhs = *)
+(*   basic_state @@ function *)
+(*   | AE.Case _ -> *)
+(*   [[lhs; guard; rhs]] *)
+(*   | _ -> [] *)
 
-and match_any_expr id = A.{
+(* and match_record_field id_ref expr_s = *)
+(*   basic_state @@ function *)
+(*   | AE.LPAR_Longident_DOT_t_loc_AND__expression_RPAR ({ Asttypes.txt = id; _ }, _) *)
+(*     when id = id_ref -> *)
+(*     [[expr_s]] *)
+(*   | _ -> [] *)
+
+let match_any_expr id = A.{
     transitions = [
       false,
       fun meta ast_elt ->
         match ast_elt with
         | AE.Expression expr ->
         [
-          [final ()],
+          Final,
           {meta with
            Match.substitutions =
              Substitution.add_expr
@@ -211,7 +215,7 @@ and match_any_pattern id = A.{
         match ast_elt with
         | AE.Pattern pat ->
         [
-          [final ()],
+          Final,
           {meta with
            Match.substitutions =
              Substitution.add_pattern

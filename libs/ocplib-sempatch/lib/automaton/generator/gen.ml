@@ -31,10 +31,10 @@ let escape string =
   let rp s = Str.global_replace (Str.regexp_string s) in
   string
   |> rp " " "_"
-  |> rp "(" "LPAR_"
-  |> rp ")" "_RPAR"
-  |> rp "*" "_AND_"
-  |> rp "." "_DOT_"
+  |> rp "(" "lpar_"
+  |> rp ")" "_rpar"
+  |> rp "*" "_and_"
+  |> rp "." "_dot_"
 
 let type_to_string typ =
   Pprintast.core_type Format.str_formatter typ;
@@ -119,10 +119,11 @@ let build_sum loc types =
   }
 
 let build_automaton_types loc tree_types tree_types_def =
+  let mkhere elt = Location.mkloc elt loc in
   let state_core_type = {
     ptyp_loc = loc;
     ptyp_attributes = [];
-    ptyp_desc = Ptyp_constr (Location.mkloc (Longident.Lident "state") loc, []);
+    ptyp_desc = Ptyp_constr (mkhere (Longident.Lident "state"), []);
   }
   in
   let types = List.map (fun (_, typ) ->
@@ -135,7 +136,7 @@ let build_automaton_types loc tree_types tree_types_def =
             typ with
             ptyp_desc = Ptyp_tuple (List.map (fun _ -> state_core_type) l)
           }
-          ("automaton_" ^ name |> Location.mknoloc)
+          ("automaton_" ^ name |> mkhere)
       | Ptyp_constr ({Asttypes.txt = id; _}, _) ->
         let model_typ =
           begin
@@ -152,8 +153,8 @@ let build_automaton_types loc tree_types tree_types_def =
                   constr_decl with
                   pcd_name = (
                     "Automaton_" ^ name ^ "_" ^
-                    (constr_decl.pcd_name.Asttypes.txt)
-                  ) |> Location.mknoloc;
+                    (constr_decl.pcd_name.Asttypes.txt |> String.uncapitalize)
+                  ) |> mkhere;
                   pcd_args =
                     List.map
                       (fun _ -> state_core_type)
@@ -163,14 +164,14 @@ let build_automaton_types loc tree_types tree_types_def =
                 v
               )
               )
-              ("automaton_" ^ name |> Location.mknoloc)
+              ("automaton_" ^ name |> mkhere)
           | Ptype_record r ->
             H.Type.mk ~kind:(Ptype_variant (List.map (fun label_decl ->
                 {
                   pcd_name = (
                     "Automaton_" ^ name ^ "_" ^
-                    (label_decl.pld_name.Asttypes.txt)
-                  ) |> Location.mknoloc;
+                    (label_decl.pld_name.Asttypes.txt |> String.uncapitalize)
+                  ) |> mkhere;
                   pcd_args = [state_core_type];
                   pcd_res = None;
                   pcd_loc = label_decl.pld_loc;
@@ -180,9 +181,9 @@ let build_automaton_types loc tree_types tree_types_def =
                 r
               )
               )
-              ("automaton_" ^ name |> Location.mknoloc)
+              ("automaton_" ^ name |> mkhere)
           | Ptype_abstract -> H.Type.mk ~manifest:state_core_type
-              ("automaton_" ^ name |> Location.mknoloc)
+                                ("automaton_" ^ name |> mkhere)
           | _ -> assert false
         end
       | _ ->
@@ -193,24 +194,24 @@ let build_automaton_types loc tree_types tree_types_def =
   in
   let sum_of_all =
     H.Type.mk ~kind:(Ptype_variant (
-        H.Type.constructor (Location.mknoloc "Trash") ::
-        H.Type.constructor (Location.mknoloc "Final") ::
+        H.Type.constructor (mkhere "Trash") ::
+        H.Type.constructor (mkhere "Final") ::
         List.map (fun typ ->
-        {
-          pcd_name = String.capitalize typ.ptype_name.Asttypes.txt
-                     |> Location.mknoloc;
-          pcd_args =
-            [
-              H.Typ.constr
-                (Location.mknoloc (Longident.Lident typ.ptype_name.Asttypes.txt))
-                []
-            ];
-          pcd_res = None;
-          pcd_loc = loc;
-          pcd_attributes = [];
-        }
-      )
-        types
+            {
+              pcd_name = String.capitalize typ.ptype_name.Asttypes.txt
+                         |> mkhere;
+              pcd_args =
+                [
+                  H.Typ.constr
+                    (mkhere (Longident.Lident typ.ptype_name.Asttypes.txt))
+                    []
+                ];
+              pcd_res = None;
+              pcd_loc = loc;
+              pcd_attributes = [];
+            }
+          )
+          types
       )
       )
       (Location.mkloc "automaton_tree" loc)
@@ -226,39 +227,157 @@ let build_automaton_types loc tree_types tree_types_def =
       ~kind:(Ptype_record [
           H.Type.field
             ~mut:Asttypes.Mutable
-            (Location.mknoloc "transitions")
+            (mkhere "transitions")
             (type_of_string "transition list");
           H.Type.field
             ~mut:Asttypes.Mutable
-            (Location.mknoloc "final")
-            (H.Typ.constr (Location.mknoloc (Longident.Lident "bool")) []);
+            (mkhere "final")
+            (H.Typ.constr (mkhere (Longident.Lident "bool")) []);
         ]
         )
       (Location.mkloc "state" loc)
   in
   sum_of_all::transition_type::state_type::types
 
-let mapper _ =
-  let types_list, types_def = collect_types
-      "libs/ocplib-sempatch/lib/automaton/generator/parsetree.mli"
+let generate_froms loc tree_type types_def =
+  let mkhere elt = Location.mkloc elt loc in
+  let preprocess constr =
+    constr
+    |> String.capitalize
+    |> Str.replace_first (Str.regexp "^Cons$") "(::)"
+    |> Str.replace_first (Str.regexp "^Nil$") "[]"
+  in
+  let mk_match_body first_constructor second_constructor arity =
+    let module S = String in
+    let rec aux = function
+      | 0 ->
+        Parser.parse_expression Lexer.token @@ Lexing.from_string
+          (
+            "basic_state @@ function" ^ (
+              Printf.sprintf
+                "| %s (%s%s) -> %s | _ -> Trash"
+                (preprocess first_constructor)
+                (preprocess second_constructor)
+                (* (if arity > 0 and then " _" else "") *)
+                (if arity = 0 then ""
+                 else if second_constructor = "cons" then " (_,_)"
+                 else " _")
+                (
+                  let buf = Buffer.create 63 in
+                  Buffer.add_string buf "Automaton_";
+                  Buffer.add_string buf first_constructor;
+                  Buffer.add_string buf "_";
+                  Buffer.add_string buf second_constructor;
+                  if arity > 0 then begin
+                    Buffer.add_string buf "(";
+                    for i=1 to arity do
+                      Buffer.add_string buf ("state_" ^ (string_of_int i));
+                      if i < arity then
+                        Buffer.add_string buf ", ";
+                    done;
+                    Buffer.add_string buf ")";
+                  end;
+                  Buffer.contents buf
+                )
+            )
+          )
+      | n when n > 0 ->
+        H.Exp.fun_
+          ""
+          None
+          (H.Pat.var (mkhere ("state_" ^ (string_of_int (arity+1-n)))))
+          (aux (n-1))
+      | _ -> assert false
+    in
+    H.Vb.mk
+      (
+        H.Pat.var
+          (mkhere
+             ("match_" ^ first_constructor ^ "_" ^ second_constructor)
+          )
+      )
+      (aux arity)
+  in
+  match tree_type.ptype_kind with
+  | Ptype_variant variants ->
+    Pstr_value (
+      Asttypes.Nonrecursive ,
+      List.map (fun first_variant ->
+          let first_name =
+            String.uncapitalize first_variant.pcd_name.Asttypes.txt
+          in
+          match first_variant.pcd_args with
+          | [{ptyp_desc = Ptyp_constr (id, _); _}] ->
+            let sub_type =
+              try
+                Hashtbl.find types_def (id.Asttypes.txt)
+              with Not_found -> failwith first_name
+            in
+            begin
+              match sub_type.ptype_kind with
+              | Ptype_variant variant ->
+                List.map (fun second_variant ->
+                    let second_name =
+                      String.uncapitalize second_variant.pcd_name.Asttypes.txt
+                    and arity =
+                      List.length second_variant.pcd_args
+                    in
+                    (
+                      mk_match_body
+                        first_name
+                        second_name
+                        arity
+                    )
+                  )
+                  variant
+              | _ -> [] (* TODO *)
+            end
+          | [] -> assert false
+          | args ->
+            [
+              mk_match_body
+                first_name
+                ""
+                (List.length args)
+            ]
+        )
+        variants
+      |> List.flatten
+    )
+  | _ -> assert false
+
+let mapper args =
+  let ast_path =
+    match args with
+    | path::_ -> path
+    | _ -> "libs/ocplib-sempatch/lib/automaton/generator/parsetree.mli"
+  in
+  List.iter print_endline args;
+  let types_list, types_def = collect_types ast_path
   in
   {
-  M.default_mapper with
-  M.structure_item = (fun self item ->
-      let desc =
-        match item.pstr_desc with
-        | Pstr_extension ((id, _), _)
-          when id.Asttypes.txt = "build_tree_type" ->
-          Pstr_type [(build_sum id.Asttypes.loc types_list)];
-        | Pstr_extension ((id, _), _)
-          when id.Asttypes.txt = "build_automaton_types" ->
-          Pstr_type (
-            build_automaton_types id.Asttypes.loc types_list types_def
-          );
-        | d -> d
-      in
-      M.default_mapper.M.structure_item self { item with pstr_desc = desc }
-    );
-}
+    M.default_mapper with
+    M.structure_item = (fun self item ->
+        let desc =
+          match item.pstr_desc with
+          | Pstr_extension ((id, _), _)
+            when id.Asttypes.txt = "build_tree_type" ->
+            Pstr_type [(build_sum id.Asttypes.loc types_list)];
+          | Pstr_extension ((id, _), _)
+            when id.Asttypes.txt = "build_automaton_types" ->
+            Pstr_type (
+              build_automaton_types id.Asttypes.loc types_list types_def
+            );
+          | Pstr_extension ((id, _), _)
+            when id.Asttypes.txt = "build_automaton_matchers" ->
+            generate_froms
+              id.Asttypes.loc
+              (build_sum id.Asttypes.loc types_list)
+              types_def
+          | d -> d
+        in
+        M.default_mapper.M.structure_item self { item with pstr_desc = desc }
+      );
+  }
 
 let () = Ast_mapper.register "abc" mapper
