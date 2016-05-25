@@ -24,8 +24,8 @@ open SimpleConfig (* for !! *)
 module Plugin = LintFabPlugin.Plugin
 
 module FullyQualifiedChecker = Plugin.MakeLint(struct
-    let name = "List function on singleton"
-    let short_name = "code_list_on_singleton"
+    let name = "Fully-Qualified Identifiers"
+    let short_name = "fully_qualified_identifiers"
     let details = "Checks that external identifiers are fully qualified."
   end)
 

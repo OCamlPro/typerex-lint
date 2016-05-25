@@ -22,7 +22,21 @@ begin library "ocp-lint-plugin-fabrice"
   files = [
         "lintFabPlugin.ml"
 
-        "lintFabFullyQualified.ml"
+          "lintFabFullyQualified.ml"
+
+          (* From ocaml-4.03.0 *)
+        "lintFabOCaml_Location.ml"
+        "lintFabOCaml_Asttypes.ml"
+        "lintFabOCaml_Lexer.mll"
+        "lintFabOCaml_Parsetree.ml"
+        "lintFabOCaml_Ast_helper.ml"
+        "lintFabOCaml_Docstrings.ml"
+        "lintFabOCaml_Syntaxerr.ml"
+        "lintFabOCaml_Parser.mly"
+        "lintFabOCaml_Ast_iterator.ml"
+        "lintFabOCaml_Parse.ml"
+
+        "lintFabSyntaxLinter.ml"
   ]
   requires = [ "plugin-lib" ]
 end
