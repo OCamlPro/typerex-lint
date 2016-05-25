@@ -71,7 +71,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       details
       details
       SimpleConfig.enable_option
-      true;
+      false;
     let details =
       Printf.sprintf "Module to ignore durint the lint of %S" lint_long_name in
     ignore @@
@@ -260,7 +260,7 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
       [P.short_name; "flag"]
       details
       details
-      SimpleConfig.enable_option true;
+      SimpleConfig.enable_option false;
     try
       register_plugin plugin
     with Plugin_error(error) ->
