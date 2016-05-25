@@ -38,7 +38,6 @@ module Warning = struct
 
   let add_warning pname lname warning =
     Db.DefaultDB.update pname lname warning
-  (* wset := WarningSet.add warning !wset *)
 
   let add pname lname loc id decl output =
     let instance = {id; decl} in

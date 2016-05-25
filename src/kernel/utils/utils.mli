@@ -36,5 +36,5 @@ val absolute : string -> string
      path which marks the root of a project and contains the db file. *)
 val find_root : File.t -> string list -> File.t
 
-(** [spf format] utility function to call sprintf. *)
+(** Alias for Printf.sprintf. *)
 val spf : ('a, unit, string) format -> 'a
