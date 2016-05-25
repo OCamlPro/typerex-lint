@@ -107,8 +107,15 @@ let rec load_plugins list =
           Dynlink.loadfile file
         else
           Printf.eprintf "Cannot load %S\n%!" file
-      with _ ->
-        Printf.eprintf "%S: No such file or directory.\n%!" file)
+      with
+      | Dynlink.Error err ->
+        Printf.eprintf "Error plugin %S: %s.\n%!" file
+        (Dynlink.error_message err)
+      | exn ->
+        Printf.eprintf "%S: exception %s in load_plugins.\n%!" file
+          (Printexc.to_string exn);
+        (*        Printf.eprintf "%S: No such file or directory.\n%!" file *)
+    )
     list
 
 let load_default_sempatch () =
@@ -171,6 +178,8 @@ let scan ?output_text print_only_new path =
   Format.printf "Starting analyses...\n%!";
 
   Parallel_engine.lint all mls mlis asts_ml asts_mli cmts plugins;
+
+  Format.printf "Analyses finished...\n%!";
 
   (* TODO: do we want to print in stderr by default ? *)
   begin match output_text with

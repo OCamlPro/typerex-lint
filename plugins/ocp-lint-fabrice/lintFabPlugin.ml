@@ -18,16 +18,10 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "typedtree-iter"
-  link += [ "-linkall" ]
-  files = [ "lintTypedtreeIter.ml" ]
-  requires = [ "compiler-libs" ]
-  pp = [ "ocp-pp" ]
-end
+let details = "Specific linters for Fabrice's projects"
 
-
-(* begin library "typedtree-map" *)
-(*   files = [ "typedtreeMap.ml" ] *)
-(*   requires = [ "compiler-libs" ] *)
-(*   pp = [ "ocp-pp" ] *)
-(* end *)
+module Plugin = Plugin_API.MakePlugin (struct
+    let name = "Fabrice plugin"
+    let short_name = "plugin_fabrice"
+    let details = details
+  end)

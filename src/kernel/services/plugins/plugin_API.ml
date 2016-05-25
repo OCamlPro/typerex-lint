@@ -60,8 +60,9 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
   end
   let plugin = (module Plugin : Plugin_types.PLUGIN)
 
-  let create_option options short_help lhelp ty default =
-    Globals.Config.create_option options short_help lhelp 0 ty default
+  let create_option options short_help long_help ty default =
+    let long_help = if long_help = "" then short_help else long_help in
+    Globals.Config.create_option options short_help long_help 0 ty default
 
   let create_default_lint_option lint_short_name lint_long_name =
     let details = Printf.sprintf "Enable/Disable linter %S." lint_long_name in
@@ -101,9 +102,10 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     let patches = C.patches
     let decls = WarningDeclaration.empty ()
 
-    let create_option option short_help lhelp ty default =
+    let create_option option short_help long_help ty default =
+      let long_help = if long_help = "" then short_help else long_help in
       let option = [P.short_name; C.short_name; option] in
-      Globals.Config.create_option option short_help lhelp 0 ty default
+      Globals.Config.create_option option short_help long_help 0 ty default
 
     let new_warning loc warn_id kinds ~short_name ~msg ~args = (* TODO *)
       let open Warning_types in
@@ -185,9 +187,10 @@ module MakePlugin(P : Plugin_types.PluginArg) = struct
     let details = C.details
     let decls = WarningDeclaration.empty ()
 
-    let create_option option short_help lhelp ty default =
+    let create_option option short_help long_help ty default =
+      let long_help = if long_help = "" then short_help else long_help in
       let option = [P.short_name; C.short_name; option] in
-      Globals.Config.create_option option short_help lhelp 0 ty default
+      Globals.Config.create_option option short_help long_help 0 ty default
 
     let fresh_id =
       let cpt = ref 0 in

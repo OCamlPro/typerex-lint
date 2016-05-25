@@ -175,8 +175,12 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                           (Db.DefaultDB.add_entry file Plugin.short_name cname;
                            try
                              main (Lazy.force input)
-                           with Plugin_error.Plugin_error err ->
-                             Plugin_error.print fmt err)
+                           with
+                           | Plugin_error.Plugin_error err ->
+                             Plugin_error.print fmt err
+                           | Cmi_format.Error _ ->
+                              Printf.eprintf "Error reading .cmt %S\n%!"
+                                file)
                       end
                     | _ -> ()) Lint.inputs) checks)
         plugins)

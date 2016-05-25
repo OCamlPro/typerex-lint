@@ -18,16 +18,11 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "typedtree-iter"
-  link += [ "-linkall" ]
-  files = [ "lintTypedtreeIter.ml" ]
-  requires = [ "compiler-libs" ]
-  pp = [ "ocp-pp" ]
+begin library "ocp-lint-plugin-fabrice"
+  files = [
+        "lintFabPlugin.ml"
+
+        "lintFabFullyQualified.ml"
+  ]
+  requires = [ "plugin-lib" ]
 end
-
-
-(* begin library "typedtree-map" *)
-(*   files = [ "typedtreeMap.ml" ] *)
-(*   requires = [ "compiler-libs" ] *)
-(*   pp = [ "ocp-pp" ] *)
-(* end *)
