@@ -18,42 +18,26 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module Config = Lint_config.DefaultConfig
+module type CONFIG = sig
+  val config_file : SimpleConfig.config_file
 
-let plugins = Hashtbl.create 42
+  val init_config : File.t -> unit
 
-let olint_dirname = "_olint"
-let config_file = ".ocplint"
+  val simple_args : unit -> (string * Arg.spec * string) list
 
-let default_patches =
-  (* To add a static file, edit src/kernel/services/plugins/build.ocp *)
-  List.map (fun (file, content) ->
-      let tmp = Filename.get_temp_dir_name () in
-      let file = Filename.basename file in
-      let destfile = Filename.concat tmp file in
-      File.Dir.make_all (File.of_string @@ Filename.dirname destfile);
-      File.file_of_string destfile content;
-      destfile)
-    Global_static_files.files
+  val create_option :
+    string list ->
+    string ->
+    string ->
+    int ->
+    'a SimpleConfig.option_class ->
+    'a ->
+    'a SimpleConfig.config_option
 
-let init_config file =
-  SimpleConfig.set_config_file Config.config_file file;
-  SimpleConfig.load Config.config_file
+  val get_option_value : string list -> string
 
-let init no_db path =
-  let path_t = File.of_string path in
-  (try
-     let root_path_t = Lint_utils.find_root path_t [config_file] in
-     let file_t = File.concat root_path_t (File.of_string config_file) in
-     init_config file_t;
-   with Not_found -> ());
-  try
-    if not no_db then
-      let root_path_dir_t = Lint_utils.find_root path_t [olint_dirname] in
-      let root_t =
-        File.concat root_path_dir_t (File.of_string olint_dirname) in
-      Lint_db.DefaultDB.init root_t
-  with Not_found ->
-    Printf.eprintf
-      "No DB file found, you should use --init option to use DB features.\n%!";
-    exit 1
+  val get_linter_options : string -> string -> (string list * string) list
+
+  val save : unit -> unit
+
+end

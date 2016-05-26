@@ -19,6 +19,6 @@
 (**************************************************************************)
 
 (** A printing function over the type [Warning_types.warning].  *)
-val print : Format.formatter -> Lint_db_types.t -> unit
+val print : Format.formatter -> string -> Lint_db_types.t -> unit
 
-val print_only_new : Format.formatter -> Lint_db_types.t -> unit
+val print_only_new : Format.formatter -> string -> Lint_db_types.t -> unit

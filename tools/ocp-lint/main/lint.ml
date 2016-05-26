@@ -70,7 +70,7 @@ let () =
 
     "--load-patches", Arg.String (fun files ->
         let patches = (Str.split (Str.regexp ",") files) in
-        Lint_actions.load_sempatch_plugins patches;
+        Lint_actions.load_patches patches;
         List.iter add_spec (Lint_globals.Config.simple_args ())),
     "PATCHES List of user defined lint with the patch format.";
 
@@ -91,7 +91,7 @@ let () =
   ]
 
 let start_lint dir =
-  Lint_globals.init !no_db dir;
+  Lint_actions.init !no_db dir;
   Lint_actions.scan
     ?output_text:!output_text
     !print_only_new
@@ -101,7 +101,6 @@ let start_lint dir =
 
 let main () =
   (* Getting all options declared in all registered plugins. *)
-  Lint_actions.load_default_sempatch ();
   List.iter add_spec (Lint_globals.Config.simple_args ());
   Arg.parse_dynamic specs
     (fun cmd ->
@@ -115,7 +114,8 @@ let main () =
     exit 0 (* No warning, we can exit successfully *)
   | ActionList ->
     exit 0
-  | ActionInit -> Lint_actions.init_db ()
+  | ActionInit ->
+    Lint_actions.init_olint_dir ()
   | ActionSave ->
     Lint_globals.Config.save ();
     exit 0

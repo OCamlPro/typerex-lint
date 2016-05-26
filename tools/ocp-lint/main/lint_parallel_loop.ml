@@ -63,7 +63,8 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                         if not
                             (Lint_db.DefaultDB.already_run input
                                Plugin.short_name cname) then
-                          (Lint_db.DefaultDB.add_entry input Plugin.short_name cname;
+                          (Lint_db.DefaultDB.add_entry
+                             input Plugin.short_name cname;
                            try
                              main input
                            with Lint_plugin_error.Plugin_error err ->
@@ -87,7 +88,8 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                         if not
                             (Lint_db.DefaultDB.already_run
                                input Plugin.short_name cname) then
-                          (Lint_db.DefaultDB.add_entry input Plugin.short_name cname;
+                          (Lint_db.DefaultDB.add_entry
+                             input Plugin.short_name cname;
                            try
                              main input
                            with Lint_plugin_error.Plugin_error err ->
@@ -114,11 +116,13 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                             if not
                                 (Lint_db.DefaultDB.already_run file
                                    Plugin.short_name cname) then
-                              (Lint_db.DefaultDB.add_entry file Plugin.short_name cname;
+                              (Lint_db.DefaultDB.add_entry
+                                 file Plugin.short_name cname;
                                try
                                  main input
                                with
-                               | Lint_db_error.Db_error err -> Lint_db_error.print fmt err
+                               | Lint_db_error.Db_error err ->
+                                 Lint_db_error.print fmt err
                                | Sempatch.Failure.SempatchException e ->
                                  Format.fprintf fmt "Sempatch error : %s\n"
                                    (Sempatch.Failure.to_string e)
@@ -147,7 +151,8 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                             if not
                                 (Lint_db.DefaultDB.already_run
                                    file Plugin.short_name cname) then
-                              (Lint_db.DefaultDB.add_entry file Plugin.short_name cname;
+                              (Lint_db.DefaultDB.add_entry file
+                                 Plugin.short_name cname;
                                try
                                  main input
                                with Lint_plugin_error.Plugin_error err ->
@@ -172,7 +177,8 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                         if not
                             (Lint_db.DefaultDB.already_run
                                file Plugin.short_name cname) then
-                          (Lint_db.DefaultDB.add_entry file Plugin.short_name cname;
+                          (Lint_db.DefaultDB.add_entry
+                             file Plugin.short_name cname;
                            try
                              main (Lazy.force input)
                            with Lint_plugin_error.Plugin_error err ->

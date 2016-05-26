@@ -18,7 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open SimpleConfig (* for !! *)
 open Plugin_complex
 
 let details = "Checks if the module type name is capitalized."

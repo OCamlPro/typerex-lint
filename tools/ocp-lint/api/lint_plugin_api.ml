@@ -122,9 +122,9 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
     (* TODO This function should be exported in ocp-sempatch. *)
     let map_args env args =
       List.map (fun str ->
-            match Substitution.get str env with
-            | Some ast -> (str, Ast_element.to_string ast)
-            | None -> (str, "xx"))
+          match Substitution.get str env with
+          | Some ast -> (str, Ast_element.to_string ast)
+          | None -> (str, "xx"))
         args
 
     module Warnings = struct

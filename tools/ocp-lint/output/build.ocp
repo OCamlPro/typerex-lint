@@ -23,9 +23,9 @@ begin library "ocp-lint-output"
     "lint_text.ml"
   ]
   requires = [
-    "compiler-libs.common"
+    "compiler-libs"
     "ocp-lint-plugin-api"
-    "ocp-lint-db-types"
+    "ocp-lint-db"
     "ocp-lint-utils"
   ]
 end

@@ -38,3 +38,6 @@ val find_root : File.t -> string list -> File.t
 
 (** Alias for Printf.sprintf. *)
 val spf : ('a, unit, string) format -> 'a
+
+(** [is_in_path file path] checks if the file is in the path. *)
+val is_in_path : string -> string -> bool

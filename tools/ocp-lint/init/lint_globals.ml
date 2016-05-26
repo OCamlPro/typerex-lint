@@ -18,15 +18,10 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-db"
-  files = [
-    "lint_db_types.ml"
-    "lint_db_error.ml"
-    "lint_db.ml"
-  ]
-  requires = [
-    "ocplib-system"
-    "ocp-lint-plugin-types"
-    "ocp-lint-config"
-  ]
-end
+module Config = Lint_config.DefaultConfig
+
+let plugins = Hashtbl.create 42
+
+let olint_dirname = "_olint"
+
+let config_file = ".ocplint"

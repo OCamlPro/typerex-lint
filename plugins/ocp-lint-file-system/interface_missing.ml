@@ -18,7 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open SimpleConfig     (* for !! *)
 open Plugin_file_system (* Registering to PluginFileSystem *)
 
 let details = "Missing interface."

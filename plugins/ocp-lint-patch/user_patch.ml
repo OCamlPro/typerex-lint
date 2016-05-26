@@ -18,15 +18,13 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-db"
-  files = [
-    "lint_db_types.ml"
-    "lint_db_error.ml"
-    "lint_db.ml"
-  ]
-  requires = [
-    "ocplib-system"
-    "ocp-lint-plugin-types"
-    "ocp-lint-config"
-  ]
-end
+let load_patches patches =
+  let
+    module UserDefined = Plugin_patch.PluginPatch.MakeLintPatch(struct
+      let name = "Lint from semantic patches (user defined)."
+      let short_name = "sempatch_lint_user_defined"
+      let details = "Lint from semantic patches (user defined)."
+      let patches = patches
+      let enable = true
+    end) in
+  ()

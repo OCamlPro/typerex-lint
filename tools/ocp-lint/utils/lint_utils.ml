@@ -62,3 +62,6 @@ let find_root root_dir basenames =
   find root_dir basenames
 
 let spf = Printf.sprintf
+
+let is_in_path file path =
+  Str.string_match (Str.regexp path) file 0

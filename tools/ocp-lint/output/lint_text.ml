@@ -28,27 +28,30 @@ let print_warning ppf warning =
   Format.fprintf ppf "  %s" warning.output;
   Format.fprintf ppf "@."
 
-let print fmt db =
+let print fmt path db =
   Hashtbl.iter (fun file (hash, pres) ->
-      StringMap.iter (fun pname lres ->
-          StringMap.iter  (fun lname (_source, _opt, ws) ->
-              let filters =
-                Lint_globals.Config.get_option_value [pname; lname; "warnings"] in
-              let arr = Lint_parse_args.parse_options filters in
-              List.iter
-                (fun warning ->
-                   if arr.(warning.instance.id - 1) then
-                     print_warning fmt warning)
-                ws)
-            lres)
-        pres)
+      if Lint_utils.(is_in_path file (absolute path)) then
+        StringMap.iter (fun pname lres ->
+            StringMap.iter  (fun lname (_source, _opt, ws) ->
+                let filters =
+                  Lint_globals.Config.get_option_value
+                    [pname; lname; "warnings"] in
+                let arr = Lint_parse_args.parse_options filters in
+                List.iter
+                  (fun warning ->
+                     if arr.(warning.instance.id - 1) then
+                       print_warning fmt warning)
+                  ws)
+              lres)
+          pres)
     db
 
-let print_only_new fmt db =
+let print_only_new fmt path db =
   Hashtbl.iter (fun file (hash, pres) ->
-      StringMap.iter (fun pname lres ->
-          StringMap.iter  (fun lname (source, _opt, ws) ->
-              if source = Analyse then List.iter (print_warning fmt) ws)
-            lres)
-        pres)
+      if Lint_utils.(is_in_path file (absolute path)) then
+        StringMap.iter (fun pname lres ->
+            StringMap.iter  (fun lname (source, _opt, ws) ->
+                if source = Analyse then List.iter (print_warning fmt) ws)
+              lres)
+          pres)
     db

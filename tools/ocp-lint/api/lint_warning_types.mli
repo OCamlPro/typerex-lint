@@ -18,24 +18,30 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** [Config] is a module which allow to create options for the configuration
-    file and command-line arguments. *)
-module Config : Lint_config.CONFIG
+(** [kind] is the category of the warning. A warning can be about the code, a
+    typography (for example the line length), interface, metrics and custom. *)
+type kind =
+  | Code
+  | Typo
+  | Interface
+  | Metrics
+  | Custom of string
 
-(** [plugins] is a global data structure where all plugins are registered.
-    The keys of the structure are a [Lint_plugin_types.PLUGIN] and the value are
-    a [LintMap.t]. *)
-(* val plugins : *)
-(*   ((module Lint_plugin_types.PLUGIN), Lint_types.lint) Hashtbl.t *)
-val plugins :
-  ((module Lint_plugin_types.PLUGIN), (module Lint_types.LINT) Lint_map.t)
-    Hashtbl.t
+and kinds = kind list
 
-val config_file : string
-val olint_dirname : string
+type warning = {
+  loc : Location.t;    (* The location of the warning *)
+  instance : warning_instance;
+  output: string;
+}
 
-val default_patches : string list
+and warning_instance = {
+  id : int;            (* Warning number *)
+  decl : warning_declaration
+}
 
-(** [init no_db path] initialize the db and config modules with the path
-     given in the command line *)
-val init : bool -> string -> unit
+and warning_declaration = {
+  kinds : kinds;       (* Warning kinds *)
+  short_name : string; (* A short name to identify a warning *)
+  message : string;    (* The displayed message *)
+}

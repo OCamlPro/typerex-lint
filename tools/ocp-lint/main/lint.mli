@@ -18,15 +18,4 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-db"
-  files = [
-    "lint_db_types.ml"
-    "lint_db_error.ml"
-    "lint_db.ml"
-  ]
-  requires = [
-    "ocplib-system"
-    "ocp-lint-plugin-types"
-    "ocp-lint-config"
-  ]
-end
+val main : unit -> unit

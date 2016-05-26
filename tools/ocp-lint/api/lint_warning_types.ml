@@ -18,8 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** [kind] is the category of the warning. A warning can be about the code, a
-    typography (for example the line length), interface, metrics and custom. *)
 type kind =
   | Code
   | Typo

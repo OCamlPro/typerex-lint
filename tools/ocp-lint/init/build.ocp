@@ -21,7 +21,10 @@
 
 begin library "ocp-lint-init"
   files = [
+    "lint_globals.ml"
   ]
   requires = [
+     "ocp-lint-config"
+     "ocp-lint-plugin-types"
   ]
 end

@@ -18,15 +18,21 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-db"
-  files = [
-    "lint_db_types.ml"
-    "lint_db_error.ml"
-    "lint_db.ml"
-  ]
-  requires = [
-    "ocplib-system"
-    "ocp-lint-plugin-types"
-    "ocp-lint-config"
-  ]
-end
+let default_patches =
+  (* To add a static file, edit plugins/ocp-lint-patch/build.ocp *)
+  List.map (fun (file, content) ->
+      let tmp = Filename.get_temp_dir_name () in
+      let file = Filename.basename file in
+      let destfile = Filename.concat tmp file in
+      File.Dir.make_all (File.of_string @@ Filename.dirname destfile);
+      File.file_of_string destfile content;
+      destfile)
+    Global_static_files.files
+
+module Default = Plugin_patch.PluginPatch.MakeLintPatch(struct
+    let name = "Lint from semantic patches (default)"
+    let short_name = "sempatch_lint_default"
+    let details = "Lint from semantic patches (default)."
+    let patches = default_patches
+    let enable = false
+  end)

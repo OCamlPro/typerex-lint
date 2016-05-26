@@ -18,15 +18,26 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-db"
-  files = [
-    "lint_db_types.ml"
-    "lint_db_error.ml"
-    "lint_db.ml"
-  ]
-  requires = [
-    "ocplib-system"
-    "ocp-lint-plugin-types"
-    "ocp-lint-config"
-  ]
+module type CONFIG = sig
+  val config_file : SimpleConfig.config_file
+
+  val init_config : File.t -> unit
+
+  val simple_args : unit -> (string * Arg.spec * string) list
+
+  val create_option :
+    string list ->
+    string ->
+    string ->
+    int ->
+    'a SimpleConfig.option_class ->
+    'a ->
+    'a SimpleConfig.config_option
+
+  val get_option_value : string list -> string
+
+  val get_linter_options : string -> string -> (string list * string) list
+
+  val save : unit -> unit
+
 end

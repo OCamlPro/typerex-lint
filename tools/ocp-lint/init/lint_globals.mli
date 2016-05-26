@@ -18,15 +18,19 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-db"
-  files = [
-    "lint_db_types.ml"
-    "lint_db_error.ml"
-    "lint_db.ml"
-  ]
-  requires = [
-    "ocplib-system"
-    "ocp-lint-plugin-types"
-    "ocp-lint-config"
-  ]
-end
+(** [Config] is a module which allow to create options for the configuration
+    file and command-line arguments. *)
+module Config : Lint_config_types.CONFIG
+
+(** [plugins] is a global data structure where all plugins are registered.
+    The keys of the structure are a [Lint_plugin_types.PLUGIN] and the value are
+    a [LintMap.t]. *)
+(* val plugins : *)
+(*   ((module Lint_plugin_types.PLUGIN), Lint_types.lint) Hashtbl.t *)
+val plugins :
+  ((module Lint_plugin_types.PLUGIN), (module Lint_types.LINT) Lint_map.t)
+    Hashtbl.t
+
+val config_file : string
+
+val olint_dirname : string

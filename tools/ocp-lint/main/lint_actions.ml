@@ -111,42 +111,48 @@ let rec load_plugins list =
         Printf.eprintf "%S: No such file or directory.\n%!" file)
     list
 
-let load_default_sempatch () =
-  (* TODO: Fabrice: vérifier que le fichier existe, sinon prendre celui dans
-     l'exécutable par défaut*)
-  let
-    module Default = Plugin_patch.PluginPatch.MakeLintPatch(struct
-      let name = "Lint from semantic patches (default)"
-      let short_name = "sempatch_lint_default"
-      let details = "Lint from semantic patches (default)."
-      let patches = Lint_globals.default_patches
-      let enable = false
-    end) in
-  ()
+let load_patches patches =
+  User_patch.load_patches patches
 
-let load_sempatch_plugins patches =
-  let
-    module UserDefined = Plugin_patch.PluginPatch.MakeLintPatch(struct
-      let name = "Lint from semantic patches (user defined)."
-      let short_name = "sempatch_lint_user_defined"
-      let details = "Lint from semantic patches (user defined)."
-      let patches = patches
-      let enable = false
-    end) in
-  ()
+let init_olint_dir () = File.RawIO.safe_mkdir Lint_globals.olint_dirname
 
-let output print_only_new fmt =
+let init_db no_db path_t =
+  let olint_dirname = Lint_globals.olint_dirname in
+  try
+    if not no_db then
+      let root_path_dir_t = Lint_utils.find_root path_t [olint_dirname] in
+      let root_t = File.concat root_path_dir_t (File.of_string olint_dirname) in
+      Lint_db.DefaultDB.init root_t
+  with Not_found ->
+    Printf.eprintf
+      "No DB file found, you should use --init option to use DB features.\n%!";
+    exit 1
+
+let init_config path_t =
+  let config_file = Lint_globals.config_file in
+  try
+    let root_path_t = Lint_utils.find_root path_t [config_file] in
+    let file_t = File.concat root_path_t (File.of_string config_file) in
+    Lint_globals.Config.init_config file_t;
+  with Not_found -> ()
+
+let init no_db path =
+  let path_t = File.of_string path in
+  init_config path_t;
+  init_db no_db path_t
+
+let output path print_only_new fmt =
   if print_only_new then
-    Lint_text.print_only_new fmt Lint_db.DefaultDB.db
-  else Lint_text.print fmt Lint_db.DefaultDB.db
+    Lint_text.print_only_new fmt path Lint_db.DefaultDB.db
+  else Lint_text.print fmt path Lint_db.DefaultDB.db
 
-let print print_only_new =
-  output print_only_new Format.err_formatter
+let print path print_only_new =
+  output path print_only_new Format.err_formatter
 
-let to_text file =
+let to_text path file =
   let oc = open_out file in
   let fmt = Format.formatter_of_out_channel oc in
-  output false fmt;
+  output path false fmt;
   close_out oc
 
 let scan ?output_text print_only_new path =
@@ -176,8 +182,6 @@ let scan ?output_text print_only_new path =
 
   (* TODO: do we want to print in stderr by default ? *)
   begin match output_text with
-    | None -> print print_only_new
-    | Some file -> to_text file
+    | None -> print path print_only_new
+    | Some file -> to_text path file
   end
-
-let init_db () = File.RawIO.safe_mkdir Lint_globals.olint_dirname

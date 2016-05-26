@@ -18,26 +18,16 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module type CONFIG = sig
-  val config_file : SimpleConfig.config_file
-  val simple_args : unit -> (string * Arg.spec * string) list
-  val create_option :
-    string list ->
-    string ->
-    string ->
-    int ->
-    'a SimpleConfig.option_class ->
-    'a ->
-    'a SimpleConfig.config_option
-  val get_option_value : string list -> string
-  val get_linter_options : string -> string -> (string list * string) list
-  val save : unit -> unit
-end
+open Lint_config_types
 
 exception ConfigParseError of string
 
 module DefaultConfig = struct
   let config_file = SimpleConfig.create_config_file (File.of_string ".ocplint")
+
+  let init_config file =
+    SimpleConfig.set_config_file config_file file;
+    SimpleConfig.load config_file
 
   let simple_args () =
     SimpleConfig.LowLevel.simple_args "" config_file
@@ -73,6 +63,4 @@ module DefaultConfig = struct
 
   let save () =
     SimpleConfig.save_with_help config_file
-
   end
-

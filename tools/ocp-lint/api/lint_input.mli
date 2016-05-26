@@ -18,15 +18,22 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-db"
-  files = [
-    "lint_db_types.ml"
-    "lint_db_error.ml"
-    "lint_db.ml"
-  ]
-  requires = [
-    "ocplib-system"
-    "ocp-lint-plugin-types"
-    "ocp-lint-config"
-  ]
-end
+(** Type [input] is the type of inputs that each linter can takes as
+    argument. *)
+type input =
+    | InStruct of (Parsetree.structure -> unit)
+    | InInterf of (Parsetree.signature -> unit)
+    | InTop of (Parsetree.toplevel_phrase -> unit)
+    | InCmt of (Cmt_format.cmt_infos -> unit)
+    | InMl of (string -> unit)
+    | InMli of (string -> unit)
+    | InAll of (string list -> unit)
+
+module type INPUT = sig val input : input end
+module type STRUCTURE = sig val main : Parsetree.structure -> unit end
+module type INTERFACE = sig val main : Parsetree.signature -> unit end
+module type TOPLEVEL = sig val main : Parsetree.toplevel_phrase -> unit end
+module type CMT = sig val main : Cmt_format.cmt_infos -> unit end
+module type ML = sig val main : string -> unit end
+module type MLI = sig val main : string -> unit end
+module type ALL = sig val main : string list -> unit end

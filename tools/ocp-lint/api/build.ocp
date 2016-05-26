@@ -20,8 +20,6 @@
 
 begin library "ocp-lint-plugin-api"
   files = [
-    "lint_globals.ml"
-    "lint_map.ml"
     "lint_warning.ml"
     "lint_plugin.ml"
     "lint_plugin_api.ml"
@@ -37,13 +35,14 @@ begin library "ocp-lint-plugin-api"
     (* Internal dependencies. *)
     "ocp-lint-config"
     "ocp-lint-db"
-    "ocp-lint-static-patch-files"
     "ocp-lint-plugin-types"
-   ]
+    "ocp-lint-init"
+  ]
 end
 
 begin library "ocp-lint-plugin-types"
   files = [
+    "lint_map.ml"
     "lint_input.ml"
     "lint_types.ml"
     "lint_plugin_error.ml"

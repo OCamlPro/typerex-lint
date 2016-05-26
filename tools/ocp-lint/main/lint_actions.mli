@@ -22,12 +22,9 @@
     directory given in the command line with '--load' option. *)
 val load_plugins : string list -> unit
 
-(** [load_sempatch_plugins files] load dynamically patch files in a specific
+(** [load_patches files] load dynamically patch files in a specific
     directory given in the command line with '--patches' option. *)
-val load_sempatch_plugins : string list -> unit
-
-(** [load_default_sempatch ()] load default semantic patch file. *)
-val load_default_sempatch : unit -> unit
+val load_patches : string list -> unit
 
 (** [scan patches ?output_text no_db path] scan the [path] and start the
     registered plugins/linters on the files in this path. *)
@@ -38,4 +35,8 @@ val scan :
   unit
 
 (** [init_db ()] create dir to dump the db. *)
-val init_db : unit -> unit
+val init_olint_dir : unit -> unit
+
+(** [init no_db path] initialize the db and config modules with the path
+     given in the command line *)
+val init : bool -> string -> unit

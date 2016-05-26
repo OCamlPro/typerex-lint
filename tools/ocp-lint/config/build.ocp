@@ -19,6 +19,11 @@
 (**************************************************************************)
 
 begin library "ocp-lint-config"
-  files = [ "lint_config.ml" ]
-  requires = [ "ocplib-config" ]
+  files = [
+    "lint_config_types.ml"
+    "lint_config.ml"
+  ]
+  requires = [
+    "ocplib-config"
+  ]
 end

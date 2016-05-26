@@ -18,25 +18,4 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module type CONFIG = sig
-  val config_file : SimpleConfig.config_file
-
-  val simple_args : unit -> (string * Arg.spec * string) list
-
-  val create_option :
-    string list ->
-    string ->
-    string ->
-    int ->
-    'a SimpleConfig.option_class ->
-    'a ->
-    'a SimpleConfig.config_option
-
-  val get_option_value : string list -> string
-
-  val get_linter_options : string -> string -> (string list * string) list
-
-  val save : unit -> unit
-end
-
-module DefaultConfig : CONFIG
+module DefaultConfig : Lint_config_types.CONFIG
