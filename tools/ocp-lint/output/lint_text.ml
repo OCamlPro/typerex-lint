@@ -28,23 +28,36 @@ let print_warning ppf warning =
   Format.fprintf ppf "  %s" warning.output;
   Format.fprintf ppf "@."
 
+let check_flag options =
+  bool_of_string @@
+  Lint_globals.Config.get_option_value options
+
 let print fmt path db =
-  Hashtbl.iter (fun file (hash, pres) ->
-      if Lint_utils.(is_in_path file (absolute path)) then
-        StringMap.iter (fun pname lres ->
-            StringMap.iter  (fun lname (_source, _opt, ws) ->
-                let filters =
-                  Lint_globals.Config.get_option_value
-                    [pname; lname; "warnings"] in
-                let arr = Lint_parse_args.parse_options filters in
-                List.iter
-                  (fun warning ->
-                     if arr.(warning.instance.id - 1) then
-                       print_warning fmt warning)
-                  ws)
-              lres)
-          pres)
-    db
+  try
+    Hashtbl.iter (fun file (hash, pres) ->
+        if Lint_utils.(is_in_path file (absolute path)) then
+          StringMap.iter (fun pname lres ->
+              let flag = check_flag [pname; "flag"] in
+              if flag then
+                StringMap.iter  (fun lname (_source, _opt, ws) ->
+                    let flag = check_flag [pname; lname; "flag"] in
+                    if flag then
+                      let filters =
+                        Lint_globals.Config.get_option_value
+                          [pname; lname; "warnings"] in
+                      let arr = Lint_parse_args.parse_options filters in
+                      List.iter
+                        (fun warning ->
+                           if arr.(warning.instance.id - 1) then
+                             print_warning fmt warning)
+                        ws)
+                  lres)
+            pres)
+      db
+  with Not_found ->
+    Printf.eprintf "Warning: Database contains warnings raised by plugins \
+                    that do not exist anymore. Please clean your database.\n%!"
+
 
 let print_only_new fmt path db =
   Hashtbl.iter (fun file (hash, pres) ->

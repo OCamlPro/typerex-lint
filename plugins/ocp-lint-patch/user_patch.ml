@@ -18,13 +18,19 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-let load_patches patches =
-  let
-    module UserDefined = Plugin_patch.PluginPatch.MakeLintPatch(struct
-      let name = "Lint from semantic patches (user defined)."
-      let short_name = "sempatch_lint_user_defined"
-      let details = "Lint from semantic patches (user defined)."
-      let patches = patches
-      let enable = true
-    end) in
-  ()
+module UserDefined = Plugin_patch.PluginPatch.MakeLintPatch(struct
+    let name = "Lint from semantic patches (user defined)."
+    let short_name = "sempatch_lint_user_defined"
+    let details = "Lint from semantic patches (user defined)."
+    let patches =
+      try
+        let path = Sys.getenv "PATCHES" in
+        let files = ref [] in
+        Lint_utils.iter_files (fun file ->
+            if Filename.check_suffix file ".md" then
+              files := (Filename.concat path file) :: !files)
+          path;
+        !files
+      with Not_found -> []
+    let enable = true
+  end)
