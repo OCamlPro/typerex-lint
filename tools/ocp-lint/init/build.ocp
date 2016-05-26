@@ -18,15 +18,10 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-text"
-  files = [
-    "plugin_text.ml"
 
-    (* All linters attached to Text plugin. *)
-    "code_length.ml"
+begin library "ocp-lint-init"
+  files = [
   ]
   requires = [
-    "ocp-lint-config"
-    "ocp-lint-plugin-api"
   ]
 end
