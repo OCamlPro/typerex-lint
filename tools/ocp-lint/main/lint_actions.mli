@@ -22,10 +22,6 @@
     directory given in the command line with '--load' option. *)
 val load_plugins : string list -> unit
 
-(** [load_patches files] load dynamically patch files in a specific
-    directory given in the command line with '--patches' option. *)
-val load_patches : string list -> unit
-
 (** [scan patches ?output_text no_db path] scan the [path] and start the
     registered plugins/linters on the files in this path. *)
 val scan :

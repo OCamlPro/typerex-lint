@@ -70,12 +70,6 @@ let () =
         exit_status := 1),
     " Every warning returns an error status code.";
 
-    "--load-patches", Arg.String (fun files ->
-        let patches = (Str.split (Str.regexp ",") files) in
-        Lint_actions.load_patches patches;
-        List.iter add_spec (Lint_globals.Config.simple_args ())),
-    "PATCHES List of user defined lint with the patch format.";
-
     "--load-plugins", Arg.String (fun files ->
         let l = (Str.split (Str.regexp ",") files) in
         Lint_actions.load_plugins l;

@@ -112,9 +112,6 @@ let rec load_plugins list =
         Printf.eprintf "%S: No such file or directory.\n%!" file)
     list
 
-let load_patches patches =
-  User_patch.load_patches patches
-
 let init_olint_dir () = File.RawIO.safe_mkdir Lint_globals.olint_dirname
 
 let init_db no_db path =
