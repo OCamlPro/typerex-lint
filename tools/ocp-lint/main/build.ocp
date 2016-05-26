@@ -36,3 +36,21 @@ begin program "ocp-lint"
   ]
   link = [ "-linkall" ]
 end
+
+begin program "ocp-lint-minimal"
+  files = [
+    "lint_parallel_loop.ml"
+    "lint_actions.ml"
+    "lint.ml"
+  ]
+  requires = [
+    "dynlink"
+    "ocp-lint-output"
+    "ocp-lint-patch"
+    "ocp-lint-file-system"
+    "ocp-lint-text"
+    "ocp-lint-typedtree"
+    "ocp-lint-parsetree"
+    "ocp-lint-complex"
+  ]
+end
