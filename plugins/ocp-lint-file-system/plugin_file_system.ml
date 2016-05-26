@@ -18,10 +18,11 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+let details =
+  "A plugin with linters on file system like interface missing, etc."
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+module PluginFileSystem = Lint_plugin_api.MakePlugin (struct
+    let name = "File System plugin."
+    let short_name = "plugin_file_system"
+    let details = details
+  end)

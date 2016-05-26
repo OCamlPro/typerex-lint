@@ -18,10 +18,14 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+(** [lint all mls mlis asts_ml asts_mli cmts] starts linting in all needed input
+    by the registered plugins. *)
+val lint :
+  string list ->
+  string list ->
+  string list ->
+  (string * Parsetree.structure option Lazy.t) list ->
+  (string * Parsetree.signature option Lazy.t) list ->
+  (string * Cmt_format.cmt_infos Lazy.t) list ->
+  Lint_plugin.t ->
+  unit

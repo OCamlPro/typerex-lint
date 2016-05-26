@@ -18,10 +18,21 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+(** [Config] is a module which allow to create options for the configuration
+    file and command-line arguments. *)
+module Config : Lint_config.CONFIG
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+(** [plugins] is a global data structure where all plugins are registered.
+    The keys of the structure are a [Lint_plugin_types.PLUGIN] and the value are
+    a [LintMap.t]. *)
+(* val plugins : *)
+(*   ((module Lint_plugin_types.PLUGIN), Lint_types.lint) Hashtbl.t *)
+val plugins :
+  ((module Lint_plugin_types.PLUGIN), (module Lint_types.LINT) Lint_map.t)
+    Hashtbl.t
+
+val default_patches : string list
+
+(** [init no_db path] initialize the db and config modules with the path
+     given in the command line *)
+val init : bool -> string -> unit

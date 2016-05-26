@@ -2,7 +2,7 @@
 
 LINT=_obuild/ocp-lint/ocp-lint.asm
 
-$LINT --warn-error --path src > /dev/null
+$LINT --warn-error tools > /dev/null
 
 if [ "$?" = 0 ]; then
     exit 0

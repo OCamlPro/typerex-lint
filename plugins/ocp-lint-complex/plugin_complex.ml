@@ -18,10 +18,11 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+let details =
+  "A plugin with linters on different inputs."
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+module PluginComplex = Lint_plugin_api.MakePlugin (struct
+    let name = "Complex plugin."
+    let short_name = "plugin_complex"
+    let details = details
+  end)

@@ -18,10 +18,13 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
+begin library "ocplib-compiler"
   files = [
-    "testsuite.ml"
+     "lint_parsetree_iter.ml"
+     "lint_parsetree_map.ml"
+     "lint_typedtree_iter.ml"
+     (* "lint_typedtree_map.ml"  TODO: cago does not compile *)
   ]
-  requires = [ "unix" "str" ]
+ requires = [ "compiler-libs" ]
+ pp = [ "ocp-pp" ]
 end

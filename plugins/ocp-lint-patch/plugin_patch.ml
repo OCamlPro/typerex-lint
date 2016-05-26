@@ -18,10 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+module PluginPatch = Lint_plugin_api.MakePlugin (struct
+    let name = "Semantic patch plugin"
+    let short_name = "plugin_patch"
+    let details = "Detect pattern with semantic patch."
+  end)

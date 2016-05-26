@@ -18,10 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+module type IteratorArgument = TypedtreeIter.IteratorArgument
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+module MakeIterator = TypedtreeIter.MakeIterator
+
+module DefaultIteratorArgument = TypedtreeIter.DefaultIteratorArgument

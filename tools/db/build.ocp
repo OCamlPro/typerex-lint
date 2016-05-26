@@ -18,10 +18,25 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
+begin library "ocp-lint-db"
   files = [
-    "testsuite.ml"
+    "lint_db_error.ml"
+    "lint_db.ml"
   ]
-  requires = [ "unix" "str" ]
+  requires = [
+    "ocp-lint-db-types"
+    "ocplib-system"
+    "ocp-lint-config"
+  ]
+end
+
+begin library "ocp-lint-db-types"
+  files = [
+    "lint_db_types.ml"
+  ]
+  requires = [
+    "ocplib-system"
+    "ocp-lint-plugin-types"
+  (* "ocp-lint-plugin-api" *)
+  ]
 end

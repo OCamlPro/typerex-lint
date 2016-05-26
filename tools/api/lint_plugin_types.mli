@@ -18,10 +18,14 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+module type PluginArg = sig
+  val name : string
+  val short_name : string
+  val details : string
+end
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
+module type PLUGIN = sig
+  val name : string
+  val short_name : string
+  val details : string
 end

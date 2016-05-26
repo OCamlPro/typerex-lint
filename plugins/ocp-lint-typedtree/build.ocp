@@ -18,10 +18,15 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
+begin library "ocp-lint-typedtree"
   files = [
-    "testsuite.ml"
+    "plugin_typedtree.ml"
+
+  (* All linters attached to Typedtree plugin. *)
+
   ]
-  requires = [ "unix" "str" ]
+  requires = [
+    "ocp-lint-config"
+    "ocp-lint-plugin-api"
+  ]
 end

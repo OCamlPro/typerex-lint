@@ -18,10 +18,11 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+let details =
+  "A plugin with linters on typed tree."
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+module PluginTypedtree = Lint_plugin_api.MakePlugin (struct
+    let name = "Typed tree plugin."
+    let short_name = "plugin_typedtree"
+    let details = details
+  end)

@@ -18,10 +18,17 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
+begin library "ocp-lint-parsetree"
   files = [
-    "testsuite.ml"
+    "plugin_parsetree.ml"
+
+    (* All linters attached to Parsetree plugin. *)
+    "identifier_length.ml"
+    "list_function_on_singleton.ml"
+    "physical_comp_on_alloc_lit.ml"
   ]
-  requires = [ "unix" "str" ]
+  requires = [
+    "ocp-lint-config"
+    "ocp-lint-plugin-api"
+  ]
 end

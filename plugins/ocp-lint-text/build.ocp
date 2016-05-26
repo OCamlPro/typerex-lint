@@ -18,10 +18,16 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
+begin library "ocp-lint-text"
   files = [
-    "testsuite.ml"
+    "plugin_text.ml"
+
+    (* All linters attached to Text plugin. *)
+    "code_length.ml"
   ]
-  requires = [ "unix" "str" ]
+  requires = [
+    "ocp-lint-config"
+    "ocp-lint-plugin-api"
+  ]
+  link = [ "-linkall" ]
 end

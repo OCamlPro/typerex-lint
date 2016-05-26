@@ -18,10 +18,39 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+module Config = Lint_config.DefaultConfig
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+let plugins = Hashtbl.create 42
+
+let default_patches =
+  (* To add a static file, edit src/kernel/services/plugins/build.ocp *)
+  List.map (fun (file, content) ->
+      let tmp = Filename.get_temp_dir_name () in
+      let file = Filename.basename file in
+      let destfile = Filename.concat tmp file in
+      File.Dir.make_all (File.of_string @@ Filename.dirname destfile);
+      File.file_of_string destfile content;
+      destfile)
+    Global_static_files.files
+
+let init_config file =
+  SimpleConfig.set_config_file Config.config_file file;
+  SimpleConfig.load Config.config_file
+
+let init no_db path =
+  let path_t = File.of_string path in
+  (try
+     let root_path_t = Lint_utils.find_root path_t [".ocplint"] in
+     let file_t = File.concat root_path_t (File.of_string ".ocplint") in
+     init_config file_t;
+   with Not_found -> ());
+  try
+    if not no_db then
+      let root_path_dir_t = Lint_utils.find_root path_t [".typerex-lint"] in
+      let root_t =
+        File.concat root_path_dir_t (File.of_string ".typerex-lint") in
+      Lint_db.DefaultDB.init root_t
+  with Not_found ->
+    Printf.eprintf
+      "No DB file found, you should use --init option to use DB features.\n%!";
+    exit 1
