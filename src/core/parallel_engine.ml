@@ -59,6 +59,9 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
               if not (is_in_ignored_files input ignored_files) then
                 List.iter (function
                     | Input.InMl main ->
+                      Printf.eprintf "x1: %s %s %s\n%!" input
+                        Plugin.short_name cname
+                      ;
                       begin
                         if not
                             (Db.DefaultDB.already_run input
@@ -175,8 +178,12 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                           (Db.DefaultDB.add_entry file Plugin.short_name cname;
                            try
                              main (Lazy.force input)
-                           with Plugin_error.Plugin_error err ->
-                             Plugin_error.print fmt err)
+                           with
+                           | Plugin_error.Plugin_error err ->
+                             Plugin_error.print fmt err
+                           | Cmi_format.Error _ ->
+                              Printf.eprintf "Error reading .cmt %S\n%!"
+                                file)
                       end
                     | _ -> ()) Lint.inputs) checks)
         plugins)

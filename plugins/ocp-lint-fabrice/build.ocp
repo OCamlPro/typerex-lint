@@ -18,16 +18,35 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "typedtree-iter"
-  link += [ "-linkall" ]
-  files = [ "lintTypedtreeIter.ml" ]
-  requires = [ "compiler-libs" ]
-  pp = [ "ocp-pp" ]
+begin library "ocp-lint-plugin-fabrice"
+  files = [
+        "lintFabPlugin.ml"
+
+          "lintFabFullyQualified.ml"
+          "lintFabGoodPractices.ml"
+
+          (* From ocaml-4.03.0 *)
+        "lintFabOCaml_Location.ml"
+        "lintFabOCaml_Asttypes.ml"
+        "lintFabOCaml_Parsetree.ml"
+        "lintFabOCaml_Docstrings.ml"
+        "lintFabOCaml_Ast_helper.ml"
+        "lintFabOCaml_Syntaxerr.ml"
+        "lintFabOCaml_Parser.mly"
+        "lintFabOCaml_Lexer.mll"
+        "lintFabOCaml_Ast_iterator.ml"
+        "lintFabOCaml_Parse.ml"
+
+        "lintFabSyntaxLinter.ml"
+  ]
+  requires = [ "plugin-lib" ]
 end
 
 
-(* begin library "typedtree-map" *)
-(*   files = [ "typedtreeMap.ml" ] *)
-(*   requires = [ "compiler-libs" ] *)
-(*   pp = [ "ocp-pp" ] *)
-(* end *)
+begin program "ocp-lint-fabrice"
+  files = [ "main.ml" ]
+  requires = [
+        "ocp-lint-lib"
+        "ocp-lint-plugin-fabrice"
+  ]
+end

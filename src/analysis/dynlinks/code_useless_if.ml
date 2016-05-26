@@ -74,6 +74,7 @@ let iter =
       let open Parsetree in
       let open Asttypes in
       begin match expr.pexp_desc with
+        (* | [% if cond then then_expr ] *)
         | Pexp_ifthenelse (cond, then_expr, else_expr) ->
           begin match then_expr.pexp_desc, else_expr with
             | Pexp_construct (true_expr, _),

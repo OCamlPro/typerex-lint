@@ -22,7 +22,8 @@ begin library "parse-args"
   files = [ "parse_args.ml" ]
 end
 
-begin program "ocp-lint"
+begin library "ocp-lint-lib"
+  link += [ "-linkall" ]
   files = [
     "parallel_engine.ml"
     "ocplint_actions.ml"
@@ -34,5 +35,25 @@ begin program "ocp-lint"
     "lint-code"
     "lint-interface"
     "output-text"
+    "typedtree-iter"
+    "compiler-libs"
+  ]
+end
+
+begin program "ocp-lint"
+  link += [ "-linkall" ]
+  files = [
+    "parallel_engine.ml"
+    "ocplint_actions.ml"
+    "ocplint.ml"
+  ]
+  requires = [
+    "dynlink"
+    "parse-args"
+    "lint-code"
+    "lint-interface"
+    "output-text"
+    "typedtree-iter"
+    "compiler-libs"
   ]
 end

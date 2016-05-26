@@ -1,0 +1,2 @@
+
+let () = Ocplint.main ()
