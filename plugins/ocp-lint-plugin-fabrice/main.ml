@@ -1,0 +1,2 @@
+
+let () = Lint.main ()

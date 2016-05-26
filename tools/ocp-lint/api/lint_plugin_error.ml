@@ -25,6 +25,7 @@ type error =
   | Plugin_not_found of (module Lint_plugin_types.PLUGIN)
   | Patch_file_not_found of string
   | Syntax_error of string
+  | Plugin_exception of exn
 
 exception Plugin_error of error
 
@@ -39,6 +40,8 @@ let to_string = function
     spf "Patch '%s' is not found." filename
   | Syntax_error filename ->
     spf "Syntax error in %S: cannot lint this file." filename
+  | Plugin_exception exn ->
+    Printf.sprintf "exception %s." (Printexc.to_string exn)
 
 let print fmt err =
   Format.fprintf fmt "Plugin error: %s\n" (to_string err)

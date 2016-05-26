@@ -32,8 +32,6 @@ module type IteratorArgument = sig
    val enter_core_field_type : core_field_type -> unit
    val leave_core_field_type : core_field_type -> unit
 #elif OCAML_VERSION >= "4.02" && OCAML_VERSION < "4.03"
-  val enter_value_binding : value_binding -> unit
-  val leave_value_binding : value_binding -> unit
   val enter_type_extension : type_extension -> unit
   val leave_type_extension : type_extension -> unit
   val enter_extension_constructor : extension_constructor -> unit
@@ -90,8 +88,8 @@ module type IteratorArgument = sig
     val leave_structure_item : structure_item -> unit
 
     val enter_bindings : rec_flag -> unit
-    val enter_binding : pattern -> expression -> unit
-    val leave_binding : pattern -> expression -> unit
+    val enter_binding : bool -> pattern -> expression -> unit
+    val leave_binding : bool -> pattern -> expression -> unit
     val leave_bindings : rec_flag -> unit
 
       end
@@ -157,7 +155,7 @@ module MakeIterator(Iter : IteratorArgument) : sig
         | Pstr_attribute attr -> ()
 #else
 #endif
-        | Pstr_value (rec_flag, list) -> iter_bindings rec_flag list
+        | Pstr_value (rec_flag, list) -> iter_bindings true rec_flag list
         | Pstr_open _ -> ()
         | Pstr_class list ->
           List.iter (fun ci ->
@@ -317,7 +315,7 @@ module MakeIterator(Iter : IteratorArgument) : sig
           may_iter iter_core_type cty1; may_iter iter_core_type cty2
         | Pexp_function (label, expo, cases) ->
           may_iter iter_expression expo;
-          iter_bindings Nonrecursive cases
+          iter_bindings false Nonrecursive cases
         | Pexp_construct (_, expo, _) ->
           may_iter iter_expression expo
         | Pexp_when (exp1, exp2) ->
@@ -325,14 +323,14 @@ module MakeIterator(Iter : IteratorArgument) : sig
           iter_expression exp2
         | Pexp_assertfalse -> ()
         | Pexp_let (rec_flag, list, exp) ->
-          iter_bindings rec_flag list;
+          iter_bindings false rec_flag list;
           iter_expression exp
         | Pexp_match (exp, list) ->
           iter_expression exp;
-          iter_bindings Nonrecursive list
+          iter_bindings false Nonrecursive list
         | Pexp_try (exp, list) ->
           iter_expression exp;
-          iter_bindings Nonrecursive list
+          iter_bindings false Nonrecursive list
         | Pexp_letmodule (_, mexpr, exp) ->
           iter_module_expr mexpr;
           iter_expression exp
@@ -340,7 +338,7 @@ module MakeIterator(Iter : IteratorArgument) : sig
           iter_module_expr mexpr
 #elif OCAML_VERSION >= "4.02" && OCAML_VERSION < "4.03"
         | Pexp_let (rec_flag, vb, exp) ->
-          iter_bindings rec_flag vb;
+          iter_bindings false rec_flag vb;
           iter_expression exp
         | Pexp_function cases -> iter_cases cases
         | Pexp_fun (label, expo, pat, exp) ->
@@ -581,7 +579,7 @@ module MakeIterator(Iter : IteratorArgument) : sig
           ) args
 
         | Pcl_let (rec_flat, bindings, cl) ->
-          iter_bindings rec_flat bindings;
+          iter_bindings false rec_flat bindings;
           iter_class_expr cl
 
         | Pcl_constr (_, tyl) ->
@@ -727,18 +725,18 @@ module MakeIterator(Iter : IteratorArgument) : sig
       end;
       Iter.leave_class_field cf;
 
-    and iter_binding (pat, exp) =
-      Iter.enter_binding pat exp;
+    and iter_binding toplevel (pat, exp) =
+      Iter.enter_binding toplevel pat exp;
       iter_pattern pat;
       iter_expression exp;
-      Iter.leave_binding pat exp
+      Iter.leave_binding toplevel pat exp
 
-    and iter_bindings rec_flag list =
+    and iter_bindings toplevel rec_flag list =
       Iter.enter_bindings rec_flag;
 #if OCAML_VERSION >= "4.01" && OCAML_VERSION < "4.02"
-      List.iter iter_binding list;
+      List.iter (iter_binding toplevel) list;
 #else
-      List.iter iter_value_binding list;
+      List.iter (iter_value_binding toplevel) list;
 #endif
       Iter.leave_bindings rec_flag
 
@@ -766,11 +764,11 @@ module MakeIterator(Iter : IteratorArgument) : sig
       Iter.leave_core_field_type cft;
 #else
 
-  and iter_value_binding v =
-    Iter.enter_value_binding v;
-    iter_pattern v.pvb_pat;
-    iter_expression v.pvb_expr;
-    Iter.leave_value_binding v
+    and iter_value_binding toplevel v =
+      Iter.enter_binding toplevel v.pvb_pat v.pvb_expr;
+      iter_pattern v.pvb_pat;
+      iter_expression v.pvb_expr;
+      Iter.leave_binding toplevel v.pvb_pat v.pvb_expr;
 
 #endif
 
@@ -786,8 +784,6 @@ module DefaultIteratorArgument = struct
       let enter_core_field_type _ = ()
       let leave_core_field_type _ = ()
 #else
-      let enter_value_binding _ = ()
-      let leave_value_binding _ = ()
       let enter_type_extension _ = ()
       let leave_type_extension _ = ()
       let enter_extension_constructor _ = ()
@@ -843,8 +839,8 @@ module DefaultIteratorArgument = struct
     let leave_class_field _ = ()
     let leave_structure_item _ = ()
 
-    let enter_binding _ _ = ()
-    let leave_binding _ _ = ()
+    let enter_binding _ _ _ = ()
+    let leave_binding _ _ _ = ()
 
     let enter_bindings _ = ()
     let leave_bindings _ = ()

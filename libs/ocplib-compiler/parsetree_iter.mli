@@ -31,8 +31,6 @@ module type IteratorArgument = sig
    val enter_core_field_type : core_field_type -> unit
    val leave_core_field_type : core_field_type -> unit
 #elif OCAML_VERSION >= "4.02" && OCAML_VERSION < "4.03"
-  val enter_value_binding : value_binding -> unit
-  val leave_value_binding : value_binding -> unit
   val enter_type_extension : type_extension -> unit
   val leave_type_extension : type_extension -> unit
   val enter_extension_constructor : extension_constructor -> unit
@@ -90,8 +88,8 @@ module type IteratorArgument = sig
     val leave_structure_item : structure_item -> unit
 
     val enter_bindings : rec_flag -> unit
-    val enter_binding : pattern -> expression -> unit
-    val leave_binding : pattern -> expression -> unit
+    val enter_binding : bool -> pattern -> expression -> unit
+    val leave_binding : bool -> pattern -> expression -> unit
     val leave_bindings : rec_flag -> unit
 
       end

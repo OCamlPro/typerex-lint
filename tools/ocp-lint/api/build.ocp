@@ -18,7 +18,22 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-plugin-api"
+begin library "ocp-lint-api-types"
+  files = [
+    "lint_map.ml"
+    "lint_input.ml"
+    "lint_types.ml"
+    "lint_plugin_error.ml"
+    "lint_warning_types.ml"
+    "lint_plugin_types.ml"
+  ]
+  requires = [
+    "compiler-libs"
+    "ocp-lint-utils"
+  ]
+end
+
+begin library "ocp-lint-api"
   files = [
     "lint_warning.ml"
     "lint_plugin.ml"
@@ -35,22 +50,7 @@ begin library "ocp-lint-plugin-api"
     (* Internal dependencies. *)
     "ocp-lint-config"
     "ocp-lint-db"
-    "ocp-lint-plugin-types"
+    "ocp-lint-api-types"
     "ocp-lint-init"
-  ]
-end
-
-begin library "ocp-lint-plugin-types"
-  files = [
-    "lint_map.ml"
-    "lint_input.ml"
-    "lint_types.ml"
-    "lint_plugin_error.ml"
-    "lint_warning_types.ml"
-    "lint_plugin_types.ml"
-  ]
-  requires = [
-    "compiler-libs"
-    "ocp-lint-utils"
   ]
 end

@@ -25,6 +25,8 @@ type error =
   | Patch_file_not_found of string
   | Syntax_error of string
 
+  | Plugin_exception of exn
+
 (** [to_string err] returns a string representation of [err].  *)
 val to_string : error -> string
 val print : Format.formatter -> error -> unit

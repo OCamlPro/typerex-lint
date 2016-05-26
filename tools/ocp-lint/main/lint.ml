@@ -119,5 +119,3 @@ let main () =
   | ActionNone ->
     start_lint default_dir;
     exit 0
-
-let () = main ()

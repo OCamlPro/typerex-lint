@@ -29,8 +29,10 @@ let print_warning ppf warning =
   Format.fprintf ppf "@."
 
 let check_flag options =
-  bool_of_string @@
-  Lint_globals.Config.get_option_value options
+  try
+    bool_of_string
+      (Lint_globals.Config.get_option_value options)
+  with Not_found -> true
 
 let print fmt path db =
   try
@@ -57,7 +59,6 @@ let print fmt path db =
   with Not_found ->
     Printf.eprintf "Warning: Database contains warnings raised by plugins \
                     that do not exist anymore. Please clean your database.\n%!"
-
 
 let print_only_new fmt path db =
   Hashtbl.iter (fun file (hash, pres) ->
