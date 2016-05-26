@@ -50,18 +50,18 @@ let parse_opt active flags s =
       i, n1, n1
   in
   let rec loop i =
-    if i >= String.length s then () else
-    match s.[i] with
-    | 'A' .. 'Z' ->
-       List.iter set (letter (Char.lowercase s.[i]));
-       loop (i+1)
-    | 'a' .. 'z' ->
-       List.iter clear (letter s.[i]);
-       loop (i+1)
-    | '+' -> loop_letter_num set (i+1)
-    | '-' -> loop_letter_num clear (i+1)
-    | '@' -> loop_letter_num set_all (i+1)
-    | c -> error ()
+    if i < String.length s then
+      match s.[i] with
+      | 'A' .. 'Z' ->
+        List.iter set (letter (Char.lowercase s.[i]));
+        loop (i+1)
+      | 'a' .. 'z' ->
+        List.iter clear (letter s.[i]);
+        loop (i+1)
+      | '+' -> loop_letter_num set (i+1)
+      | '-' -> loop_letter_num clear (i+1)
+      | '@' -> loop_letter_num set_all (i+1)
+      | c -> error ()
   and loop_letter_num myset i =
     if i >= String.length s then error () else
     match s.[i] with

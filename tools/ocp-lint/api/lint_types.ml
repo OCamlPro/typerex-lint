@@ -18,14 +18,14 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module type LintArg = sig
+module type LINTARG = sig
   val name : string
   val short_name : string
   val details : string
   val enable : bool
 end
 
-module type LintPatchArg = sig
+module type LINTPATCHARG = sig
   val name : string
   val short_name : string
   val details : string

@@ -117,7 +117,8 @@ module MakeDB (DB : DATABASE_IO) = struct
       files
 
   let update pname lname warn =
-    let file = warn.Lint_warning_types.loc.Location.loc_start.Lexing.pos_fname in
+    let file =
+      warn.Lint_warning_types.loc.Location.loc_start.Lexing.pos_fname in
     if not (Sys.file_exists file)
     then raise (Lint_db_error.Db_error (Lint_db_error.File_not_found file));
     let file = Lint_utils.absolute file in
@@ -134,9 +135,14 @@ module MakeDB (DB : DATABASE_IO) = struct
           let new_pres =
             StringMap.add pname new_lres (StringMap.remove pname old_pres) in
           Hashtbl.replace db file (hash, new_pres)
-        else raise (Lint_db_error.Db_error (Lint_db_error.Linter_not_in_db (file, pname, lname)))
-      else raise (Lint_db_error.Db_error (Lint_db_error.Plugin_not_in_db (file, pname)))
-    else raise (Lint_db_error.Db_error (Lint_db_error.File_not_in_db file))
+        else
+          raise (Lint_db_error.Db_error
+                   (Lint_db_error.Linter_not_in_db (file, pname, lname)))
+      else
+        raise (Lint_db_error.Db_error
+                 (Lint_db_error.Plugin_not_in_db (file, pname)))
+    else
+      raise (Lint_db_error.Db_error (Lint_db_error.File_not_in_db file))
 
   let already_run file pname lname =
     let file = Lint_utils.absolute file in

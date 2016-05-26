@@ -18,7 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module type PluginArg = sig
+module type PLUGINARG = sig
   val name : string
   val short_name : string
   val details : string

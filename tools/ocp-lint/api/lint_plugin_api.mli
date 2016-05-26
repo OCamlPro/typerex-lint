@@ -22,7 +22,7 @@
     [Lint_plugin_types.PluginArg] as an argument. It registers the plugin to the
     global [Globals.plugins] and all the linter associated and created with
     the functor [MakeLint]. *)
-module MakePlugin : functor (Plugin : Lint_plugin_types.PluginArg) ->
+module MakePlugin : functor (Plugin : Lint_plugin_types.PLUGINARG) ->
 sig
 
   (** The name of the plugin.  *)
@@ -37,7 +37,7 @@ sig
       on semantic patches (see ocplib-sempatch). It takes the files names of
       the patches as arguments and automatically register the linter
       into a plugin. *)
-  module MakeLintPatch : functor (CA : Lint_types.LintPatchArg) ->  sig  end
+  module MakeLintPatch : functor (CA : Lint_types.LINTPATCHARG) ->  sig  end
 
   (** [MakeLint] is a functor which takes a module of type [Lint.LintArg] as
       argument. It allows to create a linter and automatically register it to
@@ -45,7 +45,7 @@ sig
       specific options for each lint and register them to the global
       [Global.Config] module. *)
   module MakeLint :
-    functor (CA : Lint_types.LintArg) ->
+    functor (CA : Lint_types.LINTARG) ->
     sig
       (** The name of the linter. *)
       val name : string

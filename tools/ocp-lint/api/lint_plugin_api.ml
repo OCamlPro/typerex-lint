@@ -48,7 +48,7 @@ let register_main plugin cname new_lint =
   with Not_found ->
     raise (Plugin_error(Plugin_not_found plugin))
 
-module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
+module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
 
   let name = P.name
   let short_name = P.short_name
@@ -96,7 +96,7 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
     let warning_decl = { kinds; short_name; message = msg } in
     warning_decl
 
-  module MakeLintPatch (C : Lint_types.LintPatchArg) = struct
+  module MakeLintPatch (C : Lint_types.LINTPATCHARG) = struct
 
     let name = C.name
     let short_name = C.short_name
@@ -183,7 +183,7 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
       create_default_lint_option C.short_name C.name C.enable
   end (* MakeLintPatch *)
 
-  module MakeLint (C : Lint_types.LintArg) = struct
+  module MakeLint (C : Lint_types.LINTARG) = struct
 
     let name = C.name
     let short_name = C.short_name

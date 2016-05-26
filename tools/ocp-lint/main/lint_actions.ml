@@ -45,7 +45,8 @@ let filter_plugins plugins =
       let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
       let plugin_short_name = Plugin.short_name in
       let plugin_opt_names = plugin_short_name :: [ "flag" ] in
-      let plugin_opt_value = Lint_globals.Config.get_option_value plugin_opt_names in
+      let plugin_opt_value =
+        Lint_globals.Config.get_option_value plugin_opt_names in
       (* if the plugin is disable, don't try to add any linter attached to it *)
       if (bool_of_string plugin_opt_value) then begin
         Lint_map.iter (fun cname lint ->
