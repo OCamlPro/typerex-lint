@@ -18,10 +18,25 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+(** [LINTARG] is a type module which is used by the functor
+    [Lint_plugin_api.MakeLint]. *)
+module type LINTARG = sig
+  val name : string
+  val short_name : string
+  val details : string
+  val enable : bool
+end
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
+(** [LINTPATCHARG] is a type module which is used by the functor
+    [Lint_plugin_api.MakeLintPatch]. *)
+module type LINTPATCHARG = sig
+  val name : string
+  val short_name : string
+  val details : string
+  val patches : string list
+  val enable : bool
+end
+
+module type LINT = sig
+  val inputs : Lint_input.input list
 end

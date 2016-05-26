@@ -18,10 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+(** A printing function over the type [Warning_types.warning].  *)
+val print : Format.formatter -> string -> Lint_db_types.t -> unit
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+val print_only_new : Format.formatter -> string -> Lint_db_types.t -> unit

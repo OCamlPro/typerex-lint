@@ -18,10 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open Lint_db_types
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+module DefaultDB : DATABASE

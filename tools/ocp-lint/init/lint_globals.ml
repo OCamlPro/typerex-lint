@@ -18,10 +18,10 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+module Config = Lint_config.DefaultConfig
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+let plugins = Hashtbl.create 42
+
+let olint_dirname = "_olint"
+
+let config_file = ".ocplint"

@@ -18,10 +18,21 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
+begin program "ocp-lint"
   files = [
-    "testsuite.ml"
+    "lint_parallel_loop.ml"
+    "lint_actions.ml"
+    "lint.ml"
   ]
-  requires = [ "unix" "str" ]
+  requires = [
+    "dynlink"
+    "ocp-lint-output"
+    "ocp-lint-patch"
+    "ocp-lint-file-system"
+    "ocp-lint-text"
+    "ocp-lint-typedtree"
+    "ocp-lint-parsetree"
+    "ocp-lint-complex"
+  ]
+  link = [ "-linkall" ]
 end

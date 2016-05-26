@@ -18,10 +18,49 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open Lint_config_types
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+exception ConfigParseError of string
+
+module DefaultConfig = struct
+  let config_file = SimpleConfig.create_config_file (File.of_string ".ocplint")
+
+  let init_config file =
+    SimpleConfig.set_config_file config_file file;
+    SimpleConfig.load config_file
+
+  let simple_args () =
+    SimpleConfig.LowLevel.simple_args "" config_file
+
+  let create_option
+      opt_names short_help long_help level opt_class default_value =
+    let short_help = Some short_help in
+    let level = Some level in
+      SimpleConfig.create_option config_file
+          opt_names ?short_help:short_help [long_help] ?level:level
+          opt_class default_value
+
+  let get_option_value option_name =
+    SimpleConfig.LowLevel.get_simple_option config_file option_name
+
+  let is_option_of name oi =
+    try
+      let diff =
+        List.mapi (fun i n ->
+            (List.nth oi.SimpleConfig.LowLevel.option_name i) = n)
+          name in
+      List.for_all (fun b -> b) diff
+    with _ -> false
+
+  let get_linter_options plugin_name linter_name =
+    let name = [ plugin_name; linter_name ] in
+    let options = SimpleConfig.LowLevel.simple_options "" config_file in
+    let plugin_options = List.filter (fun oi -> is_option_of name oi) options in
+    List.map (fun oi ->
+        oi.SimpleConfig.LowLevel.option_name,
+        oi.SimpleConfig.LowLevel.option_value)
+      plugin_options
+
+  let save () =
+    SimpleConfig.save_with_help config_file
+  end

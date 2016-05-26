@@ -18,10 +18,14 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+type error =
+  | File_not_found of string
+  | File_not_in_db of string
+  | Plugin_not_in_db of (string * string)
+  | Linter_not_in_db of (string * string * string)
+  | No_db_found
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+exception Db_error of error
+
+val to_string : error -> string
+val print : Format.formatter -> error -> unit

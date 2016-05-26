@@ -18,10 +18,12 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+(** [LintMap] is a Map containing all information about the linter.
+    The key is a [string] representing the linter name, and the value of the
+    map contains a list of [input] (registered mains). *)
+type 'a t
+val empty : 'a t
+val add : string -> 'a -> 'a t -> 'a t
+val iter : (string -> 'a -> unit) -> 'a t -> unit
+val find : string -> 'a t -> 'a
+val cardinal : 'a t -> int

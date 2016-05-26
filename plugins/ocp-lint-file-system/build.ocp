@@ -18,10 +18,15 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
+begin library "ocp-lint-file-system"
   files = [
-    "testsuite.ml"
+    "plugin_file_system.ml"
+
+    (* All linters attached to File System plugin. *)
+    "interface_missing.ml"
   ]
-  requires = [ "unix" "str" ]
+  requires = [
+    "ocp-lint-config"
+    "ocp-lint-plugin-api"
+  ]
 end

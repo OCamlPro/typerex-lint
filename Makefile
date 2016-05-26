@@ -17,7 +17,7 @@ all:
 	$(OCPBUILD)
 
 test:
-	@./_obuild/testsuite/testsuite.asm \
+	@./_obuild/ocp-lint-testsuite/ocp-lint-testsuite.asm \
 	./_obuild/ocp-lint/ocp-lint.asm \
 	testsuite
 

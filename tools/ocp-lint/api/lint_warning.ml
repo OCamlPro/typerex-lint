@@ -18,10 +18,43 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open Lint_warning_types
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
+let kind_code = Code
+let kind_typo = Typo
+let kind_interface = Interface
+let kind_metrics = Metrics
+
+let new_kind kind = Custom kind
+
+let kind_to_string = function
+  | Code -> "code"
+  | Typo -> "typographie"
+  | Interface -> "interface"
+  | Metrics -> "metrics"
+  | Custom kind -> kind
+
+module Warning = struct
+
+  let add_warning pname lname warning =
+    Lint_db.DefaultDB.update pname lname warning
+
+  let add pname lname loc id decl output =
+    let instance = {id; decl} in
+    let warning = {loc; instance; output} in
+    add_warning pname lname warning
+end
+
+module WarningDeclaration = struct
+  (* Warning declaration Set *)
+  module WDeclSet = Set.Make (struct
+      type t = Lint_warning_types.warning_declaration
+      let compare = Pervasives.compare
+    end)
+
+  type t = WDeclSet.t ref
+
+  let empty () = ref WDeclSet.empty
+
+  let add decl decls = decls := WDeclSet.add decl !decls
 end

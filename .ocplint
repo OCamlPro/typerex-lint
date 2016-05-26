@@ -12,58 +12,20 @@
 
 (* Module to ignore during the lint. *)
 ignored_files = [
-  "src/kernel/internal/parsing/parsetreeMap.ml";
-  "src/kernel/internal/parsing/parsetreeIter.ml";
-  "src/kernel/internal/parsing/parsetreeMap.mli";
-  "src/kernel/internal/parsing/parsetreeIter.mli";
-  "src/kernel/internal/typing/typedtreeMap.ml";
-  "src/kernel/internal/typing/typedtreeIter.ml";
-  "src/kernel/internal/typing/typedtreeMap.mli";
-  "src/kernel/internal/typing/typedtreeIter.mli";
 ]
-plugin_sempatch = {
+plugin_typedtree = {
 
-(* Detect pattern with semantic patch *)
-  flag = true
-  sempatch_lint_default = {
-
-(* Enable/Disable linter "Lint from semantic patches (default)". *)
-    flag = true
-
-(* Module to ignore durint the lint of "Lint from semantic patches (default)" *)
-    ignored_files = [
-    ]
-
-(* Enable/Disable warnings from "Lint from semantic patches (default)" *)
-    warnings = "+A"
-  }
+(* A plugin with linters on typed tree. *)
+  flag = false
 }
-plugin_core = {
+plugin_text = {
 
-(* A style-checker for OCaml sources (code, documentation, interface, metrics, and typography). *)
-  flag = true
-  code_identifier_length = {
-
-(* Enable/Disable linter "Code Identifier Length". *)
-    flag = true
-
-(* Module to ignore durint the lint of "Code Identifier Length" *)
-    ignored_files = [
-    ]
-
-(* Enable/Disable warnings from "Code Identifier Length" *)
-    warnings = "+A"
-
-(* Identifiers with a shorter name will trigger a warning *)
-    min_identifier_length = 1
-
-(* Identifiers with a longer name will trigger a warning *)
-    max_identifier_length = 35
-  }
+(* A plugin with linters on the source. *)
+  flag = false
   code_length = {
 
 (* Enable/Disable linter "Code Length". *)
-    flag = true
+    flag = false
 
 (* Module to ignore durint the lint of "Code Length" *)
     ignored_files = [
@@ -75,10 +37,50 @@ plugin_core = {
 (* Maximum line length *)
     max_line_length = 80
   }
+}
+plugin_patch = {
+
+(* Detect pattern with semantic patch. *)
+  flag = false
+  sempatch_lint_default = {
+
+(* Enable/Disable linter "Lint from semantic patches (default)". *)
+    flag = false
+
+(* Module to ignore durint the lint of "Lint from semantic patches (default)" *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "Lint from semantic patches (default)" *)
+    warnings = "+A"
+  }
+}
+plugin_parsetree = {
+
+(* A plugin with linters on parsetree. *)
+  flag = false
+  code_identifier_length = {
+
+(* Enable/Disable linter "Code Identifier Length". *)
+    flag = false
+
+(* Module to ignore durint the lint of "Code Identifier Length" *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "Code Identifier Length" *)
+    warnings = "+A"
+
+(* Identifiers with a shorter name will trigger a warning *)
+    min_identifier_length = 2
+
+(* Identifiers with a longer name will trigger a warning *)
+    max_identifier_length = 30
+  }
   code_list_on_singleton = {
 
 (* Enable/Disable linter "List function on singleton". *)
-    flag = true
+    flag = false
 
 (* Module to ignore durint the lint of "List function on singleton" *)
     ignored_files = [
@@ -87,10 +89,10 @@ plugin_core = {
 (* Enable/Disable warnings from "List function on singleton" *)
     warnings = "+A"
   }
-  "phys-comp-allocated-lit" = {
+  phys_comp_allocated_lit = {
 
 (* Enable/Disable linter "Physical comparison between allocated litterals.". *)
-    flag = true
+    flag = false
 
 (* Module to ignore durint the lint of "Physical comparison between allocated litterals." *)
     ignored_files = [
@@ -99,10 +101,15 @@ plugin_core = {
 (* Enable/Disable warnings from "Physical comparison between allocated litterals." *)
     warnings = "+A"
   }
+}
+plugin_file_system = {
+
+(* A plugin with linters on file system like interface missing, etc. *)
+  flag = false
   interface_missing = {
 
 (* Enable/Disable linter "Missing interface". *)
-    flag = true
+    flag = false
 
 (* Module to ignore durint the lint of "Missing interface" *)
     ignored_files = [
@@ -111,10 +118,15 @@ plugin_core = {
 (* Enable/Disable warnings from "Missing interface" *)
     warnings = "+A"
   }
-  "interface-module-type-name" = {
+}
+plugin_complex = {
+
+(* A plugin with linters on different inputs. *)
+  flag = false
+  interface_module_type_name = {
 
 (* Enable/Disable linter "Checks on module type name.". *)
-    flag = true
+    flag = false
 
 (* Module to ignore durint the lint of "Checks on module type name." *)
     ignored_files = [

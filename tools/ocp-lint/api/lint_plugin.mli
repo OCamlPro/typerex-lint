@@ -18,10 +18,28 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+type t =
+  ((module Lint_plugin_types.PLUGIN), (module Lint_types.LINT) Lint_map.t)
+    Hashtbl.t
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+val create : unit -> t
+
+val add : t ->
+  (module Lint_plugin_types.PLUGIN) ->
+  (module Lint_types.LINT) Lint_map.t ->
+  unit
+
+val find :
+  t ->
+  (module Lint_plugin_types.PLUGIN) ->
+  (module Lint_types.LINT) Lint_map.t
+
+(** [iter_plugins f] applies f to all bindings in the global data structure
+    [plugins]. [f] receives the [plugin] as first argument and the [Lint_map.t]
+    associated to this plugin as second. *)
+val iter_plugins :
+  ((module Lint_plugin_types.PLUGIN) ->
+   (module Lint_types.LINT) Lint_map.t ->
+   unit) ->
+  t ->
+  unit

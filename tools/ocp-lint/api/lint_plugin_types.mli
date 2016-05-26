@@ -18,10 +18,16 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+module type PLUGINARG = sig
+  val name : string
+  val short_name : string
+  val details : string
+  val enable : bool
+end
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
+module type PLUGIN = sig
+  val name : string
+  val short_name : string
+  val details : string
+  val enable : bool
 end

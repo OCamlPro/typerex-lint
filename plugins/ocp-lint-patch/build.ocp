@@ -19,9 +19,28 @@
 (**************************************************************************)
 
 
-begin program "ocp-lint-testsuite"
+begin library "ocp-lint-static-patch-files"
   files = [
-    "testsuite.ml"
+   "global_static_files.ml"
+
+   (* All static linked files which is used in globals.ml *)
+     (file2string = [
+        "./patches/core_patch.md"
+     ])
   ]
-  requires = [ "unix" "str" ]
+  requires = [
+    "ocp-lint-config"
+  ]
+end
+
+begin library "ocp-lint-patch"
+  files = [
+    "plugin_patch.ml"
+    "default_patch.ml"
+    "user_patch.ml"
+  ]
+  requires = [
+    "ocp-lint-plugin-api"
+    "ocp-lint-static-patch-files"
+  ]
 end

@@ -18,10 +18,4 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+module DefaultConfig : Lint_config_types.CONFIG

@@ -18,10 +18,13 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+let load_patches patches =
+  let
+    module UserDefined = Plugin_patch.PluginPatch.MakeLintPatch(struct
+      let name = "Lint from semantic patches (user defined)."
+      let short_name = "sempatch_lint_user_defined"
+      let details = "Lint from semantic patches (user defined)."
+      let patches = patches
+      let enable = true
+    end) in
+  ()

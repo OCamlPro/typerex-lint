@@ -19,9 +19,12 @@
 (**************************************************************************)
 
 
-begin program "ocp-lint-testsuite"
+begin library "ocp-lint-init"
   files = [
-    "testsuite.ml"
+    "lint_globals.ml"
   ]
-  requires = [ "unix" "str" ]
+  requires = [
+     "ocp-lint-config"
+     "ocp-lint-plugin-types"
+  ]
 end

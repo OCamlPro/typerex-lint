@@ -18,10 +18,14 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+type t =
+  ((module Lint_plugin_types.PLUGIN), (module Lint_types.LINT) Lint_map.t)
+    Hashtbl.t
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+let create () = Hashtbl.create 42
+
+let add = Hashtbl.replace
+
+let find = Hashtbl.find
+
+let iter_plugins apply plugins = Hashtbl.iter apply plugins

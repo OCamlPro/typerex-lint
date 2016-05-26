@@ -18,10 +18,12 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+let details =
+  "A plugin with linters on the source."
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+module PluginText = Lint_plugin_api.MakePlugin (struct
+    let name = "Source code plugin."
+    let short_name = "plugin_text"
+    let details = details
+    let enable = false
+  end)

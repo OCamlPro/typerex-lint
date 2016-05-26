@@ -18,10 +18,12 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+let details =
+  "A plugin with linters on parsetree."
 
-begin program "ocp-lint-testsuite"
-  files = [
-    "testsuite.ml"
-  ]
-  requires = [ "unix" "str" ]
-end
+module PluginParsetree = Lint_plugin_api.MakePlugin (struct
+    let name = "Parsetree plugin."
+    let short_name = "plugin_parsetree"
+    let details = details
+    let enable = false
+  end)
