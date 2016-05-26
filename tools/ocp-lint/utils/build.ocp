@@ -21,6 +21,7 @@
 begin library "ocp-lint-utils"
   files = [
     "lint_utils.ml"
+    "lint_parse_args.ml"
   ]
   requires = [
     "str"

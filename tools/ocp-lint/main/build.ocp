@@ -18,10 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-others"
-  files = [     "lint_parse_args.ml" ]
-
-end
 begin program "ocp-lint"
   files = [
     "lint_parallel_loop.ml"

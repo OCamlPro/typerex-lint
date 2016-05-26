@@ -26,6 +26,6 @@ begin library "ocp-lint-output"
     "compiler-libs.common"
     "ocp-lint-plugin-api"
     "ocp-lint-db-types"
-    "ocp-lint-others"
+    "ocp-lint-utils"
   ]
 end
