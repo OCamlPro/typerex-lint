@@ -36,12 +36,12 @@ type warnings =
 
 let w_empty = ListOnSingleton.new_warning
     [ Lint_warning.kind_code ]
-    ~short_name:"list-function-on-empty"
+    ~short_name:"list_function_on_empty"
     ~msg:"$fun is used on an empty list."
 
 let w_singleton = ListOnSingleton.new_warning
     [ Lint_warning.kind_code ]
-    ~short_name:"list-function-on-singleton"
+    ~short_name:"list_function_on_singleton"
     ~msg:"$fun is used on a singleton."
 
  module Warnings = struct

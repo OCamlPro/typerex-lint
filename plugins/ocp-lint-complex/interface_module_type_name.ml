@@ -25,7 +25,7 @@ let details = "Checks if the module type name is capitalized."
 
 module ModuleTypeName = PluginComplex.MakeLint(struct
     let name = "Checks on module type name."
-    let short_name = "interface-module-type-name"
+    let short_name = "interface_module_type_name"
     let details = details
   end)
 
@@ -33,7 +33,7 @@ type warning = Module_name of (string * string)
 
 let w_name = ModuleTypeName.new_warning
     [ Lint_warning.kind_code; Lint_warning.kind_interface ]
-    ~short_name:"interface-module-type-name-check"
+    ~short_name:"interface_module_type_name_check"
     ~msg:"Module type name '$badmodname' should be uppercase as '$goodmodname'."
 
 module Warnings = struct

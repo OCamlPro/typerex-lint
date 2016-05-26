@@ -26,7 +26,7 @@ let details =
 
 module PhysCompLit = PluginParsetree.MakeLint(struct
     let name = "Physical comparison between allocated litterals."
-    let short_name = "phys-comp-allocated-lit"
+    let short_name = "phys_comp_allocated_lit"
     let details = details
   end)
 
@@ -52,7 +52,7 @@ let to_string ty1 ty2 =
 
 let w_phys_comp = PhysCompLit.new_warning
     [ Lint_warning.kind_code ]
-    ~short_name:"phys-comp-allocated-lit-checks"
+    ~short_name:"phys_comp_allocated_lit_checks"
     ~msg:"Physical comparison on '$lit'."
 
 module Warnings = struct
