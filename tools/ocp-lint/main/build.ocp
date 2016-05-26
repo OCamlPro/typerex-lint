@@ -18,7 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin program "ocp-lint"
+begin library "ocp-lint-lib"
   files = [
     "lint_parallel_loop.ml"
     "lint_actions.ml"
@@ -27,30 +27,32 @@ begin program "ocp-lint"
   requires = [
     "dynlink"
     "ocp-lint-output"
-    "ocp-lint-patch"
-    "ocp-lint-file-system"
-    "ocp-lint-text"
-    "ocp-lint-typedtree"
-    "ocp-lint-parsetree"
-    "ocp-lint-complex"
+  ]
+end
+
+begin program "ocp-lint"
+  files = [
+        "main.ml"
+  ]
+  requires = [
+    "ocp-lint-lib"
+    "ocp-lint-plugin-sempatch"
+    "ocp-lint-plugin-files"
+    "ocp-lint-plugin-text"
+    "ocp-lint-plugin-typedtree"
+    "ocp-lint-plugin-parsetree"
+    "ocp-lint-plugin-complex"
   ]
   link = [ "-linkall" ]
 end
 
 begin program "ocp-lint-minimal"
   files = [
-    "lint_parallel_loop.ml"
-    "lint_actions.ml"
-    "lint.ml"
+     "main.ml"
   ]
   requires = [
-    "dynlink"
-    "ocp-lint-output"
-    "ocp-lint-patch"
-    "ocp-lint-file-system"
-    "ocp-lint-text"
-    "ocp-lint-typedtree"
-    "ocp-lint-parsetree"
-    "ocp-lint-complex"
+        "ocp-lint-lib"
+        "ocplib-compiler"
   ]
+  link = [ "-linkall" ]
 end

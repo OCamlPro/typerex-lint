@@ -18,7 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open SimpleConfig
+let (!!) = SimpleConfig.(!!)
 
 let get_ignored_files pname cname =
   let opt =
@@ -67,7 +67,8 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                              input Plugin.short_name cname;
                            try
                              main input
-                           with Lint_plugin_error.Plugin_error err ->
+                           with
+                           | Lint_plugin_error.Plugin_error err ->
                              Lint_plugin_error.print fmt err)
                       end
                     | _ -> ()) Lint.inputs) checks)
@@ -186,4 +187,6 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                       end
                     | _ -> ()) Lint.inputs) checks)
         plugins)
-    cmts
+    cmts;
+
+  ()

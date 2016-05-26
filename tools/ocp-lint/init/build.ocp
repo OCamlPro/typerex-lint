@@ -25,6 +25,6 @@ begin library "ocp-lint-init"
   ]
   requires = [
      "ocp-lint-config"
-     "ocp-lint-plugin-types"
+     "ocp-lint-api-types"
   ]
 end

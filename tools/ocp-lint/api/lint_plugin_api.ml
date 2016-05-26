@@ -223,32 +223,46 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
         register_main plugin C.short_name lint
     end
 
+    let wrap_plugin_exn f =
+      function arg ->
+      try
+        ( f arg : unit )
+      with
+      | exn -> raise (Lint_plugin_error.Plugin_error (Plugin_exception exn))
+
     module MakeInputStructure(S : Lint_input.STRUCTURE) = struct
-      module R = Register(struct let input = Lint_input.InStruct S.main end)
+      module R = Register(struct
+          let input = Lint_input.InStruct (wrap_plugin_exn S.main) end)
     end
 
     module MakeInputInterface (I : Lint_input.INTERFACE) = struct
-      module R = Register (struct let input = Lint_input.InInterf I.main end)
+      module R = Register (struct
+          let input = Lint_input.InInterf (wrap_plugin_exn I.main) end)
     end
 
     module MakeInputToplevelPhrase (T : Lint_input.TOPLEVEL) = struct
-      module R = Register (struct let input = Lint_input.InTop T.main end)
+      module R = Register (struct
+          let input = Lint_input.InTop (wrap_plugin_exn T.main) end)
     end
 
     module MakeInputCMT(C : Lint_input.CMT) = struct
-      module R = Register (struct let input = Lint_input.InCmt C.main end)
+      module R = Register (struct
+          let input = Lint_input.InCmt (wrap_plugin_exn C.main) end)
     end
 
     module MakeInputML (ML : Lint_input.ML) = struct
-      module R = Register (struct let input = Lint_input.InMl ML.main end)
+      module R = Register (struct
+          let input = Lint_input.InMl (wrap_plugin_exn ML.main) end)
     end
 
     module MakeInputMLI (MLI : Lint_input.MLI) = struct
-      module R = Register (struct let input = Lint_input.InMli MLI.main end)
+      module R = Register (struct
+          let input = Lint_input.InMli (wrap_plugin_exn MLI.main) end)
     end
 
     module MakeInputAll (All : Lint_input.ALL) = struct
-      module R = Register (struct let input = Lint_input.InAll All.main end)
+      module R = Register (struct
+          let input = Lint_input.InAll (wrap_plugin_exn All.main) end)
     end
     let () =
       create_default_lint_option C.short_name C.name C.enable

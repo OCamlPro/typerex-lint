@@ -18,7 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open SimpleConfig
+let (!!) = SimpleConfig.(!!)
 open Lint_warning
 
 let ignored_files = Lint_globals.Config.create_option
@@ -62,7 +62,8 @@ let filter_plugins plugins =
                 (Lint_map.add cname lint old_lints)
             end)
           checks
-      end)
+      end
+    )
     plugins;
   activated_plugins
 
@@ -174,6 +175,8 @@ let scan ?output_text print_only_new path =
   Format.printf "Starting analyses...\n%!";
 
   Lint_parallel_loop.lint all mls mlis asts_ml asts_mli cmts plugins;
+
+  Format.printf "Printing results...\n%!";
 
   (* TODO: do we want to print in stderr by default ? *)
   begin match output_text with

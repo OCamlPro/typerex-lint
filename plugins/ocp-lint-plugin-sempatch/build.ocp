@@ -18,15 +18,30 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-file-system"
-  files = [
-    "plugin_file_system.ml"
 
-    (* All linters attached to File System plugin. *)
-    "interface_missing.ml"
+begin library "ocp-lint-plugin-sempatch"
+  files = [
+   "global_static_files.ml"
+
+   (* All static linked files which is used in globals.ml *)
+     (file2string = [
+        "./patches/core_patch.md"
+       ])
+     (*
   ]
   requires = [
     "ocp-lint-config"
-    "ocp-lint-plugin-api"
+  ]
+end
+
+begin library "ocp-lint-patch"
+  files = [ *)
+    "plugin_patch.ml"
+    "default_patch.ml"
+    "user_patch.ml"
+  ]
+  requires = [
+    "ocp-lint-api"
+        (*    "ocp-lint-static-patch-files" *)
   ]
 end

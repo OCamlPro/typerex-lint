@@ -18,15 +18,17 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-text"
+begin library "ocp-lint-plugin-parsetree"
   files = [
-    "plugin_text.ml"
+    "plugin_parsetree.ml"
 
-    (* All linters attached to Text plugin. *)
-    "code_length.ml"
+    (* All linters attached to Parsetree plugin. *)
+    "identifier_length.ml"
+    "list_function_on_singleton.ml"
+    "physical_comp_on_alloc_lit.ml"
   ]
   requires = [
     "ocp-lint-config"
-    "ocp-lint-plugin-api"
+    "ocp-lint-api"
   ]
 end

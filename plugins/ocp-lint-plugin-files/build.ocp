@@ -18,15 +18,15 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-typedtree"
+begin library "ocp-lint-plugin-files"
   files = [
-    "plugin_typedtree.ml"
+    "plugin_file_system.ml"
 
-  (* All linters attached to Typedtree plugin. *)
-
+    (* All linters attached to File System plugin. *)
+    "interface_missing.ml"
   ]
   requires = [
     "ocp-lint-config"
-    "ocp-lint-plugin-api"
+    "ocp-lint-api"
   ]
 end
