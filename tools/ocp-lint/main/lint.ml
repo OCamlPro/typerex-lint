@@ -58,7 +58,9 @@ let () =
     "--init", Arg.Unit (fun dir -> set_action ActionInit),
     " Init a project";
 
-    "--path", Arg.String (fun dir -> set_action (ActionLoad dir)),
+    "--path", Arg.String (fun dir ->
+        Lint_actions.init_config dir;
+        set_action (ActionLoad dir)),
     "DIR   Give a project dir path";
 
     "--output-txt", Arg.String (fun file -> output_text := Some file),
@@ -91,7 +93,7 @@ let () =
   ]
 
 let start_lint dir =
-  Lint_actions.init !no_db dir;
+  Lint_actions.init_db !no_db dir;
   Lint_actions.scan
     ?output_text:!output_text
     !print_only_new
@@ -101,6 +103,7 @@ let start_lint dir =
 
 let main () =
   (* Getting all options declared in all registered plugins. *)
+  Lint_actions.init_config default_dir;
   List.iter add_spec (Lint_globals.Config.simple_args ());
   Arg.parse_dynamic specs
     (fun cmd ->

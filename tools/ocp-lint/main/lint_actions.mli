@@ -37,6 +37,5 @@ val scan :
 (** [init_db ()] create dir to dump the db. *)
 val init_olint_dir : unit -> unit
 
-(** [init no_db path] initialize the db and config modules with the path
-     given in the command line *)
-val init : bool -> string -> unit
+val init_config : string -> unit
+val init_db : bool -> string -> unit
