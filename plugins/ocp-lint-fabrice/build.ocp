@@ -23,6 +23,7 @@ begin library "ocp-lint-plugin-fabrice"
         "lintFabPlugin.ml"
 
           "lintFabFullyQualified.ml"
+          "lintFabGoodPractices.ml"
 
           (* From ocaml-4.03.0 *)
         "lintFabOCaml_Location.ml"
