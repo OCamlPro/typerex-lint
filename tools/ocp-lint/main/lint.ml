@@ -72,13 +72,13 @@ let () =
         let patches = (Str.split (Str.regexp ",") files) in
         Lint_actions.load_sempatch_plugins patches;
         List.iter add_spec (Lint_globals.Config.simple_args ())),
-    " List of user defined lint with the patch format.";
+    "PATCHES List of user defined lint with the patch format.";
 
     "--load-plugins", Arg.String (fun files ->
         let l = (Str.split (Str.regexp ",") files) in
         Lint_actions.load_plugins l;
         List.iter add_spec (Lint_globals.Config.simple_args ())),
-    " Load dynamically plugins with their corresponding 'cmxs' files.";
+    "PLUGINS Load dynamically plugins with their corresponding 'cmxs' files.";
 
     "--save-config", Arg.Unit (fun () -> set_action (ActionSave)),
     " Save ocp-lint default config file.";
