@@ -24,6 +24,7 @@ module type LintArg = sig
   val name : string
   val short_name : string
   val details : string
+  val enable : bool
 end
 
 module type LintPatchArg = sig
@@ -31,6 +32,7 @@ module type LintPatchArg = sig
   val short_name : string
   val details : string
   val patches : string list
+  val enable : bool
 end
 
 module type LINT = sig

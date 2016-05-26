@@ -28,6 +28,7 @@ module PhysCompLit = PluginParsetree.MakeLint(struct
     let name = "Physical comparison between allocated litterals."
     let short_name = "phys_comp_allocated_lit"
     let details = details
+    let enable = false
   end)
 
 type warning =

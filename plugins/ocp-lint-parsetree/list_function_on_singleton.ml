@@ -28,6 +28,7 @@ module ListOnSingleton = PluginParsetree.MakeLint(struct
     let name = "List function on singleton"
     let short_name = "code_list_on_singleton"
     let details = details
+    let enable = false
   end)
 
 type warnings =

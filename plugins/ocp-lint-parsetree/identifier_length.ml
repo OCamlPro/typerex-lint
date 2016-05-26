@@ -38,6 +38,7 @@ module CodeIdentifierLength = PluginParsetree.MakeLint(struct
     let name = "Code Identifier Length"
     let short_name = "code_identifier_length"
     let details = details
+    let enable = false
   end)
 
 type warnings =

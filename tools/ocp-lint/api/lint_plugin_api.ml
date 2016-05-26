@@ -53,25 +53,27 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
   let name = P.name
   let short_name = P.short_name
   let details = P.details
+  let enable = P.enable
 
   module Plugin = struct
     let name = name
     let short_name = short_name
     let details = details
+    let enable = enable
   end
   let plugin = (module Plugin : Lint_plugin_types.PLUGIN)
 
   let create_option options short_help lhelp ty default =
     Lint_globals.Config.create_option options short_help lhelp 0 ty default
 
-  let create_default_lint_option lint_short_name lint_long_name =
+  let create_default_lint_option lint_short_name lint_long_name enable =
     let details = Printf.sprintf "Enable/Disable linter %S." lint_long_name in
     ignore @@
     create_option [P.short_name; lint_short_name; "flag"]
       details
       details
       SimpleConfig.enable_option
-      false;
+      enable;
     let details =
       Printf.sprintf "Module to ignore durint the lint of %S" lint_long_name in
     ignore @@
@@ -100,6 +102,8 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
     let short_name = C.short_name
     let details = C.details
     let patches = C.patches
+    let enable = C.enable
+
     let decls = WarningDeclaration.empty ()
 
     let create_option option short_help lhelp ty default =
@@ -176,7 +180,7 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
       end in
       let lint = (module Lint : Lint_types.LINT) in
       register_main plugin C.short_name lint;
-      create_default_lint_option C.short_name C.name
+      create_default_lint_option C.short_name C.name C.enable
   end (* MakeLintPatch *)
 
   module MakeLint (C : Lint_types.LintArg) = struct
@@ -184,6 +188,7 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
     let name = C.name
     let short_name = C.short_name
     let details = C.details
+    let enable = C.enable
     let decls = WarningDeclaration.empty ()
 
     let create_option option short_help lhelp ty default =
@@ -246,7 +251,7 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
       module R = Register (struct let input = Lint_input.InAll All.main end)
     end
     let () =
-      create_default_lint_option C.short_name C.name
+      create_default_lint_option C.short_name C.name C.enable
   end (* MakeLint *)
 
   let () =
@@ -256,7 +261,7 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
       [P.short_name; "flag"]
       details
       details
-      SimpleConfig.enable_option false;
+      SimpleConfig.enable_option P.enable;
     try
       register_plugin plugin
     with Plugin_error(error) ->

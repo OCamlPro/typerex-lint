@@ -27,6 +27,7 @@ module ModuleTypeName = PluginComplex.MakeLint(struct
     let name = "Checks on module type name."
     let short_name = "interface_module_type_name"
     let details = details
+    let enable = false
   end)
 
 type warning = Module_name of (string * string)

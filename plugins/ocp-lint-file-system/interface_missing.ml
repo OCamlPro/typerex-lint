@@ -27,6 +27,7 @@ module MissingInterface = PluginFileSystem.MakeLint(struct
     let name = "Missing interface"
     let short_name = "interface_missing"
     let details = details
+    let enable = false
   end)
 
 type warning = Missing of string

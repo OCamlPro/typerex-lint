@@ -120,6 +120,7 @@ let load_default_sempatch () =
       let short_name = "sempatch_lint_default"
       let details = "Lint from semantic patches (default)."
       let patches = Lint_globals.default_patches
+      let enable = false
     end) in
   ()
 
@@ -130,6 +131,7 @@ let load_sempatch_plugins patches =
       let short_name = "sempatch_lint_user_defined"
       let details = "Lint from semantic patches (user defined)."
       let patches = patches
+      let enable = false
     end) in
   ()
 
