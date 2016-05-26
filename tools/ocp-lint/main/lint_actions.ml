@@ -180,4 +180,4 @@ let scan ?output_text print_only_new path =
     | Some file -> to_text file
   end
 
-let init_db () = File.RawIO.safe_mkdir ".typerex-lint"
+let init_db () = File.RawIO.safe_mkdir Lint_globals.olint_dirname

@@ -37,6 +37,5 @@ begin library "ocp-lint-db-types"
   requires = [
     "ocplib-system"
     "ocp-lint-plugin-types"
-  (* "ocp-lint-plugin-api" *)
   ]
 end

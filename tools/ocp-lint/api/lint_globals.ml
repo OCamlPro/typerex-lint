@@ -22,6 +22,9 @@ module Config = Lint_config.DefaultConfig
 
 let plugins = Hashtbl.create 42
 
+let olint_dirname = "_olint"
+let config_file = ".ocplint"
+
 let default_patches =
   (* To add a static file, edit src/kernel/services/plugins/build.ocp *)
   List.map (fun (file, content) ->
@@ -40,15 +43,15 @@ let init_config file =
 let init no_db path =
   let path_t = File.of_string path in
   (try
-     let root_path_t = Lint_utils.find_root path_t [".ocplint"] in
-     let file_t = File.concat root_path_t (File.of_string ".ocplint") in
+     let root_path_t = Lint_utils.find_root path_t [config_file] in
+     let file_t = File.concat root_path_t (File.of_string config_file) in
      init_config file_t;
    with Not_found -> ());
   try
     if not no_db then
-      let root_path_dir_t = Lint_utils.find_root path_t [".typerex-lint"] in
+      let root_path_dir_t = Lint_utils.find_root path_t [olint_dirname] in
       let root_t =
-        File.concat root_path_dir_t (File.of_string ".typerex-lint") in
+        File.concat root_path_dir_t (File.of_string olint_dirname) in
       Lint_db.DefaultDB.init root_t
   with Not_found ->
     Printf.eprintf

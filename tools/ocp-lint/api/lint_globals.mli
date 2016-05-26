@@ -31,6 +31,9 @@ val plugins :
   ((module Lint_plugin_types.PLUGIN), (module Lint_types.LINT) Lint_map.t)
     Hashtbl.t
 
+val config_file : string
+val olint_dirname : string
+
 val default_patches : string list
 
 (** [init no_db path] initialize the db and config modules with the path

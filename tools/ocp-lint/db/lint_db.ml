@@ -40,8 +40,8 @@ module MakeDB (DB : DATABASE_IO) = struct
       let db2 = DB.load !database_file in
       Hashtbl.iter (fun k v -> Hashtbl.add db k v) db2
     with Not_found ->
-      Printf.eprintf "Can't find .typerex-lint dir \
-                      use ocplint init if you want to use db support.\n%!"
+      Printf.eprintf "Can't find '_olint' directory: use ocp-lint --init \
+                      if you want to use db support.\n%!"
 
   let save () =
     Hashtbl.iter (fun file (hash, pres) ->
