@@ -50,20 +50,20 @@ let check_module_name loc modname =
 
 let iter =
   let module IterArg = struct
-    include Lint_parsetree_iter.DefaultIteratorArgument
+    include Parsetree_iter.DefaultIteratorArgument
 
     let enter_module_type_declaration modtype =
       let open Parsetree in
       let open Asttypes in
       check_module_name modtype.pmtd_loc modtype.pmtd_name.txt
   end in
-  (module IterArg : Lint_parsetree_iter.IteratorArgument)
+  (module IterArg : Parsetree_iter.IteratorArgument)
 
 (* Registering a main entry to the linter *)
 module MainMLI = ModuleTypeName.MakeInputInterface (struct
-    let main ast = Lint_parsetree_iter.iter_signature iter ast
+    let main ast = Parsetree_iter.iter_signature iter ast
   end)
 
 module MainML = ModuleTypeName.MakeInputStructure(struct
-    let main ast = Lint_parsetree_iter.iter_structure iter ast
+    let main ast = Parsetree_iter.iter_structure iter ast
   end)

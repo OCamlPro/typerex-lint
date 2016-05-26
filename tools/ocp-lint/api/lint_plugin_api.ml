@@ -152,7 +152,7 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
 
     let iter =
       let module IterArg = struct
-        include Lint_parsetree_iter.DefaultIteratorArgument
+        include Parsetree_iter.DefaultIteratorArgument
         let enter_expression expr =
           List.iteri (fun i patches ->
               let matches =
@@ -168,11 +168,11 @@ module MakePlugin(P : Lint_plugin_types.PluginArg) = struct
                 matches)
             patches
       end in
-      (module IterArg : Lint_parsetree_iter.IteratorArgument)
+      (module IterArg : Parsetree_iter.IteratorArgument)
 
     let () =
       let module Lint = struct
-        let inputs = [Lint_input.InStruct (Lint_parsetree_iter.iter_structure iter)]
+        let inputs = [Lint_input.InStruct (Parsetree_iter.iter_structure iter)]
       end in
       let lint = (module Lint : Lint_types.LINT) in
       register_main plugin C.short_name lint;

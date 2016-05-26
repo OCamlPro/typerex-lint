@@ -121,7 +121,7 @@ let check_fun f args =
 
 let iter =
   let module IterArg = struct
-    include Lint_parsetree_iter.DefaultIteratorArgument
+    include Parsetree_iter.DefaultIteratorArgument
 
     let enter_expression expr =
       let open Parsetree in
@@ -139,9 +139,9 @@ let iter =
       | _ -> ()
 
   end in
-  (module IterArg : Lint_parsetree_iter.IteratorArgument)
+  (module IterArg : Parsetree_iter.IteratorArgument)
 
 (* Registering a main entry to the linter *)
 module MainML = ListOnSingleton.MakeInputStructure(struct
-    let main ast = Lint_parsetree_iter.iter_structure iter ast
+    let main ast = Parsetree_iter.iter_structure iter ast
   end)

@@ -20,9 +20,9 @@
 
 begin library "ocplib-compiler"
   files = [
-     "lint_parsetree_iter.ml"
-     "lint_parsetree_map.ml"
-     "lint_typedtree_iter.ml"
+     "parsetree_iter.ml"
+     "parsetree_map.ml"
+     "typedtree_iter.ml"
      (* "lint_typedtree_map.ml"  TODO: cago does not compile *)
   ]
  requires = [ "compiler-libs" ]

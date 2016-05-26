@@ -71,7 +71,7 @@ let w_too_long = CodeIdentifierLength.new_warning
 
 let iter min_identifier_length max_identifier_length =
   let module IterArg = struct
-    include Lint_parsetree_iter.DefaultIteratorArgument
+    include Parsetree_iter.DefaultIteratorArgument
 
     let enter_pattern pat =
       let open Parsetree in
@@ -88,7 +88,7 @@ let iter min_identifier_length max_identifier_length =
         | _ -> ()
       end
   end in
-  (module IterArg : Lint_parsetree_iter.IteratorArgument)
+  (module IterArg : Parsetree_iter.IteratorArgument)
 
 (* Defining/Using option from configuration file / command line *)
 let min_identifier_length = CodeIdentifierLength.create_option
@@ -108,6 +108,6 @@ let max_identifier_length = CodeIdentifierLength.create_option
 (* Registering a main entry to the linter *)
 module MainML = CodeIdentifierLength.MakeInputStructure(struct
     let main ast =
-      Lint_parsetree_iter.iter_structure
+      Parsetree_iter.iter_structure
         (iter !!min_identifier_length !!max_identifier_length) ast
   end)
