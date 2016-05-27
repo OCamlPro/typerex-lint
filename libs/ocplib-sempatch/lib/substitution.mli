@@ -10,6 +10,7 @@ val get_ident: string -> t -> string option
 
 val add_expr: string -> Parsetree.expression -> t -> t
 val add_ident: string -> string -> t -> t
+val add_pattern: string -> Parsetree.pattern -> t -> t
 
 val to_list : t -> (string * Ast_element.t) list
 

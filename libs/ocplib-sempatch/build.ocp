@@ -8,7 +8,9 @@ begin library "ocplib-sempatch"
       "lib/ast_element.ml"
       "lib/substitution.ml"
       "lib/match.ml"
-      "lib/environment.ml"
+      "lib/automaton/automaton.ml"
+      "lib/automaton/builder.ml"
+      "lib/automaton/eval.ml"
       "lib/parsing/guard.ml"
       "lib/parsing/guard_lexer.mll"
       "lib/parsing/guard_parser.mly"
@@ -16,7 +18,6 @@ begin library "ocplib-sempatch"
       "lib/parsing/raw_patch.ml"
       "lib/ast_maybe_mapper2.ml"
       "lib/guard_evaluator.ml"
-      "lib/ast_pattern_matcher.ml"
       "lib/parsing/code_lexer.mll"
       "lib/parsing/code_parser.mly"
       "lib/parsing/patch_lexer.mll"
@@ -29,16 +30,4 @@ begin library "ocplib-sempatch"
         "compiler-libs.common"
     ]
     ocamlyacc = "menhir"
-end
-
-begin program "sempatch-test"
-    files = [
-      "test/sempatch_runner.ml"
-    ]
-    requires = [
-        "ocplib-sempatch"
-    ]
-
-    test_args = [ "test/sempatch.md" ]
-    tests = [ "test" ]
 end

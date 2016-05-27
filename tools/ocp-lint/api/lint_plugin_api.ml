@@ -152,10 +152,15 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let patches =
       List.map (fun filename ->
           if Sys.file_exists filename then
-            let ic = open_in filename in
-            let patches = Patch.from_channel ic in
-            close_in ic;
-            patches
+            try
+              let ic = open_in filename in
+              let patches = Patch.from_channel ic in
+              close_in ic;
+              patches
+            with
+              Failure.SempatchException e ->
+              Printf.eprintf "Sempatch failure : %s\n" (Failure.to_string e);
+              []
           else
             (raise (Plugin_error(Patch_file_not_found filename))))
         C.patches
@@ -163,11 +168,11 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let iter =
       let module IterArg = struct
         include Parsetree_iter.DefaultIteratorArgument
-        let enter_expression expr =
+        let enter_structure structure =
           List.iteri (fun i patches ->
               let matches =
-                Patch.parallel_apply_nonrec
-                  patches (Ast_element.Expression expr) in
+                Patch.parallel_apply
+                  patches (Ast_element.from_structure structure) in
               List.iter (fun matching ->
                   let patch =
                     List.find

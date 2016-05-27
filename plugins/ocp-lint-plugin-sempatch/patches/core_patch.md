@@ -14,7 +14,6 @@ when: "e1 = e2"
 - e1 := !e2 - 1
 + decr e1
 ```
-
 @CompToFalse
 expressions: cond
 message: "Use 'not $cond' instead of '$cond = false'."
@@ -27,8 +26,8 @@ message: "Use 'not $cond' instead of '$cond = false'."
 expressions: cond
 message: "Use '$cond' instead of '$cond != false'."
 ```
-- cond != false 
-+ cond 
+- cond != false
++ cond
 ```
 
 @ CompToFalse3
@@ -71,15 +70,6 @@ when : "is_int_in_range(i, 0, 5)"
 List.length l = i
 ```
 
-@ ConstantIf
-expressions: cond, e1, e2
-message: "Constant if-then-else: there is no need to use a if-then-else."
-when: "e1 = e2"
-```
-- if cond then e1 else e2
-+ e1
-```
-
 @ UselessIf
 expressions: cond
 message: "Useless if-then-else: use '$cond' instead of 'if $cond then true else false'."
@@ -119,4 +109,12 @@ message: "List operation on singleton: use '$expr :: $list' instead of '[$expr] 
 ```
 - [ expr ] @ list
 + expr :: list
+```
+
+@ ConstantIf
+expressions: cond, e1, e2
+message: "Constant if-then-else: there is no need to use a if-then-else."
+when: "e1 = e2"
+```
+if cond then e1 else e2
 ```

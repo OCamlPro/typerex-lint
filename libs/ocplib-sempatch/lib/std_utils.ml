@@ -59,6 +59,8 @@ sig
 
   val bind : 'a t -> ('a -> 'b t) -> 'b t
 
+  val to_list : 'a t -> 'a list
+
   module Infix :
   sig
     val (|?) : 'a t -> 'a -> 'a
@@ -105,6 +107,10 @@ struct
 
   let is_none x = (=) None x
   let is_some x = (<>) None x
+
+  let to_list = function
+    | Some x -> [x]
+    | None -> []
 
   module Infix =
   struct
@@ -190,8 +196,14 @@ sig
 
   val cons : 'a -> 'a list -> 'a list
 
+  val truncate_as : 'a list -> 'b list -> 'a list option
+
+  val bind : ('a -> 'b t) -> 'a t -> 'b t
   val sum : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
   val product : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
+  val product_bind : ('a -> 'b -> 'c t) -> 'a list -> 'b list -> 'c list
+
+  val flip_opt : 'a option list -> 'a list option
 
   val find_opt : ('a -> bool) -> 'a list -> 'a option
 end
@@ -215,7 +227,27 @@ struct
 
   let sum = map2
 
-  let product f l1 l2 = List.map (fun x -> List.map (f x) l2) l1 |> List.flatten
+  let rec take n l = match n, l with
+    | 0, _ -> Some []
+    | n, (hd::tl) when n > 0 ->
+      Option.bind (take (n-1) tl) (fun l -> Some (cons hd l))
+    | _ -> None
+
+  let truncate_as l1 l2 =
+    let new_length = List.length l2 in
+    take new_length l1
+
+  let bind f lst = List.map f lst |> List.flatten
+  let product_bind f l1 l2 = bind (fun x -> bind (f x) l2) l1
+  let product f l1 l2 = product_bind (fun x y -> [f x y]) l1 l2
+
+  let flip_opt list = List.fold_left (fun accu elt ->
+      match accu, elt with
+      | Some acc, Some el -> Some (el::acc)
+      | _ -> None
+    )
+      (Some [])
+      list
 
   let find_opt f l = try List.find f l |> Option.some with Not_found -> None
 end

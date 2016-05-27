@@ -1,4 +1,4 @@
-# foo - test
+# ocplib-sempatch
 
 ## Syntax of the patches
 
@@ -24,20 +24,5 @@ In addition, free variables can be matched against any expression in the AST
 
 ## Patching process
 
-The algo walks through the source AST, and for each node tries to match the
-patch.
-
-To match the patch, the algo walks through both ASTs at the same time, if
-possible.
-
-- If it encouters a matching leaf L of the patch for a certain substitution S,
-  it returns the couple (S, L') where L' is the application of S to L
-
-- If it encounters an extension node labelled "delete" or "add", it's still a
-  TODO
-
-  - Force deletes and adds to stay close and be valide expressions
-
-  - Preprocess more smartly the patch to get rid of this <-- +1
-
-If everything else fails, the algo stops
+Each patch is converted to an automaton which is then matched against the
+Parstree.

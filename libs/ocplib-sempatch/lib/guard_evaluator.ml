@@ -53,21 +53,17 @@ let bool f x = Bool (f x)
 let expr f x = Expr (f x)
 
 let equiv_ast = apply_to_exprs @@ apply_to_2 @@ fun e1 e2 ->
-  let open Ast_maybe_mapper2 in
-  let default_mapper = Ast_maybe_mapper2.mk (fun () () -> ()) in
-  let mapper = {
-    default_mapper with
-    expr = fun self () ~patch ~expr ->
-      match expr.pexp_desc, patch.pexp_desc with
-      | Pexp_ident i, Pexp_ident j when i.Asttypes.txt = j.Asttypes.txt ->
-        Ok (expr, ())
-      | Pexp_constant i, Pexp_constant j when i = j -> Ok (expr, ())
-      | _, _ -> default_mapper.expr self () ~expr ~patch
-  }
+  let patch = Parsed_patches.preprocess Parsed_patches.{
+      unprocessed_header =
+        { Parsed_patches.void_header with Type.name = "guard"};
+      unprocessed_body = e1;
+    }
   in
-  match mapper.expr mapper () ~expr:e1 ~patch:e2 with
-  | Ok _ -> true
-  | Error _ -> false
+  match
+    Eval.apply "" patch.Parsed_patches.Type.body (Ast_element.Expression e2)
+  with
+  | [] -> false
+  | _ -> true
 
 let (&&&) = apply_to_bool @@ apply_to_2 @@ (fun x y -> x&&y)
 let (|||) = apply_to_bool @@ apply_to_2 @@ (fun x y -> x||y)
