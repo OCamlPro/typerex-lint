@@ -30,6 +30,8 @@ val scan :
   string ->
   unit
 
+val list_plugins : Format.formatter -> unit
+
 (** [init_db ()] create dir to dump the db. *)
 val init_olint_dir : unit -> unit
 

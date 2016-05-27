@@ -24,7 +24,7 @@ module UserDefined = Plugin_patch.PluginPatch.MakeLintPatch(struct
     let details = "Lint from semantic patches (user defined)."
     let patches =
       try
-        let path = Sys.getenv "PATCHES" in
+        let path = Sys.getenv "OCPLINT_PATCHES" in
         let files = ref [] in
         Lint_utils.iter_files (fun file ->
             if Filename.check_suffix file ".md" then

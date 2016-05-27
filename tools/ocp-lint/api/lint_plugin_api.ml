@@ -21,6 +21,7 @@
 open Lint_plugin_error
 open Sempatch
 open Lint_warning
+open Lint_warning_decl
 
 let register_plugin plugin =
   try
@@ -37,7 +38,12 @@ let register_main plugin cname new_lint =
       let module Old_lint = (val lint : Lint_types.LINT) in
       let module New_lint = (val new_lint : Lint_types.LINT) in
       let module Merge = struct
+        let name = New_lint.name
+        let short_name = New_lint.short_name
+        let details = New_lint.details
+        let enable = New_lint.enable
         let inputs = Old_lint.inputs @ New_lint.inputs
+        let wdecls = WarningDeclaration.union Old_lint.wdecls New_lint.wdecls
       end in
       let new_lints =
         Lint_map.add cname (module Merge : Lint_types.LINT) lints in
@@ -104,7 +110,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let patches = C.patches
     let enable = C.enable
 
-    let decls = WarningDeclaration.empty ()
+    let wdecls = WarningDeclaration.empty ()
 
     let create_option option short_help lhelp ty default =
       let option = [P.short_name; C.short_name; option] in
@@ -113,7 +119,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let new_warning loc warn_id kinds ~short_name ~msg ~args = (* TODO *)
       let open Lint_warning_types in
       let decl = new_warning kinds ~short_name ~msg in
-      WarningDeclaration.add decl decls;
+      WarningDeclaration.add decl wdecls;
       (* TODO: cago: here we have to re-set the long help with the id and the
          short_name of the warning. It will be displayed in the config file. *)
       let msg = Lint_utils.subsitute decl.message args in
@@ -176,7 +182,12 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
 
     let () =
       let module Lint = struct
+        let name = name
+        let short_name = short_name
+        let details = details
+        let enable = enable
         let inputs = [Lint_input.InStruct (Parsetree_iter.iter_structure iter)]
+        let wdecls = wdecls
       end in
       let lint = (module Lint : Lint_types.LINT) in
       register_main plugin C.short_name lint;
@@ -189,7 +200,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let short_name = C.short_name
     let details = C.details
     let enable = C.enable
-    let decls = WarningDeclaration.empty ()
+    let wdecls = WarningDeclaration.empty ()
 
     let create_option option short_help lhelp ty default =
       let option = [P.short_name; C.short_name; option] in
@@ -210,14 +221,19 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
 
     let new_warning kinds ~short_name ~msg = (* TODO *)
       let decl = new_warning kinds ~short_name ~msg in
-      WarningDeclaration.add decl decls;
+      WarningDeclaration.add decl wdecls;
       decl
 
     module Register(I : Lint_input.INPUT) =
     struct
       let () =
         let module Lint = struct
+          let name = name
+          let short_name = short_name
+          let details = details
+          let enable = enable
           let inputs = [ I.input ]
+          let wdecls = wdecls
         end in
         let lint = (module Lint : Lint_types.LINT) in
         register_main plugin C.short_name lint
