@@ -112,6 +112,7 @@ let main () =
   | ActionList ->
     exit 0
   | ActionInit ->
+    Lint_globals.Config.save ();
     Lint_actions.init_olint_dir ()
   | ActionSave ->
     Lint_globals.Config.save ();
