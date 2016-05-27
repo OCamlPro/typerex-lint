@@ -151,6 +151,37 @@ let to_text path file =
   output path false fmt;
   close_out oc
 
+let list_plugins fmt =
+  let open Lint_warning_decl in
+  let open Lint_warning_types in
+  Lint_plugin.iter_plugins (fun plugin checks ->
+      let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
+      let status = if Plugin.enable then "enable" else "disable" in
+      if Plugin.enable then
+        Format.fprintf fmt "=== %s === (\027[32m%s\027[m)\n" Plugin.name status
+      else
+        Format.fprintf fmt "=== %s === (\027[31m%s\027[m)\n" Plugin.name status;
+      Lint_map.iter (fun cname lint ->
+          let module Linter = (val lint : Lint_types.LINT) in
+          let status = if Linter.enable then "enable" else "disable" in
+          (* Format.fprintf fmt "  * %s  (%s by default)\n" Linter.name status; *)
+          if Linter.enable then
+            Format.fprintf fmt "  ** %s (\027[32m%s\027[m)\n%!"
+              Linter.name status
+          else
+            Format.fprintf fmt "  ** %s (\027[31m%s\027[m)\n%!"
+              Linter.name status;
+          WarningDeclaration.iter (fun wdecl ->
+              let kinds_str =
+                String.concat ", "
+                  (List.map Lint_warning.kind_to_string wdecl.kinds) in
+              Format.fprintf fmt "      Warning %S on [%s]\n%!"
+                wdecl.short_name kinds_str)
+            Linter.wdecls)
+        checks;
+      Format.fprintf fmt "\n%!")
+    Lint_globals.plugins
+
 let scan ?output_text print_only_new path =
   (* We filter plugins by using the .ocplint config file and/or
      command line arguments. *)

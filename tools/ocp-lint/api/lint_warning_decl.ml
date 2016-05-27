@@ -18,29 +18,20 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Lint_warning_types
+module WarningDeclaration = struct
+  (* Warning declaration Set *)
+  module WDeclSet = Set.Make (struct
+      type t = Lint_warning_types.warning_declaration
+      let compare = Pervasives.compare
+    end)
 
-let kind_code = Code
-let kind_typo = Typo
-let kind_interface = Interface
-let kind_metrics = Metrics
+  type t = WDeclSet.t ref
 
-let new_kind kind = Custom kind
+  let empty () = ref WDeclSet.empty
 
-let kind_to_string = function
-  | Code -> "code"
-  | Typo -> "typographie"
-  | Interface -> "interface"
-  | Metrics -> "metrics"
-  | Custom kind -> kind
+  let add decl decls = decls := WDeclSet.add decl !decls
 
-module Warning = struct
+  let union decls1 decls2 = ref (WDeclSet.union !decls1 !decls2)
 
-  let add_warning pname lname warning =
-    Lint_db.DefaultDB.update pname lname warning
-
-  let add pname lname loc id decl output =
-    let instance = {id; decl} in
-    let warning = {loc; instance; output} in
-    add_warning pname lname warning
+  let iter f decls = WDeclSet.iter f !decls
 end

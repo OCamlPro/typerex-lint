@@ -66,6 +66,9 @@ let () =
     "--output-txt", Arg.String (fun file -> output_text := Some file),
     "FILE   Output results in a text file.";
 
+    "--list", Arg.Unit (fun () -> set_action ActionList),
+    " List of every plugins and warnings.";
+
     "--warn-error", Arg.Unit (fun () ->
         exit_status := 1),
     " Every warning returns an error status code.";
@@ -110,6 +113,7 @@ let main () =
     start_lint dir;
     exit 0 (* No warning, we can exit successfully *)
   | ActionList ->
+    Lint_actions.list_plugins Format.std_formatter;
     exit 0
   | ActionInit ->
     Lint_globals.Config.save ();

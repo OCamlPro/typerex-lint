@@ -37,7 +37,7 @@ sig
       on semantic patches (see ocplib-sempatch). It takes the files names of
       the patches as arguments and automatically register the linter
       into a plugin. *)
-  module MakeLintPatch : functor (CA : Lint_types.LINTPATCHARG) ->  sig  end
+  module MakeLintPatch : functor (CA : Lint_types.LINTPATCHARG) ->  sig end
 
   (** [MakeLint] is a functor which takes a module of type [Lint.LintArg] as
       argument. It allows to create a linter and automatically register it to
