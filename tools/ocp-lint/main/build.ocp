@@ -27,6 +27,8 @@ begin library "ocp-lint-lib"
   requires = [
     "dynlink"
     "ocp-lint-output"
+    "ocp-lint-api-types"
+    "ocp-lint-api"
   ]
 end
 

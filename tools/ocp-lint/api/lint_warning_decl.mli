@@ -18,29 +18,18 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Lint_warning_types
+module WarningDeclaration : sig
+  (** Abstract type representation the warning declaration data structure. *)
+  type t
 
-let kind_code = Code
-let kind_typo = Typo
-let kind_interface = Interface
-let kind_metrics = Metrics
+  (** The empty set of warning declaration. *)
+  val empty : unit -> t
 
-let new_kind kind = Custom kind
+  (** [add wdecl wdecl_set] adds the warning declaration [wdecl] to [wset]. *)
+  val add : Lint_warning_types.warning_declaration -> t -> unit
 
-let kind_to_string = function
-  | Code -> "code"
-  | Typo -> "typographie"
-  | Interface -> "interface"
-  | Metrics -> "metrics"
-  | Custom kind -> kind
+  (** [union wdecl1 wdecl2] union between [wdecl1] and [wdecl2]. *)
+  val union : t -> t -> t
 
-module Warning = struct
-
-  let add_warning pname lname warning =
-    Lint_db.DefaultDB.update pname lname warning
-
-  let add pname lname loc id decl output =
-    let instance = {id; decl} in
-    let warning = {loc; instance; output} in
-    add_warning pname lname warning
+  val iter : (Lint_warning_types.warning_declaration -> unit) -> t -> unit
 end

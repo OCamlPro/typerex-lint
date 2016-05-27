@@ -22,6 +22,7 @@ begin library "ocp-lint-api-types"
   files = [
     "lint_map.ml"
     "lint_input.ml"
+    "lint_warning_decl.ml"
     "lint_types.ml"
     "lint_plugin_error.ml"
     "lint_warning_types.ml"

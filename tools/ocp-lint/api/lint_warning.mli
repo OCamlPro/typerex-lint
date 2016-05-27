@@ -31,18 +31,6 @@ val new_kind : string -> Lint_warning_types.kind
 val kind_to_string : Lint_warning_types.kind -> string
 
 (**** Warnings data structure. ****)
-
-module WarningDeclaration : sig
-  (** Abstract type representation the warning declaration data structure. *)
-  type t
-
-  (** The empty set of warning declaration. *)
-  val empty : unit -> t
-
-  (** [add wdecl wdecl_set] adds the warning declaration [wdecl] to [wset]. *)
-  val add : Lint_warning_types.warning_declaration -> t -> unit
-end
-
 module Warning : sig
 
   (** [add loc id kinds short_name message wset] adds the warning to [wset] with
