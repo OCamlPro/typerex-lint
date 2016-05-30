@@ -21,7 +21,7 @@
 let details =
   "A plugin with linters on typed tree."
 
-module PluginTypedtree = Lint_plugin_api.MakePlugin (struct
+module Plugin = Lint_plugin_api.MakePlugin (struct
     let name = "Typed tree plugin."
     let short_name = "plugin_typedtree"
     let details = details

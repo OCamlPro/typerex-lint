@@ -18,12 +18,10 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Plugin_parsetree
-
 let details =
   "Checks physical comparison between two allocated litterals."
 
-module PhysCompLit = PluginParsetree.MakeLint(struct
+module PhysCompLit = Plugin_parsetree.Plugin.MakeLint(struct
     let name = "Physical comparison between allocated litterals."
     let short_name = "phys_comp_allocated_lit"
     let details = details

@@ -23,7 +23,8 @@ begin library "ocp-lint-plugin-files"
     "plugin_file_system.ml"
 
     (* All linters attached to File System plugin. *)
-    "interface_missing.ml"
+      "interface_missing.ml"
+      "project_files.ml"
   ]
   requires = [
     "ocp-lint-config"

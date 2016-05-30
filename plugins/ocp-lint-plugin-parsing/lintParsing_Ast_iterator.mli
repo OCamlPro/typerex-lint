@@ -13,12 +13,12 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Asttypes = LintFabOCaml_Asttypes
-module Ast_helper = LintFabOCaml_Ast_helper
-module Parsetree = LintFabOCaml_Parsetree
-module Docstrings = LintFabOCaml_Docstrings
-module Location = LintFabOCaml_Location
-module Syntaxerr = LintFabOCaml_Syntaxerr
+module Asttypes = LintParsing_Asttypes
+module Ast_helper = LintParsing_Ast_helper
+module Parsetree = LintParsing_Parsetree
+module Docstrings = LintParsing_Docstrings
+module Location = LintParsing_Location
+module Syntaxerr = LintParsing_Syntaxerr
 
 (** {!iterator} allows to implement AST inspection using open recursion.  A
     typical mapper would be based on {!default_iterator}, a trivial iterator,

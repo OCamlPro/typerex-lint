@@ -16,9 +16,9 @@
 (* The lexer definition *)
 
 {
-module Location = LintFabOCaml_Location
-module Parser = LintFabOCaml_Parser
-module Docstrings = LintFabOCaml_Docstrings
+module Location = LintParsing_Location
+module Parser = LintParsing_Parser
+module Docstrings = LintParsing_Docstrings
 
 open Lexing
 open Misc

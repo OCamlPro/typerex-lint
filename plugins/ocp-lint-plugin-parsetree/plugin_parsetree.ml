@@ -21,7 +21,7 @@
 let details =
   "A plugin with linters on parsetree."
 
-module PluginParsetree = Lint_plugin_api.MakePlugin (struct
+module Plugin = Lint_plugin_api.MakePlugin (struct
     let name = "Parsetree plugin."
     let short_name = "plugin_parsetree"
     let details = details

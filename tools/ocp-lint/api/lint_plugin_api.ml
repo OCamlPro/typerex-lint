@@ -75,7 +75,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
   let create_default_lint_option lint_short_name lint_long_name enable =
     let details = Printf.sprintf "Enable/Disable linter %S." lint_long_name in
     ignore @@
-    create_option [P.short_name; lint_short_name; "flag"]
+    create_option [P.short_name; lint_short_name; "enabled"]
       details
       details
       SimpleConfig.enable_option
@@ -122,7 +122,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       WarningDeclaration.add decl wdecls;
       (* TODO: cago: here we have to re-set the long help with the id and the
          short_name of the warning. It will be displayed in the config file. *)
-      let msg = Lint_utils.subsitute decl.message args in
+      let msg = Lint_utils.substitute decl.message args in
       Warning.add P.short_name C.short_name loc warn_id decl msg
 
     (* TODO This function should be exported in ocp-sempatch. *)
@@ -216,7 +216,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       (* TODO: cago: here we have to re-set the long help with the id and the
          short_name of the warning. It will be displayed in the config file. *)
       fun loc ~args ->
-        let msg = Lint_utils.subsitute decl.message args in
+        let msg = Lint_utils.substitute decl.message args in
         Warning.add P.short_name C.short_name loc id decl msg
 
     let new_warning kinds ~short_name ~msg = (* TODO *)
@@ -288,7 +288,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     (* Creating default options for plugins: "--plugin.enable" *)
     ignore @@
     create_option
-      [P.short_name; "flag"]
+      [P.short_name; "enabled"]
       details
       details
       SimpleConfig.enable_option P.enable;

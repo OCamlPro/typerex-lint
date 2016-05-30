@@ -21,7 +21,7 @@
 open StringCompat
 open SimpleConfig (* for !! *)
 
-module Plugin = LintFabPlugin.Plugin
+module Plugin = Plugin_parsetree.Plugin
 
 module Linter = Plugin.MakeLint(struct
     let name = "Good Practices"

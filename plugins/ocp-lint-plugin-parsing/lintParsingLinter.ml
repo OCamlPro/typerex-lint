@@ -33,7 +33,7 @@ Lident "begin end" (unit "()" created with "begin end")
 open StringCompat
 open SimpleConfig (* for !! *)
 
-module Plugin = LintFabPlugin.Plugin
+module Plugin = LintParsingPlugin.Plugin
 
 module Linter = Plugin.MakeLint(struct
     let name = "Raw Syntax"
@@ -72,10 +72,10 @@ let w_inconsistent_list_notations = Linter.new_warning
       | InconsistentListNotations -> w_inconsistent_list_notations loc []
   end
 
-module Asttypes = LintFabOCaml_Asttypes
-module Parsetree = LintFabOCaml_Parsetree
-module Parse = LintFabOCaml_Parse
-module Ast_iterator = LintFabOCaml_Ast_iterator
+module Asttypes = LintParsing_Asttypes
+module Parsetree = LintParsing_Parsetree
+module Parse = LintParsing_Parse
+module Ast_iterator = LintParsing_Ast_iterator
 
 
 module MakeArg = struct
@@ -126,7 +126,7 @@ module MakeArg = struct
     Location.init lexbuf source;
     let str =
       try
-        LintFabOCaml_Parse.implementation lexbuf
+        LintParsing_Parse.implementation lexbuf
       with exn ->
         close_in ic;
         raise exn

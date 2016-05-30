@@ -13,48 +13,21 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Location = LintFabOCaml_Location
+module Asttypes = LintParsing_Asttypes
+module Ast_helper = LintParsing_Ast_helper
+module Parsetree = LintParsing_Parsetree
+module Docstrings = LintParsing_Docstrings
+module Location = LintParsing_Location
+module Syntaxerr = LintParsing_Syntaxerr
+module Lexer = LintParsing_Lexer
+module Parser = LintParsing_Parser
 
-(* Auxiliary a.s.t. types used by parsetree and typedtree. *)
+(* Entry points in the parser *)
 
-type constant =
-    Const_int of int
-  | Const_char of char
-  | Const_string of string * string option
-  | Const_float of string
-  | Const_int32 of int32
-  | Const_int64 of int64
-  | Const_nativeint of nativeint
-
-type rec_flag = Nonrecursive | Recursive
-
-type direction_flag = Upto | Downto
-
-(* Order matters, used in polymorphic comparison *)
-type private_flag = Private | Public
-
-type mutable_flag = Immutable | Mutable
-
-type virtual_flag = Virtual | Concrete
-
-type override_flag = Override | Fresh
-
-type closed_flag = Closed | Open
-
-type label = string
-
-type arg_label =
-    Nolabel
-  | Labelled of string (*  label:T -> ... *)
-  | Optional of string (* ?label:T -> ... *)
-
-type 'a loc = 'a Location.loc = {
-  txt : 'a;
-  loc : Location.t;
-}
-
-
-type variance =
-  | Covariant
-  | Contravariant
-  | Invariant
+val implementation : Lexing.lexbuf -> Parsetree.structure
+val interface : Lexing.lexbuf -> Parsetree.signature
+val toplevel_phrase : Lexing.lexbuf -> Parsetree.toplevel_phrase
+val use_file : Lexing.lexbuf -> Parsetree.toplevel_phrase list
+val core_type : Lexing.lexbuf -> Parsetree.core_type
+val expression : Lexing.lexbuf -> Parsetree.expression
+val pattern : Lexing.lexbuf -> Parsetree.pattern

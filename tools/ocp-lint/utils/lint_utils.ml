@@ -35,7 +35,7 @@ let iter_files ?(recdir=true) apply dirname =
   in
   iter dirname ""
 
-let subsitute str substs =
+let substitute str substs =
   let replace substs str = try List.assoc str substs with Not_found -> str in
   let buf = Buffer.create (String.length str) in
   Buffer.add_substitute buf (replace substs) str;
@@ -60,8 +60,6 @@ let find_root root_dir basenames =
       File.concat (File.X.getcwd ()) root_dir
   in
   find root_dir basenames
-
-let spf = Printf.sprintf
 
 let is_in_path file path =
   Str.string_match (Str.regexp path) file 0

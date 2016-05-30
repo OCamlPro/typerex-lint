@@ -16,16 +16,16 @@ ignored_files = [
 plugin_typedtree = {
 
 (* A plugin with linters on typed tree. *)
-  flag = false
+  enabled = true
 }
 plugin_text = {
 
 (* A plugin with linters on the source. *)
-  flag = false
+  enabled = true
   code_length = {
 
 (* Enable/Disable linter "Code Length". *)
-    flag = false
+    enabled = false
 
 (* Module to ignore durint the lint of "Code Length" *)
     ignored_files = [
@@ -41,11 +41,11 @@ plugin_text = {
 plugin_patch = {
 
 (* Detect pattern with semantic patch. *)
-  flag = false
+  enabled = true
   sempatch_lint_default = {
 
 (* Enable/Disable linter "Lint from semantic patches (default)". *)
-    flag = false
+    enabled = false
 
 (* Module to ignore durint the lint of "Lint from semantic patches (default)" *)
     ignored_files = [
@@ -54,15 +54,27 @@ plugin_patch = {
 (* Enable/Disable warnings from "Lint from semantic patches (default)" *)
     warnings = "+A"
   }
+  sempatch_lint_user_defined = {
+
+(* Enable/Disable linter "Lint from semantic patches (user defined).". *)
+    enabled = true
+
+(* Module to ignore durint the lint of "Lint from semantic patches (user defined)." *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "Lint from semantic patches (user defined)." *)
+    warnings = "+A"
+  }
 }
 plugin_parsetree = {
 
 (* A plugin with linters on parsetree. *)
-  flag = false
+  enabled = true
   code_identifier_length = {
 
 (* Enable/Disable linter "Code Identifier Length". *)
-    flag = false
+    enabled = false
 
 (* Module to ignore durint the lint of "Code Identifier Length" *)
     ignored_files = [
@@ -80,7 +92,7 @@ plugin_parsetree = {
   code_list_on_singleton = {
 
 (* Enable/Disable linter "List function on singleton". *)
-    flag = false
+    enabled = false
 
 (* Module to ignore durint the lint of "List function on singleton" *)
     ignored_files = [
@@ -92,7 +104,7 @@ plugin_parsetree = {
   phys_comp_allocated_lit = {
 
 (* Enable/Disable linter "Physical comparison between allocated litterals.". *)
-    flag = false
+    enabled = false
 
 (* Module to ignore durint the lint of "Physical comparison between allocated litterals." *)
     ignored_files = [
@@ -105,11 +117,11 @@ plugin_parsetree = {
 plugin_file_system = {
 
 (* A plugin with linters on file system like interface missing, etc. *)
-  flag = false
+  enabled = true
   interface_missing = {
 
 (* Enable/Disable linter "Missing interface". *)
-    flag = false
+    enabled = false
 
 (* Module to ignore durint the lint of "Missing interface" *)
     ignored_files = [
@@ -118,15 +130,27 @@ plugin_file_system = {
 (* Enable/Disable warnings from "Missing interface" *)
     warnings = "+A"
   }
+  project_files = {
+
+(* Enable/Disable linter "File Names". *)
+    enabled = true
+
+(* Module to ignore durint the lint of "File Names" *)
+    ignored_files = [
+    ]
+
+(* Enable/Disable warnings from "File Names" *)
+    warnings = "+A"
+  }
 }
 plugin_complex = {
 
 (* A plugin with linters on different inputs. *)
-  flag = false
+  enabled = true
   interface_module_type_name = {
 
 (* Enable/Disable linter "Checks on module type name.". *)
-    flag = false
+    enabled = false
 
 (* Module to ignore durint the lint of "Checks on module type name." *)
     ignored_files = [

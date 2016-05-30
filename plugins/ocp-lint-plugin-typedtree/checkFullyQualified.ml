@@ -21,7 +21,7 @@
 open StringCompat
 open SimpleConfig (* for !! *)
 
-module Plugin = LintFabPlugin.Plugin
+module Plugin = Plugin_typedtree.Plugin
 
 module FullyQualifiedChecker = Plugin.MakeLint(struct
     let name = "Fully-Qualified Identifiers"
