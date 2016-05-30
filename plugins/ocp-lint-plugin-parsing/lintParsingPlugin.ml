@@ -18,15 +18,15 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-let plugin_name = "Fabrice's Linters"
+let plugin_name = "Parsing Linter"
 
 let () = Printf.eprintf "Loading plugin %S\n%!" plugin_name
 
-let details = "Specific linters for Fabrice's projects"
+let details = "Analyses requiring to re-parse the file"
 
 module Plugin = Lint_plugin_api.MakePlugin (struct
     let name = plugin_name
-    let short_name = "plugin_fabrice"
+    let short_name = "plugin_parsing"
     let details = details
     let enable = true
   end)

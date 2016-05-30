@@ -66,14 +66,26 @@ let check_files all =
       || Filename.check_suffix lower_basename ".mli"
       || Filename.check_suffix lower_basename ".mll"
       || Filename.check_suffix lower_basename ".mly"
-      then
-        let key = Filename.concat dirname lower_basename in
-        try
-          let fileA = StringMap.find key !files in
-          let loc = Location.in_file fileA in
-          Warnings.report loc (ConflictingSources(fileA,filename))
-        with Not_found ->
-          files := StringMap.add key filename !files
+      then begin
+
+        begin
+          let key = Filename.concat dirname lower_basename in
+          try
+            let fileA = StringMap.find key !files in
+            let loc = Location.in_file filename in
+            Warnings.report loc (ConflictingSources(fileA,filename))
+          with Not_found ->
+            files := StringMap.add key filename !files
+        end;
+
+        begin
+          match basename.[0] with
+          | 'A'..'Z' ->
+            let loc = Location.in_file filename in
+            Warnings.report loc (CapitalizedFilename filename)
+          | _ -> ()
+        end
+      end
     ) all
 
 (* Registering a main entry to the linter *)

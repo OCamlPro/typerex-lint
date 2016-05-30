@@ -18,7 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-plugin-fabrice";
+begin library "ocp-lint-plugin-parsing";
 
   files = [
         "lintParsingPlugin.ml";
@@ -44,10 +44,10 @@ begin library "ocp-lint-plugin-fabrice";
 end
 
 
-begin program "ocp-lint-fabrice"
+begin program "ocp-lint-parsing"
   files = [ "main.ml" ]
   requires = [
         "ocp-lint-lib"
-        "ocp-lint-plugin-fabrice"
+        "ocp-lint-plugin-parsing"
   ]
 end

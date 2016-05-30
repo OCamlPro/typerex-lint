@@ -20,6 +20,16 @@
 
 let (!!) = SimpleConfig.(!!)
 
+let () =
+  Printexc.register_printer (fun exn ->
+      match exn with
+      | Cmi_format.Error error ->
+        Buffer.clear Format.stdbuf;
+        Cmi_format.report_error Format.str_formatter error;
+        Some (Format.flush_str_formatter ())
+      | _ -> None
+    )
+
 let get_ignored_files pname cname =
   let opt =
     Lint_globals.Config.create_option [pname; cname; "ignored_files"]  "" "" 0
@@ -177,13 +187,21 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
                       begin
                         if not
                             (Lint_db.DefaultDB.already_run
-                               file Plugin.short_name cname) then
-                          (Lint_db.DefaultDB.add_entry
-                             file Plugin.short_name cname;
-                           try
-                             main (Lazy.force input)
-                           with Lint_plugin_error.Plugin_error err ->
-                             Lint_plugin_error.print fmt err)
+                               file Plugin.short_name cname) then begin
+                          Lint_db.DefaultDB.add_entry
+                            file Plugin.short_name cname;
+                          try
+                            main (try
+                                    Lazy.force input
+                                  with exn ->
+                                    raise
+                                      (Lint_plugin_error.Plugin_error
+                                         (Lint_plugin_error.Plugin_exception exn)))
+                          with
+                          | Lint_plugin_error.Plugin_error err ->
+                            Lint_plugin_error.print fmt err
+
+                        end
                       end
                     | _ -> ()) Lint.inputs) checks)
         plugins)

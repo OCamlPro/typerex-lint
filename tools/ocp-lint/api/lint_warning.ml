@@ -33,6 +33,7 @@ let kind_to_string = function
   | Interface -> "interface"
   | Metrics -> "metrics"
   | Custom kind -> kind
+  | Files -> "files"
 
 module Warning = struct
 

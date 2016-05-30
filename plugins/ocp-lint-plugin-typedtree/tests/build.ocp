@@ -1,0 +1,5 @@
+
+begin library "ocp-lint-plugin-parsing-test"
+  install = false
+  files = [ "test.ml" ]
+end

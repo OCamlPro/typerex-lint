@@ -57,7 +57,6 @@ module Warnings = struct
   end
 
 let iter_structure ast =
-  Printf.eprintf "iter_structure\n%!";
   let module Iter = Parsetree_iter.MakeIterator(struct
       open Asttypes
       open Parsetree
@@ -65,13 +64,15 @@ let iter_structure ast =
 
     include Parsetree_iter.DefaultIteratorArgument
 
-    let enter_binding toplevel pat exp =
+    let enter_binding toplevel pat exp = ()
+    (*
       if toplevel then
         match pat.ppat_desc, exp.pexp_desc with
         | Ppat_var _, Pexp_ident { txt = Ldot(_,_) } ->
           Warnings.report pat.ppat_loc
             (GoodPractice "avoid using local aliases for external identifiers")
         | _ -> ()
+*)
 
     let enter_pattern pat =
       match pat.ppat_desc with
