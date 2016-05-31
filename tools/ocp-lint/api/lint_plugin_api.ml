@@ -97,9 +97,9 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       SimpleConfig.string_option
       "+A"
 
-  let new_warning kinds ~short_name ~msg = (* TODO *)
+  let new_warning id ~short_name ~msg =
     let open Lint_warning_types in
-    let warning_decl = { kinds; short_name; message = msg } in
+    let warning_decl = { short_name; message = msg; id } in
     warning_decl
 
   module MakeLintPatch (C : Lint_types.LINTPATCHARG) = struct
@@ -116,14 +116,14 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       let option = [P.short_name; C.short_name; option] in
       Lint_globals.Config.create_option option short_help lhelp 0 ty default
 
-    let new_warning loc warn_id kinds ~short_name ~msg ~args = (* TODO *)
+    let new_warning loc ~id ~short_name ~msg ~args =
       let open Lint_warning_types in
-      let decl = new_warning kinds ~short_name ~msg in
+      let decl = new_warning id ~short_name ~msg in
       WarningDeclaration.add decl wdecls;
       (* TODO: cago: here we have to re-set the long help with the id and the
          short_name of the warning. It will be displayed in the config file. *)
       let msg = Lint_utils.substitute decl.message args in
-      Warning.add P.short_name C.short_name loc warn_id decl msg
+      Warning.add P.short_name C.short_name loc decl msg
 
     (* TODO This function should be exported in ocp-sempatch. *)
     let map_args env args =
@@ -134,14 +134,15 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
         args
 
     module Warnings = struct
-      let report warn_id matching kinds patch =
+      let report id matching patch =
         let msg =
           match Patch.get_msg patch with
           (* TODO replace by the result of the patch. *)
             None -> "You should use ... instead of ..."
           | Some msg -> msg in
         (* TODO Warning number can be override by the user. *)
-        new_warning (Match.get_location matching) warn_id kinds
+        new_warning (Match.get_location matching)
+          ~id:id
           ~short_name:(Patch.get_name patch)
           ~msg
           ~args:(map_args
@@ -179,7 +180,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
                       (fun p ->
                          Patch.get_name p = Match.get_patch_name matching)
                       patches in
-                  Warnings.report (i + 1) matching [kind_code] patch)
+                  Warnings.report (i + 1) matching patch)
                 matches)
             patches
       end in
@@ -211,23 +212,31 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       let option = [P.short_name; C.short_name; option] in
       Lint_globals.Config.create_option option short_help lhelp 0 ty default
 
-    let fresh_id =
-      let cpt = ref 0 in
-      fun () -> incr cpt; !cpt
-
-    let instanciate decl =
+    let new_warning ~id ~short_name ~msg  =
       let open Lint_warning_types in
-      let id = fresh_id () in
-      (* TODO: cago: here we have to re-set the long help with the id and the
-         short_name of the warning. It will be displayed in the config file. *)
-      fun loc ~args ->
-        let msg = Lint_utils.substitute decl.message args in
-        Warning.add P.short_name C.short_name loc id decl msg
-
-    let new_warning kinds ~short_name ~msg = (* TODO *)
-      let decl = new_warning kinds ~short_name ~msg in
+      let decl = new_warning id ~short_name ~msg in
       WarningDeclaration.add decl wdecls;
       decl
+
+    (** [MakeWarnings] is a functor which allows to register the warnings
+        automatically in the global data structure [plugins] with the
+        associated plugin and linter. *)
+    module MakeWarnings (WA : Lint_warning_types.WARNINGARG) = struct
+      type t = WA.t
+
+      let report loc t =
+        let open Lint_warning_types in
+        let decl, args = WA.to_warning t in
+        let msg = Lint_utils.substitute decl.message args in
+        Warning.add P.short_name C.short_name loc decl msg
+
+      let report_file filename t =
+        let open Lint_warning_types in
+        let decl, args = WA.to_warning t in
+        let msg = Lint_utils.substitute decl.message args in
+        let loc = Location.in_file filename in
+        Warning.add P.short_name C.short_name loc decl msg
+    end
 
     module Register(I : Lint_input.INPUT) =
     struct

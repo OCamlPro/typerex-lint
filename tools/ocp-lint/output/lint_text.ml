@@ -26,7 +26,7 @@ let print_warning ppf linter_name warning =
     Format.fprintf ppf "%a" Location.print warning.loc;
 
   Format.fprintf ppf "  Warning %S number %d:\n"
-    linter_name warning.instance.id;
+    linter_name warning.decl.id;
   Format.fprintf ppf "  %s" warning.output;
   Format.fprintf ppf "@."
 
@@ -53,10 +53,10 @@ let summary path db =
                     let arr = Lint_parse_args.parse_options filters in
                     List.iter
                       (fun warning ->
-                         if arr.(warning.instance.id - 1) then
+                         if arr.(warning.decl.id - 1) then
                            (files_linted :=
                               StringCompat.StringSet.add file !files_linted;
-                            let entry = lname, warning.instance.id in
+                            let entry = lname, warning.decl.id in
                             if Hashtbl.mem breakdown entry then
                               let old_cpt = Hashtbl.find breakdown entry in
                               Hashtbl.replace breakdown entry (old_cpt + 1)
@@ -91,7 +91,7 @@ let print fmt path db =
                       let arr = Lint_parse_args.parse_options filters in
                       List.iter
                         (fun warning ->
-                           if arr.(warning.instance.id - 1) then
+                           if arr.(warning.decl.id - 1) then
                              print_warning fmt lname warning)
                         ws)
                   lres)

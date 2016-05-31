@@ -172,11 +172,8 @@ let list_plugins fmt =
             Format.fprintf fmt "  ** %s (\027[31m%s\027[m)\n%!"
               Linter.name status;
           WarningDeclaration.iter (fun wdecl ->
-              let kinds_str =
-                String.concat ", "
-                  (List.map Lint_warning.kind_to_string wdecl.kinds) in
-              Format.fprintf fmt "      Warning %d: %S on [%s]\n%!"
-                wdecl.id wdecl.short_name kinds_str)
+              Format.fprintf fmt "      Warning %d: %S.\n%!"
+                wdecl.id wdecl.short_name)
             Linter.wdecls)
         checks;
       Format.fprintf fmt "\n%!")
