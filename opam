@@ -7,9 +7,9 @@ license: "GPL 3.0"
 homepage: "https://github.com/ocamlpro/typerex-lint"
 bug-reports: "https://github.com/ocamlpro/typerex-lint/issues"
 depends: [
-  "ocp-build" {build}
-  "menhir" {build}
-  "yojson" {build}
+  "ocp-build" 
+  "menhir" 
+  "ocp-indent" 
 ]
 available: ocaml-version >= "4.02"
 build: [

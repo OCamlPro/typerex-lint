@@ -594,7 +594,7 @@ OCAML_MAJOR_VERSION
 OCAML_PKG_ocplib_config
 OCPBUILD
 OCAML_PKG_menhirLib
-OCAML_PKG_yojson
+OCAML_PKG_ocp_indent
 OCAMLFIND
 AWK
 SED
@@ -3914,17 +3914,17 @@ if test "$OCAMLFIND" = "no"; then
 fi
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package yojson" >&5
-$as_echo_n "checking for OCaml findlib package yojson... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package ocp-indent" >&5
+$as_echo_n "checking for OCaml findlib package ocp-indent... " >&6; }
 
   unset found
   unset pkg
   found=no
-  for pkg in yojson  ; do
+  for pkg in ocp-indent  ; do
     if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: found" >&5
 $as_echo "found" >&6; }
-      OCAML_PKG_yojson=$pkg
+      OCAML_PKG_ocp_indent=$pkg
       found=yes
       break
     fi
@@ -3932,13 +3932,13 @@ $as_echo "found" >&6; }
   if test "$found" = "no" ; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
-    OCAML_PKG_yojson=no
+    OCAML_PKG_ocp_indent=no
   fi
 
 
 
- if test "$OCAML_PKG_yojson" = "no"; then
-   as_fn_error $? "Please install OCaml package 'yojson'." "$LINENO" 5
+ if test "$OCAML_PKG_ocpindent" = "no"; then
+   as_fn_error $? "Please install OCaml package 'ocp-indent'." "$LINENO" 5
  fi
 
 
@@ -4007,7 +4007,7 @@ $as_echo "no" >&6; }
 fi
 
 
- if test "$OCAML_PKG_yojson" = "no"; then
+ if test "$OCAML_PKG_ocp-indent" = "no"; then
    as_fn_error $? "Please install OCaml package 'ocp-build'." "$LINENO" 5
  fi
 
