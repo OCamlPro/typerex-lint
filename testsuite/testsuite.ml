@@ -116,17 +116,13 @@ let starts_with str ~substring =
 
 let run_ocp_lint ocplint dir =
   let project_arg = "--path" in
-  let sempatch_args =
-    if Sys.file_exists (dir // sempatch_file)
-    then
-      [| "--load-patches"; dir // sempatch_file |]
-    else
-      [||]
-  in
-  let args = Array.append
-      [| ocplint; project_arg; dir |]
-      sempatch_args
-  in
+  if Sys.file_exists (dir // sempatch_file)
+  then begin
+    try
+      Unix.putenv "OCPLINT_PATCHES" dir
+        with _ -> ()
+  end;
+  let args = [| ocplint; project_arg; dir |] in
   let status = run_command ocplint args dir in
   match status with
   | Unix.WEXITED 0   -> ()

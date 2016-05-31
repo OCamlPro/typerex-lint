@@ -9,11 +9,8 @@
 (*************************************)
 
 plugin_patch = {
-
-(* Detect pattern with semantic patch. *)
   flag = true
-  sempatch_lint_user_defined = {
+  sempatch_lint_default = {
     flag = true
-    warnings = "+A"
   }
 }
