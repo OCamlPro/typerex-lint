@@ -17,9 +17,9 @@ all:
 	$(OCPBUILD)
 
 test:
-	@rm -rf ./testsuite/_olint
-	@mkdir ./testsuite/_olint
-	@./_obuild/ocp-lint-testsuite/ocp-lint-testsuite.asm \
+	rm -rf ./testsuite/_olint
+	mkdir ./testsuite/_olint
+	./_obuild/ocp-lint-testsuite/ocp-lint-testsuite.asm \
 	./_obuild/ocp-lint/ocp-lint.asm \
 	testsuite
 
@@ -28,22 +28,16 @@ clean:
 
 cleanall: distclean
 
-distclean:
-	rm -f autoconf/config.log
-	rm -f autoconf/Makefile.config
-	rm -f autoconf/config.log
-	rm -f autoconf/config.ocpgen
-	rm -f autoconf/config.status
-	rm -rf autoconf/autom4te.cache
-	rm -rf _obuild/
+distclean: ocp-distclean
 
 opam-deps:
 	opam install $(OPAMDEPS)
 
 install:
-	cp _obuild/ocp-lint/ocp-lint.asm $(BINDIR)/ocp-lint
+	cp _obuild/ocp-lint/ocp-lint.asm $(bindir)/ocp-lint
 
 uninstall:
-	rm $(BINDIR)/ocp-lint
+	rm $(bindir)/ocp-lint
 
+include autoconf/Makefile.rules
 
