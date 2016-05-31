@@ -28,17 +28,20 @@ module OCPIndent = PluginText.MakeLint(struct
     let enable = true
   end)
 
+type warning = File of string
+
 let w_check_indent = OCPIndent.new_warning
-    [ Lint_warning.kind_code ]
     ~id:1
     ~short_name:"ocp_indent_check"
     ~msg:"File '$file' is not indented correctly."
 
 module Warnings = OCPIndent.MakeWarnings (
   struct
-    include Lint_warning_types.DefaultWarning(struct type t = string end)
+    type t = warning
 
-    let report loc file = w_check_indent loc ["file", file]
+    let to_warning = function
+      | File filename ->
+        w_check_indent, ["file", filename]
   end)
 
 let check_indent file =
@@ -68,9 +71,7 @@ let check_indent file =
   IndentPrinter.(proceed output nstream block ());
 
   if Buffer.contents text_init <> Buffer.contents text_indented then
-    let pos = Lexing.({dummy_pos with pos_fname = file}) in
-    let loc = Location.({none with loc_start = pos}) in
-    Warnings.report loc file
+    Warnings.report_file file (File file)
 
 
 (* Registering a main entry to the linter *)

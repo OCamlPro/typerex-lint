@@ -32,17 +32,17 @@ module ModuleTypeName = PluginComplex.MakeLint(struct
 type warning = Module_name of (string * string)
 
 let w_name = ModuleTypeName.new_warning
-    [ Lint_warning.kind_code; Lint_warning.kind_interface ]
+    ~id:1
     ~short_name:"interface_module_type_name_check"
     ~msg:"Module type name '$badmodname' should be uppercase as '$goodmodname'."
 
-module Warnings = struct
-  let w_name = ModuleTypeName.instanciate w_name
+module Warnings = ModuleTypeName.MakeWarnings(struct
+    type t = warning
 
-  let report loc = function
-    | Module_name (bad, good) ->
-      w_name loc [("badmodname", bad); ("goodmodname", good)]
-end
+    let to_warning = function
+      | Module_name (bad, good) ->
+        w_name, [("badmodname", bad); ("goodmodname", good)]
+  end)
 
 let check_module_name loc modname =
   if String.uppercase modname <> modname  then

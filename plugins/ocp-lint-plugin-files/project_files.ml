@@ -36,25 +36,24 @@ type warning =
   | CapitalizedFilename of string
 
 let conflicting = Linter.new_warning
-    [ Lint_warning_types.Files ]
+    ~id:1
     ~short_name:"conflicting_sources"
     ~msg:"Source files $fileA and $fileB may conflict on some file-systems"
 
 let capitalized = Linter.new_warning
-    [ Lint_warning_types.Files ]
+    ~id:2
     ~short_name:"capitalized_filename"
     ~msg:"Filename $file should not be capitalized"
 
-module Warnings = struct
-  let conflicting = Linter.instanciate conflicting
-  let capitalized = Linter.instanciate capitalized
+module Warnings = Linter.MakeWarnings(struct
+    type t = warning
 
-  let report loc = function
-    | ConflictingSources (fileA, fileB) ->
-      conflicting loc ["fileA", fileA; "fileB", fileB]
-    | CapitalizedFilename filename ->
-      capitalized loc ["file", filename]
-end
+    let to_warning = function
+      | ConflictingSources (fileA, fileB) ->
+        conflicting, ["fileA", fileA; "fileB", fileB]
+      | CapitalizedFilename filename ->
+        capitalized, ["file", filename]
+  end)
 
 let check_files all =
   let files = ref StringMap.empty in

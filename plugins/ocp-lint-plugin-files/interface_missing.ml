@@ -32,25 +32,24 @@ module MissingInterface = PluginFileSystem.MakeLint(struct
 type warning = Missing of string
 
 let missing = MissingInterface.new_warning
-    [ Lint_warning.kind_interface ]
+    ~id:1
     ~short_name:"missing_interface"
     ~msg:"Missing interface for '$file'."
 
-module Warnings = struct
-  let missing = MissingInterface.instanciate missing
+module Warnings = MissingInterface.MakeWarnings(struct
+    type t = warning
 
-  let report loc = function
-    | Missing file ->
-      missing loc [("file", file)]
-end
+    let to_warning = function
+      | Missing file ->
+        missing, [("file", file)]
+  end)
 
 let mli = ".mli"
 
 let check source =
   let modname = Filename.chop_extension source in
-  let loc = Location.in_file source in
   if not (Sys.file_exists (modname ^ mli)) then
-    Warnings.report loc (Missing source)
+    Warnings.report_file source (Missing source)
 
 (* Registering a main entry to the linter *)
 module MainSRC = MissingInterface.MakeInputML(struct

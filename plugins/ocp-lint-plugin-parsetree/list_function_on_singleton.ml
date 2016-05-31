@@ -28,28 +28,27 @@ module ListOnSingleton = Plugin_parsetree.Plugin.MakeLint(struct
     let enable = false
   end)
 
-type warnings =
+type warning =
   | Empty of string
   | Singleton of string
 
 let w_empty = ListOnSingleton.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:1
     ~short_name:"list_function_on_empty"
     ~msg:"$fun is used on an empty list."
 
 let w_singleton = ListOnSingleton.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:2
     ~short_name:"list_function_on_singleton"
     ~msg:"$fun is used on a singleton."
 
- module Warnings = struct
-    let w_empty = ListOnSingleton.instanciate w_empty
-    let w_singleton = ListOnSingleton.instanciate w_singleton
+module Warnings = ListOnSingleton.MakeWarnings(struct
+    type t = warning
 
-    let report loc = function
-      | Empty funct -> w_empty loc [("fun", funct)]
-      | Singleton funct -> w_singleton loc [("fun", funct)]
-  end
+    let to_warning = function
+      | Empty funct -> w_empty, [("fun", funct)]
+      | Singleton funct -> w_singleton, [("fun", funct)]
+  end)
 
 let is_singleton f args =
   let open Parsetree in

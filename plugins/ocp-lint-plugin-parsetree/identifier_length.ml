@@ -40,34 +40,28 @@ module CodeIdentifierLength = Plugin_parsetree.Plugin.MakeLint(struct
     let enable = false
   end)
 
-type warnings =
+type warning =
   | Short of (int * string)
   | Long of (int * string)
 
 let w_too_short = CodeIdentifierLength.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:1
     ~short_name:"identifier_too_short"
     ~msg:"$id is too short: it should be at least of size '$size'."
 
 let w_too_long = CodeIdentifierLength.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:2
     ~short_name:"identifier_too_long"
     ~msg:"$id is too long: it should be at most of size '$size'."
 
- module Warnings = struct
-    let w_too_short = CodeIdentifierLength.instanciate w_too_short
-    let w_too_long = CodeIdentifierLength.instanciate w_too_long
+module Warnings = CodeIdentifierLength.MakeWarnings(struct
+    type t = warning
 
-    let report loc = function
+    let to_warning = function
       | Short (min, id) ->
-        w_too_short
-          loc
-          [("id", id); ("size", string_of_int min)]
-      | Long (max, id) ->
-        w_too_long
-          loc
-          [("id", id); ("size", string_of_int max)]
-  end
+        w_too_short, [("id", id); ("size", string_of_int min)]
+      | Long (max, id) -> w_too_long, [("id", id); ("size", string_of_int max)]
+  end)
 
 let iter min_identifier_length max_identifier_length =
   let module IterArg = struct

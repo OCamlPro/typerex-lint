@@ -38,28 +38,24 @@ module CodeLength = PluginText.MakeLint(struct
 type warning = LongLine of (int * int)
 
 let line_too_long = CodeLength.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:1
     ~short_name:"long_line"
     ~msg:"This line is too long ('$line'): it should be at \
           most of size '$max'."
 
-module Warnings = struct
+module Warnings = CodeLength.MakeWarnings(struct
+    type t = warning
 
-  let line_too_long = CodeLength.instanciate line_too_long
-
-  let report loc = function
-    | LongLine (max, len) ->
-      line_too_long loc
-        [("line", string_of_int len);
-         ("max", string_of_int max)]
-end
+    let to_warning = function
+      | LongLine (max, len) ->
+        line_too_long,
+        [("line", string_of_int len); ("max", string_of_int max)]
+  end)
 
 let check_line lnum max_line_length file line =
   let line_len = String.length line in
   if line_len > max_line_length then
-    let pos = Lexing.({dummy_pos with pos_fname = file; pos_lnum = lnum}) in
-    let loc = Location.({none with loc_start = pos}) in
-    Warnings.report loc (LongLine (max_line_length, line_len))
+    Warnings.report_file file (LongLine (max_line_length, line_len))
 
 let check_file max_line_length file =
   let ic = open_in file in

@@ -42,46 +42,40 @@ module Linter = Plugin.MakeLint(struct
     let enable = true
   end)
 
-type warnings =
+type warning =
   | AvoidParen of string
   | DirectMatchInCase of string
   | InconsistentListNotations
   | UseNEWInsteadOfOLD of string * string
 
 let w_avoid_paren = Linter.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:1
     ~short_name:"avoid-paren"
     ~msg:"Avoid parentheses around $expr"
 let w_direct_match_in_case = Linter.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:2
     ~short_name:"direct-match-in-case"
     ~msg:"$expr should be enclosed in parentheses"
 let w_inconsistent_list_notations = Linter.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:3
     ~short_name:"inconsistent-list-notations"
     ~msg:"Inconsistent list notations"
 let w_use_instead = Linter.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:4
     ~short_name:"use-instead"
     ~msg:"Good practice: use \"$new\" instead of \"$old\""
 
 
- module Warnings = struct
-    let w_avoid_paren = Linter.instanciate w_avoid_paren
-    let w_direct_match_in_case = Linter.instanciate w_direct_match_in_case
-    let w_inconsistent_list_notations =
-      Linter.instanciate w_inconsistent_list_notations
-    let w_use_instead =
-      Linter.instanciate w_use_instead
+module Warnings = Linter.MakeWarnings(struct
+    type t = warning
 
-    let report loc = function
-      | AvoidParen where -> w_avoid_paren loc [ "expr", where  ]
-      | DirectMatchInCase expr -> w_direct_match_in_case loc [ "expr", expr ]
-      | InconsistentListNotations -> w_inconsistent_list_notations loc []
+    let to_warning = function
+      | AvoidParen where -> w_avoid_paren, [ "expr", where  ]
+      | DirectMatchInCase expr -> w_direct_match_in_case, [ "expr", expr ]
+      | InconsistentListNotations -> w_inconsistent_list_notations, []
       | UseNEWInsteadOfOLD (new_expr, old_expr) ->
-        w_use_instead loc ["new", new_expr; "old", old_expr]
-
-  end
+        w_use_instead, ["new", new_expr; "old", old_expr]
+  end)
 
 module Asttypes = LintParsing_Asttypes
 module Parsetree = LintParsing_Parsetree

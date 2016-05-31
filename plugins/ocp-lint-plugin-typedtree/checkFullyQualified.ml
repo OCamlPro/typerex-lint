@@ -30,31 +30,24 @@ module Linter = Plugin.MakeLint(struct
     let enable = true
   end)
 
-type warnings =
+type warning =
   | NotQualifiedEnough of string * string
   | AliasPersistentValue of string * string
 
 let w_not_enough = Linter.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:1
     ~short_name:"not-qualified-enough"
     ~msg:"external identifier \"$ident\" is not fully qualified\n    (should be \"$path\")"
 
-let w_alias_persistent = Linter.new_warning
-    [ Lint_warning.kind_code ]
-    ~short_name:"alias-persistent"
-    ~msg:"Avoid aliasing external values (here $ident to $path)"
+module Warnings = Linter.MakeWarnings(struct
+    type t = warning
 
- module Warnings = struct
-    let w_not_enough = Linter.instanciate w_not_enough
-    let w_alias_persistent = Linter.instanciate w_alias_persistent
-
-    let report loc = function
+    let to_warning = function
       | NotQualifiedEnough (ident, path) ->
-        w_not_enough loc ["ident", ident; "path", path]
+        w_not_enough, ["ident", ident; "path", path]
       | AliasPersistentValue (ident, path) ->
-        w_not_enough loc ["ident", ident; "path", path]
-
-  end
+        w_not_enough, ["ident", ident; "path", path]
+  end)
 
 let ignored_modules = Linter.create_option
     "ignored_modules"
