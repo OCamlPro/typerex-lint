@@ -175,8 +175,8 @@ let list_plugins fmt =
               let kinds_str =
                 String.concat ", "
                   (List.map Lint_warning.kind_to_string wdecl.kinds) in
-              Format.fprintf fmt "      Warning %S on [%s]\n%!"
-                wdecl.short_name kinds_str)
+              Format.fprintf fmt "      Warning %d: %S on [%s]\n%!"
+                wdecl.id wdecl.short_name kinds_str)
             Linter.wdecls)
         checks;
       Format.fprintf fmt "\n%!")
