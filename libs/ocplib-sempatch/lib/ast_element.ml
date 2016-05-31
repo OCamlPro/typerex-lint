@@ -1,8 +1,10 @@
 type record_field = Longident.t Asttypes.loc * Parsetree.expression
-open Parsetree
-open Asttypes
-[%%build_tree_type]
-type t = tree
+(* open Parsetree *)
+(* open Asttypes *)
+(* open Tree *)
+(* [%%build_tree_type] *)
+(* type t = tree *)
+type t = Tree.Exploded.t
 (* type t = *)
 (*   | Expression of Parsetree.expression *)
 (*   | Expressions of Parsetree.expression list *)
@@ -20,15 +22,15 @@ type t = tree
 (*   | Record_fields of record_field list *)
 
 let to_string =
-  let open Pprintast in
-  let to_string printer value =
-    printer Format.str_formatter value;
-    Format.flush_str_formatter ()
-  in
+  (* let open Pprintast in *)
+  (* let to_string printer value = *)
+  (*   printer Format.str_formatter value; *)
+  (*   Format.flush_str_formatter () *)
+  (* in *)
   function
-  | Expression e -> to_string expression e
-  | String i -> i
-  | Pattern p -> to_string pattern p
+  (* | Expression e -> to_string expression e *)
+  (* | String i -> i *)
+  (* | Pattern p -> to_string pattern p *)
   | _ -> "???"
 
-let from_structure e = Structure e
+(* let from_structure e = Structure e *)

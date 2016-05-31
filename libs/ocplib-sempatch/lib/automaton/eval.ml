@@ -215,6 +215,7 @@ and dispatch = fun state_bundles expr ->
   List.bind (fun (state_bun, env) -> apply2 state_bun env expr) state_bundles
 
 let apply name state elt =
-  apply'
-    (Match.mk name Substitution.empty None Location.none)
-    state elt
+  assert false
+  (* apply' *)
+  (*   (Match.mk name Substitution.empty None Location.none) *)
+  (*   state elt *)

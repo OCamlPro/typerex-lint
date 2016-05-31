@@ -70,29 +70,29 @@ let get key vars =
 let get_expr key vars =
   get key vars
   >>= (function
-      | AE.Expression e -> Some e
-      | AE.Pattern p -> pat_to_expr p
-      | AE.String i ->
-        Ast_helper.Exp.ident (Location.mknoloc (Longident.Lident i))
-                      |> Option.some
+      (* | AE.Expression e -> Some e *)
+      (* | AE.Pattern p -> pat_to_expr p *)
+      (* | AE.String i -> *)
+      (*   Ast_helper.Exp.ident (Location.mknoloc (Longident.Lident i)) *)
+      (*                 |> Option.some *)
       | _ -> None
     )
 
 let get_ident key vars =
   get key vars
   >>= (function
-      | AE.String p -> Some p
+      (* | AE.String p -> Some p *)
       | _ -> None
     )
 
 (* let is_defined_ident key vars = Option.is_some (get_ident key vars) *)
 
-let add_expr name value vars = M.add
-    name
-    (AE.Expression (postprocess value))
-    vars
-let add_ident name value vars = M.add name (AE.String value) vars
-let add_pattern name value vars = M.add name (AE.Pattern value) vars
+let add_expr name value vars = assert false(* M.add *)
+    (* name *)
+    (* (AE.Expression (postprocess value)) *)
+    (* vars *)
+let add_ident name value vars = assert false(* M.add name (AE.String value) vars *)
+let add_pattern name value vars = assert false(* M.add name (AE.Pattern value) vars *)
 
 let merge m1 m2 =
   StringMap.merge (fun _ -> Option.merge_sup (fun _ x -> x)) m1 m2

@@ -94,13 +94,15 @@ This can be split in several parts
 
 * Types generation
 
-(Probably the easiest)
++(Probably the easiest)+
 
 The goal is to generate the ~tree~ aut ~automaton_tree~ types
 
-** DONE Generate the ~tree~ :
+** TODO Generate the ~tree~ :
    The only required think is to collect all the types defined in the
    file and make a big sum of it
+   This means :
+   - find 
 
 ** DONE Generate the ~automaton_tree~
 

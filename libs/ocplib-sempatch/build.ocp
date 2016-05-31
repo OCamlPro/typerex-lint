@@ -1,17 +1,28 @@
 comp += [ "-w" "+A-4" ]
 
-begin program "abc"
+begin library "abc"
     files = [
-      "lib/automaton/generator/gen.ml"
+      "lib/std_utils.ml"
+      "lib/automaton/generator/common.ml"
+      "lib/automaton/generator/type_collector.ml"
+      "lib/automaton/generator/from.ml"
+      "lib/automaton/generator/match.ml"
+      "lib/automaton/generator/automaton_processor.ml"
+      "lib/automaton/generator/deriving_sumall.ml"
     ]
     requires = [
       "compiler-libs.common"
       "str"
+      "ppx_deriving.api"
+      "ppx_deriving.std"
+      "ppx_tools.metaquot"
     ]
+    comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
 end
 
 begin library "ocplib-sempatch"
     files = [
+      "lib/automaton/generator/tree.ml"
       "lib/std_utils.ml"
       "lib/failure.ml"
       "lib/res.ml"
@@ -39,8 +50,10 @@ begin library "ocplib-sempatch"
         "compiler-libs"
         "compiler-libs.common"
         "abc"
+        "ppx_deriving"
     ]
-    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm" ]
+    comp += [ "-ppx" "%{ppx_deriving_DST_DIR}%/ppx_deriving %{abc_DST_DIR}%/abc.cmxs" ]
+    (* comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm" ] *)
     comp_requires = "abc:asm"
     ocamlyacc = "menhir"
 end
