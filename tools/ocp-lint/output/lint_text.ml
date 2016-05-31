@@ -21,10 +21,12 @@
 open Lint_warning_types
 open Lint_db_types
 
-let print_warning ppf warning =
+let print_warning ppf linter_name warning =
   if warning.loc <> Location.none then
     Format.fprintf ppf "%a" Location.print warning.loc;
 
+  Format.fprintf ppf "  Warning %S number %d:\n"
+    linter_name warning.instance.id;
   Format.fprintf ppf "  %s" warning.output;
   Format.fprintf ppf "@."
 
@@ -90,7 +92,7 @@ let print fmt path db =
                       List.iter
                         (fun warning ->
                            if arr.(warning.instance.id - 1) then
-                             print_warning fmt warning)
+                             print_warning fmt lname warning)
                         ws)
                   lres)
             pres)
@@ -104,7 +106,7 @@ let print_only_new fmt path db =
       if Lint_utils.(is_in_path file (absolute path)) then
         StringMap.iter (fun pname lres ->
             StringMap.iter  (fun lname (source, _opt, ws) ->
-                if source = Analyse then List.iter (print_warning fmt) ws)
+                if source = Analyse then List.iter (print_warning fmt lname) ws)
               lres)
           pres)
     db
