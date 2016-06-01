@@ -34,14 +34,17 @@ module MakeDB (DB : DATABASE_IO) = struct
   let load = DB.load
 
   let init path =
-    try
-      let file = Filename.concat (File.to_string path) "db" in
-      database_file := file;
-      let db2 = DB.load !database_file in
-      Hashtbl.iter (fun k v -> Hashtbl.add db k v) db2
-    with Not_found ->
-      Printf.eprintf "Can't find '_olint' directory: use ocp-lint --init \
-                      if you want to use db support.\n%!"
+    let file = Filename.concat (File.to_string path) "db" in
+    database_file := file;
+    let db2 =
+      try
+        DB.load !database_file
+      with exn ->
+        (Format.eprintf "Can't read DB file, using a fresh DB\n%!";
+         Format.eprintf "%s\n%!" (Printexc.to_string exn);
+         empty_db ())
+    in
+    Hashtbl.iter (fun k v -> Hashtbl.add db k v) db2
 
   let save () =
     Hashtbl.iter (fun file (hash, pres) ->
@@ -177,15 +180,10 @@ module Marshal_IO : DATABASE_IO = struct
 
   let load file =
     if Sys.file_exists file then
-      try
-        let ic = open_in file in
-        input_value ic
-      with exn ->
-        (Printf.eprintf "Can't read DB file, using a fresh DB\n%!";
-         Printf.eprintf "%s\n%!" (Printexc.to_string exn);
-         empty_db ())
+      let ic = open_in file in
+      input_value ic
     else
-      (Printf.eprintf "No DB file found, using a fresh DB\n%!";
+      (Format.eprintf "No DB file found, using a fresh DB\n%!";
        empty_db ())
 
   let save file db =

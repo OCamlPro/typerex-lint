@@ -23,5 +23,5 @@ begin program "ocp-lint-testsuite"
   files = [
     "testsuite.ml"
   ]
-  requires = [ "unix" "str" ]
+  requires = [ "unix" "str" "ocp-lint-db" "ocp-lint-api" ]
 end

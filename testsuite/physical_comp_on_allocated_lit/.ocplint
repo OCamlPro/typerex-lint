@@ -1,0 +1,16 @@
+
+
+(*************************************)
+(*   Never edit options files while  *)
+(*       the program is running      *)
+(*************************************)
+(* SECTION : Header                  *)
+(* These options must be read first  *)
+(*************************************)
+
+plugin_parsetree = {
+  flag = true
+  phys_comp_allocated_lit = {
+    flag = true
+  }
+}

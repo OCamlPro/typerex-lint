@@ -17,18 +17,75 @@
 (*  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE      *)
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
+open Lint_db_types
+
+type failure =
+  | No_db of string
+  | Empty_db of string
+  | Diff_warnings of ((Lint_warning_types.warning list) *
+                      (Lint_warning_types.warning list)) list
+  | Diff_db of string list
+
+type res =
+  | Ok
+  | Fail of failure
 
 let (//) = Filename.concat
 
 (* Testsuite files *)
 let out = "ocp-lint.out"
 let err = "ocp-lint.err"
-let output = "ocp-lint.output"
 let result = "ocp-lint.result"
 let sempatch_file = "sempatch.md"
+let failure_report = "testsuite/failure.desc"
 
 (* Testsuite programs *)
-let diff = "diff"
+
+let read_db file = try Lint_db.DefaultDB.load file with _ -> Hashtbl.create 42
+
+let string_of_diff indent = function
+| Ok -> indent ^ "Ok"
+| Fail f -> begin match f with
+    | No_db f -> Printf.sprintf "%sNo expected db %S" indent f
+    | Empty_db f -> Printf.sprintf "%sExpected db is empty : %S" indent f
+    | Diff_db l ->
+      Printf.sprintf
+        "%sDifferences in these plugins : %s"
+        indent
+        (String.concat ";" l)
+    | Diff_warnings l -> indent ^"Differences of warnings"
+  end
+
+let fail_warnings res w1 w2 = match res with
+  | Ok -> Fail (Diff_warnings [(w1, w2)])
+  | Fail (Diff_warnings l) -> Fail (Diff_warnings ((w1, w2) :: l))
+  | _ -> res
+
+let fail_db res p = match res with
+  | Ok -> Fail (Diff_db [p])
+  | Fail (Diff_db l) -> Fail (Diff_db (p::l))
+  | _ -> res
+
+let is_included file_res =
+  if not (Sys.file_exists file_res) then (Fail (No_db file_res))
+  else
+    let db1 = read_db "testsuite/_olint/db" in
+    let db2 = read_db file_res in
+    if Hashtbl.length db2 = 0 then (Fail (Empty_db file_res))
+    else
+      Hashtbl.fold (fun file (_hash, fres2) acc ->
+          StringMap.fold (fun pname lres2 acc ->
+              StringMap.fold (fun lname (_, _, wres2) acc ->
+                  try
+                    let (_, fres1) = Hashtbl.find db1 file in
+                    let pres1 = StringMap.find pname fres1 in
+                    let (_, _, wres1) = StringMap.find lname pres1 in
+                    if wres1 = wres2 then acc
+                    else fail_warnings acc wres1 wres2
+                  with _ -> fail_db acc pname)
+                lres2 acc)
+            fres2 acc)
+        db2 Ok
 
 let run_command prog args dir  =
   let file_stdout = dir // out in
@@ -36,11 +93,11 @@ let run_command prog args dir  =
   let fd_stdout =
     Unix.openfile
       file_stdout
-      [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o644 in
+      [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o644 in
   let fd_stderr =
     Unix.openfile
       file_stderr
-      [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o644 in
+      [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o644 in
   let pid = Unix.create_process prog args Unix.stdin fd_stdout fd_stderr in
   Unix.close fd_stdout;
   Unix.close fd_stderr;
@@ -48,40 +105,24 @@ let run_command prog args dir  =
   assert (rpid = pid);
   status
 
-let run_diff dir =
-  let file1 = dir // output in
-  let file2 = dir // result in
-  let args = [| diff; "-q"; file1; file2 |] in
-  let status = run_command diff args dir in
-  match status with
-  | Unix.WEXITED 0 -> true
-  | Unix.WEXITED _
-  | Unix.WSIGNALED _
-  | Unix.WSTOPPED _ -> false
-
 let check_tests test_dirs =
-  let check_test dir = run_diff dir, dir in
-  List.map check_test test_dirs
+  List.map (fun dir ->
+    let db_path = Filename.concat dir "ocp-lint.result" in
+    is_included db_path, dir) test_dirs
 
 let starts_with str ~substring =
   let len_sub = String.length substring in
   str = (String.sub str 0 len_sub)
 
 let run_ocp_lint ocplint dir =
-  let output = dir // output in
   let project_arg = "--path" in
-  let output_arg = "--output-txt" in
-  let sempatch_args =
-    if Sys.file_exists (dir // sempatch_file)
-    then
-      [| "--load-patches"; dir //sempatch_file |]
-    else
-      [||]
-  in
-  let args = Array.append
-      [| ocplint; project_arg; dir; output_arg; output |]
-      sempatch_args
-  in
+  if Sys.file_exists (dir // sempatch_file)
+  then begin
+    try
+      Unix.putenv "OCPLINT_PATCHES" dir
+        with _ -> ()
+  end;
+  let args = [| ocplint; project_arg; dir |] in
   let status = run_command ocplint args dir in
   match status with
   | Unix.WEXITED 0   -> ()
@@ -94,20 +135,24 @@ let find_directories parent =
   let files =
     List.filter (fun file ->
         let dirname =  parent // file in
-        Sys.is_directory dirname)
+        Sys.is_directory dirname && file <> "_olint")
       (Array.to_list files) in
   List.map (fun file -> parent // file) files
 
-let print_result res =
+let print_result res verbose =
+  let fail_oc = if verbose then stdout else open_out failure_report in
   List.iter (fun (diff, dir) ->
-      if diff
+      if diff = Ok
       then Printf.printf "  \027[32m[PASS]\027[m %S\n%!" dir
-      else Printf.printf "  \027[31m[FAIL]\027[m %S\n%!" dir)
+      else
+        (Printf.printf "  \027[31m[FAIL]\027[m %S\n%!" dir;
+         Printf.fprintf fail_oc "%s\n%!" (string_of_diff "      " diff))
+    )
     res;
-  let succeed = List.filter (fun (diff, _) -> diff) res in
+  let succeed = List.filter (fun (diff, _) -> diff = Ok) res in
   let n_succ = List.length succeed in
   let n_res = List.length res in
-  Printf.eprintf "%i/%i tests passed!\n%!" n_succ n_res;
+  Printf.printf "%i/%i tests passed!\n%!" n_succ n_res;
   if n_succ = n_res then exit 0
   else exit 1
 
@@ -116,11 +161,10 @@ let _ =
     failwith "Usage: testsuite OCPLINTBINARY PATH";
   let ocplint = Sys.argv.(1) in
   let parent = Sys.argv.(2) in
-  Printf.eprintf "Running tests...\n%!" ;
+  Printf.printf "Running tests...\n%!" ;
   let test_dirs = find_directories parent in
 
   (* Starting ocp-lint on each subdirectories. *)
   List.iter (run_ocp_lint ocplint) test_dirs;
-
   let result = check_tests test_dirs in
-  print_result result
+  print_result result true
