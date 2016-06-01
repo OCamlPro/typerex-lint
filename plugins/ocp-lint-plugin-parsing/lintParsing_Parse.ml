@@ -13,14 +13,14 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Asttypes = LintFabOCaml_Asttypes
-module Ast_helper = LintFabOCaml_Ast_helper
-module Parsetree = LintFabOCaml_Parsetree
-module Docstrings = LintFabOCaml_Docstrings
-module Location = LintFabOCaml_Location
-module Syntaxerr = LintFabOCaml_Syntaxerr
-module Lexer = LintFabOCaml_Lexer
-module Parser = LintFabOCaml_Parser
+module Asttypes = LintParsing_Asttypes
+module Ast_helper = LintParsing_Ast_helper
+module Parsetree = LintParsing_Parsetree
+module Docstrings = LintParsing_Docstrings
+module Location = LintParsing_Location
+module Syntaxerr = LintParsing_Syntaxerr
+module Lexer = LintParsing_Lexer
+module Parser = LintParsing_Parser
 
 (* Entry points in the parser *)
 

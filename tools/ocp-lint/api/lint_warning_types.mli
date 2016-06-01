@@ -26,6 +26,7 @@ type kind =
   | Interface
   | Metrics
   | Custom of string
+  | Files
 
 and kinds = kind list
 

@@ -13,10 +13,10 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Location = LintFabOCaml_Location
-module Asttypes = LintFabOCaml_Asttypes
-module Parsetree = LintFabOCaml_Parsetree
-module Docstrings = LintFabOCaml_Docstrings
+module Location = LintParsing_Location
+module Asttypes = LintParsing_Asttypes
+module Parsetree = LintParsing_Parsetree
+module Docstrings = LintParsing_Docstrings
 
 (** Helpers to produce Parsetree fragments *)
 

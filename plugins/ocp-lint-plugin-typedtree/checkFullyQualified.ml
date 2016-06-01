@@ -21,9 +21,9 @@
 open StringCompat
 open SimpleConfig (* for !! *)
 
-module Plugin = LintFabPlugin.Plugin
+module Plugin = Plugin_typedtree.Plugin
 
-module FullyQualifiedChecker = Plugin.MakeLint(struct
+module Linter = Plugin.MakeLint(struct
     let name = "Fully-Qualified Identifiers"
     let short_name = "fully_qualified_identifiers"
     let details = "Checks that external identifiers are fully qualified."
@@ -32,35 +32,45 @@ module FullyQualifiedChecker = Plugin.MakeLint(struct
 
 type warnings =
   | NotQualifiedEnough of string * string
+  | AliasPersistentValue of string * string
 
-let w_not_enough = FullyQualifiedChecker.new_warning
+let w_not_enough = Linter.new_warning
     [ Lint_warning.kind_code ]
     ~short_name:"not-qualified-enough"
     ~msg:"external identifier \"$ident\" is not fully qualified\n    (should be \"$path\")"
 
+let w_alias_persistent = Linter.new_warning
+    [ Lint_warning.kind_code ]
+    ~short_name:"alias-persistent"
+    ~msg:"Avoid aliasing external values (here $ident to $path)"
+
  module Warnings = struct
-    let w_not_enough = FullyQualifiedChecker.instanciate w_not_enough
+    let w_not_enough = Linter.instanciate w_not_enough
+    let w_alias_persistent = Linter.instanciate w_alias_persistent
 
     let report loc = function
       | NotQualifiedEnough (ident, path) ->
         w_not_enough loc ["ident", ident; "path", path]
+      | AliasPersistentValue (ident, path) ->
+        w_not_enough loc ["ident", ident; "path", path]
+
   end
 
-let ignored_modules = FullyQualifiedChecker.create_option
+let ignored_modules = Linter.create_option
     "ignored_modules"
     "Ignore unqualified identifiers coming from these modules"
     ""
     (SimpleConfig.list_option SimpleConfig.string_option)
     [ "Pervasives"; "StringCompat" ]
 
-let ignore_operators = FullyQualifiedChecker.create_option
+let ignore_operators = Linter.create_option
     "ignore_operators"
     "Ignore symbolic operators"
     ""
     SimpleConfig.bool_option
     true
 
-let ignore_depth = FullyQualifiedChecker.create_option
+let ignore_depth = Linter.create_option
     "ignore_depth"
     "Ignore qualified identifiers of that depth, not fully qualified"
     ""
@@ -86,9 +96,11 @@ let iter_structure ast =
         else Some id
       | Path.Papply _ -> None
       | Path.Pdot(path, field, _) ->
-        match check_path path with
-        | None -> None
-        | Some id -> Some (id ^ "." ^ field)
+        begin
+          match check_path path with
+          | None -> None
+          | Some id -> Some (id ^ "." ^ field)
+        end
 
     let is_operator s =
       match s.[0] with
@@ -112,12 +124,33 @@ let iter_structure ast =
             end
         end
       | _ -> ()
+
+    let rec is_persistent path =
+      match path with
+      | Path.Pident id ->
+        Ident.persistent id
+      | Path.Pdot(path, _,_) -> is_persistent path
+      | Path.Papply _ -> false
+
+    let enter_structure_item str =
+      match str.str_desc with
+      | Tstr_value (_, vbs) ->
+        List.iter (fun vb ->
+            match vb.vb_pat.pat_desc, vb.vb_expr.exp_desc with
+            | Tpat_var (var,_), Texp_ident (Path.Pdot _ as path, _, _) ->
+              if is_persistent path then
+                Warnings.report vb.vb_loc
+                  (AliasPersistentValue (Ident.name var, Path.name path))
+            | _ -> ()
+          ) vbs
+      | _ -> ()
+
     end)
   in
   Iter.iter_structure ast
 
 (* Registering a main entry to the linter *)
-module Main = FullyQualifiedChecker.MakeInputCMT(struct
+module Main = Linter.MakeInputCMT(struct
 
     open Cmt_format
 

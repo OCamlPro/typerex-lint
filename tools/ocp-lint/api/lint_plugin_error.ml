@@ -32,14 +32,14 @@ exception Plugin_error of error
 let to_string = function
   | Plugin_already_registered plugin ->
     let module P = (val plugin : Lint_plugin_types.PLUGIN) in
-    spf "Plugin '%s' is already registered." P.name
+    Printf.sprintf "Plugin '%s' is already registered." P.name
   | Plugin_not_found plugin ->
     let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
-    spf "Plugin '%s' is not found." Plugin.name
+    Printf.sprintf "Plugin '%s' is not found." Plugin.name
   | Patch_file_not_found filename ->
-    spf "Patch '%s' is not found." filename
+    Printf.sprintf "Patch '%s' is not found." filename
   | Syntax_error filename ->
-    spf "Syntax error in %S: cannot lint this file." filename
+    Printf.sprintf "Syntax error in %S: cannot lint this file." filename
   | Plugin_exception exn ->
     Printf.sprintf "exception %s." (Printexc.to_string exn)
 

@@ -19,7 +19,6 @@
 (**************************************************************************)
 
 open SimpleConfig (* for !! *)
-open Plugin_parsetree
 
 let default_max = 30
 let default_min = 2
@@ -34,7 +33,7 @@ let details =
     default_min
     default_max
 
-module CodeIdentifierLength = PluginParsetree.MakeLint(struct
+module CodeIdentifierLength = Plugin_parsetree.Plugin.MakeLint(struct
     let name = "Code Identifier Length"
     let short_name = "code_identifier_length"
     let details = details

@@ -13,8 +13,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Parsetree = LintFabOCaml_Parsetree
-module Location = LintFabOCaml_Location
+module Parsetree = LintParsing_Parsetree
+module Location = LintParsing_Location
 
 open Location
 

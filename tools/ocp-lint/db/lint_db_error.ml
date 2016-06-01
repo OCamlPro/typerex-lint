@@ -29,15 +29,19 @@ type error =
 
 let to_string = function
   | No_db_found ->
-    spf "No DB file found, you should use --init option to use DB features."
+    Printf.sprintf
+      "No DB file found, you should use --init option to use DB features."
   | File_not_found filename ->
-    spf "Ignoring warnings on %S. This file may be generated." filename
+    Printf.sprintf
+      "Ignoring warnings on %S. This file may be generated." filename
   | File_not_in_db filename ->
-    spf "Ignoring warnings on %S. This file is not in the db." filename
+    Printf.sprintf
+      "Ignoring warnings on %S. This file is not in the db." filename
   | Plugin_not_in_db (fname, pname) ->
-    spf "Ignoring warnings on %S. The plugin %s is not in the db." fname pname
+    Printf.sprintf
+      "Ignoring warnings on %S. The plugin %s is not in the db." fname pname
   | Linter_not_in_db  (fname, pname, lname) ->
-    spf
+    Printf.sprintf
       "Ignoring warnings on %S. The linter %s.%s is not in the db."
       fname
       pname

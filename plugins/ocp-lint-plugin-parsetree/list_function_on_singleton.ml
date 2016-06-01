@@ -18,12 +18,10 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Plugin_parsetree
-
 let details =
   "Checks that we do not use a list function on a singleton element."
 
-module ListOnSingleton = PluginParsetree.MakeLint(struct
+module ListOnSingleton = Plugin_parsetree.Plugin.MakeLint(struct
     let name = "List function on singleton"
     let short_name = "code_list_on_singleton"
     let details = details

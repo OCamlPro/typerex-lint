@@ -39,10 +39,10 @@ let print fmt path db =
     Hashtbl.iter (fun file (hash, pres) ->
         if Lint_utils.(is_in_path file (absolute path)) then
           StringMap.iter (fun pname lres ->
-              let flag = check_flag [pname; "flag"] in
+              let flag = check_flag [pname; "enabled"] in
               if flag then
                 StringMap.iter  (fun lname (_source, _opt, ws) ->
-                    let flag = check_flag [pname; lname; "flag"] in
+                    let flag = check_flag [pname; lname; "enabled"] in
                     if flag then
                       let filters =
                         Lint_globals.Config.get_option_value

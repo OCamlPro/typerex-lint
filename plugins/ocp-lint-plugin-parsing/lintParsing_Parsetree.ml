@@ -13,7 +13,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Asttypes = LintFabOCaml_Asttypes
+module Asttypes = LintParsing_Asttypes
 
 (** Abstract syntax tree produced by parsing *)
 

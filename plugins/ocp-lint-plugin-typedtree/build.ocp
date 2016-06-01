@@ -23,7 +23,7 @@ begin library "ocp-lint-plugin-typedtree"
     "plugin_typedtree.ml"
 
   (* All linters attached to Typedtree plugin. *)
-
+    "checkFullyQualified.ml"
   ]
   requires = [
     "ocp-lint-config"

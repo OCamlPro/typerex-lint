@@ -26,6 +26,8 @@ begin library "ocp-lint-plugin-parsetree"
     "identifier_length.ml"
     "list_function_on_singleton.ml"
     "physical_comp_on_alloc_lit.ml"
+
+    "checkGoodPractices.ml";
   ]
   requires = [
     "ocp-lint-config"

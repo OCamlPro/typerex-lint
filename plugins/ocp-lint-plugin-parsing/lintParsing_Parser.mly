@@ -17,12 +17,12 @@
 
 %{
 
-module Asttypes = LintFabOCaml_Asttypes
-module Ast_helper = LintFabOCaml_Ast_helper
-module Parsetree = LintFabOCaml_Parsetree
-module Docstrings = LintFabOCaml_Docstrings
-module Location = LintFabOCaml_Location
-module Syntaxerr = LintFabOCaml_Syntaxerr
+module Asttypes = LintParsing_Asttypes
+module Ast_helper = LintParsing_Ast_helper
+module Parsetree = LintParsing_Parsetree
+module Docstrings = LintParsing_Docstrings
+module Location = LintParsing_Location
+module Syntaxerr = LintParsing_Syntaxerr
 
 open Location
 open Longident
@@ -588,8 +588,8 @@ let package_type_of_module_type pmty =
 %token WHEN
 %token WHILE
 %token WITH
-%token <string * LintFabOCaml_Location.t> COMMENT
-%token <LintFabOCaml_Docstrings.docstring> DOCSTRING
+%token <string * LintParsing_Location.t> COMMENT
+%token <LintParsing_Docstrings.docstring> DOCSTRING
 
 %token EOL
 
@@ -662,19 +662,19 @@ The precedences must be listed from low to high.
 /* Entry points */
 
 %start implementation                   /* for implementation files */
-%type <LintFabOCaml_Parsetree.structure> implementation
+%type <LintParsing_Parsetree.structure> implementation
 %start interface                        /* for interface files */
-%type <LintFabOCaml_Parsetree.signature> interface
+%type <LintParsing_Parsetree.signature> interface
 %start toplevel_phrase                  /* for interactive use */
-%type <LintFabOCaml_Parsetree.toplevel_phrase> toplevel_phrase
+%type <LintParsing_Parsetree.toplevel_phrase> toplevel_phrase
 %start use_file                         /* for the #use directive */
-%type <LintFabOCaml_Parsetree.toplevel_phrase list> use_file
+%type <LintParsing_Parsetree.toplevel_phrase list> use_file
 %start parse_core_type
-%type <LintFabOCaml_Parsetree.core_type> parse_core_type
+%type <LintParsing_Parsetree.core_type> parse_core_type
 %start parse_expression
-%type <LintFabOCaml_Parsetree.expression> parse_expression
+%type <LintParsing_Parsetree.expression> parse_expression
 %start parse_pattern
-%type <LintFabOCaml_Parsetree.pattern> parse_pattern
+%type <LintParsing_Parsetree.pattern> parse_pattern
 %%
 
 /* Entry points */

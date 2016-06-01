@@ -13,7 +13,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Location = LintFabOCaml_Location
+module Location = LintParsing_Location
 
 (* Auxiliary type for reporting syntax errors *)
 
