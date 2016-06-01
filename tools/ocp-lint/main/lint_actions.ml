@@ -209,6 +209,7 @@ let scan ?output_text print_only_new path =
 
   Format.printf "Printing results...\n%!";
 
+  Lint_text.summary path Lint_db.DefaultDB.db;
   (* TODO: do we want to print in stderr by default ? *)
   begin match output_text with
     | None -> print path print_only_new
