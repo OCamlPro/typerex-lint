@@ -48,9 +48,9 @@ if test "$OCAMLFIND" = "no"; then
    AC_MSG_ERROR([You must install OCaml package 'ocamlfind'])
 fi
 
-AC_CHECK_OCAML_PKG([yojson])
- if test "$OCAML_PKG_yojson" = "no"; then
-   AC_MSG_ERROR([Please install OCaml package 'yojson'.])
+AC_CHECK_OCAML_PKG([ocp-indent])
+ if test "$OCAML_PKG_ocpindent" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'ocp-indent'.])
  fi
 
 AC_CHECK_OCAML_PKG([menhirLib])
@@ -59,7 +59,7 @@ AC_CHECK_OCAML_PKG([menhirLib])
  fi
 
 AC_CHECK_PROG([OCPBUILD],ocp-build,yes,no)
- if test "$OCAML_PKG_yojson" = "no"; then
+ if test "$OCAML_PKG_ocp-indent" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'ocp-build'.])
  fi
 

@@ -30,31 +30,29 @@ module Linter = Plugin.MakeLint(struct
     let enable = true
   end)
 
-type warnings =
+type warning =
   | UseNEWInsteadOfOLD of string * string
   | GoodPractice of string
 
 let w_use_instead = Linter.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:1
     ~short_name:"use-instead"
     ~msg:"Good practice: use \"$new\" instead of \"$old\""
 
 let w_good_practice = Linter.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:2
     ~short_name:"good-practice"
     ~msg:"Good practice: $advice"
 
-module Warnings = struct
-  let w_use_instead = Linter.instanciate w_use_instead
-  let w_good_practice = Linter.instanciate w_good_practice
+module Warnings = Linter.MakeWarnings(struct
+    type t = warning
 
-  let report loc = function
-    | UseNEWInsteadOfOLD (new_expr, old_expr) ->
-      w_use_instead loc ["new", new_expr; "old", old_expr]
-    | GoodPractice advice ->
-      w_good_practice loc ["advice", advice]
-
-  end
+    let to_warning = function
+      | UseNEWInsteadOfOLD (new_expr, old_expr) ->
+        w_use_instead, ["new", new_expr; "old", old_expr]
+      | GoodPractice advice ->
+        w_good_practice, ["advice", advice]
+  end)
 
 let iter_structure ast =
   let module Iter = Parsetree_iter.MakeIterator(struct

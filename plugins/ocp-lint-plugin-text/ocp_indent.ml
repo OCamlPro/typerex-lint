@@ -18,52 +18,63 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Plugin_complex
+open SimpleConfig (* for !! *)
+open Plugin_text
 
-let details = "Checks if the module type name is capitalized."
-
-module ModuleTypeName = PluginComplex.MakeLint(struct
-    let name = "Checks on module type name."
-    let short_name = "interface_module_type_name"
-    let details = details
-    let enable = false
+module OCPIndent = PluginText.MakeLint(struct
+    let name = "Indention with ocp-indent"
+    let short_name = "ocp_indent"
+    let details = "Checks indentation with ocp-indent"
+    let enable = true
   end)
 
-type warning = Module_name of (string * string)
+type warning = File of string
 
-let w_name = ModuleTypeName.new_warning
+let w_check_indent = OCPIndent.new_warning
     ~id:1
-    ~short_name:"interface_module_type_name_check"
-    ~msg:"Module type name '$badmodname' should be uppercase as '$goodmodname'."
+    ~short_name:"ocp_indent_check"
+    ~msg:"File '$file' is not indented correctly."
 
-module Warnings = ModuleTypeName.MakeWarnings(struct
+module Warnings = OCPIndent.MakeWarnings (
+  struct
     type t = warning
 
     let to_warning = function
-      | Module_name (bad, good) ->
-        w_name, [("badmodname", bad); ("goodmodname", good)]
+      | File filename ->
+        w_check_indent, ["file", filename]
   end)
 
-let check_module_name loc modname =
-  if String.uppercase modname <> modname  then
-    Warnings.report loc (Module_name (modname, String.uppercase modname))
+let check_indent file =
+  let ic = open_in file in
+  let text_init = Buffer.create 42 in
+  let text_indented = Buffer.create 42 in
+  let nstream = Nstream.of_channel ic in
+  let block = IndentBlock.empty in
+  let rec loop ic =
+    try
+      Buffer.add_string text_init (input_line ic ^ "\n");
+      loop ic
+    with End_of_file -> () in
+  loop ic;
+  seek_in ic 0;
+  let output = {
+    IndentPrinter.
+    debug = false;
+    config = IndentConfig.default;
+    in_lines = (fun _ -> true);
+    indent_empty = false;
+    adaptive = true;
+    kind = IndentPrinter.Print (fun s () -> Buffer.add_string text_indented s)
+  } in
 
-let iter =
-  let module IterArg = struct
-    include Parsetree_iter.DefaultIteratorArgument
+  (* Getting indented code by ocp-indent. *)
+  IndentPrinter.(proceed output nstream block ());
 
-    let enter_module_type_declaration modtype =
-      let open Parsetree in
-      let open Asttypes in
-      check_module_name modtype.pmtd_loc modtype.pmtd_name.txt
-  end in
-  (module IterArg : Parsetree_iter.IteratorArgument)
+  if Buffer.contents text_init <> Buffer.contents text_indented then
+    Warnings.report_file file (File file)
+
 
 (* Registering a main entry to the linter *)
-module MainMLI = ModuleTypeName.MakeInputInterface (struct
-    let main ast = Parsetree_iter.iter_signature iter ast
-  end)
-
-module MainML = ModuleTypeName.MakeInputStructure(struct
-    let main ast = Parsetree_iter.iter_structure iter ast
+module MainSRC = OCPIndent.MakeInputML(struct
+    let main source = check_indent source
   end)

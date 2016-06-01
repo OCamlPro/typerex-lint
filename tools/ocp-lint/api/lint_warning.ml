@@ -20,28 +20,12 @@
 
 open Lint_warning_types
 
-let kind_code = Code
-let kind_typo = Typo
-let kind_interface = Interface
-let kind_metrics = Metrics
-
-let new_kind kind = Custom kind
-
-let kind_to_string = function
-  | Code -> "code"
-  | Typo -> "typographie"
-  | Interface -> "interface"
-  | Metrics -> "metrics"
-  | Custom kind -> kind
-  | Files -> "files"
-
 module Warning = struct
 
   let add_warning pname lname warning =
     Lint_db.DefaultDB.update pname lname warning
 
-  let add pname lname loc id decl output =
-    let instance = {id; decl} in
-    let warning = {loc; instance; output} in
+  let add pname lname loc decl output =
+    let warning = {loc; decl; output} in
     add_warning pname lname warning
 end

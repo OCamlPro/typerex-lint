@@ -18,18 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** Values representing the kind of warnings. See [Lint_warning_types.kind] for more
-    details. *)
-val kind_code : Lint_warning_types.kind
-val kind_typo : Lint_warning_types.kind
-val kind_interface : Lint_warning_types.kind
-val kind_metrics : Lint_warning_types.kind
-val new_kind : string -> Lint_warning_types.kind
-
-(** [kind_to_string kind] returns the string representation of
-    [Lint_warning_types.kind]. *)
-val kind_to_string : Lint_warning_types.kind -> string
-
 (**** Warnings data structure. ****)
 module Warning : sig
 
@@ -42,7 +30,6 @@ module Warning : sig
     string ->
     string ->
     Location.t ->
-    int ->
     Lint_warning_types.warning_declaration ->
     string ->
     unit

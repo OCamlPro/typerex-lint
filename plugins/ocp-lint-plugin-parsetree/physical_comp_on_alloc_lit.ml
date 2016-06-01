@@ -49,18 +49,17 @@ let to_string ty1 ty2 =
   | _ -> "Allocated litterals"
 
 let w_phys_comp = PhysCompLit.new_warning
-    [ Lint_warning.kind_code ]
+    ~id:1
     ~short_name:"phys_comp_allocated_lit_checks"
     ~msg:"Physical comparison on '$lit'."
 
-module Warnings = struct
-  let w_phys_comp = PhysCompLit.instanciate w_phys_comp
+module Warnings = PhysCompLit.MakeWarnings(struct
+    type t = warning * warning
 
-  let report loc ty1 ty2 =
-    let ty = to_string ty1 ty2 in
-    w_phys_comp loc [("lit", ty)]
-
-end
+    let to_warning (ty1, ty2) =
+      let ty = to_string ty1 ty2 in
+      w_phys_comp, [("lit", ty)]
+  end)
 
 (** Allocated litterals *)
 let is_allocated_lit expr =
@@ -100,7 +99,7 @@ let iter =
               let flag1, ty1 = is_allocated_lit expr1 in
               let flag2, ty2 = is_allocated_lit expr2 in
               if flag1 && flag2 then
-                Warnings.report expr.pexp_loc ty1 ty2
+                Warnings.report expr.pexp_loc (ty1, ty2)
             | _ -> ()
           end
       | _ -> ()
