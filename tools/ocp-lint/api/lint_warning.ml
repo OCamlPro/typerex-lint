@@ -29,3 +29,33 @@ module Warning = struct
     let warning = {loc; decl; output} in
     add_warning pname lname warning
 end
+
+let cmp_loc loc1 loc2 =
+  let pos_lnum1 = loc1.Lexing.pos_lnum in
+  let pos_bol1 = loc1.Lexing.pos_bol in
+  let pos_cnum1 = loc1.Lexing.pos_cnum in
+
+  let pos_lnum2 = loc2.Lexing.pos_lnum in
+  let pos_bol2 = loc2.Lexing.pos_bol in
+  let pos_cnum2 = loc2.Lexing.pos_cnum in
+
+  pos_lnum1 = pos_lnum2 &&
+  pos_bol1 = pos_bol2 &&
+  pos_cnum1 = pos_cnum2
+
+let cmp_warnings w1 w2 =
+  let open Lint_warning_types in
+  let file1 = Filename.basename w1.loc.Location.loc_start.Lexing.pos_fname in
+  let file2 = Filename.basename w2.loc.Location.loc_start.Lexing.pos_fname in
+
+  let s_loc1 = w1.loc.Location.loc_start in
+  let s_loc2 = w2.loc.Location.loc_start in
+
+  let e_loc1 = w1.loc.Location.loc_end in
+  let e_loc2 = w2.loc.Location.loc_end in
+
+  w1.decl.short_name = w2.decl.short_name &&
+  w1.decl.id = w2.decl.id &&
+  file1 = file2 &&
+  cmp_loc s_loc1 s_loc2 &&
+  cmp_loc e_loc1 e_loc2

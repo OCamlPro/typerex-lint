@@ -29,8 +29,11 @@ val iter_files : ?recdir:bool -> (string -> unit) -> string -> unit
      matching string in the list. *)
 val substitute : string -> (string * string) list -> string
 
-(** [absolute filename] give the absolute path to a file. *)
-val absolute : string -> string
+(** [absolute_path filename] give the absolute path of a file. *)
+val absolute_path : string -> string
+
+(** [relative root filename] give the relative to root path of a file. *)
+val relative_path : string -> string -> string
 
 (** [find_root root_dir basenames] recurcively looks for the basenames in the
      path which marks the root of a project and contains the db file. *)

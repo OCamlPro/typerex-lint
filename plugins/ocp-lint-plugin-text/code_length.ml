@@ -54,9 +54,13 @@ module Warnings = CodeLength.MakeWarnings(struct
   end)
 
 let check_line lnum max_line_length file line =
+  let open Lexing in
+  let open Location in
   let line_len = String.length line in
   if line_len > max_line_length then
-    Warnings.report_file file (LongLine (max_line_length, line_len))
+    let pos = { Lexing.dummy_pos with pos_fname = file; pos_lnum = lnum } in
+    let loc = { Location.none with loc_start = pos; loc_end = pos} in
+    Warnings.report loc (LongLine (max_line_length, line_len))
 
 let check_file max_line_length file =
   let ic = open_in file in
