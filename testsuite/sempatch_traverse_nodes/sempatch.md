@@ -1,5 +1,0 @@
-@FindAllFoos
-message : found
-```
-foo
-```
