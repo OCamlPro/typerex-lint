@@ -1,12 +1,12 @@
 comp += [ "-w" "+A-4" ]
 
-begin library "abc"
+begin program "abc"
     files = [
       "lib/std_utils.ml"
       "lib/automaton/generator/common.ml"
       "lib/automaton/generator/type_collector.ml"
       "lib/automaton/generator/from.ml"
-      "lib/automaton/generator/match.ml"
+      "lib/automaton/generator/match_builder.ml"
       "lib/automaton/generator/automaton_processor.ml"
       "lib/automaton/generator/deriving_sumall.ml"
     ]
@@ -52,8 +52,7 @@ begin library "ocplib-sempatch"
         "abc"
         "ppx_deriving"
     ]
-    comp += [ "-ppx" "%{ppx_deriving_DST_DIR}%/ppx_deriving %{abc_DST_DIR}%/abc.cmxs" ]
-    (* comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm" ] *)
+    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm" ]
     comp_requires = "abc:asm"
     ocamlyacc = "menhir"
 end

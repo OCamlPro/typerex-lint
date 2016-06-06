@@ -12,48 +12,11 @@
 
 (** Abstract syntax tree produced by parsing *)
 
-(* type node1 = *)
-(*   | Leaf1 of string*int *)
-(*   | Nodes1 of node1 option *)
-(* and node2 = { *)
-(*   value : int; *)
-(*   succ : node1; *)
-(* } *)
-(* [@@deriving sumall] *)
+open Asttypes
 
 (** {2 Extension points} *)
 
-type location__t = Location.t
-
-type constant =
-    Const_int of int
-  | Const_char of char
-  | Const_string of string * string option
-  | Const_float of string
-  | Const_int32 of int32
-  | Const_int64 of int64
-  | Const_nativeint of nativeint
-
-and rec_flag = Nonrecursive | Recursive
-and direction_flag = Upto | Downto
-and private_flag = Private | Public
-and mutable_flag = Immutable | Mutable
-and virtual_flag = Virtual | Concrete
-and override_flag = Override | Fresh
-and closed_flag = Closed | Open
-and label = string
-and 'a loc = {
-  txt : 'a;
-  loc : Location.t;
-}
-
-and variance =
-  | Covariant
-  | Contravariant
-  | Invariant
-
-
-and attribute = string loc * payload
+type attribute = string loc * payload
        (* [@id ARG]
           [@@id ARG]
 
@@ -522,14 +485,14 @@ and class_type_field =
 and class_type_field_desc =
   | Pctf_inherit of class_type
         (* inherit CT *)
-  | Pctf_val of string * mutable_flag * virtual_flag * core_type
+  | Pctf_val of (string * mutable_flag * virtual_flag * core_type)
         (* val x: T *)
-  | Pctf_method  of string * private_flag * virtual_flag * core_type
+  | Pctf_method  of (string * private_flag * virtual_flag * core_type)
         (* method x: T
 
            Note: T can be a Ptyp_poly.
          *)
-  | Pctf_constraint  of core_type * core_type
+  | Pctf_constraint  of (core_type * core_type)
         (* constraint T1 = T2 *)
   | Pctf_attribute of attribute
         (* [@@@id] *)
@@ -616,15 +579,15 @@ and class_field_desc =
            inherit! CE
            inherit! CE as x
          *)
-  | Pcf_val of string loc * mutable_flag * class_field_kind
+  | Pcf_val of (string loc * mutable_flag * class_field_kind)
         (* val x = E
            val virtual x: T
          *)
-  | Pcf_method of string loc * private_flag * class_field_kind
+  | Pcf_method of (string loc * private_flag * class_field_kind)
         (* method x = E            (E can be a Pexp_poly)
            method virtual x: T     (T can be a Ptyp_poly)
          *)
-  | Pcf_constraint of core_type * core_type
+  | Pcf_constraint of (core_type * core_type)
         (* constraint T1 = T2 *)
   | Pcf_initializer of expression
         (* initializer E *)
@@ -847,7 +810,6 @@ and module_binding =
      pmb_attributes: attributes;
      pmb_loc: Location.t;
     }
-[@@deriving sumall]
 (* X = ME *)
 
 (** {2 Toplevel} *)
@@ -865,3 +827,4 @@ and directive_argument =
   | Pdir_int of int
   | Pdir_ident of Longident.t
   | Pdir_bool of bool
+

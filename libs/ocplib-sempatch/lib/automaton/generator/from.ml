@@ -62,7 +62,7 @@ let apply_from loc name args =
         ~loc
         (H.Exp.ident (L.mkloc (LI.Ldot (LI.Lident "Match", name)) loc))
         (List.mapi (build_sub_from loc) args)
-  in [%expr ([%e result] :  Automaton.state)]
+  in [%expr ([%e result] :  A.state)]
 
 let str_of_core_type self type_declarations loc name typ =
   let template pattern expression =
@@ -82,7 +82,8 @@ let str_of_core_type self type_declarations loc name typ =
       )
     and expr = H.Exp.apply
         ~loc
-        (H.Exp.ident ~loc (Location.mkloc (LI.Ldot (LI.Lident "Match", name)) loc))
+        (H.Exp.ident ~loc (Location.mkloc
+                             (LI.Ldot (LI.Lident "Match", name)) loc))
         (List.map (fun (name, typ) ->
              "", H.Exp.apply
                ~loc
@@ -94,55 +95,55 @@ let str_of_core_type self type_declarations loc name typ =
             names
         )
     in template pattern expr
-  | Ptyp_constr ({ txt = Longident.Lident id; _ }, args) ->
-    begin
-      if args = [] then
+  | Ptyp_constr ({ txt = id; _ }, []) ->
         let pattern = H.Pat.construct
             ~loc
             (Location.mkloc
                (LI.Ldot (LI.Lident "Ast_element",
-                         C.cstr id))
+                         C.cstr (Longident.last id)))
                loc)
             (Some (H.Pat.var ~loc (Location.mkloc "y" loc)))
         in
         [%expr fun x -> Match.basic_state @@
                  function
-                 | [%p pattern] when x = y -> [Automaton.Final]
-                 | _ -> [Automaton.Trash]]
-      else
-        match C.upprint typ with
-        | Some alias when alias <> name ->
-          let expr =
-            H.Exp.ident ~loc
-              (L.mkloc (LI.Lident (C.id alias)) loc)
-          in
-          [%expr fun x -> [%e expr] x]
-        | _ ->
+                 | [%p pattern] when x = y -> [A.Final]
+                 | _ -> [A.Trash]]
+  | Ptyp_constr ({ txt = Longident.Lident id; _ }, args) ->
+    begin
+      match C.upprint typ with
+      | Some alias when C.id alias <> name ->
+        let expr =
+          H.Exp.ident ~loc
+            (L.mkloc (LI.Lident (C.id alias)) loc)
+        in
+        C.debug "alias : %s, name : %s\n" alias name;
+        [%expr fun x -> [%e expr] x]
+      | _ ->
         try
-        let generic_type =
-          List.find (fun typ -> typ.ptype_name.txt = id) type_declarations
-        in
-        let instanciations =
-          List.combine
-            (List.bind
-               (fun (typ, _) ->
-                  match typ.ptyp_desc with
-                  | Ptyp_var v -> [v]
-                  | _ ->
-                    C.warn "Unable to create 'from' for %s\n" name;
-                    []
-               )
-               generic_type.ptype_params
-            )
-            args
-        in
-        let real_type =
-          C.instantiate_type_decl instanciations generic_type
-        in
-        self { real_type with ptype_name = Location.mknoloc name }
-      with
-        Not_found ->
-        raise_errorf "%s : Not in the stdlib nor declared here : %s" deriver id
+          let generic_type =
+            List.find (fun typ -> typ.ptype_name.txt = id) type_declarations
+          in
+          let instanciations =
+            List.combine
+              (List.bind
+                 (fun (typ, _) ->
+                    match typ.ptyp_desc with
+                    | Ptyp_var v -> [v]
+                    | _ ->
+                      C.warn "Unable to create 'from' for %s\n" name;
+                      []
+                 )
+                 generic_type.ptype_params
+              )
+              args
+          in
+          let real_type =
+            C.instantiate_type_decl instanciations generic_type
+          in
+          self { real_type with ptype_name = Location.mknoloc name }
+        with
+          Not_found ->
+          raise_errorf "%s : Not in the stdlib nor declared here : %s" deriver id
     end
   | _ ->
     C.warn "Unable to create 'from' for %s\n" name;

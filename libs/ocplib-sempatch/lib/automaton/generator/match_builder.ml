@@ -14,8 +14,6 @@ let raise_errorf = PpxD.raise_errorf
 
 let preamble =
   [%str
-    module A = Automaton
-
    let ignore_meta f m y = List.map (fun elt -> elt, m) (f y)
 
    let basic_state f = {
@@ -48,19 +46,19 @@ let generate_patterns loc input_list =
   | lst -> Option.some @@ H.Pat.tuple ~loc lst
 
 let mk_exploded str = Longident.Ldot (Longident.Lident "Ast_element", str)
-let mk_aut str = Longident.Ldot (Longident.Lident "Automaton", str)
+let mk_aut str = Longident.Ldot (Longident.Lident "A", str)
 let mk_aut_cstr str = Longident.Ldot
-    (Longident.Lident "Automaton", S.capitalize str)
+    (Longident.Lident "A", S.capitalize str)
 
 let create_match loc name args pattern result =
   let here elt = L.mkloc elt loc in
   let body =
     [%expr basic_state (function
                          | [%p pattern] -> [[%e result]]
-                         | _ -> [Automaton.Trash])
+                         | _ -> [A.Trash])
                                   [@@metaloc loc]
     ]
-  and type_constraint = [%type: Automaton.state]
+  and type_constraint = [%type: A.state]
   in
   H.Vb.mk
     ~loc
@@ -293,8 +291,8 @@ let str_of_type all_types type_decls =
           in
           let expr = [%expr
             fun x -> basic_state @@ function
-              | [%p pattern] when x = y -> [Automaton.Final]
-              | _ -> [Automaton.Trash]
+              | [%p pattern] when x = y -> [A.Final]
+              | _ -> [A.Trash]
           ]
           in
           [

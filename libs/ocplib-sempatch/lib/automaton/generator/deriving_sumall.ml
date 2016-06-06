@@ -1,30 +1,18 @@
-open Asttypes
-module M = Ast_mapper
-module LI = Longident
-module L = Location
-open Parsetree
 module H = Ast_helper
+module L = Location
+module LI = Longident
+module M = Ast_mapper
 module PpxD = Ppx_deriving
 module S = String
+open Asttypes
+open Parsetree
 open Std_utils
-
-let deriver = "sumall"
-
-let raise_errorf = PpxD.raise_errorf
-
-let parse_options options =
-  options
-  |> List.iter @@
-  fun (name, expr) ->
-  match name with
-  | _ -> raise_errorf ~loc:expr.pexp_loc
-           "%s does not support option %s"
-           deriver name
 
 let transition_type = H.Type.mk
     ~manifest:[%type: Exploded.bool *
-                      (Exploded.unit -> Ast_element.t
-                       -> (t * Exploded.unit) Ppx_deriving_runtime.list)]
+                      (unit -> Ast_element.t
+                       -> (t * unit)
+                         Ppx_deriving_runtime.list)]
     (L.mknoloc "transition")
 and state_type = H.Type.mk
     ~kind:(Ptype_record [
@@ -118,9 +106,7 @@ let sum_of_types loc types all_types =
     ~kind:(Ptype_variant(trash_variant :: final_variant :: poly_sum))
     (Location.mkloc "t" loc)
 
-let str_of_type ~options ~path type_decls =
-  parse_options options;
-  ignore path;
+let str_of_type type_decls =
   match type_decls with
   | [] -> []
   | hd::_ ->
@@ -145,7 +131,7 @@ let str_of_type ~options ~path type_decls =
                            (Some (Longident.Lident "Exploded")) mono_decls);
 
         (* The type of the automaton *)
-        "Automaton", [], transition_type :: state_type :: automaton_typ
+        "A", [], transition_type :: state_type :: automaton_typ
                          :: automaton_tree;
       ]
     in
@@ -171,14 +157,37 @@ let str_of_type ~options ~path type_decls =
             constructors
     in
     declarations
-    @ (Match.str_of_type poly_decls mono_decls)
+    @ (Match_builder.str_of_type poly_decls mono_decls)
     @ (From.str_of_type poly_decls mono_decls)
 
-let () =
-  PpxD.(
-    register
-      (create
-         deriver
-         ~type_decl_str:str_of_type
-         ()
-      ))
+let is_def_of name = List.exists (fun def -> def.ptype_name.txt = name)
+
+let mapper = let open M in {
+    default_mapper with
+    structure = (fun self str ->
+        List.bind (fun stri ->
+            match stri.pstr_desc with
+            | Pstr_extension ((id, _), _)
+              when id.txt = "create_automaton" ->
+              let in_file = open_in
+                  ("/home/regnat/Documents/X/stage3A/typerex-lint/" ^
+                   "libs/ocplib-sempatch/lib/automaton/generator/tree.ml")
+              in
+              let tree_struct =
+                Parser.interface Lexer.token (Lexing.from_channel in_file)
+              in
+              List.bind (fun x ->
+                  match x.psig_desc with
+                  | Psig_type types when is_def_of "expression" types ->
+                    str_of_type types
+                  | _ -> []
+                )
+                tree_struct
+            | _ ->
+              [default_mapper.structure_item self stri]
+          )
+          str
+      );
+  }
+
+let () = Ast_mapper.register "automaton" (fun _ -> mapper)
