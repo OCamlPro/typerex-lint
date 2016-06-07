@@ -99,7 +99,7 @@ let str_of_core_type self type_declarations loc name typ =
         let pattern = H.Pat.construct
             ~loc
             (Location.mkloc
-               (LI.Ldot (LI.Lident "Ast_element",
+               (LI.Ldot (LI.Lident "Element",
                          C.cstr (Longident.last id)))
                loc)
             (Some (H.Pat.var ~loc (Location.mkloc "y" loc)))
@@ -116,7 +116,6 @@ let str_of_core_type self type_declarations loc name typ =
           H.Exp.ident ~loc
             (L.mkloc (LI.Lident (C.id alias)) loc)
         in
-        C.debug "alias : %s, name : %s\n" alias name;
         [%expr fun x -> [%e expr] x]
       | _ ->
         try

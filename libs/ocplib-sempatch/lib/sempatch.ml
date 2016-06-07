@@ -21,10 +21,10 @@ struct
 
   let apply patch ast = let open Ast_element in
     match ast with
-    | Structure e ->
+    | Element.Structure e ->
       let
         results = Eval.apply patch.header.name patch.body
-          (Ast_element.Structure (Parsed_patches.preprocess_src_expr e))
+          (Element.Structure (Parsed_patches.preprocess_src_expr e))
       in
       List.map snd
         results

@@ -3,7 +3,7 @@ open Std_utils
 open Option.Infix
 
 module M = StringMap
-module AE = Ast_element
+module AE = Ast_element.Element
 
 type t = AE.t M.t
 
@@ -87,12 +87,12 @@ let get_ident key vars =
 
 (* let is_defined_ident key vars = Option.is_some (get_ident key vars) *)
 
-let add_expr name value vars = assert false(* M.add *)
+let add_expr _name _value _vars = assert false(* M.add *)
     (* name *)
     (* (AE.Expression (postprocess value)) *)
     (* vars *)
-let add_ident name value vars = assert false(* M.add name (AE.String value) vars *)
-let add_pattern name value vars = assert false(* M.add name (AE.Pattern value) vars *)
+let add_ident _name _value _vars = assert false(* M.add name (AE.String value) vars *)
+let add_pattern _name _value _vars = assert false(* M.add name (AE.Pattern value) vars *)
 
 let merge m1 m2 =
   StringMap.merge (fun _ -> Option.merge_sup (fun _ x -> x)) m1 m2

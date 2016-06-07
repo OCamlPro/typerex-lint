@@ -45,7 +45,7 @@ let generate_patterns loc input_list =
   | [elt] -> Some elt
   | lst -> Option.some @@ H.Pat.tuple ~loc lst
 
-let mk_exploded str = Longident.Ldot (Longident.Lident "Ast_element", str)
+let mk_exploded str = Longident.Ldot (Longident.Lident "Element", str)
 let mk_aut str = Longident.Ldot (Longident.Lident "A", str)
 let mk_aut_cstr str = Longident.Ldot
     (Longident.Lident "A", S.capitalize str)
@@ -285,7 +285,7 @@ let str_of_type all_types type_decls =
             H.Pat.construct
               ~loc
               (L.mkloc (LI.Ldot (
-                  LI.Lident "Ast_element",
+                  LI.Lident "Element",
                   C.cstr type_decl.ptype_name.txt)) loc)
               (Some [%pat? y])
           in

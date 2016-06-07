@@ -26,6 +26,6 @@ begin library "ocplib-compiler"
      (* "typedtree_map.ml"  TODO: cago does not compile *)
      "lexer_iter.ml"
   ]
- requires = [ "compiler-libs" ]
+ requires = [ "compiler-libs.common" ]
  pp = [ "ocp-pp" ]
 end

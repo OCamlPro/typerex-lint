@@ -9,7 +9,7 @@ struct
     guard : Guard.t list;
   }
 
-  type body = Automaton.t
+  type body = Automaton.A.state
 
   type patch = {
     header: header;
@@ -172,7 +172,7 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
     header = { header with meta_expr = !meta_exprs_in_pre_patch; };
     body =
       try
-        Builder.from_expr !meta_exprs_in_pre_patch processed_before_patch
+        Automaton.From.expression processed_before_patch
       with
         Failure.SempatchException (Failure.Non_implemented pos) ->
         raise Failure.(SempatchException (Non_implemented {

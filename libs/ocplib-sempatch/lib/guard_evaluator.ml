@@ -60,7 +60,8 @@ let equiv_ast = apply_to_exprs @@ apply_to_2 @@ fun e1 e2 ->
     }
   in
   match
-    Eval.apply "" patch.Parsed_patches.Type.body (Ast_element.Expression e2)
+    Eval.apply "" patch.Parsed_patches.Type.body
+      (Ast_element.Element.Expression e2)
   with
   | [] -> false
   | _ -> true
