@@ -4,12 +4,20 @@ open Parsetree
 open Lexing
 open Longident
 
-open Match
-
 open Ast_element
 
 [%%create_automaton]
 [%%create_match]
+
+module Match : module type of Match_ =
+struct
+  include Match_
+
+  let location__t _ _ _ = basic_state @@ function
+    | Element.Location__t _ -> [A.Final]
+    | _ -> [A.Trash]
+end
+
 [%%create_from]
 
 let final () = A.{

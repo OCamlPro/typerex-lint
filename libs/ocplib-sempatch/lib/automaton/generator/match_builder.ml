@@ -311,6 +311,6 @@ let str_of_type all_types type_decls =
   [
     H.Str.module_
       (H.Mb.mk
-         (Location.mknoloc "Match")
+         (Location.mknoloc "Match_")
          (H.Mod.structure res))
   ]
