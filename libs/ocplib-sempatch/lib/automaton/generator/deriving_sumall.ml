@@ -116,7 +116,7 @@ let str_of_type type_decls cmd =
     let instantiated_polys = Type_collector.collect type_decls in
     let poly_decls = (type_decls @ Common.stdlib) @ instantiated_polys in
     let mono_decls = Common.filter_decls poly_decls in
-    let sum_typ, automaton_typ = sum_of_types loc mono_decls poly_decls in
+    let sum_typ, automaton_typ = sum_of_types loc mono_decls mono_decls in
     let automaton_typ = preprocess_automaton automaton_typ in
     let automaton_tree = List.map build_automaton_tree poly_decls in
     let mk_type_module =
@@ -172,6 +172,8 @@ let str_of_type type_decls cmd =
       (Match_builder.str_of_type poly_decls mono_decls)
     | `From ->
       (From.str_of_type poly_decls mono_decls)
+    | `Eval ->
+      (Eval_builder.combine_all poly_decls mono_decls)
 
 let is_def_of name = List.exists (fun def -> def.ptype_name.txt = name)
 
@@ -209,6 +211,9 @@ let mapper = let open M in
             | Pstr_extension ((id, _), _)
               when id.txt = "create_from" ->
               perform `From
+            | Pstr_extension ((id, _), _)
+              when id.txt = "create_eval" ->
+              perform `Eval
             | _ ->
               [default_mapper.structure_item self stri]
           )

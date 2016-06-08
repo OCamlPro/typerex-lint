@@ -7,6 +7,7 @@ begin program "abc"
       "lib/automaton/generator/type_collector.ml"
       "lib/automaton/generator/from.ml"
       "lib/automaton/generator/match_builder.ml"
+      "lib/automaton/generator/eval_builder.ml"
       "lib/automaton/generator/automaton_processor.ml"
       "lib/automaton/generator/deriving_sumall.ml"
     ]
