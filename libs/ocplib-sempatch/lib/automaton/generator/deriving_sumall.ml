@@ -139,17 +139,22 @@ let str_of_type type_decls cmd =
     in
     match cmd with
     | `Ast_types ->
+      let poly_decls_no_list =
+        List.filter
+          (fun decl -> not (decl.ptype_name.txt = "list"))
+          poly_decls
+      in
       let constructors =
         [
           (* An "exploded" -- ie with more detailled types version of
              the parsetree *)
-          "Exploded", [], mk_synonyms loc None mono_decls;
+          "Exploded", [], mk_synonyms loc None poly_decls_no_list;
 
           (* Module conatining the sum type of all nodes in the ast *)
           "Element", [], sum_typ ::
                              (mk_synonyms loc
                                 (Some (Longident.Lident "Exploded"))
-                                mono_decls);
+                                poly_decls_no_list);
         ]
       in
       let declarations =
