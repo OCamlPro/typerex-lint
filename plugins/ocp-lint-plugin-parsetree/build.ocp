@@ -28,6 +28,7 @@ begin library "ocp-lint-plugin-parsetree"
     "physical_comp_on_alloc_lit.ml"
 
     "checkGoodPractices.ml";
+    "checkConstructorArgs.ml";
   ]
   requires = [
     "ocp-lint-config"

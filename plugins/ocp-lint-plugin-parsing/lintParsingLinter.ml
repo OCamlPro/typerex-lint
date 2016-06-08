@@ -43,15 +43,19 @@ module Linter = Plugin.MakeLint(struct
   end)
 
 type warning =
-  | AvoidParen of string
+  | AvoidParenAroundIfArgument
   | DirectMatchInCase of string
   | InconsistentListNotations
-  | UseNEWInsteadOfOLD of string * string
+  | AvoidParenAroundConstrUniqArg of string
+  | AvoidParenAroundSimpleExpression
+  | AvoidParenAroundFunctionBody
+  | ParenBlockAfterThen
+  | ParenBlockAfterElse
 
-let w_avoid_paren = Linter.new_warning
+let w_avoid_paren_around_if_argument = Linter.new_warning
     ~id:1
-    ~short_name:"avoid-paren"
-    ~msg:"Avoid parentheses around $expr"
+    ~short_name:"avoid_paren.if_argument"
+    ~msg:"Avoid parentheses around if argument"
 let w_direct_match_in_case = Linter.new_warning
     ~id:2
     ~short_name:"direct-match-in-case"
@@ -60,21 +64,41 @@ let w_inconsistent_list_notations = Linter.new_warning
     ~id:3
     ~short_name:"inconsistent-list-notations"
     ~msg:"Inconsistent list notations"
-let w_use_instead = Linter.new_warning
+let w_avoid_paren_around_constr_uniq_arg = Linter.new_warning
     ~id:4
-    ~short_name:"use-instead"
-    ~msg:"Good practice: use \"$new\" instead of \"$old\""
-
+    ~short_name:"avoid_paren.constr_uniq_arg"
+    ~msg:"Avoid parentheses around constructor \"$constr\" uniq argument"
+let w_avoid_paren_around_simple_expr = Linter.new_warning
+    ~id:5
+    ~short_name:"avoid_paren.simple_expr"
+    ~msg:"Avoid parentheses around simple expression"
+let w_avoid_paren_around_function_body = Linter.new_warning
+    ~id:6
+    ~short_name:"avoid_paren.function_body"
+    ~msg:"Avoid parentheses around function body"
+let w_paren_block_after_then = Linter.new_warning
+    ~id:7
+    ~short_name:"paren_block.then"
+    ~msg:"Good practice: use '..then begin..end' instead of '..then (..)'"
+let w_paren_block_after_else = Linter.new_warning
+    ~id:8
+    ~short_name:"paren_block.else"
+    ~msg:"Good practice: use '..else begin..end' instead of '..else (..)'"
 
 module Warnings = Linter.MakeWarnings(struct
     type t = warning
 
     let to_warning = function
-      | AvoidParen where -> w_avoid_paren, [ "expr", where  ]
+      | AvoidParenAroundIfArgument -> w_avoid_paren_around_if_argument, []
       | DirectMatchInCase expr -> w_direct_match_in_case, [ "expr", expr ]
       | InconsistentListNotations -> w_inconsistent_list_notations, []
-      | UseNEWInsteadOfOLD (new_expr, old_expr) ->
-        w_use_instead, ["new", new_expr; "old", old_expr]
+      | AvoidParenAroundConstrUniqArg constr ->
+        w_avoid_paren_around_constr_uniq_arg, [ "constr", constr ]
+      | AvoidParenAroundSimpleExpression -> w_avoid_paren_around_simple_expr, []
+      | AvoidParenAroundFunctionBody ->
+        w_avoid_paren_around_function_body, []
+      | ParenBlockAfterThen -> w_paren_block_after_then, []
+      | ParenBlockAfterElse -> w_paren_block_after_else, []
   end)
 
 module Asttypes = LintParsing_Asttypes
@@ -112,6 +136,30 @@ module MakeArg = struct
       -> true
     | _ -> false
 
+
+    let check_str_item str =
+      match str.pstr_desc with
+
+      | Pstr_type (_rec, decls) ->
+        List.iter (function
+            | { ptype_kind = Ptype_variant variants } ->
+              List.iter (fun pcd ->
+                match pcd.pcd_res with
+                | Some _ -> () (* GADT ? *)
+                | None ->
+                  match pcd.pcd_args with
+                  (* Detect "A of (int)" *)
+                  | Pcstr_tuple [ { ptyp_desc = Ptyp_tuple [_] }] ->
+                    Warnings.report pcd.pcd_loc
+                      (AvoidParenAroundConstrUniqArg pcd.pcd_name.txt)
+                  | _ -> ()
+                ) variants
+            | _ -> ()
+          ) decls
+      | _ -> ()
+
+
+
   let single_line loc =
     let line_begin = loc.Location.loc_start.Lexing.pos_lnum in
     let line_end = loc.Location.loc_end.Lexing.pos_lnum in
@@ -121,23 +169,21 @@ module MakeArg = struct
     begin
       match cond with
       | { pexp_desc = Pexp_paren _ } ->
-        Warnings.report cond.pexp_loc (AvoidParen "if argument")
+        Warnings.report cond.pexp_loc AvoidParenAroundIfArgument
       | _ -> ()
     end;
     begin
       match ifthen with
       | { pexp_desc = Pexp_paren _ ; pexp_loc }
         when not (single_line pexp_loc) ->
-        Warnings.report pexp_loc
-          (UseNEWInsteadOfOLD ("then begin ... end", "then ( .. )"))
+        Warnings.report pexp_loc ParenBlockAfterThen
       |  _ -> ()
     end;
     begin
       match ifelse with
       | Some { pexp_desc = Pexp_paren _; pexp_loc }
         when not(single_line pexp_loc) ->
-        Warnings.report pexp_loc
-          (UseNEWInsteadOfOLD ("else begin ... end", "else ( .. )"))
+        Warnings.report pexp_loc ParenBlockAfterElse
       |  _ -> ()
     end
 
@@ -151,7 +197,7 @@ module MakeArg = struct
       match exp.pexp_desc with
       | Pexp_paren exp ->
         if should_not_paren exp then
-          Warnings.report exp.pexp_loc (AvoidParen "simple expression")
+          Warnings.report exp.pexp_loc AvoidParenAroundSimpleExpression
       | Pexp_ifthenelse (cond, ifthen, ifelse) ->
         check_ifthenelse cond ifthen ifelse
 
@@ -159,7 +205,7 @@ module MakeArg = struct
                   { pexp_desc = Pexp_paren body}) ->
         if not (is_tuple body) then
           Warnings.report exp.pexp_loc
-            (AvoidParen "function body")
+            AvoidParenAroundFunctionBody
 
       (* x :: [y] instead of [x;y] *)
       | Pexp_construct({ txt = Lident "::" },
@@ -208,6 +254,10 @@ module MakeArg = struct
           (fun iterator case ->
              check_case case;
              default_iterator.case iterator case);
+        structure_item =
+          (fun iterator str_item ->
+             check_str_item str_item;
+             default_iterator.structure_item iterator str_item);
       }
     in
     default_iterator.structure this_iterator str
