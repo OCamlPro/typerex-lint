@@ -6,6 +6,8 @@ open Longident
 
 open Ast_element
 
+let () = let open! Match in ()
+
 [%%create_automaton]
 [%%create_match]
 
