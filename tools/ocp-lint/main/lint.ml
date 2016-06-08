@@ -107,6 +107,7 @@ let add_padding len (kwd,spec,msg) =
           let len = len+3 in
           prefix ^ spaces ^ split len suffix
   in
+  let kwd = OcpString.replace_chars kwd ['_', "-"] in
   (kwd, spec, msg)
 ;;
 
