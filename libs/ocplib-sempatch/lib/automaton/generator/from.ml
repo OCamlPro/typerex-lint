@@ -53,14 +53,14 @@ let build_sub_from loc index typ =
     ["", H.Exp.ident ~loc (L.mkloc (LI.Lident arg_name) loc)]
 
 let apply_from loc name args =
+  let matcher = H.Exp.ident (L.mkloc (LI.Ldot (LI.Lident "Match", name)) loc) in
   let result =
     match args with
-    | [] -> (H.Exp.ident (L.mkloc (LI.Ldot (LI.Lident "Match", name)) loc))
-    | [arg] -> snd @@ build_sub_from loc 0 arg
+    | [] -> matcher
     | _ ->
       H.Exp.apply
         ~loc
-        (H.Exp.ident (L.mkloc (LI.Ldot (LI.Lident "Match", name)) loc))
+        matcher
         (List.mapi (build_sub_from loc) args)
   in [%expr ([%e result] :  A.state)]
 
