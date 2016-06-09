@@ -26,6 +26,7 @@ begin library "ocp-lint-plugin-text"
     "code_length.ml"
     "ocp_indent.ml"
     "useless_space.ml"
+    "not_that_char.ml"
   ]
   requires = [
     "ocp-lint-config"
