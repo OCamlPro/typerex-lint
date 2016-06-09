@@ -37,7 +37,7 @@ begin library "ocp-lint-plugin-parsing";
 
         "lintParsingLinter.ml";
   ];
-    requires = [
+  requires = [
         "ocp-lint-api";
         "ocplib-compiler"
       ]
