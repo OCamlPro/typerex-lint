@@ -62,34 +62,7 @@ let testInclusion l1 l2 =
                                   ^ " is present in the substitution AST"
                                   ^ "and not in the original one")
 
-let curryfying_mapper =
-  let open Ast_mapper in
-  { default_mapper with
-    expr = (fun self e ->
-        match e.pexp_desc with
-        | Pexp_apply (f, args) ->
-          let currified_applies = List.fold_left (fun acc (lbl, arg) ->
-              {
-                arg with
-                pexp_desc = Pexp_apply (acc, [lbl, self.expr self arg]);
-                pexp_attributes =
-                  (Location.mknoloc "__sempatch_uncurryfy", PStr [])::[];
-              }
-            )
-              (self.expr self f)
-            args
-          in { e with
-               pexp_desc = currified_applies.pexp_desc;
-               pexp_attributes = e.pexp_attributes;
-             }
-        | _ -> default_mapper.expr self e
-      );
-  }
-
-(** preprocess the patch before applying it
-
-    Currently, this just means curryfiying the world
-*)
+(** preprocess the patch before applying it *)
 let preprocess { unprocessed_header = header; unprocessed_body = body} =
   let open Ast_mapper in
   let meta_exprs_in_pre_patch  = ref []
@@ -161,7 +134,7 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
   in
   let map expr =
     let mapper = mkmapper false in
-    curryfying_mapper.expr curryfying_mapper (mapper.expr mapper expr)
+    mapper.expr mapper expr
   in
   let processed_before_patch = map body
   in
@@ -184,4 +157,4 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
           ))
   }
 
-let preprocess_src_expr = curryfying_mapper.Ast_mapper.structure curryfying_mapper
+let preprocess_src_expr = fun x -> x
