@@ -40,15 +40,20 @@ let static_bindings =
         if state.A.final then
           [state, env]
         else
+          let loc = match node with
+            | T.Expression e ->
+              Some e.Parsetree.pexp_loc
+            | _ -> Match.get_location env
+          in
           let new_states = List.bind
               (fun (update_loc, trans) ->
-                let new_loc =
-                  if update_loc then
-                    Some (Match.get_current_location env)
-                  else
-                    Match.get_location env
+                let new_loc = loc
+                  (* if update_loc then *)
+                    (* Some (Match.get_current_location env) *)
+                (*   else *)
+                (*     Match.get_location env *)
                 in
-                let env = { env with Match.location = new_loc } in
+                let env = Match.set_location new_loc env in
                 (trans env node)
               )
               state.A.transitions
