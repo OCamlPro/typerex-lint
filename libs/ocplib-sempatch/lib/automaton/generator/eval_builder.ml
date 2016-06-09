@@ -143,12 +143,14 @@ let global_dispatcher loc decls =
     value
 
 let expr_list_to_list_expr exprs =
-  List.fold_left (
-    fun accu expr ->
-      [%expr [%e expr] :: [%e accu]]
-  )
-    [%expr []]
-    exprs
+  match exprs with
+  | [] -> [%expr [[Automaton.final (), env]]]
+  | _ -> List.fold_left (
+      fun accu expr ->
+        [%expr [%e expr] :: [%e accu]]
+    )
+      [%expr []]
+      exprs
 
 let apply' states element = [%expr apply' env [%e states] [%e element]]
 
