@@ -31,6 +31,7 @@ let default_patches =
 
 module Default = Plugin_patch.PluginPatch.MakeLintPatch(struct
     let name = "Lint from semantic patches (default)"
+    let version = 1
     let short_name = "sempatch_lint_default"
     let details = "Lint from semantic patches (default)."
     let patches = default_patches

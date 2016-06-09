@@ -37,6 +37,7 @@ module Plugin = LintParsingPlugin.Plugin
 
 module Linter = Plugin.MakeLint(struct
     let name = "Raw Syntax"
+    let version = 1
     let short_name = "raw_syntax"
     let details = "Checks properties on raw syntax."
     let enable = true

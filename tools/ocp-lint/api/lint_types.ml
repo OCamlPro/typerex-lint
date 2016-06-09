@@ -20,17 +20,15 @@
 
 module type LINTARG = sig
   val name : string
+  val version : int
   val short_name : string
   val details : string
   val enable : bool
 end
 
 module type LINTPATCHARG = sig
-  val name : string
-  val short_name : string
-  val details : string
+  include LINTARG
   val patches : string list
-  val enable : bool
 end
 
 module type LINT = sig

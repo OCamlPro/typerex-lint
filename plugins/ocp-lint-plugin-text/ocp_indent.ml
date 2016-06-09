@@ -23,6 +23,7 @@ open Plugin_text
 
 module OCPIndent = PluginText.MakeLint(struct
     let name = "Indention with ocp-indent"
+    let version = 1
     let short_name = "ocp_indent"
     let details = "Checks indentation with ocp-indent"
     let enable = true

@@ -23,6 +23,7 @@ let details =
 
 module ListOnSingleton = Plugin_parsetree.Plugin.MakeLint(struct
     let name = "List function on singleton"
+    let version = 1
     let short_name = "code_list_on_singleton"
     let details = details
     let enable = false

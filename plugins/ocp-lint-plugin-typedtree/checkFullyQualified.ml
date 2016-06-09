@@ -25,6 +25,7 @@ module Plugin = Plugin_typedtree.Plugin
 
 module Linter = Plugin.MakeLint(struct
     let name = "Fully-Qualified Identifiers"
+    let version = 1
     let short_name = "fully_qualified_identifiers"
     let details = "Checks that external identifiers are fully qualified."
     let enable = true
