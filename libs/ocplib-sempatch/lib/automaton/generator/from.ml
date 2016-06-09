@@ -110,39 +110,31 @@ let str_of_core_type self type_declarations loc name typ =
                  | _ -> [A.Trash]]
   | Ptyp_constr ({ txt = Longident.Lident id; _ }, args) ->
     begin
-      match C.upprint typ with
-      | Some alias when C.id alias <> name ->
-        let expr =
-          H.Exp.ident ~loc
-            (L.mkloc (LI.Lident (C.id alias)) loc)
+      try
+        let generic_type =
+          List.find (fun typ -> typ.ptype_name.txt = id) type_declarations
         in
-        [%expr fun x -> [%e expr] x]
-      | _ ->
-        try
-          let generic_type =
-            List.find (fun typ -> typ.ptype_name.txt = id) type_declarations
-          in
-          let instanciations =
-            List.combine
-              (List.bind
-                 (fun (typ, _) ->
-                    match typ.ptyp_desc with
-                    | Ptyp_var v -> [v]
-                    | _ ->
-                      C.warn "Unable to create 'from' for %s\n" name;
-                      []
-                 )
-                 generic_type.ptype_params
-              )
-              args
-          in
-          let real_type =
-            C.instantiate_type_decl instanciations generic_type
-          in
-          self { real_type with ptype_name = Location.mknoloc name }
-        with
-          Not_found ->
-          raise_errorf "%s : Not in the stdlib nor declared here : %s" deriver id
+        let instanciations =
+          List.combine
+            (List.bind
+               (fun (typ, _) ->
+                  match typ.ptyp_desc with
+                  | Ptyp_var v -> [v]
+                  | _ ->
+                    C.warn "Unable to create 'from' for %s\n" name;
+                    []
+               )
+               generic_type.ptype_params
+            )
+            args
+        in
+        let real_type =
+          C.instantiate_type_decl instanciations generic_type
+        in
+        self { real_type with ptype_name = Location.mknoloc name }
+      with
+        Not_found ->
+        raise_errorf "%s : Not in the stdlib nor declared here : %s" deriver id
     end
   | _ ->
     C.warn "Unable to create 'from' for %s\n" name;
