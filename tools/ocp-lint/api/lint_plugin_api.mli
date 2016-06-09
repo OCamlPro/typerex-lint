@@ -85,6 +85,8 @@ sig
           type t = WA.t
           val report : Location.t -> t -> unit
           val report_file : string -> t -> unit
+          val report_file_line : string -> int -> t -> unit
+          val report_file_line_col : string -> int -> int -> t -> unit
         end
 
       (** Input functors which are used to register a main function to the

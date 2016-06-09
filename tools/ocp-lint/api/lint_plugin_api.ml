@@ -236,6 +236,25 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
         let msg = Lint_utils.substitute decl.message args in
         let loc = Location.in_file filename in
         Warning.add P.short_name C.short_name loc decl msg
+
+      let report_file_line file lnum w =
+        let open Location in
+        let open Lexing in
+        let pos = { Lexing.dummy_pos with pos_fname = file; pos_lnum = lnum } in
+        let loc = { Location.none with loc_start = pos; loc_end = pos} in
+        report loc w
+
+      let report_file_line_col file lnum cnum w =
+        let open Location in
+        let open Lexing in
+        let pos = { Lexing.dummy_pos with
+                    pos_fname = file;
+                    pos_lnum = lnum;
+                    pos_cnum = cnum;
+                  } in
+        let loc = { Location.none with loc_start = pos; loc_end = pos} in
+        report loc w
+
     end
 
     module Register(I : Lint_input.INPUT) =
