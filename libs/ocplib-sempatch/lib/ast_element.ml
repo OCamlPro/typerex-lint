@@ -16,3 +16,4 @@ let to_string =
   | _ -> "???"
 
 let from_structure e = Element.Structure e
+let from_expression e = Element.Expression e

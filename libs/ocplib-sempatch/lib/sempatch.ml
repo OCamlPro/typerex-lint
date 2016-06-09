@@ -36,6 +36,18 @@ struct
               patch.header.guard
           with Guard_evaluator.Undefined_var _ -> false
         )
+    | Element.Expression e ->
+      let
+        results = Eval.apply patch.header.name patch.body
+          (Element.Expression (Parsed_patches.preprocess_src_expr e))
+      in
+      List.map snd
+        results
+      |> List.map (fun mat ->
+          match Match.get_location mat with
+          | Some _ -> mat
+          | None -> Match.set_location (Some Location.none) mat
+                  )
 
     | _ -> assert false
 
