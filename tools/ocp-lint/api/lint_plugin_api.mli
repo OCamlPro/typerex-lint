@@ -99,5 +99,6 @@ sig
       module MakeInputML : functor (I : Lint_input.ML) -> sig end
       module MakeInputMLI : functor (I : Lint_input.MLI) -> sig end
       module MakeInputAll : functor (I : Lint_input.ALL) -> sig end
+      module MakeInputTokens : functor (I : Lint_input.TOKENS) -> sig end
     end
 end

@@ -18,28 +18,12 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** [LINTARG] is a type module which is used by the functor
-    [Lint_plugin_api.MakeLint]. *)
-module type LINTARG = sig
-  val name : string
-  val version : int
-  val short_name : string
-  val details : string
-  val enable : bool
-end
+let details =
+  "A plugin with linters on lexer tokens."
 
-(** [LINTPATCHARG] is a type module which is used by the functor
-    [Lint_plugin_api.MakeLintPatch]. *)
-module type LINTPATCHARG = sig
-  include LINTARG
-  val patches : string list
-end
-
-module type LINT = sig
-  val name : string
-  val short_name : string
-  val details : string
-  val enable : bool
-  val inputs : Lint_input.input list
-  val wdecls : Lint_warning_decl.WarningDeclaration.t
-end
+module Plugin = Lint_plugin_api.MakePlugin (struct
+    let name = "Tokens plugin"
+    let short_name = "plugin_tokens"
+    let details = details
+    let enable = true
+  end)

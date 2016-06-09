@@ -19,9 +19,8 @@
 (**************************************************************************)
 
 open SimpleConfig (* for !! *)
-open Plugin_text
 
-module Linter = PluginText.MakeLint(struct
+module Linter = Plugin_tokens.Plugin.MakeLint(struct
     let name = "Detect use of unwanted chars in files"
     let version = 1
     let short_name = "not_that_char"
@@ -31,75 +30,75 @@ module Linter = PluginText.MakeLint(struct
   end)
 
 type warning =
-  | TabForIndent
-  | NonAsciiChar of string
+  | NonAsciiCharInComment
+  | NonAsciiCharInIdent of string
+  | NonAsciiCharInLabel of string
+  | NonAsciiCharInString
 
-let w_tab_for_indent = Linter.new_warning
-    ~id:1
-    ~short_name:"tab_for_indent"
-    ~msg:"Tabulations used for indentation"
-
-let w_non_ascii_char = Linter.new_warning
+let w_non_ascii_char_in_comment = Linter.new_warning
     ~id:2
-    ~short_name:"non_ascii_char"
-    ~msg:"Non ASCII chars like '$char' in code"
+    ~short_name:"non_ascii_char.comment"
+    ~msg:"Non ASCII chars in comment"
+
+let w_non_ascii_char_in_ident = Linter.new_warning
+    ~id:2
+    ~short_name:"non_ascii_char.ident"
+    ~msg:"Non ASCII chars in ident '$ident'"
+
+let w_non_ascii_char_in_label = Linter.new_warning
+    ~id:2
+    ~short_name:"non_ascii_char.label"
+    ~msg:"Non ASCII chars in label '$label'"
+
+let w_non_ascii_char_in_string = Linter.new_warning
+    ~id:2
+    ~short_name:"non_ascii_char.string"
+    ~msg:"Non ASCII chars in string"
 
 module Warnings = Linter.MakeWarnings(struct
     type t = warning
 
     let to_warning = function
-      | TabForIndent ->
-        w_tab_for_indent, []
-      | NonAsciiChar s ->
-        w_non_ascii_char, ["char", s]
+      | NonAsciiCharInComment ->
+        w_non_ascii_char_in_comment, []
+      | NonAsciiCharInIdent s ->
+        w_non_ascii_char_in_ident, ["ident", s]
+      | NonAsciiCharInLabel s ->
+        w_non_ascii_char_in_label, ["label", s]
+      | NonAsciiCharInString ->
+        w_non_ascii_char_in_string, []
   end)
 
-let check_line lnum line file =
+let check line =
 
   let len = String.length line in
-  let rec iter_indent not_found i =
-    if i < len then
-      match line.[i] with
-      | '\t' ->
-        if not_found then
-          Warnings.report_file_line_col file lnum i TabForIndent;
-        iter_indent false (i+1)
-      | ' ' -> iter_indent not_found (i+1)
-      | _ -> iter_code i
-
-  and iter_code i =
-    if i < len then
-      let c = int_of_char line.[i] in
-      if c < 32 || c > 127 then
-        Warnings.report_file_line_col file lnum i
-          (NonAsciiChar (Printf.sprintf "\\%03d" c)) (* warning and stop *)
-      else
-        iter_code (i+1)
+  let rec iter i =
+    i < len &&
+    let c = int_of_char line.[i] in
+    c < 32 || c > 127 ||
+    iter (i+1)
   in
-  iter_indent true 0
+  iter 0
 
-(* Later, we will use "ocplib-file":
-
-let check_file file =
-  FileString.iteri_lines (fun lnum line ->
-      check_line lnum line file) file
-*)
-
-let check_file file =
-  let ic = open_in file in
-  let rec loop lnum ic =
-    let line = input_line ic in
-    check_line lnum line file;
-    loop (lnum + 1) ic
-  in
-  try
-    loop 1 ic
-  with End_of_file ->
-    close_in ic
-
-
+let check_tokens tokens =
+  Array.iter (fun (token, loc) ->
+      match token with
+      | Parser.LIDENT s | Parser.UIDENT s ->
+        if check s then
+          Warnings.report loc (NonAsciiCharInIdent (String.escaped s))
+      | Parser.COMMENT (s, _loc) ->
+        if check s then
+          Warnings.report loc NonAsciiCharInComment
+      | Parser.LABEL s | Parser.OPTLABEL s ->
+        if check s then
+          Warnings.report loc (NonAsciiCharInLabel (String.escaped s))
+      | Parser.STRING (s, _) ->
+        if check s then
+          Warnings.report loc NonAsciiCharInString
+      | _ -> ()
+    ) tokens
 
 (* Registering a main entry to the linter *)
-module MainSRC = Linter.MakeInputML(struct
-    let main source = check_file source
+module MainSRC = Linter.MakeInputTokens(struct
+    let main source = check_tokens source
   end)

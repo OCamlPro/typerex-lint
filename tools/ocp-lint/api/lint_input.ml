@@ -26,6 +26,7 @@ type input =
     | InMl of (string -> unit)
     | InMli of (string -> unit)
     | InAll of (string list -> unit)
+    | InTokens of ( (Parser.token * Location.t) array -> unit)
 
 module type INPUT = sig val input : input end
 module type STRUCTURE = sig val main : Parsetree.structure -> unit end
@@ -35,3 +36,5 @@ module type CMT = sig val main : Cmt_format.cmt_infos -> unit end
 module type ML = sig val main : string -> unit end
 module type MLI = sig val main : string -> unit end
 module type ALL = sig val main : string list -> unit end
+module type TOKENS = sig
+  val main : (Parser.token * Location.t) array -> unit end

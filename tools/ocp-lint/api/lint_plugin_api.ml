@@ -313,6 +313,13 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       module R = Register (struct
           let input = Lint_input.InAll (wrap_plugin_exn All.main) end)
     end
+
+    module MakeInputTokens (I : Lint_input.TOKENS) = struct
+      module R = Register (struct
+          let input = Lint_input.InTokens (wrap_plugin_exn I.main) end)
+    end
+
+
     let () =
       create_default_lint_option C.short_name C.name C.enable
   end (* MakeLint *)
