@@ -23,3 +23,6 @@ module type IteratorArgument = TypedtreeIter.IteratorArgument
 module MakeIterator = TypedtreeIter.MakeIterator
 
 module DefaultIteratorArgument = TypedtreeIter.DefaultIteratorArgument
+
+val iter_structure : (module IteratorArgument) -> Cmt_format.cmt_infos -> unit
+val iter_signature : (module IteratorArgument) -> Cmt_format.cmt_infos -> unit
