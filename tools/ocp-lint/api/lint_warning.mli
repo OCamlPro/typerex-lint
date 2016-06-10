@@ -38,3 +38,6 @@ module Warning : sig
   val add_warning : string -> string -> Lint_warning_types.warning -> unit
 
 end
+
+val cmp_warnings :
+  Lint_warning_types.warning -> Lint_warning_types.warning -> bool

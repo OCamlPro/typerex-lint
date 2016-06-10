@@ -66,23 +66,44 @@ let fail_db res p = match res with
   | Fail (Diff_db l) -> Fail (Diff_db (p::l))
   | _ -> res
 
-let is_included file_res =
+let is_included file_res olint_dir =
   if not (Sys.file_exists file_res) then (Fail (No_db file_res))
   else
-    let db1 = read_db "testsuite/_olint/db" in
+    let db1 = read_db (Filename.concat olint_dir "db") in
     let db2 = read_db file_res in
     if Hashtbl.length db2 = 0 then (Fail (Empty_db file_res))
     else
       Hashtbl.fold (fun file (_hash, fres2) acc ->
           StringMap.fold (fun pname lres2 acc ->
               StringMap.fold (fun lname (_, _, wres2) acc ->
-                  try
-                    let (_, fres1) = Hashtbl.find db1 file in
-                    let pres1 = StringMap.find pname fres1 in
-                    let (_, _, wres1) = StringMap.find lname pres1 in
-                    if wres1 = wres2 then acc
-                    else fail_warnings acc wres1 wres2
-                  with _ -> fail_db acc pname)
+                  let (_, fres1) =
+                    try
+                      Hashtbl.find db1 file
+                    with Not_found -> failwith file in
+                  let pres1 =
+                    try
+                      StringMap.find pname fres1
+                    with Not_found -> failwith pname in
+                  let (_, _, wres1) =
+                    try
+                      StringMap.find lname pres1
+                    with Not_found -> failwith lname in
+
+                  (* TODO dépend de l'ordre, il faut changer ça *)
+                  let l =
+                     (List.length wres1) = (List.length wres2) in
+                  let flag =
+                    List.for_all (fun w1 ->
+                        try
+                          ignore (List.find (fun w2 ->
+                              Lint_warning.cmp_warnings w1 w2) wres2);
+                          true
+                        with Not_found -> false
+                      ) wres1
+                  in
+
+                  if flag && l then acc
+                  else fail_warnings acc wres1 wres2)
                 lres2 acc)
             fres2 acc)
         db2 Ok
@@ -105,10 +126,10 @@ let run_command prog args dir  =
   assert (rpid = pid);
   status
 
-let check_tests test_dirs =
+let check_tests test_dirs olint_dir =
   List.map (fun dir ->
     let db_path = Filename.concat dir "ocp-lint.result" in
-    is_included db_path, dir) test_dirs
+    is_included db_path olint_dir, dir) test_dirs
 
 let starts_with str ~substring =
   let len_sub = String.length substring in
@@ -161,10 +182,14 @@ let _ =
     failwith "Usage: testsuite OCPLINTBINARY PATH";
   let ocplint = Sys.argv.(1) in
   let parent = Sys.argv.(2) in
-  Printf.printf "Running tests...\n%!" ;
+  let olint_dir = Filename.concat parent "_olint" in
+  let db_file = Filename.concat olint_dir "db" in
+  if not (Sys.file_exists olint_dir) then Unix.mkdir olint_dir 0o755;
+  if (Sys.file_exists db_file) then Sys.remove db_file;
+  Printf.printf "Running tests...\n%!";
   let test_dirs = find_directories parent in
 
   (* Starting ocp-lint on each subdirectories. *)
   List.iter (run_ocp_lint ocplint) test_dirs;
-  let result = check_tests test_dirs in
+  let result = check_tests test_dirs olint_dir in
   print_result result true

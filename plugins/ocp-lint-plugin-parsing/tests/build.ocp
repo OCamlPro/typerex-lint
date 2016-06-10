@@ -1,5 +1,11 @@
+begin test "test-ocp-lint-plugin-parsing"
+    files = [ ]
 
-begin library "ocp-lint-plugin-parsing-test"
-  install = false
-  files = [ "test.ml" ]
+    test_byte = false
+    requires = [ "ocp-lint-testsuite" ]
+    test_args = [
+      "%{ocp-lint_FULL_DST_DIR}%/ocp-lint.asm"
+       "%{sources}%"
+      ]
+
 end

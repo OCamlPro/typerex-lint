@@ -41,12 +41,24 @@ let substitute str substs =
   Buffer.add_substitute buf (replace substs) str;
   Buffer.contents buf
 
-let absolute file =
+let absolute_path file =
   let file_t = File.of_string file in
   if File.is_absolute file_t then (File.to_string file_t)
   else
     let file = File.concat (File.getcwd ()) file_t in
     File.to_string file
+
+let relative_path =
+  let split_path = Str.split (Str.regexp (Filename.dir_sep)) in
+  let rec make_relative = function
+    | (dir1::root, dir2::file) when dir1 = dir2 -> make_relative (root, file)
+    | (root, file) ->
+        List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
+  in
+  fun root file ->
+    make_relative (split_path root, split_path file)
+      |> String.concat Filename.dir_sep
+
 
 let find_root root_dir basenames =
   let rec find dirname (basenames : string list) =

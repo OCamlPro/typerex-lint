@@ -1,4 +1,4 @@
-begin test "test-ocp-lint-plugin-typedtree"
+begin test "test-ocp-lint-plugin-complex"
     files = [ ]
 
     test_byte = false
