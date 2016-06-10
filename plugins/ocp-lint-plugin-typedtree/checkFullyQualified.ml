@@ -71,12 +71,12 @@ let ignore_depth = Linter.create_option
     SimpleConfig.int_option
     2
 
-let iter_structure ast =
+let iter =
   let ignored_modules =
     StringSet.of_list !!ignored_modules
   in
-  let module Iter = TypedtreeIter.MakeIterator(struct
-    include TypedtreeIter.DefaultIteratorArgument
+  let module Iter = struct
+    include Typedtree_iter.DefaultIteratorArgument
 
     open Typedtree
     open Asttypes
@@ -115,7 +115,7 @@ let iter_structure ast =
               && path <> id_loc then begin
                 Warnings.report exp.exp_loc
                   (NotQualifiedEnough (id_loc, path));
-            end
+              end
         end
       | _ -> ()
 
@@ -139,22 +139,11 @@ let iter_structure ast =
           ) vbs
       | _ -> ()
 
-    end)
+  end
   in
-  Iter.iter_structure ast
+  (module Iter : Typedtree_iter.IteratorArgument)
 
 (* Registering a main entry to the linter *)
 module Main = Linter.MakeInputCMT(struct
-
-    open Cmt_format
-
-    let main cmt =
-      match cmt.cmt_annots with
-      | Implementation str -> iter_structure str
-      | Packed _ -> ()
-      | Interface sg -> ()
-      | Partial_implementation _ ->
-        failwith "Bad .cmt file"
-      | Partial_interface _ ->
-        failwith "Bad .cmti file"
+    let main cmt = Typedtree_iter.iter_structure iter cmt
   end)
