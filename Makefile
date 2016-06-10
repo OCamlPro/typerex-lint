@@ -17,11 +17,7 @@ all:
 	$(OCPBUILD)
 
 test:
-	rm -rf ./testsuite/_olint
-	mkdir ./testsuite/_olint
-	./_obuild/ocp-lint-testsuite/ocp-lint-testsuite.asm \
-	./_obuild/ocp-lint/ocp-lint.asm \
-	testsuite
+	$(OCPBUILD) tests
 
 clean:
 	$(OCPBUILD) clean
