@@ -115,14 +115,14 @@ let rec load_plugins list =
 
 let init_olint_dir () = File.RawIO.safe_mkdir Lint_globals.olint_dirname
 
-let init_db no_db path =
+let init_db no_db all path =
   let path_t = File.of_string path in
   let olint_dirname = Lint_globals.olint_dirname in
   try
     if not no_db then
       let root_path_dir_t = Lint_utils.find_root path_t [olint_dirname] in
       let root_t = File.concat root_path_dir_t (File.of_string olint_dirname) in
-      Lint_db.DefaultDB.init root_t
+      Lint_db.DefaultDB.init all root_t
   with Not_found ->
     Printf.eprintf
       "No DB file found, you should use --init option to use DB features.\n%!";
@@ -187,6 +187,8 @@ let scan ?output_text print_only_new path =
 
   (* We filter the global ignored modules/files.  *)
   let all = filter_modules (scan_project path) !!ignored_files in
+
+  init_db false all path;
 
   (* All inputs for each analyze *)
   let mls = List.filter is_source all in

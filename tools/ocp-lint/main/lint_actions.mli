@@ -36,4 +36,4 @@ val list_plugins : Format.formatter -> unit
 val init_olint_dir : unit -> unit
 
 val init_config : string -> unit
-val init_db : bool -> string -> unit
+val init_db : bool -> string list -> string -> unit

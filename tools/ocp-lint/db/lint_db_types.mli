@@ -32,12 +32,13 @@ type t = (string, file_map) Hashtbl.t
 
 module type DATABASE_IO = sig
   val load : string -> t
-  val save : string -> t -> unit
+  val load_file : string -> (string * plugin_map)
+  val save : string -> (string * plugin_map) -> unit
 end
 
 module type DATABASE = sig
   val db : t
-  val init : File.t -> unit
+  val init : string list -> File.t -> unit
   val load : string -> t
   val save : unit -> unit
   val reset : unit -> unit

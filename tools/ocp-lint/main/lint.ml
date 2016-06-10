@@ -203,7 +203,6 @@ let () =
   ]
 
 let start_lint dir =
-  Lint_actions.init_db !no_db dir;
   Lint_actions.scan
     ?output_text:!output_text
     !print_only_new

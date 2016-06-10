@@ -34,20 +34,34 @@ module MakeDB (DB : DATABASE_IO) = struct
 
   let load = DB.load
 
-  let init path =
+  let init all path =
     let file = Filename.concat (File.to_string path) "db" in
     let path = File.to_string path in
     root := (Filename.dirname path);
+    let all_hash =
+      List.map (fun file ->
+          let hash_filename = Digest.to_hex (Digest.file file) in
+          Filename.concat path hash_filename)
+        all in
+    let all_hash_db =
+      List.filter (Sys.file_exists) all_hash in
+    Printf.printf "ROOT %s\n%!" !root;
     database_file := file;
-    let db2 =
-      try
-        DB.load !database_file
-      with exn ->
-        (Format.eprintf "Can't read DB file, using a fresh DB\n%!";
-         Format.eprintf "%s\n%!" (Printexc.to_string exn);
-         empty_db ())
-    in
-    Hashtbl.iter (fun k v -> Hashtbl.add db k v) db2
+    List.iter (fun hash_filename ->
+        Printf.printf "reading %s\n%!" hash_filename;
+        let (file, pres) = DB.load_file hash_filename in
+        let hash = Digest.file file in
+        Hashtbl.add db file (hash, pres))
+      all_hash_db
+    (* let db2 = *)
+    (*   try *)
+    (*     DB.load !database_file *)
+    (*   with exn -> *)
+    (*     (Format.eprintf "Can't read DB file, using a fresh DB\n%!"; *)
+    (*      Format.eprintf "%s\n%!" (Printexc.to_string exn); *)
+    (*      empty_db ()) *)
+    (* in *)
+    (* Hashtbl.iter (fun k v -> Hashtbl.add db k v) db2 *)
 
   let save () =
     Hashtbl.iter (fun file (hash, pres) ->
@@ -61,7 +75,15 @@ module MakeDB (DB : DATABASE_IO) = struct
             pres StringMap.empty in
         Hashtbl.replace db file (hash, new_pres))
       db;
-    DB.save !database_file db
+    Hashtbl.iter (fun file (hash, pres) ->
+        let db_path = Filename.concat !root "_olint" in
+        let db_file = Filename.concat db_path (Digest.to_hex hash) in
+        Printf.printf "saving in %s\n%!" db_file;
+        DB.save db_file (file, pres)
+        (* let oc = open_out db_file in *)
+        (* output_value oc (file, pres) *))
+      db
+    (* DB.save !database_file db *)
 
   let reset () = Hashtbl.reset db
 
@@ -188,6 +210,13 @@ module Marshal_IO : DATABASE_IO = struct
     else
       (Format.eprintf "No DB file found, using a fresh DB\n%!";
        empty_db ())
+
+  let load_file file =
+    if Sys.file_exists file then
+      let ic = open_in file in
+      input_value ic
+    else
+      assert false
 
   let save file db =
     let oc = open_out file in
