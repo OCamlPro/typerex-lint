@@ -19,3 +19,31 @@
 (**************************************************************************)
 
 include TypedtreeIter
+
+let iter_structure iterator cmt =
+  let open Cmt_format in
+  let module IA = (val iterator : IteratorArgument) in
+  let module I = (MakeIterator(IA)) in
+  match cmt.cmt_annots with
+  | Implementation str ->
+    I.iter_structure str
+  | Packed _ -> ()
+  | Interface sg -> ()
+  | Partial_implementation _ ->
+    failwith "Bad .cmt file"
+  | Partial_interface _ ->
+    failwith "Bad .cmti file"
+
+let iter_signature iterator cmt =
+  let open Cmt_format in
+  let module IA = (val iterator : IteratorArgument) in
+  let module I = (MakeIterator(IA)) in
+  match cmt.cmt_annots with
+  | Implementation str -> ()
+  | Packed _ -> ()
+  | Interface sg ->
+    I.iter_signature sg
+  | Partial_implementation _ ->
+    failwith "Bad .cmt file"
+  | Partial_interface _ ->
+    failwith "Bad .cmti file"

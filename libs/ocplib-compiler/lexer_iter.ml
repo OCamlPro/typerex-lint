@@ -18,12 +18,30 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-let details =
-  "A plugin with linters on different inputs."
+let rec iter_tokens f filename =
+  let ic = open_in filename in
+  Location.input_name := filename;
+  let lexbuf = Lexing.from_channel ic in
+  Location.init lexbuf filename;
+  let rec iter f =
+    let token = Lexer.token_with_comments lexbuf in
+    let loc = Location.curr lexbuf in
+    f token loc;
+    iter f in
+  iter f;
+  close_in ic
 
-module PluginComplex = Lint_plugin_api.MakePlugin (struct
-    let name = "Complex plugin."
-    let short_name = "plugin_complex"
-    let details = details
-    let enable = true
-  end)
+let get_tokens filename =
+  let ic = open_in filename in
+  Location.input_name := filename;
+  let lexbuf = Lexing.from_channel ic in
+  Location.init lexbuf filename;
+  let rec iter tokens =
+    let token = Lexer.token_with_comments lexbuf in
+    let loc = Location.curr lexbuf in
+    match token with
+    | Parser.EOF -> Array.of_list (List.rev tokens)
+    | _ -> iter ((token, loc) :: tokens) in
+  let tokens = iter [] in
+  close_in ic;
+  tokens

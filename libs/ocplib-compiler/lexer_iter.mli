@@ -18,12 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-let details =
-  "A plugin with linters on different inputs."
+val iter_tokens : (Parser.token -> Location.t -> unit) -> string -> unit
 
-module PluginComplex = Lint_plugin_api.MakePlugin (struct
-    let name = "Complex plugin."
-    let short_name = "plugin_complex"
-    let details = details
-    let enable = true
-  end)
+val get_tokens : string -> (Parser.token * Location.t) array
