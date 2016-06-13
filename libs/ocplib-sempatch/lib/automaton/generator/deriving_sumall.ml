@@ -178,10 +178,13 @@ let str_of_type type_decls cmd =
 let is_def_of name = List.exists (fun def -> def.ptype_name.txt = name)
 
 let mapper = let open M in
-  let perform cmd =
-    let in_file = open_in
+  let perform file cmd =
+    let file = Option.value 
         ("/home/regnat/Documents/X/stage3A/typerex-lint/" ^
          "libs/ocplib-sempatch/lib/automaton/generator/tree.ml")
+        file
+    in
+    let in_file = open_in file
     in
     let tree_struct =
       Parser.interface Lexer.token (Lexing.from_channel in_file)
@@ -199,21 +202,32 @@ let mapper = let open M in
     structure = (fun self str ->
         List.bind (fun stri ->
             match stri.pstr_desc with
-            | Pstr_extension ((id, _), _)
-              when id.txt = "create_ast_element" ->
-              perform `Ast_types
-            | Pstr_extension ((id, _), _)
-              when id.txt = "create_automaton" ->
-              perform `Automaton_types
-            | Pstr_extension ((id, _), _)
-              when id.txt = "create_match" ->
-              perform `Match
-            | Pstr_extension ((id, _), _)
-              when id.txt = "create_from" ->
-              perform `From
-            | Pstr_extension ((id, _), _)
-              when id.txt = "create_eval" ->
-              perform `Eval
+            | Pstr_extension
+                ((id, arg), _) ->
+              let name = match arg with
+                | PStr [%str
+                    [%e? {
+                         pexp_desc = Pexp_constant
+                             (Asttypes.Const_string (name, None)); _
+                       }
+                    ]
+                  ] -> Some name
+                | _ -> None
+              in
+              let action =
+                match id.txt with
+                | "create_ast_element" -> Some `Ast_types
+                | "create_automaton" -> Some `Automaton_types
+                | "create_match" -> Some `Match
+                | "create_from" -> Some `From
+                | "create_eval" -> Some `Eval
+                | _ -> None
+              in
+              begin
+                match action with
+                | Some a -> perform name a
+                | None -> [default_mapper.structure_item self stri]
+              end
             | _ ->
               [default_mapper.structure_item self stri]
           )
