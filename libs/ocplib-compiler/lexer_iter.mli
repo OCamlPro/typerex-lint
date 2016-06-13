@@ -18,14 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocplib-compiler"
-  files = [
-     "parsetree_iter.ml"
-     "parsetree_map.ml"
-     "typedtree_iter.ml"
-     (* "typedtree_map.ml"  TODO: cago does not compile *)
-     "lexer_iter.ml"
-  ]
- requires = [ "compiler-libs" ]
- pp = [ "ocp-pp" ]
-end
+val iter_tokens : (Parser.token -> Location.t -> unit) -> string -> unit
+
+val get_tokens : string -> (Parser.token * Location.t) array

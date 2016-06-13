@@ -18,14 +18,30 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocplib-compiler"
-  files = [
-     "parsetree_iter.ml"
-     "parsetree_map.ml"
-     "typedtree_iter.ml"
-     (* "typedtree_map.ml"  TODO: cago does not compile *)
-     "lexer_iter.ml"
-  ]
- requires = [ "compiler-libs" ]
- pp = [ "ocp-pp" ]
-end
+let rec iter_tokens f filename =
+  let ic = open_in filename in
+  Location.input_name := filename;
+  let lexbuf = Lexing.from_channel ic in
+  Location.init lexbuf filename;
+  let rec iter f =
+    let token = Lexer.token_with_comments lexbuf in
+    let loc = Location.curr lexbuf in
+    f token loc;
+    iter f in
+  iter f;
+  close_in ic
+
+let get_tokens filename =
+  let ic = open_in filename in
+  Location.input_name := filename;
+  let lexbuf = Lexing.from_channel ic in
+  Location.init lexbuf filename;
+  let rec iter tokens =
+    let token = Lexer.token_with_comments lexbuf in
+    let loc = Location.curr lexbuf in
+    match token with
+    | Parser.EOF -> Array.of_list (List.rev tokens)
+    | _ -> iter ((token, loc) :: tokens) in
+  let tokens = iter [] in
+  close_in ic;
+  tokens

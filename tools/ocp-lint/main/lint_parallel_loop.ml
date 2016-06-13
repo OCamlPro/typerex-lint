@@ -155,47 +155,30 @@ let lint all mls mlis asts_ml asts_mli cmts plugins =
               if not (is_in_ignored_files file ignored_files) then
                 List.iter (function
                     | Lint_input.InTokens main ->
-                      let tokens = try
-                          let ic = open_in file in
-                          try
-                          Location.input_name := file;
-                          let lexbuf = Lexing.from_channel ic in
-                          Location.init lexbuf file;
-                          let rec iter tokens =
-                            let token = Lexer.token_with_comments lexbuf in
-                            let loc = Location.curr lexbuf in
-                            match token with
-                            | Parser.EOF -> Array.of_list (List.rev tokens)
-                            | _ -> iter ( (token, loc) :: tokens)
-                          in
-                          let tokens = iter [] in
-                          close_in ic;
-                          Some tokens
-                          with exn ->
-                            close_in ic;
-                            None
-                        with exn -> None
-                      in
+                      let tokens =
+                        try
+                          Some (Lexer_iter.get_tokens file)
+                        with exn -> None in
                       begin
-                      match tokens with
-                      | None -> ()
-                      | Some tokens ->
-                        if not
-                            (Lint_db.DefaultDB.already_run file
-                               Plugin.short_name cname) then begin
-                          Lint_db.DefaultDB.add_entry
-                            file Plugin.short_name cname;
-                          try
-                            main tokens
-                          with
-                          | Lint_db_error.Db_error err ->
-                            Lint_db_error.print fmt err
-                          | Sempatch.Failure.SempatchException e ->
+                        match tokens with
+                        | None -> ()
+                        | Some tokens ->
+                          if not
+                              (Lint_db.DefaultDB.already_run file
+                                 Plugin.short_name cname) then begin
+                            Lint_db.DefaultDB.add_entry
+                              file Plugin.short_name cname;
+                            try
+                              main tokens
+                            with
+                            | Lint_db_error.Db_error err ->
+                              Lint_db_error.print fmt err
+                            | Sempatch.Failure.SempatchException e ->
                             Format.fprintf fmt "Sempatch error : %s\n"
                               (Sempatch.Failure.to_string e)
-                          | Lint_plugin_error.Plugin_error err ->
+                            | Lint_plugin_error.Plugin_error err ->
                             Lint_plugin_error.print fmt err
-                        end
+                          end
                       end
                     | _ -> ()) Lint.inputs) checks)
         plugins)
