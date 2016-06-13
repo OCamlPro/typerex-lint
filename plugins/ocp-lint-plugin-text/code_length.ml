@@ -28,7 +28,7 @@ let details =
     "Checks long lines in your code. The default value is %d."
     default_value
 
-module CodeLength = PluginText.MakeLint(struct
+module CodeLength = Plugin.MakeLint(struct
     let name = "Code Length"
     let version = 1
     let short_name = "code_length"

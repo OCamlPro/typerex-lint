@@ -19,9 +19,9 @@
 (**************************************************************************)
 
 open SimpleConfig (* for !! *)
-open Plugin_text
+open Plugin_indent
 
-module OCPIndent = PluginText.MakeLint(struct
+module OCPIndent = Plugin.MakeLint(struct
     let name = "Indention with ocp-indent"
     let version = 1
     let short_name = "ocp_indent"

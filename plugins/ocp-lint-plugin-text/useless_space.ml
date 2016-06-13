@@ -21,7 +21,7 @@
 open SimpleConfig (* for !! *)
 open Plugin_text
 
-module Linter = PluginText.MakeLint(struct
+module Linter = Plugin.MakeLint(struct
     let name = "Useless space character and empty line at the end of file."
     let version = 1
     let short_name = "useless_space_line"

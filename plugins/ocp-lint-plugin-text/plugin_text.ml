@@ -21,7 +21,7 @@
 let details =
   "A plugin with linters on the source."
 
-module PluginText = Lint_plugin_api.MakePlugin (struct
+module Plugin = Lint_plugin_api.MakePlugin (struct
     let name = "Source code plugin."
     let short_name = "plugin_text"
     let details = details

@@ -18,17 +18,12 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-plugin-text"
-  files = [
-    "plugin_text.ml"
+let details =
+  "A plugin with linters on the source."
 
-    (* All linters attached to Text plugin. *)
-    "code_length.ml"
-    "useless_space.ml"
-    "not_that_char.ml"
-  ]
-  requires = [
-    "ocp-lint-config"
-    "ocp-lint-api"
-  ]
-end
+module Plugin = Lint_plugin_api.MakePlugin (struct
+    let name = "Indentation of code plugin."
+    let short_name = "plugin_indent"
+    let details = details
+    let enable = true
+  end)

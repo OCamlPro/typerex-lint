@@ -18,17 +18,14 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-plugin-text"
+begin library "ocp-lint-plugin-indent"
   files = [
-    "plugin_text.ml"
-
-    (* All linters attached to Text plugin. *)
-    "code_length.ml"
-    "useless_space.ml"
-    "not_that_char.ml"
+    "plugin_indent.ml"
+    "ocp_indent.ml"
   ]
   requires = [
     "ocp-lint-config"
     "ocp-lint-api"
+    "ocp-indent.lib"
   ]
 end

@@ -21,7 +21,7 @@
 open SimpleConfig (* for !! *)
 open Plugin_text
 
-module Linter = PluginText.MakeLint(struct
+module Linter = Plugin.MakeLint(struct
     let name = "Detect use of unwanted chars in files"
     let version = 1
     let short_name = "not_that_char"
