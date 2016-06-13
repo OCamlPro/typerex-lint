@@ -12,6 +12,28 @@ let deriver = "from_builder"
 
 let raise_errorf = PpxD.raise_errorf
 
+let overrides = C.get_val_decls [%str
+    let expression { pexp_desc; pexp_loc; pexp_attributes } =
+      match pexp_desc with
+      | Pexp_extension ({ Asttypes.txt = "__sempatch_report"; _},
+                        PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
+        make_report @@ expression e
+      | _ ->
+        Match.expression (expression_desc pexp_desc) (location__t pexp_loc)
+          (attributes pexp_attributes)
+  ]
+
+let same_def vb1 vb2 =
+  match vb1.pvb_pat.ppat_desc, vb2.pvb_pat.ppat_desc with
+  | Ppat_var v1, Ppat_var v2 -> v1.txt = v2.txt
+  | _ -> false
+
+let apply_overrides = List.map (
+    fun type_ ->
+      List.find_opt (same_def type_) overrides
+      |> Option.value type_
+  )
+
 let nth_arg n = Printf.sprintf "sub_%i" n
 
 let args_pattern loc case =
@@ -219,6 +241,7 @@ let str_of_type all_decls type_decls =
     let def = from_builder_of_type loc all_decls name type_decl
     in
     [H.Vb.mk (H.Pat.var (here name)) def]
+    |> apply_overrides
   in
   [
     H.Str.module_

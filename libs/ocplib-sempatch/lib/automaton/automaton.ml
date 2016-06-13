@@ -14,11 +14,22 @@ let () = let open! Match in ()
 module Match : module type of Match_ =
 struct
   include Match_
+  module E = Element
 
   let location__t _ _ _ = basic_state @@ function
-    | Element.Location__t _ -> [A.Final]
+    | E.Location__t _ -> [A.Final]
     | _ -> [A.Trash]
+
 end
+
+let make_report state =
+  {
+    state with
+    A.transitions = List.map (
+        fun (_, f) -> true, f
+      )
+        state.A.transitions
+  }
 
 [%%create_from]
 

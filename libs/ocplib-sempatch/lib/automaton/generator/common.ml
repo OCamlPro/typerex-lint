@@ -58,13 +58,20 @@ let eprint prefix arg =
 let warn msg = eprint "Warning" msg
 let debug msg = eprint "Debug" msg
 
+let get_val_decls = List.bind (
+    fun stri -> match stri.pstr_desc with
+      | Pstr_value (_, t) -> t
+      | _ -> []
+  )
+
+let get_type_decls = List.bind (
+    fun stri -> match stri.pstr_desc with
+      | Pstr_type t -> t
+      | _ -> []
+  )
+
 let stdlib =
-  let to_type_decls = List.bind (
-      fun stri -> match stri.pstr_desc with
-        | Pstr_type t -> t
-        | _ -> []
-    )
-  and str = [%str
+  let str = [%str
     type 'a list =
       | Nil
       | Cons of 'a * 'a list
@@ -122,7 +129,7 @@ let stdlib =
       | Contravariant
       | Invariant
     ]
-in to_type_decls str
+in get_type_decls str
 
 (* [filter_decls type_decls] returns the list of monomorphic type
 declarations in type_decls *)
