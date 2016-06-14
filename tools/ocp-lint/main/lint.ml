@@ -205,9 +205,10 @@ let () =
 let start_lint dir =
   Lint_actions.scan
     ?output_text:!output_text
+    !no_db
     !print_only_new
     dir;
-  if not !no_db then Lint_db.DefaultDB.save ();
+  (* if not !no_db then Lint_db.DefaultDB.save (); *)
   if Lint_db.DefaultDB.has_warning () then exit !exit_status
 
 let main () =

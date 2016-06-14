@@ -27,6 +27,7 @@ val load_plugins : string list -> unit
 val scan :
   ?output_text:string ->
   bool ->
+  bool ->
   string ->
   unit
 
@@ -36,4 +37,4 @@ val list_plugins : Format.formatter -> unit
 val init_olint_dir : unit -> unit
 
 val init_config : string -> unit
-val init_db : bool -> string list -> string -> unit
+val init_db : bool -> string list -> string -> bool

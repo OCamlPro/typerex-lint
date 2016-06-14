@@ -27,7 +27,6 @@ let string_of_source = function
   | Analyse -> "Analyse"
 
 module MakeDB (DB : DATABASE_IO) = struct
-  let database_file = ref ""
   let root = ref ""
 
   let db = empty_db ()
@@ -46,14 +45,20 @@ module MakeDB (DB : DATABASE_IO) = struct
     let all_hash_db =
       List.filter (Sys.file_exists) all_hash in
     Printf.printf "ROOT %s\n%!" !root;
-    database_file := file;
-    List.iter (fun hash_filename ->
-        Printf.printf "reading %s\n%!" hash_filename;
-        let (file, pres) = DB.load_file hash_filename in
-        let hash = Digest.file file in
-        Hashtbl.add db file (hash, pres))
-      all_hash_db
-    (* let db2 = *)
+    (* database_file := file; *)
+    if all_hash_db = [] then
+      Format.eprintf "No DB files found, using a fresh DB\n%!"
+    else
+      List.iter (fun hash_filename ->
+          Printf.printf "reading %s\n%!" hash_filename;
+          try
+            let (file, pres) = DB.load_file hash_filename in
+            let hash = Digest.file file in
+            Hashtbl.add db file (hash, pres)
+          with exn ->
+              Format.eprintf "Can't read DB file %s, skipping it\n%!" file)
+        all_hash_db
+  (* let db2 = *)
     (*   try *)
     (*     DB.load !database_file *)
     (*   with exn -> *)

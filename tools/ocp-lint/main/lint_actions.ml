@@ -120,13 +120,14 @@ let init_db no_db all path =
   let olint_dirname = Lint_globals.olint_dirname in
   try
     if not no_db then
-      let root_path_dir_t = Lint_utils.find_root path_t [olint_dirname] in
-      let root_t = File.concat root_path_dir_t (File.of_string olint_dirname) in
-      Lint_db.DefaultDB.init all root_t
+      (let root_path_dir_t = Lint_utils.find_root path_t [olint_dirname] in
+       let root_t = File.concat root_path_dir_t (File.of_string olint_dirname) in
+       Lint_db.DefaultDB.init all root_t);
+    no_db
   with Not_found ->
     Printf.eprintf
       "No DB file found, you should use --init option to use DB features.\n%!";
-    exit 1
+    true
 
 let init_config path =
   let path_t = File.of_string path in
@@ -179,7 +180,7 @@ let list_plugins fmt =
       Format.fprintf fmt "\n%!")
     Lint_globals.plugins
 
-let scan ?output_text print_only_new path =
+let scan ?output_text no_db print_only_new path =
   (* We filter plugins by using the .ocplint config file and/or
      command line arguments. *)
 
@@ -188,7 +189,7 @@ let scan ?output_text print_only_new path =
   (* We filter the global ignored modules/files.  *)
   let all = filter_modules (scan_project path) !!ignored_files in
 
-  init_db false all path;
+  let no_db = init_db false all path in
 
   (* All inputs for each analyze *)
   let mls = List.filter is_source all in
@@ -213,4 +214,6 @@ let scan ?output_text print_only_new path =
   begin match output_text with
     | None -> print path print_only_new
     | Some file -> to_text path file
-  end
+  end;
+
+  if not no_db then Lint_db.DefaultDB.save ()
