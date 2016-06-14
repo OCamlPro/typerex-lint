@@ -70,18 +70,18 @@ let get key vars =
 let get_expr key vars =
   get key vars
   >>= (function
-      (* | AE.Expression e -> Some e *)
-      (* | AE.Pattern p -> pat_to_expr p *)
-      (* | AE.String i -> *)
-      (*   Ast_helper.Exp.ident (Location.mknoloc (Longident.Lident i)) *)
-      (*                 |> Option.some *)
+      | AE.Expression e -> Some e
+      | AE.Pattern p -> pat_to_expr p
+      | AE.String i ->
+        Ast_helper.Exp.ident (Location.mknoloc (Longident.Lident i))
+                      |> Option.some
       | _ -> None
     )
 
 let get_ident key vars =
   get key vars
   >>= (function
-      (* | AE.String p -> Some p *)
+      | AE.String p -> Some p
       | _ -> None
     )
 
