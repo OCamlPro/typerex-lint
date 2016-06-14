@@ -170,6 +170,8 @@ let str_of_type type_decls cmd =
         )]
     | `Match ->
       (Match_builder.str_of_type poly_decls mono_decls)
+    | `Wildcard ->
+      (Wildcard.str_of_type poly_decls mono_decls)
     | `From ->
       (From.str_of_type poly_decls mono_decls)
     | `Eval ->
@@ -221,6 +223,7 @@ let mapper = let open M in
                 | "create_match" -> Some `Match
                 | "create_from" -> Some `From
                 | "create_eval" -> Some `Eval
+                | "create_wildcard" -> Some `Wildcard
                 | _ -> None
               in
               begin
