@@ -87,10 +87,11 @@ let get_ident key vars =
 
 (* let is_defined_ident key vars = Option.is_some (get_ident key vars) *)
 
-let add_expr _name _value _vars = assert false(* M.add *)
-    (* name *)
-    (* (AE.Expression (postprocess value)) *)
-    (* vars *)
+let add_expr name value vars = M.add
+    name
+    (Ast_element.Element.Expression (postprocess value))
+    vars
+
 let add_ident _name _value _vars = assert false(* M.add name (AE.String value) vars *)
 let add_pattern _name _value _vars = assert false(* M.add name (AE.Pattern value) vars *)
 

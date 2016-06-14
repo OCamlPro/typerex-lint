@@ -29,6 +29,8 @@ module Match :
   sig
     include module type of Match_
     val wildcard : unit -> A.state
+
+    val metavar_expr : string -> A.state
   end =
 struct
   include Match_
@@ -37,6 +39,28 @@ struct
   let location__t _ _ _ = basic_state @@ function
     | E.Location__t _ -> [A.Final]
     | _ -> [A.Trash]
+
+  let metavar_expr name = A.{
+      final = false;
+      transitions = [
+        false,
+        fun meta ast_elt ->
+          match ast_elt with
+          | E.Expression expr ->
+            [
+              Final,
+              {
+                meta with
+                Match.substitutions =
+                  Substitution.add_expr
+                    name
+                    expr
+                    meta.Match.substitutions;
+              }
+            ]
+          | _ -> []
+      ]
+    }
 
   [%%create_wildcard]
 end
@@ -53,5 +77,10 @@ let make_report state =
 let add_transitions_from dest origin =
   dest.A.transitions <- origin.A.transitions @ dest.A.transitions;
   dest
+
+let has_attr name attributes =
+  List.exists
+    (fun (id, _) -> id.Asttypes.txt = name)
+    attributes
 
 [%%create_from]
