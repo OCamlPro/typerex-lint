@@ -30,8 +30,9 @@ module MakeDB (DB : DATABASE_IO) = struct
   let root = ref ""
 
   let db = empty_db ()
+  let db_error = empty_db ()
 
-  let load = DB.load
+  let load = assert false
 
   let init all path =
     let file = Filename.concat (File.to_string path) "db" in
@@ -50,7 +51,7 @@ module MakeDB (DB : DATABASE_IO) = struct
     else
       List.iter (fun (hash_filename, hash) ->
           try
-            let (file, pres) = DB.load_file hash_filename in
+            let (file, pres) = DB.load hash_filename in
             Hashtbl.add db file (hash, pres)
           with exn ->
               Format.eprintf "Can't read DB file %s, skipping it\n%!" file)
@@ -123,6 +124,13 @@ module MakeDB (DB : DATABASE_IO) = struct
       let new_fres = StringMap.add pname new_pres StringMap.empty in
       Hashtbl.add db file (hash, new_fres)
 
+  let add_error file error =
+    if Hashtbl.mem db_error file then
+      let error_set = Hashtbl.find db_error file in
+      Hashtbl.replace db_error file (ErrorSet.add error error_set)
+    else
+      Hashtbl.add db_error file (ErrorSet.singleton error)
+
   let clean files =
     List.iter (fun file ->
         let db_file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
@@ -193,19 +201,8 @@ end
 module Marshal_IO : DATABASE_IO = struct
 
   let load file =
-    if Sys.file_exists file then
-      let ic = open_in file in
-      input_value ic
-    else
-      (Format.eprintf "No DB file found, using a fresh DB\n%!";
-       empty_db ())
-
-  let load_file file =
-    if Sys.file_exists file then
-      let ic = open_in file in
-      input_value ic
-    else
-      assert false
+    let ic = open_in file in
+    input_value ic
 
   let save file db =
     let oc = open_out file in
