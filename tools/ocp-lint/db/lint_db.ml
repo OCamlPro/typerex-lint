@@ -39,34 +39,22 @@ module MakeDB (DB : DATABASE_IO) = struct
     root := (Filename.dirname path);
     let all_hash =
       List.map (fun file ->
-          let hash_filename = Digest.to_hex (Digest.file file) in
-          Filename.concat path hash_filename)
+          let hash = Digest.file file in
+          let hash_filename = Digest.to_hex hash in
+          Filename.concat path hash_filename, hash)
         all in
     let all_hash_db =
-      List.filter (Sys.file_exists) all_hash in
-    Printf.printf "ROOT %s\n%!" !root;
-    (* database_file := file; *)
+      List.filter (fun (fn, hash) -> Sys.file_exists fn) all_hash in
     if all_hash_db = [] then
       Format.eprintf "No DB files found, using a fresh DB\n%!"
     else
-      List.iter (fun hash_filename ->
-          Printf.printf "reading %s\n%!" hash_filename;
+      List.iter (fun (hash_filename, hash) ->
           try
             let (file, pres) = DB.load_file hash_filename in
-            let hash = Digest.file file in
             Hashtbl.add db file (hash, pres)
           with exn ->
               Format.eprintf "Can't read DB file %s, skipping it\n%!" file)
         all_hash_db
-  (* let db2 = *)
-    (*   try *)
-    (*     DB.load !database_file *)
-    (*   with exn -> *)
-    (*     (Format.eprintf "Can't read DB file, using a fresh DB\n%!"; *)
-    (*      Format.eprintf "%s\n%!" (Printexc.to_string exn); *)
-    (*      empty_db ()) *)
-    (* in *)
-    (* Hashtbl.iter (fun k v -> Hashtbl.add db k v) db2 *)
 
   let save () =
     Hashtbl.iter (fun file (hash, pres) ->
@@ -83,12 +71,8 @@ module MakeDB (DB : DATABASE_IO) = struct
     Hashtbl.iter (fun file (hash, pres) ->
         let db_path = Filename.concat !root "_olint" in
         let db_file = Filename.concat db_path (Digest.to_hex hash) in
-        Printf.printf "saving in %s\n%!" db_file;
-        DB.save db_file (file, pres)
-        (* let oc = open_out db_file in *)
-        (* output_value oc (file, pres) *))
+        DB.save db_file (file, pres))
       db
-    (* DB.save !database_file db *)
 
   let reset () = Hashtbl.reset db
 
