@@ -13,32 +13,6 @@ let under_arg expr =
   | Pexp_apply (f, arg) -> Some (f, arg)
   | _ -> None
 
-let uncurryfying_mapper =
-  let open Ast_mapper in
-  let open Parsetree in
-  { default_mapper with
-    expr = (fun self e ->
-            match e.pexp_desc with
-            | Pexp_apply (f, args)
-              when List.exists
-                  (fun (loc, _) -> loc.Location.txt = "__sempatch_uncurryfy")
-                  f.pexp_attributes
-              ->
-              (
-                match under_arg f with
-                | Some (next_fun, next_arg) ->
-                  self.expr self
-                    { e with
-                      pexp_desc = Pexp_apply (next_fun, next_arg @ args)
-                    }
-                | None -> default_mapper.expr self e
-              )
-            | _ -> default_mapper.expr self e
-      );
-  }
-
-let postprocess = uncurryfying_mapper.Ast_mapper.expr uncurryfying_mapper
-
 let rec pat_to_expr pat =
   let open Parsetree in
   let desc = match pat.ppat_desc with
@@ -65,7 +39,9 @@ let get key vars =
   try
     M.find key vars |> Option.some
   with
-    Not_found -> None
+    Not_found ->
+    Messages.warn "couldn't find %s\n" key;
+    None
 
 let get_expr key vars =
   get key vars
@@ -87,9 +63,15 @@ let get_ident key vars =
 
 (* let is_defined_ident key vars = Option.is_some (get_ident key vars) *)
 
-let add_expr name value vars = M.add
+let add_expr name value vars =
+  Messages.debug "adding %s to the variables as the expression '%s'\n"
     name
-    (Ast_element.Element.Expression (postprocess value))
+    (Pprintast.expression Format.str_formatter value;
+     Format.flush_str_formatter ())
+  ;
+  M.add
+    name
+    (AE.Expression value)
     vars
 
 let add_ident _name _value _vars = assert false(* M.add name (AE.String value) vars *)
