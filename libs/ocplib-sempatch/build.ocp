@@ -52,10 +52,8 @@ begin library "ocplib-sempatch"
         "compiler-libs.common"
         "abc"
         "ppx_deriving"
-        "ppx_tools"
     ]
     comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm" ]
-    comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
     comp_requires = "abc:asm"
     ocamlyacc = "menhir"
 end
