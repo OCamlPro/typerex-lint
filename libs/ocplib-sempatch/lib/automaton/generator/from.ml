@@ -18,6 +18,9 @@ let overrides = C.get_val_decls [%str
       | Pexp_extension ({ Asttypes.txt = "__sempatch_report"; _},
                         PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
         make_report @@ expression e
+      | Pexp_extension ({ Asttypes.txt = "__sempatch_inside"; _},
+                        PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
+        add_transitions_from (Match.wildcard ()) (expression e)
       | _ ->
         Match.expression (expression_desc pexp_desc) (location__t pexp_loc)
           (attributes pexp_attributes)

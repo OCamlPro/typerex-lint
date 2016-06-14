@@ -50,4 +50,8 @@ let make_report state =
         state.A.transitions
   }
 
+let add_transitions_from dest origin =
+  dest.A.transitions <- origin.A.transitions @ dest.A.transitions;
+  dest
+
 [%%create_from]

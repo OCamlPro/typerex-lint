@@ -32,17 +32,17 @@ let to_patch_body p =
       | SUBPATCH p -> (convert_patch p @ before, after, is_change)
   and convert_patch p =
     let (before, after, has_change) = convert_line p in
-    (* inside ( *)
+    inside (
       report (
         maybe_replace before after has_change
       )
-    (* ) *)
+    )
   in
-  let patch = convert_patch p
-    (* let (before, after, has_change) = convert_line p in *)
-    (* report ( *)
-    (*   maybe_replace before after has_change *)
-    (* ) *)
+  let patch = (* convert_patch p *)
+    let (before, after, has_change) = convert_line p in
+    report (
+      maybe_replace before after has_change
+    )
   in
   Parser.parse_expression Lexer.token (Lexing.from_string
                                          (String.concat "\n" @@ patch)
