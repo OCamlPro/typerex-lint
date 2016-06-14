@@ -95,7 +95,10 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
                         meta_exprs_in_pre_patch
                     in
                     processed_vars := new_var :: !processed_vars;
-                    e
+                    if in_replacement then
+                      e
+                    else
+                      [%expr e [@__sempatch_metavar]]
                   )
               | _ -> e
             in default_mapper.expr self new_expr
@@ -119,7 +122,7 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
                         meta_exprs_in_pre_patch
                     in
                     processed_vars := i :: !processed_vars;
-                    pat
+                    [%pat? pat [@__sempatch_metavar]]
                   )
               | _ -> pat
             in default_mapper.pat self new_pattern
