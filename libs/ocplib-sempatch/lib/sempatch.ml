@@ -41,13 +41,35 @@ struct
         results = Eval.apply patch.header.name patch.body
           (Element.Expression (Parsed_patches.preprocess_src_expr e))
       in
-      List.map snd
-        results
-      |> List.map (fun mat ->
-          match Match.get_location mat with
-          | Some _ -> mat
-          | None -> Match.set_location (Some Location.none) mat
+      results
+      |> List.map snd
+      |> List.filter (fun mat ->
+          (Option.is_some (Match.get_location mat)) &&
+          try
+            let res = Guard_evaluator.eval_union
+              (Match.get_substitutions mat)
+              patch.header.guard
+            in
+            if not res then
+              begin
+                Messages.debug "failed guard\n";
+                Messages.debug "> The variables where :\n";
+                StringMap.iter (fun name value ->
+                    match value with
+                    | Ast_element.Element.Expression e ->
+                      Messages.debug "> %s : %s\n"
+                        name
+                        (Pprintast.expression Format.str_formatter e;
+                        Format.flush_str_formatter ())
+                    | _ -> ()
                   )
+                  (Match.get_substitutions mat)
+              end;
+            res
+          with Guard_evaluator.Undefined_var var ->
+            Messages.debug "undefined var %s\n" var;
+            false
+        )
 
     | _ -> assert false
 
