@@ -1,0 +1,61 @@
+Even in languages with strong static typing, style-checkers can be
+very useful: some coding styles are known to ease the hidden presence
+of bugs; other coding styles can be inefficient or raise memory
+issues. Also, having different coding-styles in a project can make
+code-review more difficult, disturbing the focus of reviewers towards
+minor style issues instead of looking for algorithmic issues.
+
+A style-checker can solve many of these problems by providing an
+automatic way to check for coding styles that should be avoided in a
+project. For that, the style-checker should be fast, to provide
+feedback almost immediately, configurable, to allow project leaders to
+express their preferences, and extensible, to allow project developers
+to design new analysis specific to their needs.
+
+The main design idea behind \ocplint{} is to provide a framework for
+checking OCaml projects for coding errors, instead of just another
+monolithic tool. For that, we have tried to make it easy to
+extend \ocplint{}, either using \emph{semantic patches} (patterns of
+code described in a patch-like syntax on OCaml code) or using dynamic
+plugins (user code linked at runtime). We also tried to make it as
+configurable as possible: each plugin and each analysis can be enabled
+or disabled by a simple project configuration file, and analysis
+settings can be modified in the same configuration file. We wrote a
+set of plugins and analyses, both to be able to use the tool for our
+own purposes, and to provide examples for developers of how to extend
+the tool.
+
+Configuration files in \ocplint{} are managed by the {\tt
+ocplib-config}~\cite{ocplib-config} library. This library provides
+simple functions to define options, that can be manipulated as simply
+as references in the program, while being loaded and saved
+automatically in configuration files. The library also automatically
+generates command-line arguments to modify the options. \ocplint{} can
+use both user- and directory- specific configuration files.
+
+We already implemented a small set of plugins working on different
+kinds of inputs: {\sf text} plugin (length of lines, extra spaces,
+non-ANSII characters, etc.), {\sf indent} plugin (correct use of {\sf
+ocp-indent}), {\sf tokens} plugin (non-ASCII characters in comments,
+in idents, etc.), {\sf parsetree} plugin (constructor with tuple
+arguments, local aliases, identifiers lengths, semantic patches,
+etc.), {\sf sempatch} plugin (detection of patterns provided by
+semantic patches), {\sf typedtree} plugin (non-qualified external
+idents), {\sf parsing} plugin (extra-parentheses, use of parentheses instead of
+ {\sf begin..end}, etc.).
+ 
+Warnings emitted by these analyses are stored in a
+project-database. The database is then used when the tool is
+restarted, to avoid checking files again if they have not been
+modified, and to allow other tools to display the results ({\sf
+ocp-index} or {\sf Merlin} for example, or on a web interface).
+
+In this document, we will present \ocplint{}, a style-checker for OCaml
+projects, that aims at satisfying all these needs. An overview of
+\ocplint{} is given in section~\ref{sec:overview}. Of course,
+\ocplint{} builds on our experience learnt from using other
+style-checkers for OCaml, as shown in section~\ref{sec:related}. It is
+easy to use and configure, as depicted in appendix~\ref{sec:usage}, and
+can be extended using both \emph{semantic patches}, in
+appendix~\ref{sec:sempatch}, and dynamic plugins using a simple API,
+described in appendix~\ref{sec:extensibility}.

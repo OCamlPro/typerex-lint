@@ -1,0 +1,98 @@
+It is difficult to forecast all the checks that users will want to
+apply on their code. We implemented a large set of checks, that can be
+configured on a user basis, or per project, and semantic patches can
+be used to add more patterns to detect. Nevertheless, we thought it
+would be useful to allow users to define their own complex checks, and
+for that, we provided a simple way to develop plugins and link them at
+runtime.
+
+We sketch here the development of a simple plugin. First, we create a
+\verb-Plugin- to which analyses will be attached:
+\noindent\begin{lstlisting}[language=caml]
+module Plugin = Lint_plugin_api.MakePlugin (struct
+  let name = "Text Plugin"
+  let short_name = "plugin_text"
+  let details = "A plugin..."
+end)
+\end{lstlisting}
+
+Then, we attach a first analysis to this plugin:
+\noindent\begin{lstlisting}[language=caml]
+module Linter = Plugin.MakeLint(struct
+  let name = "Detect use of.."
+  let version = 1
+  let short_name = "not_that_char"
+  let details = "Detect ..."
+end)
+\end{lstlisting}
+
+We can now define and attach the warnings that will be raised.
+For brievity, we just display one definition:
+\noindent\begin{lstlisting}[language=caml]
+let w_non_ascii_char =
+  Linter.new_warning ~id:1
+  ~short_name:"non_ascii_char"
+  ~msg:"Non-ASCII char $char used"
+\end{lstlisting}
+
+In the code, we usually prefer the use of symbolic warnings, so we
+define them and provide a translation function:
+\noindent\begin{lstlisting}[language=caml]
+type warning =
+  | NonAsciiChar of string
+  | ..
+module Warnings =
+ Linter.MakeWarnings(struct
+  type t = warning
+  let to_warning = function
+  | NonAsciiChar s ->
+     w_non_ascii_char, ["char", s]
+  | ..
+  end)
+\end{lstlisting}
+
+We can now define our analysis. We can use several
+reporting functions defined by the {\sf MakeWarnings}
+functor:
+\noindent\begin{lstlisting}[language=caml]
+let check_line lnum line file =
+  ..
+  Warnings.report_file_line_col file lnum i
+     (NonAsciiChar (Printf.sprintf "\\%03d" c))
+  ..
+let check_file file =
+  FileString.iteri_lines (fun lnum line ->
+      check_line lnum line file) file
+\end{lstlisting}
+
+Finally, we declare that the analysis should be
+carried out on source files:
+\noindent\begin{lstlisting}[language=caml]
+module MainSRC = Linter.MakeInputML(struct
+  let main source = check_file source
+end)
+\end{lstlisting}
+
+We have predefined several kinds of inputs for analysis:
+\begin{itemize}
+\item All files: the input is the list of files to check
+\item Source file: the input is the name of a source file to check
+\item Tokens: the input is the list of tokens from the OCaml lexer
+\item Parsetree: the input is the standard AST
+\item Typedtree: the input is the typed AST, from the \verb-.cmt- file
+\end{itemize}
+
+Currently, we have created one plugin per input, that gathers together
+all the analyses on that input. However, we expect users to define
+their own plugins, mixing analyses on the different inputs, as better
+suited for their checks.
+
+Finally, we are now working on \emph{custom inputs}, i.e. an input
+that can be defined by the user, and then used by multiple analyses.
+A typical example of use is the {\sf ocp-lint-plugin-parsing} plugin,
+that includes a full OCaml 4.03 parser, that we have modified to
+generate an AST closer to the real input. Currently, this plugin is
+defined as one analysis, taking a source and applying many checks on
+the AST (for example, to warn for extra parenthesis). However, we
+would like to define the analysis separately, while still parsing only
+once the file with the new parser, defined as a user custom input.

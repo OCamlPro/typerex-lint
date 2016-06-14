@@ -1,0 +1,304 @@
+\subsection{Conventions}
+For each plugins, 2 options are generated automatically:
+\begin{itemize}
+\item {\tt \--\--enable-PLUGIN} which allow to enable the plugin {\tt PLUGIN} \\
+  (e.g. {\tt \--\--enable-plugin-typedtree});
+\item {\tt \--\--disable-PLUGIN} which allow to disable the plugin {\tt PLUGIN} \\
+  (e.g. {\tt \--\--disable-plugin-typedtree});
+\end{itemize}
+~\\
+For each linters, 3 options are generated automatically:
+\begin{itemize}
+\item {\tt \--\--enable-PLUGIN-LINTER} which allow to enable the linter {\tt
+    LINTER} \\
+  (e.g. {\tt \--\--enable-plugin-parsetree.code-identifier-length});
+\item {\tt \--\--disable-PLUGIN-LINTER} which allow to disable the linter {\tt
+    LINTER} \\
+ (e.g. {\tt \--\--disable-plugin-parsetree.code-identifier-length});
+\item {\tt \--\--PLUGIN-LINTER-warnings} which allow to choose warnings raised
+  by the linter {\tt LINTER} \\
+  (e.g. {\tt \--\--plugin-text.code-length.warnings -A+3..5+8});
+\end{itemize}
+
+In addition to that, the plugin developers can add specific option to a plugin
+or a linter: {\tt \--\--PLUGIN-OPTION} or {\tt \--\--PLUGIN-LINTER-OPTION} \\ 
+(e.g. {\tt \--\--plugin-parsetree.code-identifier-length.max-identifier-length 2}).
+
+\subsection{Kernel Arguments}
+\begin{lstlisting}[language=bash,basicstyle=\tt\small,showspaces=falseshowstringspaces=false]
+
+  --init                 Init a project
+  --path DIR             Give a project dir path
+  --output-txt FILE      Output results in a text file.
+  --list                 List of every plugins and warnings.
+  --warn-error           Every warning returns an error status code.
+  --load-plugins PLUGINS Load dynamically plugins with their 
+                         corresponding 'cmxs' files.
+  --save-config          Save ocp-lint default config file.
+  --no-db-cache          Ignore the DB feature.
+  --print-only-new       Print only new warnings.
+\end{lstlisting}
+
+
+\ocplint{} can use a database to make style-checking a project. To create an
+initial database, the user should call {\tt ocp-lint \--\--init}, otherwise, no
+database will be used.
+
+The {\tt \--\--path} argument tells \ocplint{} the directory to scan for
+files to check. \ocplint{} will check all the files with extensions
+{\sf .ml}, {\sf .mli}, {\sf .cmt} and {\sf .cmti}. We are currently
+parallelizing the process of checking each file in a different
+process: each internal process will store its results in the
+(temporary or persistent) database and the calling process will
+display the results at the end.
+
+The {\tt --load-plugins FILE.cmxs} argument can be used to load a
+plugin dynamically (\ocplint{} comes with a few plugins already
+statically linked), and the {\sf --list} argument can be used to list
+plugins and their analyses.
+
+Options changed on the command-line can be saved in the project
+configuration file using the {\tt --save-config} argument.
+
+Several output formats can be used to print warnings: plain-text, JSON,
+HTML, etc. This is easily extensible, and we plan to provide more formats.
+
+\subsection{Plugins Specific Arguments}
+\subsubsection*{Plugin On File System}
+This plugin contains linters on the file system. For example, we can check if an
+interface file is missing, or do some checks on files name.
+
+\begin{lstlisting}[language=bash,basicstyle=\tt\small,showspaces=false,showstringspaces=false]
+  --disable-plugin-file-system  
+                            A plugin with linters on file system like 
+                            interface missing, etc.
+  --enable-plugin-file-system  
+                            A plugin with linters on file system like 
+                            interface missing, etc.
+
+  --disable-plugin-file-system.interface-missing  
+                            Enable/Disable linter "Missing interface".
+  --enable-plugin-file-system.interface-missing  
+                            Enable/Disable linter "Missing interface".
+  --plugin-file-system.interface-missing.warnings <value> 
+                            Enable/Disable warnings from 
+                            "Missing interface" (current: +A)
+
+  --disable-plugin-file-system.project-files  
+                            Enable/Disable linter "File Names".
+  --enable-plugin-file-system.project-files  
+                            Enable/Disable linter "File Names".
+  --plugin-file-system.project-files.warnings <value> 
+                            Enable/Disable warnings from "File Names" 
+                            (current: +A)
+\end{lstlisting}
+
+\subsubsection*{Plugin On Text}
+This plugins contains linters on the source.
+
+\begin{lstlisting}[language=bash,basicstyle=\tt\small,showspaces=false,showstringspaces=false]
+  --disable-plugin-text     A plugin with linters on the source.
+  --enable-plugin-text      A plugin with linters on the source.
+
+  --disable-plugin-text.code-length  
+                            Enable/Disable linter "Code Length".
+  --enable-plugin-text.code-length  
+                            Enable/Disable linter "Code Length".
+  --plugin-text.code-length.max-line-length <int> 
+                            Maximum line length
+  --plugin-text.code-length.warnings <value> 
+                            Enable/Disable warnings from "Code Length" 
+                            (current: +A)
+
+  --disable-plugin-text.not-that-char  
+                            Enable/Disable linter "Detect use of unwanted 
+                            chars in files".
+  --enable-plugin-text.not-that-char  
+                            Enable/Disable linter "Detect use of unwanted 
+                            chars in files".
+  --plugin-text.not-that-char.warnings <value> 
+                            Enable/Disable warnings from "Detect use of 
+                            unwanted chars in files" (current: +A)
+
+  --disable-plugin-text.ocp-indent  
+                            Enable/Disable linter "Indention with ocp-indent".
+  --enable-plugin-text.ocp-indent  
+                            Enable/Disable linter "Indention with ocp-indent".
+  --plugin-text.ocp-indent.warnings <value> 
+                            Enable/Disable warnings from "Indention with
+                            ocp-indent" (current: +A)
+
+  --disable-plugin-text.useless-space-line  
+                            Enable/Disable linter "Useless space 
+                            character and empty line at the end of file".
+  --enable-plugin-text.useless-space-line  
+                            Enable/Disable linter "Useless space 
+                            character and empty line at the end of file".
+  --plugin-text.useless-space-line.warnings <value> 
+                            Enable/Disable warnings from "Useless space
+                            character and empty line at the end of file."
+                            (current: +A)
+\end{lstlisting}
+
+\subsubsection*{Plugin On Parsetree}
+This plugins contains linters that take the parsetree as input.
+
+\begin{lstlisting}[language=bash,basicstyle=\tt\small,showspaces=false,showstringspaces=false]
+
+  --disable-plugin-parsetree  
+                            A plugin with linters on parsetree.
+  --enable-plugin-parsetree  
+                            A plugin with linters on parsetree.
+
+  --disable-plugin-parsetree.check-constr-args  
+                            Enable/Disable linter 
+                            "Check Constructor Arguments".
+  --enable-plugin-parsetree.check-constr-args  
+                            Enable/Disable linter 
+                            "Check Constructor Arguments".
+
+  --plugin-parsetree.check-constr-args.warnings <value> 
+                            Enable/Disable warnings from 
+                            "Check Constructor Arguments" (current: +A)
+
+  --disable-plugin-parsetree.code-identifier-length  
+                            Enable/Disable linter 
+                            "Code Identifier Length".
+  --enable-plugin-parsetree.code-identifier-length  
+                            Enable/Disable linter 
+                            "Code Identifier Length".
+  --plugin-parsetree.code-identifier-length.max-identifier-length <int> 
+                            Identifiers with a longer name will 
+                            trigger a warning
+  --plugin-parsetree.code-identifier-length.min-identifier-length <int> 
+                            Identifiers with a shorter name will 
+                            trigger a warning
+  --plugin-parsetree.code-identifier-length.warnings <value> 
+                            Enable/Disable warnings from 
+                            "Code Identifier Length" (current: +A)
+
+  --disable-plugin-parsetree.code-list-on-singleton  
+                            Enable/Disable linter "List function 
+                            on singleton".
+  --enable-plugin-parsetree.code-list-on-singleton  
+                            Enable/Disable linter "List function 
+                            on singleton".
+  --plugin-parsetree.code-list-on-singleton.warnings <value> 
+                            Enable/Disable warnings from "List function 
+                            on singleton" (current: +A)
+
+  --disable-plugin-parsetree.phys-comp-allocated-lit  
+                            Enable/Disable linter "Physical comparison 
+                            between allocated litterals.".
+  --enable-plugin-parsetree.phys-comp-allocated-lit  
+                            Enable/Disable linter "Physical comparison 
+                            between allocated litterals.".
+  --plugin-parsetree.phys-comp-allocated-lit.warnings <value> 
+                            Enable/Disable warnings from "Physical 
+                            comparison between allocated litterals." 
+                            (current: +A)
+\end{lstlisting}
+
+\subsubsection*{Plugin On Typedtree}
+This plugin contains linters that take the typedtree as input.
+
+\begin{lstlisting}[language=bash,basicstyle=\tt\small,showspaces=false,showstringspaces=false]
+  --disable-plugin-typedtree  
+                            A plugin with linters on typed tree.
+  --enable-plugin-typedtree  
+                            A plugin with linters on typed tree.
+
+  --disable-plugin-typedtree.fully-qualified-identifiers  
+                            Enable/Disable linter 
+                            "Fully-Qualified Identifiers".
+  --enable-plugin-typedtree.fully-qualified-identifiers  
+                            Enable/Disable linter 
+                            "Fully-Qualified Identifiers".
+  --plugin-typedtree.fully-qualified-identifiers.ignore-depth <int> 
+                            Ignore qualified identifiers of that depth, 
+                            not fully qualified
+  --plugin-typedtree.fully-qualified-identifiers.ignore-operators <bool> 
+                            Ignore symbolic operators
+  --plugin-typedtree.fully-qualified-identifiers.warnings <value> 
+                            Enable/Disable warnings from "Fully-Qualified
+                            Identifiers" (current: +A)
+
+  --disable-plugin-typedtree.polymorphic-function  
+                            Enable/Disable linter "Polymorphic function".
+  --enable-plugin-typedtree.polymorphic-function  
+                            Enable/Disable linter "Polymorphic function".
+  --plugin-typedtree.polymorphic-function.warnings <value> 
+                            Enable/Disable warnings from 
+                            "Polymorphic function" (current: +A)
+\end{lstlisting}
+
+\subsubsection*{Plugin Complex}
+This plugin contains linters which takes different inputs to do their checks
+(e.g. parsetree and typedtree, lexer tokens and source, etc.)
+
+\begin{lstlisting}[language=bash,basicstyle=\tt\small,showspaces=false,showstringspaces=false]
+
+  --disable-plugin-complex  A plugin with linters on different inputs.
+  --enable-plugin-complex   A plugin with linters on different inputs.
+
+  --disable-plugin-complex.interface-module-type-name  
+                            Enable/Disable linter "Checks on 
+                            module type name".
+  --enable-plugin-complex.interface-module-type-name  
+                            Enable/Disable linter "Checks on 
+                            module type name".
+
+  --plugin-complex.interface-module-type-name.warnings <value> 
+                            Enable/Disable warnings from "Checks on 
+                            module type name." (current: +A)
+\end{lstlisting}
+
+
+\subsubsection*{Plugin On Semantic Patches}
+\begin{lstlisting}[language=bash,basicstyle=\tt\small,showspaces=false,showstringspaces=false]
+  --disable-plugin-patch    Detect pattern with semantic patch.
+  --enable-plugin-patch     Detect pattern with semantic patch.
+
+  --disable-plugin-patch.sempatch-lint-default  
+                            Enable/Disable linter "Lint from semantic 
+                            patches (default)".
+  --enable-plugin-patch.sempatch-lint-default  
+                            Enable/Disable linter "Lint from semantic 
+                            patches (default)".
+
+  --plugin-patch.sempatch-lint-default.warnings <value> 
+                            Enable/Disable warnings from "Lint from 
+                            semantic patches (default)" (current: +A)
+
+  --disable-plugin-patch.sempatch-lint-user-defined  
+                            Enable/Disable linter "Lint from semantic 
+                            patches (user defined).".
+  --enable-plugin-patch.sempatch-lint-user-defined  
+                            Enable/Disable linter "Lint from semantic 
+                            patches (user defined).".
+  --plugin-patch.sempatch-lint-user-defined.warnings <value> 
+                            Enable/Disable warnings from "Lint from 
+                            semantic patches (user defined)." (current: +A)
+\end{lstlisting}
+
+\subsection{A Short example}
+
+A typical example of running \ocplint{}:
+\begin{lstlisting}[language=bash,basicstyle=\tt\small]
+$ ocp-lint --path tools/ocp-lint --disable-plugin-typedtree
+Summary:
+* 11 files were linted
+* 40 warnings were emitted:
+ * 2 "interface_missing" number 1
+ * 2 "code_length" number 1
+ * 4 "ocp_indent" number 1
+File "lint_input.ml", line 1:
+  "ocp_indent" number 1:
+   File lint_input.ml' is not indented correctly.
+File "lint_actions.ml", line 1:
+  "code_length" number 1:
+  This line is too long ('82'): it should be at most of size '80'.
+File "main.ml", line 1:
+  "interface_missing" number 1:
+  Missing interface for main.ml'.
+\end{lstlisting}                %$

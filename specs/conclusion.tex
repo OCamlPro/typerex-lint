@@ -1,0 +1,36 @@
+When designing \ocplint{}, our goal was to use it on our own Github
+projects, to check pull-requests both from the project developers and
+from external contributors. We plan to apply it soon to all our
+projects, once most of the analyses we need are implemented.
+
+Although we currently use a non-optimized approach in the
+implementation of the analyses (different checks are often done in
+different analyses, while they could be done in the same iteration on
+the AST), performance is good enough for its purpose. For example,
+running \emph{sequentially} all the current 30 analysis of our 6 plugins, we
+get the following performances:\\
+{\small\noindent
+\begin{tabular}{|l|l|l|l|l|}
+  \hline
+  Project & Files & LOC & Warnings & Time \\
+  \hline
+  ocp-index & 12 & 4333 & 36 & 0.14s \\
+  \hline
+  ocp-indent & 12 & 5763 & 44 & 0.32s \\
+  \hline
+  stdlib & 35 & 12957 & 80 & 2.18s \\
+  \hline
+  opam & 64 & 26906 & 362 & 3.09s \\
+  \hline
+  flow & 119 & 47833 & 563 & 13.25s \\
+  \hline
+  hack & 386 & 73715 & 1213 & 33.57s \\
+  \hline
+\end{tabular}}\\
+
+We also took internationnalization into account in the design: the
+message associated with each warning is a simple string, that will be
+customized in the future for different languages.
+
+The project sources are hosted on Github, and an OPAM package should
+be available soon.
