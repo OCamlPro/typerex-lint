@@ -269,4 +269,21 @@ struct
       l
 end
 
+module Messages :
+sig
+  val debug : ('a, unit, string, unit) format4 -> 'a
+  val warn : ('a, unit, string, unit) format4 -> 'a
+end
+=
+struct
+  let out_fun = ignore
+  let debug msg = Printf.ksprintf
+      (fun msg -> out_fun ("Debug : " ^ msg))
+      msg
+  let warn msg = Printf.ksprintf
+      (fun msg -> out_fun ("Warning : " ^ msg))
+      msg
+end
+
+
 module List = UList
