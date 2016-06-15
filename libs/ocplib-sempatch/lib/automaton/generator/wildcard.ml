@@ -29,7 +29,7 @@ let dispatch model constructor =
       List.mapi (
         fun jdx elt ->
           let result =
-            if idx = jdx then [%expr final ()] else [%expr state]
+            if idx = jdx then [%expr state] else [%expr final ()]
           in
           constructor elt result
       )
