@@ -1,20 +1,105 @@
-\subsection{Configuration}
-{\bf ocp-autoconf TODO...}
 
-{\tt \$ ocp-autoconf}
+\def\ocpautoconf{{\tt ocp-autoconf} }
+\def\ocpbuild{{\tt ocp-build} }
+
+\subsection{Dependencies}
+There are a few dependencies for \ocplint: menhir, ocp-indent and ocp-build. You
+can install them via OPAM, the OCaml PAckage Manager:
+
+{\tt \$ opam install menhir ocp-build ocp-indent}
+
+\subsection{Configuration}
+First, we need to configure {\tt typerex-lint}. To do so, we use
+\ocpautoconf~\cite{ocp-autoconf}, a simple tool to manage standard project
+files for OCaml projects. It can manage:
+\begin{itemize}
+\item {\em ./configure}: basic configure.ac files (autoconf) to detect OCaml and
+  its libraries, and set variables to be used in Makefiles and `ocp-build`
+  files.
+\item {\em opam}: generate a standard opam file for your project, and a script to
+  upload new versions of your project to Github
+\item {\em Travis files}: standard Travis files to test pull-requests on Github
+\end{itemize}
+
+\paragraph{Basic Usage} \ocpautoconf will create a `configure' file and a
+'autoconf/' directory at the root of your project, so you should make sure such
+files do not already exist. The `configure` file is just a script to call the
+real `configure` script inside the `autoconf/` directory. 
+
+{\tt \$ ocp-autoconf \--\--save-template}\\
+
+This will create two configuration files for \ocpautoconf: 
+\begin{itemize}
+\item {\em ocp-autoconf.config}: a file containing options to describe your
+  project 
+\item {\em ocp-autoconf.ac}: a file that you can use to insert `autoconf`
+  instructions inside the `autoconf/configure.ac` file that will be generated.
+\end{itemize}
+
+Then we can start the configure script:
+
 {\tt \$ ./configure}
 
-\subsection{Build}
-{\bf ocp-build TODO...}
 
-{\tt \$ make}
+\subsection{Build}
+\ocpbuild is a build system for OCaml application, based on simple descriptions
+of packages. \ocpbuild combines the descriptions of packages, and optimize the
+parallel compilation of files depending on the number of cores and the
+automatically-infered dependencies between source files.
+
+For building the project you can either use directly \ocpbuild or the Makefile
+which will just call \ocpbuild:
+
+{\tt \$ make} 
 
 \subsection{Installation}
-{\bf OPAM / Makefile TODO...}
+You can install \ocplint{} via OPAM:
+
+{\tt \$ opam install ocp-lint}
+
+~\\
+Or pin the development package:
+
+{\tt \$ opam pin add ocp-lint \$OCPLINTSOURCES}
+
+{\tt \$ opam install ocp-lint}
+
+~\\
+You can install \ocplint{} directly from the sources:
 
 {\tt \$ make install}
 
 \subsection{Testsuite}
-{\bf TODO...}
+Each plugin can define a set of tests. To make all the test easily we use
+\ocpbuild which will find the .ocp file containing the tests.
+To define a set of test, create a directory in a plugin source:
+
+{\tt \$ mkdir \$OCPLINTPATH/plugins/MYPLUGIN/tests}
+
+~\\
+Then create a .ocp file to describe the tests:
+
+\begin{lstlisting}
+begin test "test-ocp-lint-MYPLUGIN"
+  test_byte = false
+  requires = [ "ocp-lint-testsuite" ]
+  test_args = [
+    "%{ocp-lint_FULL_DST_DIR}%/ocp-lint.asm" "%{sources}%"
+  ]
+end
+\end{lstlisting}
+
+~\\
+
+{\bf TODO cago: michael, il faudrait que tu décrives le process complet pour
+  ajouter un test avec les histoires de .result}
+
+~\\
+Finally you can use ocp-build to run the tests anywhere in the source tree:
+
+{\tt \$ ocp-build tests}
+
+~\\
+Or in the source directory use the Makefile rule:
 
 {\tt \$ make test}
