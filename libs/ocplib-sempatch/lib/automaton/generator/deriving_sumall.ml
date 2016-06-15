@@ -182,8 +182,7 @@ let is_def_of name = List.exists (fun def -> def.ptype_name.txt = name)
 let mapper = let open M in
   let perform file cmd =
     let file = Option.value 
-        ("/home/regnat/Documents/X/stage3A/typerex-lint/" ^
-         "libs/ocplib-sempatch/lib/automaton/generator/tree.ml")
+        ("libs/ocplib-sempatch/lib/automaton/generator/tree.ml")
         file
     in
     let in_file = open_in file
