@@ -166,25 +166,20 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
             (raise (Plugin_error(Patch_file_not_found filename))))
         C.patches
 
-    let iter =
-      let module IterArg = struct
-        include Parsetree_iter.DefaultIteratorArgument
-        let enter_structure structure =
-          List.iteri (fun i patches ->
-              let matches =
-                Patch.parallel_apply
-                  patches (Ast_element.from_structure structure) in
-              List.iter (fun matching ->
-                  let patch =
-                    List.find
-                      (fun p ->
-                         Patch.get_name p = Match.get_patch_name matching)
-                      patches in
-                  Warnings.report (i + 1) matching patch)
-                matches)
-            patches
-      end in
-      (module IterArg : Parsetree_iter.IteratorArgument)
+    let enter_structure structure =
+      List.iteri (fun i patches ->
+          let matches =
+            Patch.parallel_apply
+              patches (Ast_element.from_structure structure) in
+          List.iter (fun matching ->
+              let patch =
+                List.find
+                  (fun p ->
+                     Patch.get_name p = Match.get_patch_name matching)
+                  patches in
+              Warnings.report (i + 1) matching patch)
+            matches)
+        patches
 
     let () =
       let module Lint = struct
@@ -192,7 +187,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
         let short_name = short_name
         let details = details
         let enable = enable
-        let inputs = [Lint_input.InStruct (Parsetree_iter.iter_structure iter)]
+        let inputs = [Lint_input.InStruct enter_structure]
         let wdecls = wdecls
       end in
       let lint = (module Lint : Lint_types.LINT) in

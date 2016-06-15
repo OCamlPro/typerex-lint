@@ -40,6 +40,7 @@ let to_patch_body p =
   in
   let patch = (* convert_patch p *)
     let (before, after, has_change) = convert_line p in
+    inside @@
     report (
       maybe_replace before after has_change
     )
