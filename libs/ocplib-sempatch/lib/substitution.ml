@@ -75,7 +75,7 @@ let add_expr name value vars =
     vars
 
 let add_ident _name _value _vars = assert false(* M.add name (AE.String value) vars *)
-let add_pattern _name _value _vars = assert false(* M.add name (AE.Pattern value) vars *)
+let add_pattern name value vars = M.add name (AE.Pattern value) vars
 
 let merge m1 m2 =
   StringMap.merge (fun _ -> Option.merge_sup (fun _ x -> x)) m1 m2

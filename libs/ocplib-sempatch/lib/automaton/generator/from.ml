@@ -13,6 +13,15 @@ let deriver = "from_builder"
 let raise_errorf = PpxD.raise_errorf
 
 let overrides = C.get_val_decls [%str
+    let pattern { ppat_desc; ppat_attributes; ppat_loc } =
+      match ppat_desc with
+      | Ppat_var { txt = id; _}
+        when has_attr "__sempatch_metavar" ppat_attributes ->
+        Match.metavar_pat id
+      | _ ->
+        Match.pattern (pattern_desc ppat_desc) (location__t ppat_loc)
+          (attributes ppat_attributes)
+
     let expression { pexp_desc; pexp_loc; pexp_attributes } =
       match pexp_desc with
       | Pexp_extension ({ Asttypes.txt = "__sempatch_report"; _},
@@ -27,6 +36,7 @@ let overrides = C.get_val_decls [%str
       | _ ->
         Match.expression (expression_desc pexp_desc) (location__t pexp_loc)
           (attributes pexp_attributes)
+
   ]
 
 let same_def vb1 vb2 =

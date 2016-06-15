@@ -31,6 +31,7 @@ module Match :
     val wildcard : unit -> A.state
 
     val metavar_expr : string -> A.state
+    val metavar_pat : string -> A.state
   end =
 struct
   include Match_
@@ -39,6 +40,28 @@ struct
   let location__t _ _ _ = basic_state @@ function
     | E.Location__t _ -> [A.Final]
     | _ -> [A.Trash]
+
+  let metavar_pat name = A.{
+      final = false;
+      transitions = [
+        false,
+        fun meta ast_elt ->
+          match ast_elt with
+          | E.Pattern pat ->
+            [
+              Final,
+              {
+                meta with
+                Match.substitutions =
+                  Substitution.add_pattern
+                    name
+                    pat
+                    meta.Match.substitutions;
+              }
+            ]
+          | _ -> []
+      ]
+    }
 
   let metavar_expr name = A.{
       final = false;
