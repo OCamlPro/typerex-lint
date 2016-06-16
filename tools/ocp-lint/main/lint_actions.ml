@@ -260,15 +260,22 @@ let lint_file no_db file =
 
 let run no_db file =
   if no_db then lint_file no_db file
-  else
-    (let args = Array.copy Sys.argv in
-     Array.iteri (fun i arg ->
-         if arg = "--path" then
-           (args.(i) <- "--file";
-            args.(i + 1) <- file))
-       args;
-     let cmd = String.concat " " (Array.to_list args) in
-     ignore (Sys.command cmd))
+  else begin
+    let args = Array.copy Sys.argv in
+    let found = ref false in
+    Array.iteri (fun i arg ->
+        if arg = "--path" then begin
+          found := true;
+          args.(i) <- "--file";
+          args.(i + 1) <- file
+        end)
+      args;
+    let args = (* if ocp-lint is called without --path argument *)
+      if not !found then Array.to_list args @ ["--file"; file]
+      else Array.to_list args in
+     let cmd = String.concat " " args in
+    ignore (Sys.command cmd)
+  end
 
 let lint_sequential no_db path =
   (* We filter the global ignored modules/files.  *)
