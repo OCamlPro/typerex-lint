@@ -17,16 +17,11 @@ let preamble =
 
   ] @
   [%str
-    let  basic_state f = {
+    let basic_state f = {
       A.transitions = [
         false,
         ignore_meta f
       ];
-      final = false;
-    }
-
-    and  trash = {
-      A.transitions = [];
       final = false;
     }
   ]
@@ -45,11 +40,6 @@ let generate_patterns loc input_list =
   | [] -> None
   | [elt] -> Some elt
   | lst -> Option.some @@ H.Pat.tuple ~loc lst
-
-let mk_exploded str = Longident.Ldot (Longident.Lident "Element", str)
-let mk_aut str = Longident.Ldot (Longident.Lident "A", str)
-let mk_aut_cstr str = Longident.Ldot
-    (Longident.Lident "A", S.capitalize str)
 
 let create_match loc name args pattern result =
   let here elt = L.mkloc elt loc in
@@ -94,14 +84,14 @@ let create_record_match loc name fields =
     in
     H.Pat.construct
       ~loc
-      (here @@ mk_exploded (Common.cstr name))
+      (here @@ C.mk_exploded (Common.cstr name))
       (Some sub_pattern)
   and result =
     let sub_result =
       H.Exp.record
         ~loc
         (List.map (fun name ->
-             here @@ mk_aut (C.id name),
+             here @@ C.mk_aut (C.id name),
              H.Exp.ident ~loc (here (Longident.Lident (C.id name)))
            )
             args
@@ -110,7 +100,7 @@ let create_record_match loc name fields =
     in
     H.Exp.construct
       ~loc
-      (here (mk_aut_cstr name))
+      (here (C.mk_aut_cstr name))
       (Some sub_result)
   in
   create_match
@@ -129,7 +119,7 @@ let create_variant_match loc type_name variant =
   let pattern =
     H.Pat.construct
       ~loc
-      (here @@ mk_exploded (C.cstr type_name))
+      (here @@ C.mk_exploded (C.cstr type_name))
       (Some (
           H.Pat.construct
             ~loc
@@ -139,11 +129,11 @@ let create_variant_match loc type_name variant =
   and result =
     H.Exp.construct
       ~loc
-      (here (mk_aut_cstr type_name))
+      (here (C.mk_aut_cstr type_name))
       (Some (
           H.Exp.construct
             ~loc
-            (here (mk_aut_cstr variant_name))
+            (here (C.mk_aut_cstr variant_name))
             (generate_tuple loc args)
         ))
   in
@@ -162,12 +152,12 @@ let create_tuple_match loc name args =
   let pattern =
     H.Pat.construct
       ~loc
-      (here (mk_exploded @@ Common.cstr name))
+      (here (C.mk_exploded @@ Common.cstr name))
       (generate_patterns loc args)
   and result =
     H.Exp.construct
       ~loc
-      (here (mk_aut_cstr name))
+      (here (C.mk_aut_cstr name))
       (generate_tuple loc args)
   in
   create_match
@@ -185,12 +175,12 @@ let create_core_typ_match recur type_declarations loc name typ =
     let pattern =
       H.Pat.construct
         ~loc
-        (here (mk_exploded @@ C.cstr name))
+        (here (C.mk_exploded @@ C.cstr name))
         (generate_patterns loc args)
     and result =
       H.Exp.construct
         ~loc
-        (here (mk_aut_cstr name))
+        (here (C.mk_aut_cstr name))
         (generate_tuple loc args)
     in
     create_match
@@ -253,9 +243,7 @@ let str_of_type all_types type_decls =
           let pattern =
             H.Pat.construct
               ~loc
-              (L.mkloc (LI.Ldot (
-                   LI.Lident "Element",
-                   C.cstr type_decl.ptype_name.txt)) loc)
+              (L.mkloc (C.mk_exploded @@ C.cstr type_decl.ptype_name.txt) loc)
               (Some [%pat? y])
           in
           let expr = [%expr

@@ -48,11 +48,6 @@ let generate_patterns loc input_list =
   | [elt] -> Some elt
   | lst -> Option.some @@ H.Pat.tuple ~loc lst
 
-let mk_exploded str = Longident.Ldot (Longident.Lident "Element", str)
-let mk_aut str = Longident.Ldot (Longident.Lident "A", str)
-let mk_aut_cstr str = Longident.Ldot
-    (Longident.Lident "A", S.capitalize str)
-
 let create_match pattern results =
   H.Exp.case
     pattern
@@ -75,7 +70,7 @@ let create_record_match loc name fields =
     in
     H.Pat.construct
       ~loc
-      (here @@ mk_exploded (Common.cstr name))
+      (here @@ C.mk_exploded (Common.cstr name))
       (Some sub_pattern)
   and results =
     let sub_results =
@@ -83,14 +78,14 @@ let create_record_match loc name fields =
         (dispatch
            args
            (fun name result ->
-              here @@ mk_aut (C.id name),
+              here @@ C.mk_aut (C.id name),
               result
            )
         )
     in
     List.map (fun sub -> H.Exp.construct
                  ~loc
-                 (here (mk_aut_cstr name))
+                 (here (C.mk_aut_cstr name))
                  (Some sub)
              )
       sub_results
@@ -106,7 +101,7 @@ let create_variant_match loc type_name variant =
   let pattern =
     H.Pat.construct
       ~loc
-      (here @@ mk_exploded (C.cstr type_name))
+      (here @@ C.mk_exploded (C.cstr type_name))
       (Some (
           H.Pat.construct
             ~loc
@@ -118,11 +113,11 @@ let create_variant_match loc type_name variant =
     List.map (fun sub ->
         H.Exp.construct
           ~loc
-          (here (mk_aut_cstr type_name))
+          (here (C.mk_aut_cstr type_name))
           (Some (
               H.Exp.construct
                 ~loc
-                (here (mk_aut_cstr variant_name))
+                (here (C.mk_aut_cstr variant_name))
                 sub
             ))
       )
@@ -140,11 +135,11 @@ let create_tuple_match loc name args =
   let pattern =
     H.Pat.construct
       ~loc
-      (here (mk_exploded @@ Common.cstr name))
+      (here (C.mk_exploded @@ Common.cstr name))
       (generate_patterns loc args)
   and results =
     let sub_results = generate_tuple loc args in
-    List.map (H.Exp.construct ~loc (here (mk_aut_cstr name))) sub_results
+    List.map (H.Exp.construct ~loc (here (C.mk_aut_cstr name))) sub_results
   in
   create_match
     pattern
@@ -158,11 +153,11 @@ let create_core_typ_match recur type_declarations loc name typ =
     let pattern =
       H.Pat.construct
         ~loc
-        (here (mk_exploded @@ C.cstr name))
+        (here (C.mk_exploded @@ C.cstr name))
         (generate_patterns loc args)
     and results =
       let sub_results = generate_tuple loc args in
-      List.map (H.Exp.construct ~loc (here (mk_aut_cstr name))) sub_results
+      List.map (H.Exp.construct ~loc (here (C.mk_aut_cstr name))) sub_results
     in
     create_match
       pattern
@@ -170,38 +165,6 @@ let create_core_typ_match recur type_declarations loc name typ =
     :: []
   | Ptyp_constr ({ txt = Longident.Lident id; _}, args) ->
     begin
-      (* match C.upprint typ with *)
-      (* | Some alias when alias <> name -> *)
-      (*   let here elt = L.mkloc elt loc in *)
-      (*   let args = ["state_0"] in *)
-      (*   let pattern = *)
-      (*     H.Pat.construct *)
-      (*       ~loc *)
-      (*       (here (mk_exploded @@ C.cstr name)) *)
-      (*       (generate_patterns loc args) *)
-      (*   and result = *)
-      (*     H.Exp.construct *)
-      (*       ~loc *)
-      (*       (here (mk_aut_cstr name)) *)
-      (*       (generate_tuple loc args) *)
-      (*   in *)
-      (*   create_match *)
-      (*     loc *)
-      (*     name *)
-      (*     args *)
-      (*     pattern *)
-      (*     result *)
-      (*   :: [] *)
-      (*   (* let expr = *) *)
-      (*   (*   H.Exp.ident ~loc *) *)
-      (*   (*     (L.mkloc (LI.Lident (C.id alias)) loc) *) *)
-      (*   (* in *) *)
-      (*   (* [H.Vb.mk *) *)
-      (*   (*    ~loc *) *)
-      (*   (*    (H.Pat.var ~loc (L.mkloc name loc)) *) *)
-      (*   (*    [%expr fun x -> [%e expr] x] *) *)
-      (*   (* ] *) *)
-      (* | _ -> *)
       try
         let generic_type =
           List.find (fun typ -> typ.ptype_name.txt = id) type_declarations
@@ -253,9 +216,8 @@ let str_of_type all_types type_decls =
           let pattern =
             H.Pat.construct
               ~loc
-              (L.mkloc (LI.Ldot (
-                   LI.Lident "Element",
-                   C.cstr type_decl.ptype_name.txt)) loc)
+              (L.mkloc (C.mk_exploded @@
+                   C.cstr type_decl.ptype_name.txt) loc)
               (Some [%pat? _])
           in
           let expr = [%expr [A.Trash]]

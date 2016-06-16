@@ -23,15 +23,18 @@ let rec upprint typ =
     upprint {typ with ptyp_desc = tuple_constr typ.ptyp_loc args; }
   | _ -> None
 
-let type_of_string str =
-  Parser.parse_core_type Lexer.token (Lexing.from_string str)
-
 let id = String.uncapitalize
 let cstr str =
   match String.capitalize str with
   | "Cons" -> "::"
   | "Nil" -> "[]"
   | s -> s
+
+let mk_exploded str = Longident.Ldot (Longident.Lident "Element", str)
+let mk_aut str = Longident.Ldot (Longident.Lident "A", str)
+let mk_aut_cstr str = Longident.Ldot
+    (Longident.Lident "A", String.capitalize str)
+let mk_match str = Longident.Ldot (Longident.Lident "Match", str)
 
 let instantiate_type_decl variables_def typ =
   let mapper = let open Ast_mapper in {
@@ -52,11 +55,8 @@ let instantiate_type_decl variables_def typ =
     }
   in mapper.Ast_mapper.type_declaration mapper typ
 
-let eprint prefix arg =
-  let () = Printf.eprintf "%s : " prefix in
-  Printf.eprintf arg
-let warn msg = eprint "Warning" msg
-let debug msg = eprint "Debug" msg
+let warn = Messages.warn
+let debug = Messages.debug
 
 let raise_errorf ?loc msg =
   Printf.ksprintf
@@ -138,8 +138,6 @@ and variance =
 ]
 in get_type_decls str
 
-(* [filter_decls type_decls] returns the list of monomorphic type
-   declarations in type_decls *)
 let filter_decls = List.filter (fun decl -> decl.ptype_params = [])
 
 let concrete_stdlib = filter_decls stdlib

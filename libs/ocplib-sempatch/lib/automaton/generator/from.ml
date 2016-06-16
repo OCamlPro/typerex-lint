@@ -90,7 +90,7 @@ let build_sub_from loc index typ =
     ["", H.Exp.ident ~loc (L.mkloc (LI.Lident arg_name) loc)]
 
 let apply_from loc name args =
-  let matcher = H.Exp.ident (L.mkloc (LI.Ldot (LI.Lident "Match", name)) loc) in
+  let matcher = H.Exp.ident (L.mkloc (C.mk_match name) loc) in
   let result =
     match args with
     | [] -> matcher
@@ -120,7 +120,7 @@ let str_of_core_type self type_declarations loc name typ =
     and expr = H.Exp.apply
         ~loc
         (H.Exp.ident ~loc (Location.mkloc
-                             (LI.Ldot (LI.Lident "Match", name)) loc))
+                             (C.mk_match name) loc))
         (List.map (fun (name, typ) ->
              "", H.Exp.apply
                ~loc
@@ -136,8 +136,8 @@ let str_of_core_type self type_declarations loc name typ =
     let pattern = H.Pat.construct
         ~loc
         (Location.mkloc
-           (LI.Ldot (LI.Lident "Element",
-                     C.cstr (Longident.last id)))
+           (C.mk_exploded @@
+                     C.cstr (Longident.last id))
            loc)
         (Some (H.Pat.var ~loc (Location.mkloc "y" loc)))
     in
@@ -215,7 +215,7 @@ let rec from_builder_of_type loc type_decls name type_decl =
       (
         H.Exp.apply
           ~loc
-          (H.Exp.ident (L.mkloc (LI.Ldot (LI.Lident "Match", (name))) loc))
+          (H.Exp.ident (L.mkloc (C.mk_match name) loc))
           (List.map
              (fun field ->
                 "",
@@ -233,8 +233,8 @@ let rec from_builder_of_type loc type_decls name type_decl =
       | None ->
         H.Exp.ident
           ~loc
-          (here (LI.Ldot (LI.Lident "Match",
-                          C.id type_decl.ptype_name.txt)))
+          (here (C.mk_match @@
+                          C.id type_decl.ptype_name.txt))
       | Some t ->
         str_of_core_type
           (from_builder_of_type loc type_decls type_decl.ptype_name.txt)

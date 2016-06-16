@@ -93,16 +93,11 @@ let preprocess_automaton decl =
   |> (P.remove_arguments.M.type_declaration P.remove_arguments)
   |> (convert_inside_tuples.M.type_declaration convert_inside_tuples)
 
-let sum_of_types loc types all_types =
+let sum_of_types ?(extra_types=[]) loc types =
   let mono_sum = List.map (variant_of_type_decl loc) types in
-  let poly_sum = List.map (variant_of_type_decl loc) all_types in
   H.Type.mk
     ~loc
-    ~kind:(Ptype_variant(mono_sum))
-    (Location.mkloc "t" loc),
-  H.Type.mk
-    ~loc
-    ~kind:(Ptype_variant(trash_variant :: final_variant :: poly_sum))
+    ~kind:(Ptype_variant(extra_types @ mono_sum))
     (Location.mkloc "t" loc)
 
 let str_of_type type_decls cmd =
@@ -115,29 +110,19 @@ let str_of_type type_decls cmd =
     let instantiated_polys = Type_collector.collect type_decls in
     let poly_decls = (type_decls @ Common.stdlib) @ instantiated_polys in
     let mono_decls = Common.filter_decls poly_decls in
-    let sum_typ, automaton_typ = sum_of_types loc mono_decls mono_decls in
-    let automaton_typ = preprocess_automaton automaton_typ in
-    let automaton_tree = List.map build_automaton_tree poly_decls in
     let mk_type_module =
       fun (name, preamble, sum_type) ->
-        H.Str.module_
-          ~loc
-          (H.Mb.mk
-             ~loc
+        H.Str.module_ ~loc
+          (H.Mb.mk ~loc
              (L.mkloc name loc)
-             (H.Mod.structure
-                ~loc
+             (H.Mod.structure ~loc
                 (preamble @
-                 [H.Str.type_
-                    ~loc
-                    sum_type
-                 ]
-                )
-             )
-          )
+                 [H.Str.type_ ~loc
+                    sum_type ])))
     in
     match cmd with
     | `Ast_types ->
+      let sum_typ = sum_of_types loc mono_decls in
       let poly_decls_no_list =
         List.filter
           (fun decl -> not (decl.ptype_name.txt = "list"))
@@ -160,6 +145,14 @@ let str_of_type type_decls cmd =
         mk_type_module
         constructors
     | `Automaton_types ->
+      let automaton_tree = List.map build_automaton_tree poly_decls in
+      let automaton_typ =
+        sum_of_types
+          ~extra_types:([trash_variant; final_variant])
+          loc
+          mono_decls
+        |> preprocess_automaton
+      in
       [mk_type_module (
           "A", [], transition_type :: state_type :: automaton_typ
                    :: automaton_tree;
