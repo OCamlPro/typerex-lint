@@ -15,8 +15,6 @@ begin program "abc"
     requires = [
       "compiler-libs.common"
       "str"
-      "ppx_deriving.api"
-      "ppx_deriving.std"
       "ppx_tools.metaquot"
     ]
     comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
@@ -51,7 +49,6 @@ begin library "ocplib-sempatch"
         "compiler-libs"
         "compiler-libs.common"
         "abc"
-        "ppx_deriving"
     ]
     comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree.ml" ]
     comp_requires = "abc:asm"

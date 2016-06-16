@@ -58,6 +58,13 @@ let eprint prefix arg =
 let warn msg = eprint "Warning" msg
 let debug msg = eprint "Debug" msg
 
+let raise_errorf ?loc msg =
+  Printf.ksprintf
+    (fun s -> raise
+      (Location.Error (Location.error ?loc s))
+    )
+    msg
+
 let get_val_decls = List.bind (
     fun stri -> match stri.pstr_desc with
       | Pstr_value (_, t) -> t

@@ -50,7 +50,7 @@ case "$ocaml_system" in
     *)
         echo "ocamlc reports a dubious system: ${ocaml_system}. Good luck!" >&2
 esac
-opam install depext-cygwinports depext ocp-build menhir ocp-indent ppx_deriving ppx_tools
+opam install depext-cygwinports depext ocp-build menhir ocp-indent ppx_tools
 eval $(opam config env)
 
 TMP_BUILD=$(mktemp -d 2>/dev/null || mktemp -d -t 'citmpdir')

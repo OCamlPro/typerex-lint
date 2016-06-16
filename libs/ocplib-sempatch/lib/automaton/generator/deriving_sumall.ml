@@ -2,7 +2,6 @@ module H = Ast_helper
 module L = Location
 module LI = Longident
 module M = Ast_mapper
-module PpxD = Ppx_deriving
 module S = String
 open Asttypes
 open Parsetree
@@ -12,14 +11,14 @@ let transition_type = H.Type.mk
     ~manifest:[%type: Exploded.bool *
                       (Match.t -> Ast_element.t
                        -> (t * Match.t)
-                         Ppx_deriving_runtime.list)]
+                         Std_utils.List.t)]
     (L.mknoloc "transition")
 and state_type = H.Type.mk
     ~kind:(Ptype_record [
         H.Type.field
           ~mut:Asttypes.Mutable
           (L.mknoloc "transitions")
-          [%type: transition Ppx_deriving_runtime.list];
+          [%type: transition Std_utils.List.t];
         H.Type.field
           ~mut:Asttypes.Mutable
           (L.mknoloc "final")

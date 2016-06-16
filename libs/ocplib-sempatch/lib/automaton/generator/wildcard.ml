@@ -2,14 +2,12 @@ module C = Common
 module H = Ast_helper
 module L = Location
 module LI = Longident
-module PpxD = Ppx_deriving
 module S = String
 open Asttypes
 open Parsetree
 open Std_utils
 
-let raise_errorf =
-  Printf.ksprintf failwith
+let raise_errorf = C.raise_errorf
 
 let plugin_name = "wildcard"
 

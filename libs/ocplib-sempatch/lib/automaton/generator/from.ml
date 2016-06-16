@@ -2,7 +2,6 @@ module C = Common
 module H = Ast_helper
 module L = Location
 module LI = Longident
-module PpxD = Ppx_deriving
 module S = String
 open Asttypes
 open Parsetree
@@ -10,7 +9,7 @@ open Std_utils
 
 let deriver = "from_builder"
 
-let raise_errorf = PpxD.raise_errorf
+let raise_errorf = C.raise_errorf
 
 let overrides = C.get_val_decls [%str
     let pattern { ppat_desc; ppat_attributes; ppat_loc } =

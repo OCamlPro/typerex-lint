@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # This is what we would do if we needed something more:
-OPAM_DEPS="ocp-build menhir ocp-indent ppx_tools ppx_deriving"
+OPAM_DEPS="ocp-build menhir ocp-indent ppx_tools"
 export OPAMYES=1 OPAMVERBOSE=1
 
 echo System OCaml version
