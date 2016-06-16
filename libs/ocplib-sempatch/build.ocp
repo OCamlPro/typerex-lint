@@ -53,7 +53,7 @@ begin library "ocplib-sempatch"
         "abc"
         "ppx_deriving"
     ]
-    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm" ]
+    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree.ml" ]
     comp_requires = "abc:asm"
     ocamlyacc = "menhir"
 end
