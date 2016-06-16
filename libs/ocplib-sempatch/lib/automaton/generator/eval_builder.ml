@@ -109,9 +109,6 @@ let mk_case loc decl =
     H.Exp.case
       pattern
       expression;
-    H.Exp.case
-      (H.Pat.tuple ~loc [partial_pattern mk_a None; H.Pat.any ~loc ()])
-      [%expr [[Automaton.trash (), env]]]
   ]
 
 let global_dispatcher loc decls =
@@ -126,6 +123,12 @@ let global_dispatcher loc decls =
   in
   (* The list of cases in the big "match" part *)
   let cases = trash_case :: final_case :: List.bind (mk_case loc) decls
+  in
+  let cases =
+    cases @
+    [H.Exp.case
+       (H.Pat.any ~loc ())
+       [%expr [[Automaton.trash (), env]]]]
   in
   let inside_match =
     H.Exp.match_
@@ -214,16 +217,6 @@ let generate_match_on_variant loc cases =
       H.Exp.case
         pattern
         expression;
-      H.Exp.case
-        (H.Pat.tuple
-           ~loc
-           [
-             (H.Pat.construct ~loc (here @@ mk_a name)
-                (if args = [] then None else Some (H.Pat.any ~loc ())));
-             (H.Pat.any ~loc ());
-           ]
-        )
-        [%expr [[Automaton.trash (), env]]];
     ]
   in
   List.bind generate_match cases
@@ -323,6 +316,12 @@ and generate_dispatch_body loc decls_in_env decl =
   match decl.ptype_kind with
   | Ptype_variant cases ->
     let cases = generate_match_on_variant loc cases in
+    let cases =
+      cases @
+      [H.Exp.case
+         (H.Pat.any ~loc ())
+         [%expr [[Automaton.trash (), env]]]]
+    in
     H.Exp.match_
       ~loc
       [%expr states, element]
