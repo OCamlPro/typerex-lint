@@ -77,16 +77,14 @@ let parse_source source =
     Some
       (Pparse.parse_implementation ~tool_name Format.err_formatter  source)
   with Syntaxerr.Error _ ->
-    Lint_plugin_error.(print Format.err_formatter (Syntax_error source));
-    None
+    raise Lint_plugin_error.(Plugin_error (Syntax_error source))
 
 let parse_interf source =
   let tool_name = Ast_mapper.tool_name () in
   try
     Some (Pparse.parse_interface ~tool_name Format.err_formatter source)
   with Syntaxerr.Error _ ->
-    Lint_plugin_error.(print Format.err_formatter (Syntax_error source));
-    None
+    raise Lint_plugin_error.(Plugin_error (Syntax_error source))
 
 let is_source file = Filename.check_suffix file ".ml"
 let is_interface file = Filename.check_suffix file ".mli"
@@ -228,13 +226,14 @@ let from_input file pname cname inputs =
         | _ -> ()
       with
       | Lint_db_error.Db_error err ->
-        Lint_db_error.print Format.err_formatter err
+        Lint_db.DefaultDB.add_error file (Lint_db_types.Db_error err)
       | Sempatch.Failure.SempatchException e ->
-        Format.eprintf "Sempatch error : %s\n" (Sempatch.Failure.to_string e)
+        Lint_db.DefaultDB.add_error file (Lint_db_types.Sempatch_error e)
       | Lint_plugin_error.Plugin_error err ->
-        Lint_plugin_error.print Format.err_formatter err
+        Lint_db.DefaultDB.add_error file (Lint_db_types.Plugin_error err)
       | exn ->
-        Format.eprintf "Error [%s] %s\n%!" file (Printexc.to_string exn))
+        Lint_db.DefaultDB.add_error
+          file (Lint_db_types.Ocplint_error (Printexc.to_string exn)))
     inputs
 
 let lint_file no_db file =
@@ -256,9 +255,16 @@ let lint_file no_db file =
         checks)
     plugins;
   if not no_db then Lint_db.DefaultDB.save ()
-  else Lint_text.print Format.err_formatter (Filename.dirname file) Lint_db.DefaultDB.db
+  else
+    begin
+      Lint_text.print
+        Format.err_formatter (Filename.dirname file) Lint_db.DefaultDB.db;
+      Lint_text.print_error
+        Format.err_formatter file Lint_db.DefaultDB.db_errors
+    end
 
 let run no_db file =
+  (* needed for summary before real parallelization *)
   if no_db then lint_file no_db file
   else begin
     let args = Array.copy Sys.argv in
@@ -279,15 +285,17 @@ let run no_db file =
 
 let lint_sequential no_db path =
   (* We filter the global ignored modules/files.  *)
+  let no_db = init_db no_db path in
   let sources = filter_modules (scan_project path) !!ignored_files in
   List.iter (run no_db) sources;
   let no_db = init_db no_db path in
   if not no_db then
     begin
       Lint_db.DefaultDB.merge sources;
-      Lint_text.print Format.err_formatter path Lint_db.DefaultDB.db
+      Lint_text.print Format.err_formatter path Lint_db.DefaultDB.db;
+      Lint_text.print_error Format.err_formatter path Lint_db.DefaultDB.db_errors
     end;
-  Lint_text.summary path Lint_db.DefaultDB.db
+  Lint_text.summary path Lint_db.DefaultDB.db Lint_db.DefaultDB.db_errors
 
 (* let fork_exec file = *)
 (*   let exe = Sys.executable_name in *)

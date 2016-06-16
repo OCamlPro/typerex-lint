@@ -30,7 +30,7 @@ module MakeDB (DB : DATABASE_IO) = struct
   let root = ref ""
 
   let db = empty_db ()
-  let db_error = empty_db ()
+  let db_errors = empty_db ()
 
   let load file = db
 
@@ -41,32 +41,15 @@ module MakeDB (DB : DATABASE_IO) = struct
     let hash_filename_path = Filename.concat olint_dir hash_filename in
     if Sys.file_exists hash_filename_path then
       try
-        let (file, pres) = DB.load hash_filename_path in
-        Hashtbl.add db file (hash, pres)
+        let (file, pres, file_error) = DB.load hash_filename_path in
+        Hashtbl.add db file (hash, pres);
+        Hashtbl.add db_errors file file_error
       with exn ->
         Format.eprintf "Can't read DB file for %s, skipping it\n%!" file
 
   let init path =
     let path = File.to_string path in
     root := Filename.dirname path
-    (* let all_hash = *)
-    (*   List.map (fun file -> *)
-    (*       let hash = Digest.file file in *)
-    (*       let hash_filename = Digest.to_hex hash in *)
-    (*       Filename.concat path hash_filename, hash) *)
-    (*     all in *)
-    (* let all_hash_db = *)
-    (*   List.filter (fun (fn, hash) -> Sys.file_exists fn) all_hash in *)
-    (* if all_hash_db = [] then *)
-    (*   Format.eprintf "No DB files found, using a fresh DB\n%!" *)
-    (* else *)
-    (*   List.iter (fun (hash_filename, hash) -> *)
-    (*       try *)
-    (*         let (file, pres) = DB.load hash_filename in *)
-    (*         Hashtbl.add db file (hash, pres) *)
-    (*       with exn -> *)
-    (*           Format.eprintf "Can't read DB file %s, skipping it\n%!" file) *)
-    (*     all_hash_db *)
 
   let cache ()=
     Hashtbl.iter (fun file (hash, pres) ->
@@ -85,7 +68,11 @@ module MakeDB (DB : DATABASE_IO) = struct
     Hashtbl.iter (fun file (hash, pres) ->
         let db_path = Filename.concat !root "_olint" in
         let db_file = Filename.concat db_path (Digest.to_hex hash) in
-        DB.save db_file (file, pres))
+        let file_error =
+          if Hashtbl.mem db_errors file then
+            Hashtbl.find db_errors file
+          else ErrorSet.empty in
+        DB.save db_file (file, pres, file_error))
       db
 
   let reset () = Hashtbl.reset db
@@ -108,7 +95,6 @@ module MakeDB (DB : DATABASE_IO) = struct
           pres)
       db;
     Printf.printf "=========================\n%!"
-
 
   let remove_entry file =
     let file = Lint_utils.normalize_path !root file in
@@ -140,11 +126,11 @@ module MakeDB (DB : DATABASE_IO) = struct
       Hashtbl.add db file (hash, new_fres)
 
   let add_error file error =
-    if Hashtbl.mem db_error file then
-      let error_set = Hashtbl.find db_error file in
-      Hashtbl.replace db_error file (ErrorSet.add error error_set)
+    if Hashtbl.mem db_errors file then
+      let error_set = Hashtbl.find db_errors file in
+      Hashtbl.replace db_errors file (ErrorSet.add error error_set)
     else
-      Hashtbl.add db_error file (ErrorSet.singleton error)
+      Hashtbl.add db_errors file (ErrorSet.singleton error)
 
   let clean files =
     List.iter (fun file ->
@@ -217,11 +203,14 @@ module Marshal_IO : DATABASE_IO = struct
 
   let load file =
     let ic = open_in file in
-    input_value ic
+    let db = input_value ic in
+    close_in ic;
+    db
 
   let save file db =
     let oc = open_out file in
-    output_value oc db
+    output_value oc db;
+    close_out oc
 
 end
 

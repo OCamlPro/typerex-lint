@@ -17,9 +17,12 @@
 (*  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE      *)
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
+
 type error =
   | Db_error of Lint_db_error.error
   | Plugin_error of Lint_plugin_error.error
+  | Sempatch_error of Sempatch.Failure.t
+  | Ocplint_error of string
 
 module StringMap = Map.Make(String)
 module ErrorSet = Set.Make(struct
@@ -35,21 +38,22 @@ type linter_map = warning_list StringMap.t
 type plugin_map = linter_map StringMap.t
 type file_map = Digest.t * plugin_map
 
-type error_map = ErrorSet.t
+type error_set = ErrorSet.t
 
 type t = (string, file_map) Hashtbl.t
-type errors = (string, error_map) Hashtbl.t
+type errors = (string, error_set) Hashtbl.t
 
 
 
 
 module type DATABASE_IO = sig
-  val load : string -> (string * plugin_map)
-  val save : string -> (string * plugin_map) -> unit
+  val load : string -> (string * plugin_map * error_set)
+  val save : string -> (string * plugin_map * error_set) -> unit
 end
 
 module type DATABASE = sig
   val db : t
+  val db_errors : errors
   val root : string ref
   val init : File.t -> unit
   val load : string -> t
