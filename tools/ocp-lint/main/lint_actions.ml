@@ -220,6 +220,11 @@ let from_input file pname cname inputs =
           Lint_db.DefaultDB.add_entry file pname cname;
           main [file]
         | Lint_input.InTop main -> assert false (* TODO *)
+        | Lint_input.InTokens main when is_source file || is_interface file ->
+          begin try
+              main (Lexer_iter.get_tokens file)
+            with exn -> ()
+          end
         | _ -> ()
       with
       | Lint_db_error.Db_error err ->
