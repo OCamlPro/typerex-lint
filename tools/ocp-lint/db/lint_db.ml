@@ -111,13 +111,13 @@ module MakeDB (DB : DATABASE_IO) = struct
 
 
   let remove_entry file =
-    let file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
+    let file = Lint_utils.normalize_path !root file in
     Hashtbl.remove db file
 
   let add_entry file pname lname =
     let options = Lint_config.DefaultConfig.get_linter_options pname lname in
     let hash = Digest.file file in
-    let file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
+    let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then
       let (_old_hash, old_fres) = Hashtbl.find db file in
       if StringMap.mem pname old_fres then
@@ -148,7 +148,7 @@ module MakeDB (DB : DATABASE_IO) = struct
 
   let clean files =
     List.iter (fun file ->
-        let db_file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
+        let db_file = Lint_utils.normalize_path !root file in
         try
           let (old_hash, _old_fres) = Hashtbl.find db db_file in
           let hash = Digest.file file in
@@ -162,7 +162,7 @@ module MakeDB (DB : DATABASE_IO) = struct
     if not (Sys.file_exists file)
     then raise (Lint_db_error.Db_error (Lint_db_error.File_not_found file));
     let hash = Digest.file file in
-    let file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
+    let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then
       let (_, old_pres) = Hashtbl.find db file in
       if StringMap.mem pname old_pres then
@@ -186,7 +186,7 @@ module MakeDB (DB : DATABASE_IO) = struct
 
   let already_run file pname lname =
     let new_hash = Digest.file file in
-    let file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
+    let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then
       let (hash, old_fres) = Hashtbl.find db file in
       if hash = new_hash && StringMap.mem pname old_fres then

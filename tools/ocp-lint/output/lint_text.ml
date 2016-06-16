@@ -42,7 +42,7 @@ let summary path db =
   let breakdown_linted = Hashtbl.create 42 in
   let breakdown_cached = Hashtbl.create 42 in
   Hashtbl.iter (fun file (hash, pres) ->
-      (* if Lint_utils.(is_in_path file path) then *)
+      if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
         StringMap.iter (fun pname lres ->
             let flag = check_flag [pname; "enabled"] in
             if flag then
@@ -110,7 +110,7 @@ let summary path db =
 let print fmt path db =
   try
     Hashtbl.iter (fun file (hash, pres) ->
-        (* if Lint_utils.(is_in_path file path) then *)
+        if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
           StringMap.iter (fun pname lres ->
               let flag = check_flag [pname; "enabled"] in
               if flag then
@@ -135,7 +135,7 @@ let print fmt path db =
 
 let print_only_new fmt path db =
   Hashtbl.iter (fun file (hash, pres) ->
-      if Lint_utils.(is_in_path file path) then
+      if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
         StringMap.iter (fun pname lres ->
             StringMap.iter  (fun lname (source, _opt, ws) ->
                 if source = Analyse then
