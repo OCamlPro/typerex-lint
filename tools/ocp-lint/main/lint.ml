@@ -25,7 +25,8 @@ type action =
 | ActionList
 | ActionInit
 | ActionSave
-| ActionLoad of string
+| ActionLoadDir of string
+| ActionLoadFile of string
 
 let action = ref ActionNone
 let exit_status = ref 0
@@ -166,21 +167,24 @@ let () =
     " \nKernel arguments:\n";
 
     "--init", Arg.Unit (fun dir -> set_action ActionInit),
-    " Init a project";
+    " Initialise a project";
 
     "--path", Arg.String (fun dir ->
         Lint_actions.init_config dir;
-        set_action (ActionLoad dir)),
+        set_action (ActionLoadDir dir)),
     "DIR   Give a project dir path";
+
+    "--file", Arg.String (fun file ->
+        set_action (ActionLoadFile file)),
+    "FILE   Give a file to lint";
 
     "--output-txt", Arg.String (fun file -> output_text := Some file),
     "FILE   Output results in a text file.";
 
     "--list", Arg.Unit (fun () -> set_action ActionList),
-    " List of every plugins and warnings.";
+    " List of every plugins and linters.";
 
-    "--warn-error", Arg.Unit (fun () ->
-        exit_status := 1),
+    "--warn-error", Arg.Unit (fun () -> exit_status := 1),
     " Every warning returns an error status code.";
 
     "--load-plugins", Arg.String (fun files ->
@@ -194,7 +198,7 @@ let () =
     " Save ocp-lint default config file.";
 
     "--no-db-cache", Arg.Set no_db,
-    " Ignore the DB file.";
+    " Ignore the database.";
 
     "--print-only-new", Arg.Unit (fun () -> print_only_new := true),
     " Print only new warnings.";
@@ -202,13 +206,10 @@ let () =
     " \n\nPlugins arguments:\n";
   ]
 
+let start_lint_file file = Lint_actions.lint_file !no_db file
+
 let start_lint dir =
-  Lint_actions.scan
-    ?output_text:!output_text
-    !no_db
-    !print_only_new
-    dir;
-  (* if not !no_db then Lint_db.DefaultDB.save (); *)
+  Lint_actions.lint_sequential !no_db dir;
   if Lint_db.DefaultDB.has_warning () then exit !exit_status
 
 let main () =
@@ -222,8 +223,11 @@ let main () =
     usage_msg;
 
   match !action with
-  | ActionLoad dir ->
+  | ActionLoadDir dir ->
     start_lint dir;
+    exit 0 (* No warning, we can exit successfully *)
+  | ActionLoadFile file ->
+    start_lint_file file;
     exit 0 (* No warning, we can exit successfully *)
   | ActionList ->
     Lint_actions.list_plugins Format.std_formatter;

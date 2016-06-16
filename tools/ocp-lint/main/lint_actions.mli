@@ -22,19 +22,14 @@
     directory given in the command line with '--load' option. *)
 val load_plugins : string list -> unit
 
-(** [scan patches ?output_text no_db path] scan the [path] and start the
-    registered plugins/linters on the files in this path. *)
-val scan :
-  ?output_text:string ->
-  bool ->
-  bool ->
-  string ->
-  unit
-
 val list_plugins : Format.formatter -> unit
 
 (** [init_db ()] create dir to dump the db. *)
 val init_olint_dir : unit -> unit
 
 val init_config : string -> unit
-val init_db : bool -> string list -> string -> bool
+val init_db : bool -> string -> bool
+
+val lint_file : bool -> string -> unit
+(* val lint_parallel : string -> unit *)
+val lint_sequential : bool -> string -> unit
