@@ -3,4 +3,4 @@ _obuild
 *.err
 *.out
 *.output
-/_olint
+_olint
