@@ -23,8 +23,8 @@ open Lint_utils
 type error =
   | File_not_found of string
   | File_not_in_db of string
-  | Plugin_not_in_db of (string * string)
-  | Linter_not_in_db of (string * string * string)
+  | Plugin_not_in_db of string * string
+  | Linter_not_in_db of string * string * string
   | No_db_found
 
 let to_string = function

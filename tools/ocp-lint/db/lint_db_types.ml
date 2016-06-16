@@ -26,8 +26,8 @@ type error =
 
 module StringMap = Map.Make(String)
 module ErrorSet = Set.Make(struct
-  let compare = Pervasives.compare
-  type t = error
+    let compare = Pervasives.compare
+    type t = error
   end)
 
 type source = Cache | Analyse
@@ -42,9 +42,6 @@ type error_set = ErrorSet.t
 
 type t = (string, file_map) Hashtbl.t
 type errors = (string, error_set) Hashtbl.t
-
-
-
 
 module type DATABASE_IO = sig
   val load : string -> (string * plugin_map * error_set)

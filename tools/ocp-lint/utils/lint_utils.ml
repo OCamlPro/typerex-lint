@@ -46,11 +46,11 @@ let relative_path =
   let rec make_relative = function
     | (dir1::root, dir2::file) when dir1 = dir2 -> make_relative (root, file)
     | (root, file) ->
-        List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
+      List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
   in
   fun root file ->
     make_relative (split_path root, split_path file)
-      |> String.concat Filename.dir_sep
+    |> String.concat Filename.dir_sep
 
 let find_root root_dir basenames =
   let rec find dirname (basenames : string list) =
@@ -85,8 +85,7 @@ let absolute_path file =
 let absolute_path root path =
   let path_to_root = relative_path root (Sys.getcwd()) in
   let new_path = diff path_to_root path in
-  let new_abs_path = absolute_path new_path in
-  new_abs_path
+  absolute_path new_path
 
 let normalize_path root file =
   relative_path root (absolute_path root file)

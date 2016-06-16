@@ -33,8 +33,12 @@ let print_warning ppf pname lname warning =
 let print_error ppf error =
   let str = match error with
     | Db_error err -> Printf.eprintf "Db_error\n%!"; Lint_db_error.to_string err
-    | Plugin_error err -> Printf.eprintf "Plugin_error\n%!"; Lint_plugin_error.to_string err
-    | Sempatch_error err -> Printf.eprintf "Sem_error\n%!"; Sempatch.Failure.to_string err
+    | Plugin_error err ->
+      Printf.eprintf "Plugin_error\n%!";
+      Lint_plugin_error.to_string err
+    | Sempatch_error err ->
+      Printf.eprintf "Sem_error\n%!";
+      Sempatch.Failure.to_string err
     | Ocplint_error str -> Printf.eprintf "OCPL_error\n%!"; str
   in
   Format.fprintf ppf "  %s\n%!" str
@@ -81,8 +85,10 @@ let summary path db db_errors =
                                 StringCompat.StringSet.add file !files_linted;
                               let entry = lname, warning.decl.id in
                               if Hashtbl.mem breakdown_linted entry then
-                                let old_cpt = Hashtbl.find breakdown_linted entry in
-                                Hashtbl.replace breakdown_linted entry (old_cpt + 1)
+                                let old_cpt =
+                                  Hashtbl.find breakdown_linted entry in
+                                Hashtbl.replace
+                                  breakdown_linted entry (old_cpt + 1)
                               else Hashtbl.add breakdown_linted entry 1))
                         ws
                     end
@@ -103,10 +109,12 @@ let summary path db db_errors =
                                 StringCompat.StringSet.add file !files_cached;
                               let entry = lname, warning.decl.id in
                               if Hashtbl.mem breakdown_cached entry then
-                                let old_cpt = Hashtbl.find breakdown_cached entry in
-                                Hashtbl.replace breakdown_cached entry (old_cpt + 1)
+                                let old_cpt = Hashtbl.find
+                                    breakdown_cached entry in
+                                Hashtbl.replace
+                                  breakdown_cached entry (old_cpt + 1)
                               else Hashtbl.add breakdown_cached entry 1))
-                      ws end)
+                        ws end)
                 lres)
           pres)
     db;
@@ -116,20 +124,25 @@ let summary path db db_errors =
   let files_linted_total = StringCompat.StringSet.cardinal !files_linted in
   let warnings_linted_total =
     Hashtbl.fold (fun (_, _) cpt acc -> acc + cpt) breakdown_linted 0 in
-  let files_linted_errors_total = StringCompat.StringSet.cardinal !files_linted_errors in
-  let files_cached_errors_total = StringCompat.StringSet.cardinal !files_cached_errors in
+  let files_linted_errors_total =
+    StringCompat.StringSet.cardinal !files_linted_errors in
+  let files_cached_errors_total =
+    StringCompat.StringSet.cardinal !files_cached_errors in
   Printf.printf "Summary:\n%!";
   Printf.printf "== Infos ==\n%!";
   Printf.printf "  * root dir: %s\n%!" !(Lint_db.DefaultDB.root);
   Printf.printf "== Cache Infos ==\n%!";
   Printf.printf "  * %d file(s) were found in cache:\n%!" files_cached_total;
   StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_cached;
-  Printf.printf "  * %d warning(s) were found in cache:\n%!" warnings_cached_total;
+  Printf.printf "  * %d warning(s) were found in cache:\n%!"
+    warnings_cached_total;
   Hashtbl.iter (fun (lname, id) cpt ->
       Printf.printf "    - %d %S number %d\n%!" cpt lname id)
     breakdown_cached;
-  Printf.printf "  * error(s) on %d file(s) were found in cache:\n%!" files_cached_errors_total;
-  StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_cached_errors;
+  Printf.printf "  * error(s) on %d file(s) were found in cache:\n%!"
+    files_cached_errors_total;
+  StringCompat.StringSet.iter
+    (Printf.printf "    - %s\n%!") !files_cached_errors;
   Printf.printf "== New Warnings ==\n%!";
   Printf.printf "  * %d file(s) were linted:\n%!" files_linted_total;
   StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_linted;
@@ -137,8 +150,10 @@ let summary path db db_errors =
   Hashtbl.iter (fun (lname, id) cpt ->
       Printf.printf "    - %d %S number %d\n%!" cpt lname id)
     breakdown_linted;
-  Printf.printf "  * errors(s) on %d file(s) were emitted:\n%!" files_linted_errors_total;
-  StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_linted_errors
+  Printf.printf "  * errors(s) on %d file(s) were emitted:\n%!"
+    files_linted_errors_total;
+  StringCompat.StringSet.iter
+    (Printf.printf "    - %s\n%!") !files_linted_errors
 
 let print fmt path db =
   try

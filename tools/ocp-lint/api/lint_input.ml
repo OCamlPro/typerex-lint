@@ -19,14 +19,14 @@
 (**************************************************************************)
 
 type input =
-    | InStruct of (Parsetree.structure -> unit)
-    | InInterf of (Parsetree.signature -> unit)
-    | InTop of (Parsetree.toplevel_phrase -> unit)
-    | InCmt of (Cmt_format.cmt_infos -> unit)
-    | InMl of (string -> unit)
-    | InMli of (string -> unit)
-    | InAll of (string list -> unit)
-    | InTokens of ( (Parser.token * Location.t) array -> unit)
+  | InStruct of (Parsetree.structure -> unit)
+  | InInterf of (Parsetree.signature -> unit)
+  | InTop of (Parsetree.toplevel_phrase -> unit)
+  | InCmt of (Cmt_format.cmt_infos -> unit)
+  | InMl of (string -> unit)
+  | InMli of (string -> unit)
+  | InAll of (string list -> unit)
+  | InTokens of ( (Parser.token * Location.t) array -> unit)
 
 module type INPUT = sig val input : input end
 module type STRUCTURE = sig val main : Parsetree.structure -> unit end

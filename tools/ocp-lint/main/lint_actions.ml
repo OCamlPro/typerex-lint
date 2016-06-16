@@ -119,12 +119,13 @@ let init_db no_db path =
   try
     if not no_db then
       (let root_path_dir_t = Lint_utils.find_root path_t [olint_dirname] in
-       let root_t = File.concat root_path_dir_t (File.of_string olint_dirname) in
+       let root_t =
+         File.concat root_path_dir_t (File.of_string olint_dirname) in
        Lint_db.DefaultDB.init root_t);
     no_db
   with Not_found ->
     Printf.eprintf
-      "No olint dir found, you should use --init option to use DB features.\n%!";
+      "No olint dir found, you should use --init to use DB features.\n%!";
     true
 
 let init_config path =
@@ -163,7 +164,6 @@ let list_plugins fmt =
       Lint_map.iter (fun cname lint ->
           let module Linter = (val lint : Lint_types.LINT) in
           let status = if Linter.enable then "enable" else "disable" in
-          (* Format.fprintf fmt "  * %s  (%s by default)\n" Linter.name status; *)
           if Linter.enable then
             Format.fprintf fmt "  ** %s (\027[32m%s\027[m)\n%!"
               Linter.name status
@@ -250,7 +250,8 @@ let lint_file no_db file =
           let module Linter = (val lint : Lint_types.LINT) in
           let ignored_files = get_ignored_files Plugin.short_name cname in
           if not (is_in_ignored_files file ignored_files) &&
-             not (Lint_db.DefaultDB.already_run file Plugin.short_name Linter.short_name) then
+             not (Lint_db.DefaultDB.already_run
+                    file Plugin.short_name Linter.short_name) then
             from_input file Plugin.short_name Linter.short_name Linter.inputs)
         checks)
     plugins;
@@ -279,7 +280,7 @@ let run no_db file =
     let args = (* if ocp-lint is called without --path argument *)
       if not !found then Array.to_list args @ ["--file"; file]
       else Array.to_list args in
-     let cmd = String.concat " " args in
+    let cmd = String.concat " " args in
     ignore (Sys.command cmd)
   end
 
@@ -293,14 +294,16 @@ let lint_sequential no_db path =
     begin
       Lint_db.DefaultDB.merge sources;
       Lint_text.print Format.err_formatter path Lint_db.DefaultDB.db;
-      Lint_text.print_error Format.err_formatter path Lint_db.DefaultDB.db_errors
+      Lint_text.print_error
+        Format.err_formatter path Lint_db.DefaultDB.db_errors
     end;
   Lint_text.summary path Lint_db.DefaultDB.db Lint_db.DefaultDB.db_errors
 
 (* let fork_exec file = *)
 (*   let exe = Sys.executable_name in *)
 (*   let args = [| exe; "--file"; file |] in *)
-(*   let pid = Unix.create_process exe args Unix.stdin Unix.stdout Unix.stderr in *)
+(*   let pid = *)
+(*     Unix.create_process exe args Unix.stdin Unix.stdout Unix.stderr in *)
 (*   match pid with *)
 (*   | 0 -> *)
 (*     flush stdout; *)
