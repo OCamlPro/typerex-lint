@@ -167,15 +167,25 @@ let print fmt path db =
                     that do not exist anymore. Please clean your database.\n%!"
 
 let print_error ppf path db_error =
-  Format.fprintf ppf "=== Errors ===\n%!";
+  let has_error = ref false in
   Hashtbl.iter (fun file error_set ->
-      if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) && not (ErrorSet.is_empty error_set) then
-        begin
-          Format.fprintf ppf "%S:\n%!" file;
-          ErrorSet.iter (print_error ppf) error_set
-        end)
-    db_error;
-  Format.fprintf ppf "==============\n%!"
+      if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) &&
+         not (ErrorSet.is_empty error_set) then
+        has_error := true
+    ) db_error;
+  if !has_error then
+    begin
+      Format.fprintf ppf "=== Errors ===\n%!";
+      Hashtbl.iter (fun file error_set ->
+          if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) &&
+             not (ErrorSet.is_empty error_set) then
+            begin
+              Format.fprintf ppf "%S:\n%!" file;
+              ErrorSet.iter (print_error ppf) error_set
+            end)
+        db_error;
+      Format.fprintf ppf "==============\n%!"
+    end
 
 let print_only_new fmt path db =
   Hashtbl.iter (fun file (hash, pres) ->
