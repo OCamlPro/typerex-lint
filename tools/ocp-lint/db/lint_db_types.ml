@@ -50,9 +50,13 @@ end
 
 module type DATABASE = sig
   val db : t
-  val init : string list -> File.t -> unit
+  val root : string ref
+  val init : File.t -> unit
   val load : string -> t
+  val load_file : string -> unit
+  val cache : unit -> unit
   val save : unit -> unit
+  val merge : string list -> unit
   val reset : unit -> unit
   val remove_entry : string -> unit
   val add_entry : string -> string -> string -> unit

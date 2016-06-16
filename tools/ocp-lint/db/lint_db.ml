@@ -32,32 +32,43 @@ module MakeDB (DB : DATABASE_IO) = struct
   let db = empty_db ()
   let db_error = empty_db ()
 
-  let load = assert false
+  let load file = db
 
-  let init all path =
-    let file = Filename.concat (File.to_string path) "db" in
+  let load_file file =
+    let hash = Digest.file file in
+    let hash_filename = Digest.to_hex hash in
+    let olint_dir = Filename.concat !root "_olint" in
+    let hash_filename_path = Filename.concat olint_dir hash_filename in
+    if Sys.file_exists hash_filename_path then
+      try
+        let (file, pres) = DB.load hash_filename_path in
+        Hashtbl.add db file (hash, pres)
+      with exn ->
+        Format.eprintf "Can't read DB file for %s, skipping it\n%!" file
+
+  let init path =
     let path = File.to_string path in
-    root := (Filename.dirname path);
-    let all_hash =
-      List.map (fun file ->
-          let hash = Digest.file file in
-          let hash_filename = Digest.to_hex hash in
-          Filename.concat path hash_filename, hash)
-        all in
-    let all_hash_db =
-      List.filter (fun (fn, hash) -> Sys.file_exists fn) all_hash in
-    if all_hash_db = [] then
-      Format.eprintf "No DB files found, using a fresh DB\n%!"
-    else
-      List.iter (fun (hash_filename, hash) ->
-          try
-            let (file, pres) = DB.load hash_filename in
-            Hashtbl.add db file (hash, pres)
-          with exn ->
-              Format.eprintf "Can't read DB file %s, skipping it\n%!" file)
-        all_hash_db
+    root := Filename.dirname path
+    (* let all_hash = *)
+    (*   List.map (fun file -> *)
+    (*       let hash = Digest.file file in *)
+    (*       let hash_filename = Digest.to_hex hash in *)
+    (*       Filename.concat path hash_filename, hash) *)
+    (*     all in *)
+    (* let all_hash_db = *)
+    (*   List.filter (fun (fn, hash) -> Sys.file_exists fn) all_hash in *)
+    (* if all_hash_db = [] then *)
+    (*   Format.eprintf "No DB files found, using a fresh DB\n%!" *)
+    (* else *)
+    (*   List.iter (fun (hash_filename, hash) -> *)
+    (*       try *)
+    (*         let (file, pres) = DB.load hash_filename in *)
+    (*         Hashtbl.add db file (hash, pres) *)
+    (*       with exn -> *)
+    (*           Format.eprintf "Can't read DB file %s, skipping it\n%!" file) *)
+    (*     all_hash_db *)
 
-  let save () =
+  let cache ()=
     Hashtbl.iter (fun file (hash, pres) ->
         let new_pres =
           StringMap.fold (fun pname lres acc ->
@@ -68,7 +79,9 @@ module MakeDB (DB : DATABASE_IO) = struct
               StringMap.add pname new_lres acc)
             pres StringMap.empty in
         Hashtbl.replace db file (hash, new_pres))
-      db;
+      db
+
+  let save () =
     Hashtbl.iter (fun file (hash, pres) ->
         let db_path = Filename.concat !root "_olint" in
         let db_file = Filename.concat db_path (Digest.to_hex hash) in
@@ -76,6 +89,8 @@ module MakeDB (DB : DATABASE_IO) = struct
       db
 
   let reset () = Hashtbl.reset db
+
+  let merge sources = List.iter load_file sources
 
   let print_debug () =
     Printf.printf "============= DB Debug ============\n%!";
