@@ -10,8 +10,8 @@ let report expr = "[%__sempatch_report " :: expr @ ["]"]
 let replace expr replacement = "(" :: expr @ ") [@__sempatch_replace "
                                              :: replacement @ ["]"]
 let maybe_replace expr _replacement _has_change = expr
-  (* if has_change then replace expr replacement *)
-  (* else expr *)
+(* if has_change then replace expr replacement *)
+(* else expr *)
 
 let rec filter_map f = function
   | [] -> []

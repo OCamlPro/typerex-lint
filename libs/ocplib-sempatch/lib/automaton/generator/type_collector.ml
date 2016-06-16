@@ -4,28 +4,28 @@ module C = Common
 module H = Ast_helper
 
 (** Puts the list of all instanciated polymorphic types (and tuples)
-met in the [met_types] list ref, and returns the same tree with types
-replaced by their aliases *)
+    met in the [met_types] list ref, and returns the same tree with types
+    replaced by their aliases *)
 let typ_collector met_types =
   let add_if_ok typ =
     match C.upprint typ with
     | Some name ->
-       met_types := (C.id name, typ) :: !met_types;
-       typ
+      met_types := (C.id name, typ) :: !met_types;
+      typ
     | None -> typ
   in
   {
-  M.default_mapper with
-  M.typ = (fun self typ ->
-      let typ = M.(default_mapper.typ self typ) in
-      match typ.ptyp_desc with
-      | Ptyp_tuple _
-      | Ptyp_constr (_, _::_) ->
-         add_if_ok typ
-      | _ ->
-         typ
-    );
-}
+    M.default_mapper with
+    M.typ = (fun self typ ->
+        let typ = M.(default_mapper.typ self typ) in
+        match typ.ptyp_desc with
+        | Ptyp_tuple _
+        | Ptyp_constr (_, _::_) ->
+          add_if_ok typ
+        | _ ->
+          typ
+      );
+  }
 
 (** [declare_core_typ name typ] creates a type declaration of the form [let
     name = typ] *)
@@ -35,9 +35,9 @@ let declare_core_typ loc name typ =
     (Location.mkloc name loc)
 
 (** [collect type_declarations] returns the list of type declarations
-[let id = typ] where typ is an instantiated constructor appearing in
-type_declarations (like [int list] of [string option], and id a unique
-identifier for the type *)
+    [let id = typ] where typ is an instantiated constructor appearing in
+    type_declarations (like [int list] of [string option], and id a unique
+    identifier for the type *)
 let collect = function
   | [] -> []
   | hd::_ as type_decls ->
@@ -48,11 +48,8 @@ let collect = function
         (collector.M.type_declaration collector)
         type_decls
     in
-    let new_types_decls =
-      List.sort_uniq (fun (id1, _) (id2, _) ->
-          String.compare id1 id2
-        )
-        !types_list
-      |> List.map (fun (id, def) -> declare_core_typ loc id def)
-    in
-    new_types_decls
+    List.sort_uniq (fun (id1, _) (id2, _) ->
+        String.compare id1 id2
+      )
+      !types_list
+    |> List.map (fun (id, def) -> declare_core_typ loc id def)

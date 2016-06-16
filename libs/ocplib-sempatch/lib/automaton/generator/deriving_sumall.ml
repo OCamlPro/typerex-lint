@@ -34,8 +34,8 @@ and final_variant =
 
 let variant_of_type_decl loc type_decl =
   let constr_name, type_lid =
-        Common.cstr type_decl.ptype_name.txt,
-      LI.Lident (Common.id type_decl.ptype_name.txt)
+    Common.cstr type_decl.ptype_name.txt,
+    LI.Lident (Common.id type_decl.ptype_name.txt)
   in
   let args =
     match type_decl.ptype_manifest with
@@ -151,17 +151,14 @@ let str_of_type type_decls cmd =
 
           (* Module conatining the sum type of all nodes in the ast *)
           "Element", [], sum_typ ::
-                             (mk_synonyms loc
-                                (Some (Longident.Lident "Exploded"))
-                                poly_decls_no_list);
+                         (mk_synonyms loc
+                            (Some (Longident.Lident "Exploded"))
+                            poly_decls_no_list);
         ]
       in
-      let declarations =
-        List.map
-          mk_type_module
-          constructors
-      in
-      declarations
+      List.map
+        mk_type_module
+        constructors
     | `Automaton_types ->
       [mk_type_module (
           "A", [], transition_type :: state_type :: automaton_typ

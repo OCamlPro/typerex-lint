@@ -79,20 +79,20 @@ let convert_to_states =
         match mapped with
         | Ptype_variant args ->
           Ptype_variant (List.map (
-            fun cd ->
-              let args =
-                match cd.pcd_args with
-                | [{ ptyp_desc = Ptyp_tuple _; ptyp_loc = loc; _} as arg] ->
-                  [
-                    {
-                      arg with
-                      ptyp_desc = Ptyp_constr (L.mkloc state_lid loc, []);
-                    }
-                  ]
-                | args -> args
-              in { cd with pcd_args = args }
-          )
-            args
+              fun cd ->
+                let args =
+                  match cd.pcd_args with
+                  | [{ ptyp_desc = Ptyp_tuple _; ptyp_loc = loc; _} as arg] ->
+                    [
+                      {
+                        arg with
+                        ptyp_desc = Ptyp_constr (L.mkloc state_lid loc, []);
+                      }
+                    ]
+                  | args -> args
+                in { cd with pcd_args = args }
+            )
+              args
             )
         | k -> k
       )

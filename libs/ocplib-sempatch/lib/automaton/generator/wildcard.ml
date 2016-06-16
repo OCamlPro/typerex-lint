@@ -74,9 +74,9 @@ let create_record_match loc name fields =
         Asttypes.Closed
     in
     H.Pat.construct
-         ~loc
-         (here @@ mk_exploded (Common.cstr name))
-         (Some sub_pattern)
+      ~loc
+      (here @@ mk_exploded (Common.cstr name))
+      (Some sub_pattern)
   and results =
     let sub_results =
       List.map (fun arg -> H.Exp.record ~loc arg None)
@@ -101,18 +101,18 @@ let create_variant_match loc type_name variant =
   let variant_name = variant.pcd_name.txt in
   let here elt = L.mkloc elt loc in
   let args = List.mapi (fun idx _ -> "state_" ^ (string_of_int idx))
-                       variant.pcd_args
+      variant.pcd_args
   in
   let pattern =
     H.Pat.construct
       ~loc
       (here @@ mk_exploded (C.cstr type_name))
       (Some (
-           H.Pat.construct
-             ~loc
-             (here @@ Longident.Lident (C.cstr variant_name))
-             (generate_patterns loc variant.pcd_args)
-         ))
+          H.Pat.construct
+            ~loc
+            (here @@ Longident.Lident (C.cstr variant_name))
+            (generate_patterns loc variant.pcd_args)
+        ))
   and results =
     let sub_results = generate_tuple loc args in
     List.map (fun sub ->
@@ -202,30 +202,30 @@ let create_core_typ_match recur type_declarations loc name typ =
       (*   (*    [%expr fun x -> [%e expr] x] *) *)
       (*   (* ] *) *)
       (* | _ -> *)
-        try
-          let generic_type =
-            List.find (fun typ -> typ.ptype_name.txt = id) type_declarations
-          in
-          let instanciations =
-            List.combine
-              (List.bind
-                 (fun (typ, _) ->
-                    match typ.ptyp_desc with
-                    | Ptyp_var v -> [v]
-                    | _ -> []
-                 )
-                 generic_type.ptype_params
-              )
-              args
-          in
-          let real_type =
-            C.instantiate_type_decl instanciations generic_type
-          in
-          recur { real_type with ptype_name = Location.mknoloc name }
-        with
-          Not_found ->
-          raise_errorf "%s : Not in the stdlib nor declared here : %s"
-            plugin_name id
+      try
+        let generic_type =
+          List.find (fun typ -> typ.ptype_name.txt = id) type_declarations
+        in
+        let instanciations =
+          List.combine
+            (List.bind
+               (fun (typ, _) ->
+                  match typ.ptyp_desc with
+                  | Ptyp_var v -> [v]
+                  | _ -> []
+               )
+               generic_type.ptype_params
+            )
+            args
+        in
+        let real_type =
+          C.instantiate_type_decl instanciations generic_type
+        in
+        recur { real_type with ptype_name = Location.mknoloc name }
+      with
+        Not_found ->
+        raise_errorf "%s : Not in the stdlib nor declared here : %s"
+          plugin_name id
     end
   | Ptyp_tuple args ->
     [create_tuple_match loc name args]
@@ -239,9 +239,9 @@ let str_of_type all_types type_decls =
     let name = type_decl.ptype_name.txt in
     match type_decl.ptype_kind with
     | Ptype_variant cases ->
-       List.map
-         (create_variant_match loc name)
-         cases
+      List.map
+        (create_variant_match loc name)
+        cases
     | Ptype_record fields ->
       [create_record_match loc name fields]
     | Ptype_abstract ->
@@ -254,8 +254,8 @@ let str_of_type all_types type_decls =
             H.Pat.construct
               ~loc
               (L.mkloc (LI.Ldot (
-                  LI.Lident "Element",
-                  C.cstr type_decl.ptype_name.txt)) loc)
+                   LI.Lident "Element",
+                   C.cstr type_decl.ptype_name.txt)) loc)
               (Some [%pat? _])
           in
           let expr = [%expr [A.Trash]]
@@ -274,9 +274,9 @@ let str_of_type all_types type_decls =
   [%str
     let wildcard () =
       let state = A.{
-        final = false;
-        transitions = [];
-      }
+          final = false;
+          transitions = [];
+        }
       in
       state.A.transitions <-
         [
@@ -285,4 +285,3 @@ let str_of_type all_types type_decls =
         ];
       state
   ]
-

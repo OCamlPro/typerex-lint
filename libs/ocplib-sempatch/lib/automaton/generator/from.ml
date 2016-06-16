@@ -21,7 +21,7 @@ let overrides = C.get_val_decls [%str
         Match.pattern (pattern_desc ppat_desc) (location__t ppat_loc)
           (attributes ppat_attributes)
 
-    let expression { pexp_desc; pexp_loc; pexp_attributes } =
+    and expression { pexp_desc; pexp_loc; pexp_attributes } =
       match pexp_desc with
       | Pexp_extension ({ Asttypes.txt = "__sempatch_report"; _},
                         PStr [{ pstr_desc = Pstr_eval (e, _); _ }]) ->
@@ -54,11 +54,11 @@ let nth_arg n = Printf.sprintf "sub_%i" n
 let args_pattern loc case =
   let elts =
     List.mapi (fun idx _ ->
-               H.Pat.var
-                 ~loc
-                 (L.mkloc (nth_arg idx) loc)
-              )
-              case.pcd_args
+        H.Pat.var
+          ~loc
+          (L.mkloc (nth_arg idx) loc)
+      )
+      case.pcd_args
   in
   match elts with
   | [] -> None
@@ -69,11 +69,11 @@ let generate_froms loc typ =
   match Common.upprint typ with
   | None -> [%expr ()]
   | Some name ->
-     (H.Exp.ident
-        ~loc
-        (L.mkloc
-           (LI.Lident (C.id name))
-           loc))
+    (H.Exp.ident
+       ~loc
+       (L.mkloc
+          (LI.Lident (C.id name))
+          loc))
 
 let generate_sub_match loc typ var_name =
   H.Exp.apply
@@ -109,14 +109,14 @@ let str_of_core_type self type_declarations loc name typ =
   | Ptyp_tuple args ->
     let names = List.mapi (fun idx typ -> nth_arg idx, typ) args in
     let pattern = H.Pat.tuple
-      ~loc
-      (List.map (fun (arg, _) ->
-           H.Pat.var
-             ~loc
-             (L.mkloc arg loc)
-         )
-          names
-      )
+        ~loc
+        (List.map (fun (arg, _) ->
+             H.Pat.var
+               ~loc
+               (L.mkloc arg loc)
+           )
+            names
+        )
     and expr = H.Exp.apply
         ~loc
         (H.Exp.ident ~loc (Location.mkloc
@@ -126,25 +126,25 @@ let str_of_core_type self type_declarations loc name typ =
                ~loc
                (generate_froms loc typ)
                [("",(H.Exp.ident
-                  ~loc
-                  (L.mkloc (LI.Lident name) loc)))]
+                       ~loc
+                       (L.mkloc (LI.Lident name) loc)))]
            )
             names
         )
     in template pattern expr
   | Ptyp_constr ({ txt = id; _ }, []) ->
-        let pattern = H.Pat.construct
-            ~loc
-            (Location.mkloc
-               (LI.Ldot (LI.Lident "Element",
-                         C.cstr (Longident.last id)))
-               loc)
-            (Some (H.Pat.var ~loc (Location.mkloc "y" loc)))
-        in
-        [%expr fun x -> Match.basic_state @@
-                 function
-                 | [%p pattern] when x = y -> [A.Final]
-                 | _ -> [A.Trash]]
+    let pattern = H.Pat.construct
+        ~loc
+        (Location.mkloc
+           (LI.Ldot (LI.Lident "Element",
+                     C.cstr (Longident.last id)))
+           loc)
+        (Some (H.Pat.var ~loc (Location.mkloc "y" loc)))
+    in
+    [%expr fun x -> Match.basic_state @@
+             function
+             | [%p pattern] when x = y -> [A.Final]
+             | _ -> [A.Trash]]
   | Ptyp_constr ({ txt = Longident.Lident id; _ }, args) ->
     begin
       try
@@ -179,84 +179,83 @@ let str_of_core_type self type_declarations loc name typ =
 
 let rec from_builder_of_type loc type_decls name type_decl =
   let here elt = Location.mkloc elt loc in
-    match type_decl.ptype_kind with
-    | Ptype_variant cases ->
-       H.Exp.function_
+  match type_decl.ptype_kind with
+  | Ptype_variant cases ->
+    H.Exp.function_
+      ~loc
+      (List.map
+         (fun case ->
+            H.Exp.case
+              (H.Pat.construct
+                 ~loc
+                 (here (LI.Lident (C.cstr case.pcd_name.txt)))
+                 (args_pattern loc case)
+              )
+              (apply_from loc
+                 (name ^ "_" ^ Common.id case.pcd_name.txt)
+                 case.pcd_args
+              )
+         )
+         cases
+      )
+  | Ptype_record fields ->
+    H.Exp.fun_
+      ""
+      None
+      (H.Pat.record
          ~loc
-         (List.map
-            (fun case ->
-             H.Exp.case
-               (H.Pat.construct
-                  ~loc
-                  (here (LI.Lident (C.cstr case.pcd_name.txt)))
-                  (args_pattern loc case)
-               )
-               (apply_from loc
-                           (name ^ "_" ^ Common.id case.pcd_name.txt)
-                           case.pcd_args
-               )
+         (List.map (fun field ->
+              let name = field.pld_name.txt in
+              (here (LI.Lident name)),
+              H.Pat.var ~loc (here name)
             )
-            cases
-         )
-    | Ptype_record fields ->
-       H.Exp.fun_
-         ""
-         None
-         (H.Pat.record
-            ~loc
-            (List.map (fun field ->
-                       let name = field.pld_name.txt in
-                       (here (LI.Lident name)),
-                       H.Pat.var ~loc (here name)
-                      )
-                      fields)
-            Closed
-         )
-         (
-           H.Exp.apply
-             ~loc
-             (H.Exp.ident (L.mkloc (LI.Ldot (LI.Lident "Match", (name))) loc))
-             (List.map
-                (fun field ->
-                 "",
-                 generate_sub_match
-                   loc
-                   field.pld_type
-                   field.pld_name.txt
-                )
-                fields
+             fields)
+         Closed
+      )
+      (
+        H.Exp.apply
+          ~loc
+          (H.Exp.ident (L.mkloc (LI.Ldot (LI.Lident "Match", (name))) loc))
+          (List.map
+             (fun field ->
+                "",
+                generate_sub_match
+                  loc
+                  field.pld_type
+                  field.pld_name.txt
              )
-         )
-    | Ptype_abstract ->
-       begin
-         match type_decl.ptype_manifest with
-         | None ->
-           H.Exp.ident
-             ~loc
-             (here (LI.Ldot (LI.Lident "Match",
-                C.id type_decl.ptype_name.txt)))
-         | Some t ->
-            str_of_core_type
-              (from_builder_of_type loc type_decls type_decl.ptype_name.txt)
-              type_decls loc type_decl.ptype_name.txt t
-       end
-    | Ptype_open
-      ->
-       raise_errorf
-         ~loc:type_decl.ptype_loc
-         "%s can't handle open types, sorry"
-         deriver
+             fields
+          )
+      )
+  | Ptype_abstract ->
+    begin
+      match type_decl.ptype_manifest with
+      | None ->
+        H.Exp.ident
+          ~loc
+          (here (LI.Ldot (LI.Lident "Match",
+                          C.id type_decl.ptype_name.txt)))
+      | Some t ->
+        str_of_core_type
+          (from_builder_of_type loc type_decls type_decl.ptype_name.txt)
+          type_decls loc type_decl.ptype_name.txt t
+    end
+  | Ptype_open
+    ->
+    raise_errorf
+      ~loc:type_decl.ptype_loc
+      "%s can't handle open types, sorry"
+      deriver
 
 let str_of_type all_decls type_decls =
   let from_creator type_decl =
     if type_decl.ptype_params <> [] then [] else
-    let loc = type_decl.ptype_loc in
-    let here elt = L.mkloc elt loc in
-    let name = type_decl.ptype_name.txt in
-    let def = from_builder_of_type loc all_decls name type_decl
-    in
-    [H.Vb.mk (H.Pat.var (here name)) def]
-    |> apply_overrides
+      let loc = type_decl.ptype_loc in
+      let here elt = L.mkloc elt loc in
+      let name = type_decl.ptype_name.txt in
+      let def = from_builder_of_type loc all_decls name type_decl
+      in
+      apply_overrides [H.Vb.mk (H.Pat.var (here name)) def]
   in
   [
     H.Str.module_

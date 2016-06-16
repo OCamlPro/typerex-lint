@@ -12,8 +12,8 @@ struct
     Patch_parser.sempatch
       (Patch_lexer.read)
       (Lexing.from_channel chan)
-  |> List.map snd
-  |> List.map Parsed_patches.preprocess
+    |> List.map snd
+    |> List.map Parsed_patches.preprocess
 
   let get_name p = p.header.name
   let get_msg p = p.header.message
@@ -47,8 +47,8 @@ struct
           (Option.is_some (Match.get_location mat)) &&
           try
             let res = Guard_evaluator.eval_union
-              (Match.get_substitutions mat)
-              patch.header.guard
+                (Match.get_substitutions mat)
+                patch.header.guard
             in
             if not res then
               begin
@@ -60,7 +60,7 @@ struct
                       Messages.debug "> %s : %s\n"
                         name
                         (Pprintast.expression Format.str_formatter e;
-                        Format.flush_str_formatter ())
+                         Format.flush_str_formatter ())
                     | _ -> ()
                   )
                   (Match.get_substitutions mat)

@@ -47,14 +47,14 @@ let static_bindings =
           in
           let new_states = List.bind
               (fun (update_loc, trans) ->
-                let new_loc =
-                  if update_loc then
-                    Some (Match.get_current_location env)
-                  else
-                    Match.get_location env
-                in
-                let env = Match.set_location new_loc env in
-                trans env node
+                 let new_loc =
+                   if update_loc then
+                     Some (Match.get_current_location env)
+                   else
+                     Match.get_location env
+                 in
+                 let env = Match.set_location new_loc env in
+                 trans env node
               )
               state.A.transitions
           in
@@ -139,10 +139,10 @@ let global_dispatcher loc decls =
   let value =
     [%expr
       fun env (states : A.t) (element : T.t) ->
-      let results = [%e inside_match] in
-      match results with
-      | [] -> []
-      | hd::tl -> List.fold_left (List.product_bind both) hd tl
+        let results = [%e inside_match] in
+        match results with
+        | [] -> []
+        | hd::tl -> List.fold_left (List.product_bind both) hd tl
     ]
   in
   H.Vb.mk
@@ -180,12 +180,12 @@ let generate_match_on_variant loc cases =
         ~loc
         (here @@ constr name)
         (match args with
-           | [] -> None
-           | [arg] -> (Some (H.Pat.var ~loc (here @@ getter arg)))
-           | _ ->
-             Some (H.Pat.tuple
-                ~loc
-                (List.map (fun a -> H.Pat.var ~loc (here @@ getter a)) args))
+         | [] -> None
+         | [arg] -> (Some (H.Pat.var ~loc (here @@ getter arg)))
+         | _ ->
+           Some (H.Pat.tuple
+                   ~loc
+                   (List.map (fun a -> H.Pat.var ~loc (here @@ getter a)) args))
         )
     in
     let pattern =
@@ -210,7 +210,7 @@ let generate_match_on_variant loc cases =
           in
           apply' states element
       )
-      args
+        args
     in let expression = expr_list_to_list_expr expressions
     in
     [
@@ -227,14 +227,14 @@ let generate_dispatch_on_record loc fields =
     match C.upprint typ with
     | None -> assert false
     | Some repr ->
-    let states = H.Exp.field ~loc [%expr states] (here @@ mk_a name.txt)
-    and element =
-      H.Exp.construct
-        ~loc
-        (here @@ mk_t (C.cstr repr))
-        (Some (H.Exp.field ~loc [%expr element] (here @@ mk_t name.txt)))
-    in
-    apply' states element
+      let states = H.Exp.field ~loc [%expr states] (here @@ mk_a name.txt)
+      and element =
+        H.Exp.construct
+          ~loc
+          (here @@ mk_t (C.cstr repr))
+          (Some (H.Exp.field ~loc [%expr element] (here @@ mk_t name.txt)))
+      in
+      apply' states element
   in
   List.map generate_from_field fields
   |> expr_list_to_list_expr
@@ -274,7 +274,7 @@ let rec generate_dispatch_on_abstract_type loc decls_in_env typ =
           in
           apply' states element
       )
-      args
+        args
     in let expression = expr_list_to_list_expr expressions
     in
     [%expr let [%p pattern] = states, element in [%e expression]]
@@ -305,8 +305,8 @@ let rec generate_dispatch_on_abstract_type loc decls_in_env typ =
         generate_dispatch_body loc decls_in_env real_type
       with
         Not_found ->
-        failwith (Printf.sprintf"%s : Not in the stdlib nor declared here : %s"
-                    "eval" id)
+        Printf.kprintf failwith "%s : Not in the stdlib nor declared here : %s"
+          "eval" id
     end
   | _ ->
     C.warn "Unimplemented type\n";

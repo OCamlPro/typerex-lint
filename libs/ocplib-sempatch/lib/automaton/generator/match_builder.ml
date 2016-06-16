@@ -13,26 +13,28 @@ let raise_errorf = Common.raise_errorf
 
 let preamble =
   [%str
-   let ignore_meta f m y = List.map (fun elt -> elt, m) (f y)
+    let ignore_meta f m y = List.map (fun elt -> elt, m) (f y)
 
-   let basic_state f = {
-       A.transitions = [
-         false,
-         ignore_meta f
-       ];
-       final = false;
-     }
+  ] @
+  [%str
+    let  basic_state f = {
+      A.transitions = [
+        false,
+        ignore_meta f
+      ];
+      final = false;
+    }
 
-   let trash = {
-       A.transitions = [];
-       final = false;
-     }
+    and  trash = {
+      A.transitions = [];
+      final = false;
+    }
   ]
 
 let generate_tuple loc input_list =
   match List.map (fun elt ->
-                  H.Exp.ident ~loc (L.mkloc (LI.Lident elt) loc))
-                 input_list
+      H.Exp.ident ~loc (L.mkloc (LI.Lident elt) loc))
+      input_list
   with
   | [] -> None
   | [elt] -> Some elt
@@ -53,27 +55,27 @@ let create_match loc name args pattern result =
   let here elt = L.mkloc elt loc in
   let body =
     [%expr basic_state (function
-                         | [%p pattern] -> [[%e result]]
-                         | _ -> [A.Trash])
-                                  [@@metaloc loc]
-    ]
-  and type_constraint = [%type: A.state]
-  in
-  H.Vb.mk
-    ~loc
-    (H.Pat.var ~loc (here name))
-    (List.fold_left
-       (fun expr arg_name ->
-          let arg = H.Pat.constraint_
-                      ~loc
-                      (H.Pat.var ~loc (here arg_name))
-                      type_constraint
-          in
+           | [%p pattern] -> [[%e result]]
+           | _ -> [A.Trash])
+  [@@metaloc loc]
+]
+and type_constraint = [%type: A.state]
+in
+H.Vb.mk
+  ~loc
+  (H.Pat.var ~loc (here name))
+  (List.fold_left
+     (fun expr arg_name ->
+        let arg = H.Pat.constraint_
+            ~loc
+            (H.Pat.var ~loc (here arg_name))
+            type_constraint
+        in
         [%expr fun [%p arg] -> [%e expr] [@@metaloc loc]]
-       )
-       body
-       (List.rev args)
-    )
+)
+body
+  (List.rev args)
+)
 
 let create_record_match loc name fields =
   let here elt = L.mkloc elt loc in
@@ -91,9 +93,9 @@ let create_record_match loc name fields =
         Asttypes.Closed
     in
     H.Pat.construct
-         ~loc
-         (here @@ mk_exploded (Common.cstr name))
-         (Some sub_pattern)
+      ~loc
+      (here @@ mk_exploded (Common.cstr name))
+      (Some sub_pattern)
   and result =
     let sub_result =
       H.Exp.record
@@ -122,28 +124,28 @@ let create_variant_match loc type_name variant =
   let variant_name = variant.pcd_name.txt in
   let here elt = L.mkloc elt loc in
   let args = List.mapi (fun idx _ -> "state_" ^ (string_of_int idx))
-                       variant.pcd_args
+      variant.pcd_args
   in
   let pattern =
     H.Pat.construct
       ~loc
       (here @@ mk_exploded (C.cstr type_name))
       (Some (
-           H.Pat.construct
-             ~loc
-             (here @@ Longident.Lident (C.cstr variant_name))
-             (generate_patterns loc variant.pcd_args)
-         ))
+          H.Pat.construct
+            ~loc
+            (here @@ Longident.Lident (C.cstr variant_name))
+            (generate_patterns loc variant.pcd_args)
+        ))
   and result =
     H.Exp.construct
       ~loc
       (here (mk_aut_cstr type_name))
       (Some (
-           H.Exp.construct
-             ~loc
-             (here (mk_aut_cstr variant_name))
-             (generate_tuple loc args)
-         ))
+          H.Exp.construct
+            ~loc
+            (here (mk_aut_cstr variant_name))
+            (generate_tuple loc args)
+        ))
   in
   create_match
     loc
@@ -200,62 +202,30 @@ let create_core_typ_match recur type_declarations loc name typ =
     :: []
   | Ptyp_constr ({ txt = Longident.Lident id; _}, args) ->
     begin
-      (* match C.upprint typ with *)
-      (* | Some alias when alias <> name -> *)
-      (*   let here elt = L.mkloc elt loc in *)
-      (*   let args = ["state_0"] in *)
-      (*   let pattern = *)
-      (*     H.Pat.construct *)
-      (*       ~loc *)
-      (*       (here (mk_exploded @@ C.cstr name)) *)
-      (*       (generate_patterns loc args) *)
-      (*   and result = *)
-      (*     H.Exp.construct *)
-      (*       ~loc *)
-      (*       (here (mk_aut_cstr name)) *)
-      (*       (generate_tuple loc args) *)
-      (*   in *)
-      (*   create_match *)
-      (*     loc *)
-      (*     name *)
-      (*     args *)
-      (*     pattern *)
-      (*     result *)
-      (*   :: [] *)
-      (*   (* let expr = *) *)
-      (*   (*   H.Exp.ident ~loc *) *)
-      (*   (*     (L.mkloc (LI.Lident (C.id alias)) loc) *) *)
-      (*   (* in *) *)
-      (*   (* [H.Vb.mk *) *)
-      (*   (*    ~loc *) *)
-      (*   (*    (H.Pat.var ~loc (L.mkloc name loc)) *) *)
-      (*   (*    [%expr fun x -> [%e expr] x] *) *)
-      (*   (* ] *) *)
-      (* | _ -> *)
-        try
-          let generic_type =
-            List.find (fun typ -> typ.ptype_name.txt = id) type_declarations
-          in
-          let instanciations =
-            List.combine
-              (List.bind
-                 (fun (typ, _) ->
-                    match typ.ptyp_desc with
-                    | Ptyp_var v -> [v]
-                    | _ -> []
-                 )
-                 generic_type.ptype_params
-              )
-              args
-          in
-          let real_type =
-            C.instantiate_type_decl instanciations generic_type
-          in
-          recur { real_type with ptype_name = Location.mknoloc name }
-        with
-          Not_found ->
-          raise_errorf "%s : Not in the stdlib nor declared here : %s"
-            deriver id
+      try
+        let generic_type =
+          List.find (fun typ -> typ.ptype_name.txt = id) type_declarations
+        in
+        let instanciations =
+          List.combine
+            (List.bind
+               (fun (typ, _) ->
+                  match typ.ptyp_desc with
+                  | Ptyp_var v -> [v]
+                  | _ -> []
+               )
+               generic_type.ptype_params
+            )
+            args
+        in
+        let real_type =
+          C.instantiate_type_decl instanciations generic_type
+        in
+        recur { real_type with ptype_name = Location.mknoloc name }
+      with
+        Not_found ->
+        raise_errorf "%s : Not in the stdlib nor declared here : %s"
+          deriver id
     end
   | Ptyp_tuple args ->
     [create_tuple_match loc name args]
@@ -269,9 +239,9 @@ let str_of_type all_types type_decls =
     let name = type_decl.ptype_name.txt in
     match type_decl.ptype_kind with
     | Ptype_variant cases ->
-       List.map
-         (create_variant_match loc name)
-         cases
+      List.map
+        (create_variant_match loc name)
+        cases
     | Ptype_record fields ->
       [create_record_match loc name fields]
     | Ptype_abstract ->
@@ -284,8 +254,8 @@ let str_of_type all_types type_decls =
             H.Pat.construct
               ~loc
               (L.mkloc (LI.Ldot (
-                  LI.Lident "Element",
-                  C.cstr type_decl.ptype_name.txt)) loc)
+                   LI.Lident "Element",
+                   C.cstr type_decl.ptype_name.txt)) loc)
               (Some [%pat? y])
           in
           let expr = [%expr

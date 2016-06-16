@@ -26,13 +26,13 @@ let trash () = A.{
   }
 
 module Match :
-  sig
-    include module type of Match_
-    val wildcard : unit -> A.state
+sig
+  include module type of Match_
+  val wildcard : unit -> A.state
 
-    val metavar_expr : string -> A.state
-    val metavar_pat : string -> A.state
-  end =
+  val metavar_expr : string -> A.state
+  val metavar_pat : string -> A.state
+end =
 struct
   include Match_
   module E = Element

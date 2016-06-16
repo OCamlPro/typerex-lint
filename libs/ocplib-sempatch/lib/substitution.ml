@@ -7,12 +7,6 @@ module AE = Ast_element.Element
 
 type t = AE.t M.t
 
-let under_arg expr =
-  let open Parsetree in
-  match expr.pexp_desc with
-  | Pexp_apply (f, arg) -> Some (f, arg)
-  | _ -> None
-
 let rec pat_to_expr pat =
   let open Parsetree in
   let desc = match pat.ppat_desc with
@@ -50,7 +44,7 @@ let get_expr key vars =
       | AE.Pattern p -> pat_to_expr p
       | AE.String i ->
         Ast_helper.Exp.ident (Location.mknoloc (Longident.Lident i))
-                      |> Option.some
+        |> Option.some
       | _ -> None
     )
 
@@ -74,7 +68,7 @@ let add_expr name value vars =
     (AE.Expression value)
     vars
 
-let add_ident _name _value _vars = assert false(* M.add name (AE.String value) vars *)
+let add_ident name value vars = M.add name (AE.String value) vars
 let add_pattern name value vars = M.add name (AE.Pattern value) vars
 
 let merge m1 m2 =
