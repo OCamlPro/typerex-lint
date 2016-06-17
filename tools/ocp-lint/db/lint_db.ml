@@ -27,29 +27,31 @@ let string_of_source = function
   | Analyse -> "Analyse"
 
 module MakeDB (DB : DATABASE_IO) = struct
-  let database_file = ref ""
   let root = ref ""
 
   let db = empty_db ()
+  let db_errors = empty_db ()
 
-  let load = DB.load
+  let load file = db
+
+  let load_file file =
+    let hash = Digest.file file in
+    let hash_filename = Digest.to_hex hash in
+    let olint_dir = Filename.concat !root "_olint" in
+    let hash_filename_path = Filename.concat olint_dir hash_filename in
+    if Sys.file_exists hash_filename_path then
+      try
+        let (file, pres, file_error) = DB.load hash_filename_path in
+        Hashtbl.add db file (hash, pres);
+        Hashtbl.add db_errors file file_error
+      with exn ->
+        Format.eprintf "Can't read DB file for %s, skipping it\n%!" file
 
   let init path =
-    let file = Filename.concat (File.to_string path) "db" in
     let path = File.to_string path in
-    root := (Filename.dirname path);
-    database_file := file;
-    let db2 =
-      try
-        DB.load !database_file
-      with exn ->
-        (Format.eprintf "Can't read DB file, using a fresh DB\n%!";
-         Format.eprintf "%s\n%!" (Printexc.to_string exn);
-         empty_db ())
-    in
-    Hashtbl.iter (fun k v -> Hashtbl.add db k v) db2
+    root := Filename.dirname path
 
-  let save () =
+  let cache ()=
     Hashtbl.iter (fun file (hash, pres) ->
         let new_pres =
           StringMap.fold (fun pname lres acc ->
@@ -60,10 +62,22 @@ module MakeDB (DB : DATABASE_IO) = struct
               StringMap.add pname new_lres acc)
             pres StringMap.empty in
         Hashtbl.replace db file (hash, new_pres))
-      db;
-    DB.save !database_file db
+      db
+
+  let save () =
+    Hashtbl.iter (fun file (hash, pres) ->
+        let db_path = Filename.concat !root "_olint" in
+        let db_file = Filename.concat db_path (Digest.to_hex hash) in
+        let file_error =
+          if Hashtbl.mem db_errors file then
+            Hashtbl.find db_errors file
+          else ErrorSet.empty in
+        DB.save db_file (file, pres, file_error))
+      db
 
   let reset () = Hashtbl.reset db
+
+  let merge sources = List.iter load_file sources
 
   let print_debug () =
     Printf.printf "============= DB Debug ============\n%!";
@@ -82,15 +96,14 @@ module MakeDB (DB : DATABASE_IO) = struct
       db;
     Printf.printf "=========================\n%!"
 
-
   let remove_entry file =
-    let file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
+    let file = Lint_utils.normalize_path !root file in
     Hashtbl.remove db file
 
   let add_entry file pname lname =
     let options = Lint_config.DefaultConfig.get_linter_options pname lname in
     let hash = Digest.file file in
-    let file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
+    let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then
       let (_old_hash, old_fres) = Hashtbl.find db file in
       if StringMap.mem pname old_fres then
@@ -112,9 +125,16 @@ module MakeDB (DB : DATABASE_IO) = struct
       let new_fres = StringMap.add pname new_pres StringMap.empty in
       Hashtbl.add db file (hash, new_fres)
 
+  let add_error file error =
+    if Hashtbl.mem db_errors file then
+      let error_set = Hashtbl.find db_errors file in
+      Hashtbl.replace db_errors file (ErrorSet.add error error_set)
+    else
+      Hashtbl.add db_errors file (ErrorSet.singleton error)
+
   let clean files =
     List.iter (fun file ->
-        let db_file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
+        let db_file = Lint_utils.normalize_path !root file in
         try
           let (old_hash, _old_fres) = Hashtbl.find db db_file in
           let hash = Digest.file file in
@@ -128,7 +148,7 @@ module MakeDB (DB : DATABASE_IO) = struct
     if not (Sys.file_exists file)
     then raise (Lint_db_error.Db_error (Lint_db_error.File_not_found file));
     let hash = Digest.file file in
-    let file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
+    let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then
       let (_, old_pres) = Hashtbl.find db file in
       if StringMap.mem pname old_pres then
@@ -152,7 +172,7 @@ module MakeDB (DB : DATABASE_IO) = struct
 
   let already_run file pname lname =
     let new_hash = Digest.file file in
-    let file = Lint_utils.relative_path !root (Lint_utils.absolute_path file) in
+    let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then
       let (hash, old_fres) = Hashtbl.find db file in
       if hash = new_hash && StringMap.mem pname old_fres then
@@ -182,16 +202,15 @@ end
 module Marshal_IO : DATABASE_IO = struct
 
   let load file =
-    if Sys.file_exists file then
-      let ic = open_in file in
-      input_value ic
-    else
-      (Format.eprintf "No DB file found, using a fresh DB\n%!";
-       empty_db ())
+    let ic = open_in file in
+    let db = input_value ic in
+    close_in ic;
+    db
 
   let save file db =
     let oc = open_out file in
-    output_value oc db
+    output_value oc db;
+    close_out oc
 
 end
 

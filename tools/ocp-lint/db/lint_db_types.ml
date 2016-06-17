@@ -18,7 +18,17 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+type error =
+  | Db_error of Lint_db_error.error
+  | Plugin_error of Lint_plugin_error.error
+  | Sempatch_error of Sempatch.Failure.t
+  | Ocplint_error of string
+
 module StringMap = Map.Make(String)
+module ErrorSet = Set.Make(struct
+    let compare = Pervasives.compare
+    type t = error
+  end)
 
 type source = Cache | Analyse
 
@@ -27,22 +37,31 @@ type warning_list =
 type linter_map = warning_list StringMap.t
 type plugin_map = linter_map StringMap.t
 type file_map = Digest.t * plugin_map
-type t = (string, file_map) Hashtbl.t
 
+type error_set = ErrorSet.t
+
+type t = (string, file_map) Hashtbl.t
+type errors = (string, error_set) Hashtbl.t
 
 module type DATABASE_IO = sig
-  val load : string -> t
-  val save : string -> t -> unit
+  val load : string -> (string * plugin_map * error_set)
+  val save : string -> (string * plugin_map * error_set) -> unit
 end
 
 module type DATABASE = sig
   val db : t
+  val db_errors : errors
+  val root : string ref
   val init : File.t -> unit
   val load : string -> t
+  val load_file : string -> unit
+  val cache : unit -> unit
   val save : unit -> unit
+  val merge : string list -> unit
   val reset : unit -> unit
   val remove_entry : string -> unit
   val add_entry : string -> string -> string -> unit
+  val add_error : string -> error -> unit
   val clean : string list -> unit
   val update : string -> string -> Lint_warning_types.warning -> unit
   val already_run : string -> string -> string -> bool

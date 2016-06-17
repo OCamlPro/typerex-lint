@@ -18,7 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
 let iter_files ?(recdir=true) apply dirname =
   let rec iter dirname dir =
     let files = Sys.readdir (Filename.concat dirname dir) in
@@ -41,24 +40,17 @@ let substitute str substs =
   Buffer.add_substitute buf (replace substs) str;
   Buffer.contents buf
 
-let absolute_path file =
-  let file_t = File.of_string file in
-  if File.is_absolute file_t then (File.to_string file_t)
-  else
-    let file = File.concat (File.getcwd ()) file_t in
-    File.to_string file
 
 let relative_path =
   let split_path = Str.split (Str.regexp (Filename.dir_sep)) in
   let rec make_relative = function
     | (dir1::root, dir2::file) when dir1 = dir2 -> make_relative (root, file)
     | (root, file) ->
-        List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
+      List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
   in
   fun root file ->
     make_relative (split_path root, split_path file)
-      |> String.concat Filename.dir_sep
-
+    |> String.concat Filename.dir_sep
 
 let find_root root_dir basenames =
   let rec find dirname (basenames : string list) =
@@ -73,5 +65,32 @@ let find_root root_dir basenames =
   in
   find root_dir basenames
 
-let is_in_path file path =
+let diff to_root path =
+  let to_root = Str.split (Str.regexp "/") to_root in
+  let path = Str.split (Str.regexp "/") path in
+  let rec loop to_root path =
+    match to_root, path with
+    | dir1 :: tl1, dir2 :: tl2 when dir1 = dir2 -> loop tl1 tl2
+    | _ -> String.concat "/" path
+  in
+  loop to_root path
+
+let absolute_path file =
+  let file_t = File.of_string file in
+  if File.is_absolute file_t then (File.to_string file_t)
+  else
+    let file = File.concat (File.getcwd ()) file_t in
+    File.to_string file
+
+let absolute_path root path =
+  let path_to_root = relative_path root (Sys.getcwd()) in
+  let new_path = diff path_to_root path in
+  absolute_path new_path
+
+let normalize_path root file =
+  relative_path root (absolute_path root file)
+
+let is_in_path root file path =
+  let path = normalize_path root path in
+  let file = normalize_path root file in
   Str.string_match (Str.regexp path) file 0

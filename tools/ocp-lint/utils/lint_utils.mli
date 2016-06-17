@@ -29,8 +29,8 @@ val iter_files : ?recdir:bool -> (string -> unit) -> string -> unit
      matching string in the list. *)
 val substitute : string -> (string * string) list -> string
 
-(** [absolute_path filename] give the absolute path of a file. *)
-val absolute_path : string -> string
+(** [absolute_path root filename] give the absolute path of a file. *)
+val absolute_path : string -> string -> string
 
 (** [relative root filename] give the relative to root path of a file. *)
 val relative_path : string -> string -> string
@@ -39,5 +39,7 @@ val relative_path : string -> string -> string
      path which marks the root of a project and contains the db file. *)
 val find_root : File.t -> string list -> File.t
 
-(** [is_in_path file path] checks if the file is in the path. *)
-val is_in_path : string -> string -> bool
+(** [is_in_path root file path] checks if the file is in the path. *)
+val is_in_path : string -> string -> string -> bool
+
+val normalize_path : string -> string -> string

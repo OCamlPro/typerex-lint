@@ -36,9 +36,9 @@ module DefaultConfig = struct
       opt_names short_help long_help level opt_class default_value =
     let short_help = Some short_help in
     let level = Some level in
-      SimpleConfig.create_option config_file
-          opt_names ?short_help:short_help [long_help] ?level:level
-          opt_class default_value
+    SimpleConfig.create_option config_file
+      opt_names ?short_help:short_help [long_help] ?level:level
+      opt_class default_value
 
   let get_option_value option_name =
     SimpleConfig.LowLevel.get_simple_option config_file option_name
@@ -63,4 +63,4 @@ module DefaultConfig = struct
 
   let save () =
     SimpleConfig.save_with_help config_file
-  end
+end

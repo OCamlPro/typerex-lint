@@ -37,8 +37,8 @@ let parse_opt active flags s =
   let rec get_num n i =
     if i >= String.length s then i, n
     else match s.[i] with
-    | '0'..'9' -> get_num (10 * n + Char.code s.[i] - Char.code '0') (i + 1)
-    | _ -> i, n
+      | '0'..'9' -> get_num (10 * n + Char.code s.[i] - Char.code '0') (i + 1)
+      | _ -> i, n
   in
   let get_range i =
     let i, n1 = get_num 0 i in
@@ -64,18 +64,18 @@ let parse_opt active flags s =
       | c -> error ()
   and loop_letter_num myset i =
     if i >= String.length s then error () else
-    match s.[i] with
-    | '0' .. '9' ->
+      match s.[i] with
+      | '0' .. '9' ->
         let i, n1, n2 = get_range i in
         for n = n1 to min n2 warning_max do myset n done;
         loop i
-    | 'A' .. 'Z' ->
-       List.iter myset (letter (Char.lowercase s.[i]));
-       loop (i+1)
-    | 'a' .. 'z' ->
-       List.iter myset (letter s.[i]);
-       loop (i+1)
-    | _ -> error ()
+      | 'A' .. 'Z' ->
+        List.iter myset (letter (Char.lowercase s.[i]));
+        loop (i+1)
+      | 'a' .. 'z' ->
+        List.iter myset (letter s.[i]);
+        loop (i+1)
+      | _ -> error ()
   in
   loop 0
 
