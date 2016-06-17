@@ -119,7 +119,7 @@ let global_dispatcher loc decls =
   and final_case =
     H.Exp.case
       [%pat? A.Final, _]
-      [%expr [[Automaton.final (), env]]]
+      [%expr [lazy [Automaton.final (), env]]]
   in
   (* The list of cases in the big "match" part *)
   let cases = trash_case :: final_case :: List.bind (mk_case loc) decls
@@ -128,7 +128,7 @@ let global_dispatcher loc decls =
     cases @
     [H.Exp.case
        (H.Pat.any ~loc ())
-       [%expr [[Automaton.trash (), env]]]]
+       [%expr [lazy [Automaton.trash (), env]]]]
   in
   let inside_match =
     H.Exp.match_
@@ -142,7 +142,9 @@ let global_dispatcher loc decls =
         let results = [%e inside_match] in
         match results with
         | [] -> []
-        | hd::tl -> List.fold_left (List.product_bind both) hd tl
+        | hd::tl -> List.fold_left
+                      (semilazy_product_bind both)
+                      (Lazy.force hd) tl
     ]
   in
   H.Vb.mk
@@ -152,10 +154,10 @@ let global_dispatcher loc decls =
 
 let expr_list_to_list_expr exprs =
   match exprs with
-  | [] -> [%expr [[Automaton.final (), env]]]
+  | [] -> [%expr [lazy [Automaton.final (), env]]]
   | _ -> List.fold_left (
       fun accu expr ->
-        [%expr [%e expr] :: [%e accu]]
+        [%expr (lazy [%e expr]) :: [%e accu]]
     )
       [%expr []]
       exprs
@@ -320,7 +322,7 @@ and generate_dispatch_body loc decls_in_env decl =
       cases @
       [H.Exp.case
          (H.Pat.any ~loc ())
-         [%expr [[Automaton.trash (), env]]]]
+         [%expr [lazy [Automaton.trash (), env]]]]
     in
     H.Exp.match_
       ~loc

@@ -4,6 +4,11 @@ module T = Ast_element.Element
 
 let setloc = Match.set_current_location
 
+let semilazy_product_bind f l1 ll2 = match l1 with
+  | [] -> []
+  | _ -> List.product_bind f l1 (Lazy.force ll2)
+
+
 let both
   = fun (s1, l1) (s2, l2) ->
     if not A.(s1.final && s2.final) then
