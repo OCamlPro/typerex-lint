@@ -45,7 +45,7 @@ type ppx = {
 
 (** {2 A generic Parsetree mapper} *)
 
-(** {2 Apply mappers to compilation units} *)
+(** {2 Apply ppxs to compilation units} *)
 
 val tool_name: unit -> string
 (** Can be used within a ppx preprocessor to know which tool is
@@ -57,31 +57,31 @@ val tool_name: unit -> string
     [Clflags.debug]. *)
 
 
-val apply: source:string -> target:string -> mapper -> unit
-(** Apply a mapper (parametrized by the unit name) to a dumped
+val apply: source:string -> target:string -> ppx -> unit
+(** Apply a ppx (parametrized by the unit name) to a dumped
     parsetree found in the [source] file and put the result in the
-    [target] file. The [structure] or [signature] field of the mapper
+    [target] file. The [structure] or [signature] field of the ppx
     is applied to the implementation or interface.  *)
 
-val run_main: (string list -> mapper) -> unit
+val run_main: (string list -> ppx) -> unit
 (** Entry point to call to implement a standalone -ppx rewriter from a
-    mapper, parametrized by the command line arguments.  The current
+    ppx, parametrized by the command line arguments.  The current
     unit name can be obtained from [Location.input_name].  This
     function implements proper error reporting for uncaught
     exceptions. *)
 
 (** {2 Registration API} *)
 
-val register_function: (string -> (string list -> mapper) -> unit) ref
+val register_function: (string -> (string list -> ppx) -> unit) ref
 
-val register: string -> (string list -> mapper) -> unit
+val register: string -> (string list -> ppx) -> unit
 (** Apply the [register_function].  The default behavior is to run the
-    mapper immediately, taking arguments from the process command
-    line.  This is to support a scenario where a mapper is linked as a
+    ppx immediately, taking arguments from the process command
+    line.  This is to support a scenario where a ppx is linked as a
     stand-alone executable.
 
     It is possible to overwrite the [register_function] to define
-    "-ppx drivers", which combine several mappers in a single process.
+    "-ppx drivers", which combine several ppxs in a single process.
     Typically, a driver starts by defining [register_function] to a
     custom implementation, then lets ppx rewriters (linked statically
     or dynamically) register themselves, and then run all or some of
@@ -92,7 +92,7 @@ val register: string -> (string list -> mapper) -> unit
     the ppx driver.  *)
 
 
-(** {2 Convenience functions to write mappers} *)
+(** {2 Convenience functions to write ppxs} *)
 
 val extension_of_error: Location.error -> extension
 (** Encode an error into an 'ocaml.error' extension node which can be
@@ -104,7 +104,7 @@ val attribute_of_warning: Location.t -> string -> attribute
     inserted in a generated Parsetree.  The compiler will be
     responsible for reporting the warning. *)
 
-(** {2 Helper functions to call external mappers} *)
+(** {2 Helper functions to call external ppxs} *)
 
 val add_ppx_context_str: tool_name:string -> Parsetree.structure -> Parsetree.structure
 (** Extract information from the current environment and encode it

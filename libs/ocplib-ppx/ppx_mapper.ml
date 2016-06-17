@@ -23,7 +23,7 @@ open Parsetree
 open Ast_helper
 open Location
 
-type mapper = {
+type ppx = {
   structure : structure -> structure;
   signature : signature -> signature;
 }
@@ -201,14 +201,14 @@ end
 let ppx_context = PpxContext.make
 
 
-let apply_lazy ~source ~target mapper =
+let apply_lazy ~source ~target ppx =
   let ic = open_in_bin source in
   let magic =
     really_input_string ic (String.length Config.ast_impl_magic_number)
   in
   if magic <> Config.ast_impl_magic_number
   && magic <> Config.ast_intf_magic_number then
-    failwith "Ast_mapper: OCaml version mismatch or malformed input";
+    failwith "Ast_ppx: OCaml version mismatch or malformed input";
   Location.input_name := input_value ic;
   let ast = input_value ic in
   close_in ic;
@@ -222,8 +222,8 @@ let apply_lazy ~source ~target mapper =
         | _ -> [], ast
       in
       PpxContext.restore fields;
-      let mapper = mapper () in
-      let ast = mapper.structure ast in
+      let ppx = ppx () in
+      let ast = ppx.structure ast in
       let fields = PpxContext.update_cookies fields in
       Str.attribute (PpxContext.mk fields) :: ast
     with exn ->
@@ -242,8 +242,8 @@ let apply_lazy ~source ~target mapper =
         | _ -> [], ast
       in
       PpxContext.restore fields;
-      let mapper = mapper () in
-      let ast = mapper.signature ast in
+      let ppx = ppx () in
+      let ast = ppx.signature ast in
       let fields = PpxContext.update_cookies fields in
       Sig.attribute (PpxContext.mk fields) :: ast
     with exn ->
@@ -287,22 +287,22 @@ let add_ppx_context_sig ~tool_name ast =
   Ast_helper.Sig.attribute (ppx_context ~tool_name ()) :: ast
 
 
-let apply ~source ~target mapper =
-  apply_lazy ~source ~target (fun () -> mapper)
+let apply ~source ~target ppx =
+  apply_lazy ~source ~target (fun () -> ppx)
 
-let run_main mapper =
+let run_main ppx =
   try
     let a = Sys.argv in
     let n = Array.length a in
     if n > 2 then
-      let mapper () =
-        try mapper (Array.to_list (Array.sub a 1 (n - 3)))
+      let ppx () =
+        try ppx (Array.to_list (Array.sub a 1 (n - 3)))
         with exn ->
           (* PR #6463 *)
           let f _ = raise exn in
           {structure = f; signature = f}
       in
-      apply_lazy ~source:a.(n - 2) ~target:a.(n - 1) mapper
+      apply_lazy ~source:a.(n - 2) ~target:a.(n - 1) ppx
     else begin
       Printf.eprintf "Usage: %s [extra_args] <infile> <outfile>\n%!"
                      Sys.executable_name;
