@@ -1,0 +1,145 @@
+#+TITLE: Automaton builder constructor (ABC)
+
+* How it works
+
+The ABC tranlates the Parstree.t (or anything else) into a big set of mutually
+recursive functions which produce an automaton from a piece of
+parsetree.
+
+In short, it is supposed to transform this :
+
+#+BEGIN_SRC ocaml
+  type string = string [@@convert: from_string]
+  and int = int [@@convert: from_int]
+  and node1 =
+    | Leaf1 of string
+    | Nodes1 of node1*node2
+
+  and node2 =
+    | Leaf2 of int
+    | Nodes2 of node2*node1
+#+END_SRC
+
+into this :
+
+#+BEGIN_SRC ocaml
+  type tree =
+    | Node1 of node1
+    | Node2 of node2
+
+  type automaton_node1 =
+    | Aut_Leaf1 of state
+    | Aut_Nodes1 of state*state
+  and automaton_node2 =
+    | Aut_Leaf2 of state
+    | Aut_Nodes2 of state*state
+  and automaton_tree =
+    | Aut_node1 of node1
+    | Aut_node2 of node2
+    | Aut_string of string
+    | Aut_int of int
+    | Trash
+    | Final
+  and transition =
+    bool*(meta_info -> tree -> (automaton_tree*meta_info) list)
+  and state = {
+    mutable final: bool;
+    mutable transitions: transition list;
+  }
+
+  (* TODO : Some more boilerplate to add *)
+
+  let match_string = from_string
+  and match_int = from_int
+
+  and match_node1_leaf1 sub1 =
+    basic_state @@ function
+    | Node1 (Leaf1 _) ->
+      Aut_node1 (Aut_leaf1 sub1)
+    | _ -> Trash
+
+  and match_node1_nodes1 sub1 sub2 =
+    basic_state @@ function
+    | Node1 (Nodes1 _) ->
+      Aut_node1 (Aut_Nodes1 (sub1, sub2))
+    | _ -> Trash
+  (* Blah, blah *)
+
+  let catchall () =
+    let state = {} in
+    state.transitions <- state.transitions @@ [
+        function
+        | Node1 (Leaf1 _) -> [Aut_node1 (Aut_leaf1 state)]
+        | Node1 (Nodes1 _) ->
+          [
+            Aut_node1 (Aut_nodes1 (final (), state));
+            Aut_node1 (Aut_nodes1 (state, final ()));
+          ]
+          (* ... *)
+      ]
+
+  let rec from_node1 node =
+    match node with
+    | Leaf1 sub1 ->
+      match_node1_leaf1 (from_string sub1)
+    (* ... *)
+
+  and from_node2 node = blah
+
+  and from_string node = match_string node
+  and from_int node = match_int node
+#+END_SRC
+
+This can be split in several parts
+
+* Types generation
+
++(Probably the easiest)+
+
+The goal is to generate the ~tree~ aut ~automaton_tree~ types
+
+** TODO Generate the ~tree~ :
+   The only required think is to collect all the types defined in the
+   file and make a big sum of it
+   This means :
+   - find 
+
+** DONE Generate the ~automaton_tree~
+
+*** DONE Reproduct the original tree in the automaton
+    For every type ~t~ in the original tree, create a new
+    ~automaton_t~ type, defined like this :
+
+    - if ~t~ is a product type or a record, ~automaton_t~ must be a sum
+      type whith the same number of fields (all of type ~automaton~)
+
+    - if ~t~ is a sum type then ~automaton_t~ must be a sum type whose
+      fields arre the conversion of ~t~ fields (whith names prefixed
+      by ~Aut_~ to ensure unicity)
+
+*** DONE Generate the sum type of all the above
+    Exactly the same thing as generating the ~tree~ type
+
+* Code generation
+
+The goal is to generate the ~Builder~ anv ~Eval~ modules.
+
+** TODO Generate the ~Builder~ module :
+*** TODO Generate the match_* functions
+    For each node ~Node~ of arity n in the AST, generate a function
+    ~match_node~ (of arity n) in the form :
+
+#+BEGIN_SRC ocaml
+  let match_node_subnode sub_1 (* .. *) sub_n =
+    basic_state @@ function
+    | Node (Subnode _) ->
+      Automaton_node_subnode (sub1, .., subn)
+    | _ -> Trash
+#+END_SRC
+
+A simple way to handle cases where those functions have to be
+overriden is to redefine them after
+
+*** TODO Generate the from_* functions
+
+*** TODO Generate the catchall state

@@ -60,7 +60,8 @@ let equiv_ast = apply_to_exprs @@ apply_to_2 @@ fun e1 e2 ->
     }
   in
   match
-    Eval.apply "" patch.Parsed_patches.Type.body (Ast_element.Expression e2)
+    Eval.apply "" patch.Parsed_patches.Type.body
+      (Ast_element.Element.Expression e2)
   with
   | [] -> false
   | _ -> true
@@ -85,9 +86,9 @@ let is_int_in_range = fun args ->
   | [Expr e; Int min; Int max] ->
     begin
       let int_expr =
-      match e.pexp_desc with
-      | Pexp_constant (Asttypes.Const_int i) -> Some i
-      | _ -> None
+        match e.pexp_desc with
+        | Pexp_constant (Asttypes.Const_int i) -> Some i
+        | _ -> None
       in
       Option.fold (fun _ i -> min <= i && max >= i) false int_expr
     end
@@ -98,12 +99,13 @@ let is_in_range = fun args ->
   | [Expr e; Int min; Int max] ->
     begin
       let int_expr =
-      match e.pexp_desc with
-      | Pexp_constant (Asttypes.Const_int i) -> Some i
-      | Pexp_constant (Asttypes.Const_int32 i) -> Some (Int32.to_int i)
-      | Pexp_constant (Asttypes.Const_int64 i) -> Some (Int64.to_int i)
-      | Pexp_constant (Asttypes.Const_nativeint i) -> Some (Nativeint.to_int i)
-      | _ -> None
+        match e.pexp_desc with
+        | Pexp_constant (Asttypes.Const_int i) -> Some i
+        | Pexp_constant (Asttypes.Const_int32 i) -> Some (Int32.to_int i)
+        | Pexp_constant (Asttypes.Const_int64 i) -> Some (Int64.to_int i)
+        | Pexp_constant (Asttypes.Const_nativeint i) ->
+          Some (Nativeint.to_int i)
+        | _ -> None
       in
       Option.fold (fun _ i -> min <= i && max >= i) false int_expr
     end

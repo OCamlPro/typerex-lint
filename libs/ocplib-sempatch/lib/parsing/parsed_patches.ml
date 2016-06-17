@@ -9,7 +9,7 @@ struct
     guard : Guard.t list;
   }
 
-  type body = Automaton.t
+  type body = Automaton.A.state
 
   type patch = {
     header: header;
@@ -62,34 +62,7 @@ let testInclusion l1 l2 =
                                   ^ " is present in the substitution AST"
                                   ^ "and not in the original one")
 
-let curryfying_mapper =
-  let open Ast_mapper in
-  { default_mapper with
-    expr = (fun self e ->
-        match e.pexp_desc with
-        | Pexp_apply (f, args) ->
-          let currified_applies = List.fold_left (fun acc (lbl, arg) ->
-              {
-                arg with
-                pexp_desc = Pexp_apply (acc, [lbl, self.expr self arg]);
-                pexp_attributes =
-                  (Location.mknoloc "__sempatch_uncurryfy", PStr [])::[];
-              }
-            )
-              (self.expr self f)
-            args
-          in { e with
-               pexp_desc = currified_applies.pexp_desc;
-               pexp_attributes = e.pexp_attributes;
-             }
-        | _ -> default_mapper.expr self e
-      );
-  }
-
-(** preprocess the patch before applying it
-
-    Currently, this just means curryfiying the world
-*)
+(** preprocess the patch before applying it *)
 let preprocess { unprocessed_header = header; unprocessed_body = body} =
   let open Ast_mapper in
   let meta_exprs_in_pre_patch  = ref []
@@ -122,7 +95,18 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
                         meta_exprs_in_pre_patch
                     in
                     processed_vars := new_var :: !processed_vars;
-                    e
+                    if in_replacement then
+                      e
+                    else
+                      {
+                        e with
+                        pexp_attributes =
+                          (
+                            Location.mkloc "__sempatch_metavar" e.pexp_loc,
+                            PStr []
+                          )
+                          :: e.pexp_attributes
+                      }
                   )
               | _ -> e
             in default_mapper.expr self new_expr
@@ -146,7 +130,18 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
                         meta_exprs_in_pre_patch
                     in
                     processed_vars := i :: !processed_vars;
-                    pat
+                    if in_replacement then
+                      pat
+                    else
+                      {
+                        pat with
+                        ppat_attributes =
+                          (
+                            Location.mkloc "__sempatch_metavar" pat.ppat_loc,
+                            PStr []
+                          )
+                          :: pat.ppat_attributes
+                      }
                   )
               | _ -> pat
             in default_mapper.pat self new_pattern
@@ -161,7 +156,7 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
   in
   let map expr =
     let mapper = mkmapper false in
-    curryfying_mapper.expr curryfying_mapper (mapper.expr mapper expr)
+    mapper.expr mapper expr
   in
   let processed_before_patch = map body
   in
@@ -172,7 +167,7 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
     header = { header with meta_expr = !meta_exprs_in_pre_patch; };
     body =
       try
-        Builder.from_expr !meta_exprs_in_pre_patch processed_before_patch
+        Automaton.From.expression processed_before_patch
       with
         Failure.SempatchException (Failure.Non_implemented pos) ->
         raise Failure.(SempatchException (Non_implemented {
@@ -184,4 +179,4 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
           ))
   }
 
-let preprocess_src_expr = curryfying_mapper.Ast_mapper.structure curryfying_mapper
+let preprocess_src_expr = fun x -> x

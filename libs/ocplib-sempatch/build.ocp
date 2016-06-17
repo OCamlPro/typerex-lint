@@ -1,7 +1,28 @@
 comp += [ "-w" "+A-4" ]
 
+begin program "abc"
+    files = [
+      "lib/std_utils.ml"
+      "lib/automaton/generator/common.ml"
+      "lib/automaton/generator/type_collector.ml"
+      "lib/automaton/generator/from.ml"
+      "lib/automaton/generator/wildcard.ml"
+      "lib/automaton/generator/match_builder.ml"
+      "lib/automaton/generator/eval_builder.ml"
+      "lib/automaton/generator/automaton_processor.ml"
+      "lib/automaton/generator/abc.ml"
+    ]
+    requires = [
+      "compiler-libs.common"
+      "str"
+      "ppx_tools.metaquot"
+    ]
+    comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
+end
+
 begin library "ocplib-sempatch"
     files = [
+      "lib/automaton/generator/tree.ml"
       "lib/std_utils.ml"
       "lib/failure.ml"
       "lib/res.ml"
@@ -9,14 +30,12 @@ begin library "ocplib-sempatch"
       "lib/substitution.ml"
       "lib/match.ml"
       "lib/automaton/automaton.ml"
-      "lib/automaton/builder.ml"
       "lib/automaton/eval.ml"
       "lib/parsing/guard.ml"
       "lib/parsing/guard_lexer.mll"
       "lib/parsing/guard_parser.mly"
       "lib/parsing/parsed_patches.ml"
       "lib/parsing/raw_patch.ml"
-      "lib/ast_maybe_mapper2.ml"
       "lib/guard_evaluator.ml"
       "lib/parsing/code_lexer.mll"
       "lib/parsing/code_parser.mly"
@@ -28,6 +47,9 @@ begin library "ocplib-sempatch"
     requires = [
         "compiler-libs"
         "compiler-libs.common"
+        "abc"
     ]
+    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree.ml" ]
+    comp_requires = "abc:asm"
     ocamlyacc = "menhir"
 end

@@ -9,9 +9,9 @@ let inside expr = "[%__sempatch_inside " :: expr @ ["]"]
 let report expr = "[%__sempatch_report " :: expr @ ["]"]
 let replace expr replacement = "(" :: expr @ ") [@__sempatch_replace "
                                              :: replacement @ ["]"]
-let maybe_replace expr replacement has_change =
-  if has_change then replace expr replacement
-  else expr
+let maybe_replace expr _replacement _has_change = expr
+(* if has_change then replace expr replacement *)
+(* else expr *)
 
 let rec filter_map f = function
   | [] -> []
@@ -38,11 +38,11 @@ let to_patch_body p =
       )
     )
   in
-  let patch = convert_patch p
-    (* let (before, after, has_change) = convert_line p in *)
-    (* report ( *)
-    (*   maybe_replace before after has_change *)
-    (* ) *)
+  let patch = (* convert_patch p *)
+    let (before, after, has_change) = convert_line p in
+    report (
+      maybe_replace before after has_change
+    )
   in
   Parser.parse_expression Lexer.token (Lexing.from_string
                                          (String.concat "\n" @@ patch)

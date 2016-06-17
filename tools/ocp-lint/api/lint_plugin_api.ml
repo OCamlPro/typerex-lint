@@ -169,11 +169,11 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let iter =
       let module IterArg = struct
         include Parsetree_iter.DefaultIteratorArgument
-        let enter_structure structure =
+        let enter_expression structure =
           List.iteri (fun i patches ->
               let matches =
                 Patch.parallel_apply
-                  patches (Ast_element.from_structure structure) in
+                  patches (Ast_element.from_expression structure) in
               List.iter (fun matching ->
                   let patch =
                     List.find
