@@ -8,7 +8,7 @@ open Parsetree
 open Std_utils
 
 let transition_type = H.Type.mk
-    ~manifest:[%type: Exploded.bool *
+    ~manifest:[%type: Element.bool *
                       (Match.t -> Ast_element.t
                        -> (t * Match.t)
                          Std_utils.List.t)]
@@ -22,7 +22,7 @@ and state_type = H.Type.mk
         H.Type.field
           ~mut:Asttypes.Mutable
           (L.mknoloc "final")
-          [%type: Exploded.bool];
+          [%type: Element.bool];
       ]
       )
     (L.mknoloc "state")
@@ -51,15 +51,29 @@ let variant_of_type_decl loc type_decl =
     ~args
     (L.mkloc constr_name loc)
 
-let mk_synonyms loc prefix =
-  let has_prefix = Option.is_some prefix in
+let mk_synonyms loc
+    ?path_of_originals
+    ?prefix_of_originals
+    ?prefix_of_synonyms =
+  let has_prefix = Option.is_some path_of_originals
+                 || Option.is_some prefix_of_synonyms
+                 || Option.is_some prefix_of_originals
+  in
   let attrs =
     if has_prefix then [] else
       [Location.mkloc "nonrec" loc, PStr []]
   and mkname name =
-    match prefix with
+    let name = match prefix_of_originals with
+      | None -> name
+      | Some pfx -> pfx ^ name
+    in
+    match path_of_originals with
     | None -> Longident.Lident name
     | Some ident -> Longident.Ldot (ident, name)
+  and alias name =
+    match prefix_of_synonyms with
+    | None -> name
+    | Some pfx -> pfx ^ name
   in
   let mk_synonym decl =
     let name = decl.ptype_name.txt in
@@ -73,8 +87,11 @@ let mk_synonyms loc prefix =
         ~manifest:(H.Typ.constr ~loc
                      (Location.mkloc
                         (mkname name) loc) (List.map fst decl.ptype_params))
-        (Location.mkloc name loc)
-    | Some _ -> decl
+        (Location.mkloc (alias name) loc)
+    | Some _ -> {
+        decl with
+        ptype_name = Location.mkloc (alias decl.ptype_name.txt) loc
+      }
   in
   List.map mk_synonym
 
@@ -132,12 +149,15 @@ let str_of_type type_decls cmd =
         [
           (* An "exploded" -- ie with more detailled types version of
              the parsetree *)
-          "Exploded", [], mk_synonyms loc None poly_decls_no_list;
+          "Exploded", [], mk_synonyms loc
+            ~prefix_of_synonyms:"_"
+            poly_decls_no_list;
 
           (* Module conatining the sum type of all nodes in the ast *)
           "Element", [], sum_typ ::
                          (mk_synonyms loc
-                            (Some (Longident.Lident "Exploded"))
+                            ~path_of_originals:(Longident.Lident "Exploded")
+                            ~prefix_of_originals:"_"
                             poly_decls_no_list);
         ]
       in
