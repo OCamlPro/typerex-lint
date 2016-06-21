@@ -139,13 +139,17 @@ let specs : (Arg.key * Arg.spec * Arg.doc) list ref = ref []
 let static_args = ref []
 let dynamic_args = ref []
 
+let print_help () =
+  Arg.usage !specs usage_msg;
+  exit 0
+
 let set_spec () =
   specs := ArgAlign.align !static_args @
            ArgAlign.align !dynamic_args @
            [ "", Arg.Unit (fun () -> ()), " \nGetting Help:\n\n";
-             "-help", Arg.Unit (fun () -> raise (Arg.Help "")),
+             "-help", Arg.Unit print_help,
              "       Display this list of options";
-             "--help", Arg.Unit (fun () -> raise (Arg.Help "")),
+             "--help", Arg.Unit print_help,
              "      Display this list of options";
            ]
 
