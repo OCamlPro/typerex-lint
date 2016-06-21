@@ -1,0 +1,7 @@
+
+begin library "ocplib-ppx";
+
+  files = [ "ppx_mapper.ml" ];
+  requires = [ "compiler-libs" ];
+
+end;;
