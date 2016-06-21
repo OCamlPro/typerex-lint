@@ -14,4 +14,5 @@ cache:
   - ${HOME}/.opam
 script: sh -ex .travis-ci.sh
 env:
+  - OCAML_VERSION=4.02.1
   - OCAML_VERSION=4.02.3
