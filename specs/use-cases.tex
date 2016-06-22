@@ -1,10 +1,124 @@
 \subsection{Using Occasionally}
+\paragraph{Without the database}~\\
+
+To start to lint your project without the database feature, just run \ocp-lint{}
+which will output the warnings in your terminal by default:
+
+  {\tt \$ cd \$PROJECT}
+
+  {\tt \$ ocp-lint}
+
+Without the database feature, nothing is cached, so every time you will run
+\ocp-lint{}, it will recompute and re-lint every file on your project, even when
+it is no needed.
+
+\paragraph{With the cache system (database)}~\\
+
+First go to your project directory and initialize the linter which will create a
+default configuration file and an {\tt \_olint} directory to store the the
+results for the cache system.
+
+  {\tt \$ cd \$PROJECT}
+
+  {\tt \$ ocp-lint \--\--init \# create \_olint directory and .ocplint
+    configuration file}
+
+~\\  
+Then, edit your .ocplint file or just run the default behavior of the linter.
+
+  {\tt \$ ocp-lint \# default directory is .} 
+
+  {\tt \$ ocp-lint \--\--path src/ }
+
+You will get some entries in your database showing the different warning of your
+project. 
+
+\begin{lstlisting}[language=bash,basicstyle=\tt\small]
+$ ocp-lint --path $SOURCEDIR --disable-plugin-typedtree
+Summary:
+* 11 files were linted
+* 40 warnings were emitted:
+ * 2 "interface_missing" number 1
+ * 2 "code_length" number 1
+ * 4 "ocp_indent" number 1
+File "lint_input.ml", line 1:
+  "ocp_indent" number 1:
+   File lint_input.ml' is not indented correctly.
+File "lint_actions.ml", line 1:
+  "code_length" number 1:
+  This line is too long ('82'): it should be at most of size '80'.
+File "main.ml", line 1:
+  "interface_missing" number 1:
+  Missing interface for main.ml'.
+\end{lstlisting}              
+
+After that, you can edit your source files to fix the issues raised by the
+linter.
+
+To force the linter to lint a file, even when it is no needed, we can use the
+{\tt \--\--no-db-cache} option in the command line. The linter will force the
+lint of your files and will not cache the result in the database.
+
+You can run \ocplint{} as often as you want, it will update your
+database only if you change your current configuration or if a file has changed.
+
 
 \subsection{Using During the Development}
 
+The initializing process is the same as explain in the previous section.
+
+\ocplint{} can be integrated to your editor as {\tt ocp-index} or {\tt
+  merlin}. You can then have the linter output directly in your editor and then
+go to the warning line directly. With this feature, every warning could be fixed
+more quickly and during the development process.
+
+Some hook can also be add to start the linter after each compilation of your
+project or even each time you save a file. In that case, only this file can be
+linted to see the output in your editor, it will be more easy to fix the
+warnings.
+
 \subsection{Using in a Git-development process}
+Another use of \ocplint{} is to integrate it during the development process. For
+example, we can add some hook with {\tt git} which will check the project each
+time a git command will be executed.
+
 \subsubsection*{As a Pre-commit Hook}
+One of these hooks is to check the project before committing. To do so, we can
+add a {\em pre-commit hook} which will start \ocplint{} before each commit. We
+already propose the script below that you can add to your git configuration:
+
+\begin{lstlisting}[language=Bash]
+#!/bin/sh
+
+LINT=ocp-lint
+
+$LINT --warn-error tools > /dev/null
+
+if [ "$?" = 0 ]; then
+    exit 0
+else
+    echo "\n/!\\ Please fix the warnings before commiting./!\\"
+    exit 1
+fi
+\end{lstlisting}
+
+You can copy this script in your {\tt \$PROJECT/.git/hook} directory to enable
+the pre-commit hook. The linter will warn you about your code before each
+commit.
+
 \subsubsection*{As a Pre-push Hook}
+In a similar way, you can add a pre-push hook which will warn you about the
+warnings in your code before every {\tt git push} command. Until every warnings
+are fixed, there will be any chance to push the code to your git repository.
 
 \subsection{Using in a CI Process}
+Using \ocplint{} with a CI tool like travis, you can add the hook to start the
+linter after the compilation process. Then, the CI tool can automatically add
+comments to your github pull request with all the warnings or directly add
+comments to the corresponding lines. Developers can then discuss about the
+warnings and decided the needed to fix them or not to accept the pull request.
+
+\ocplint{} can be more strict with the {\tt --warn-error} option. In that case,
+the linter will return an exit code different from 0 and the CI tool will fail
+until all warnings are fixed.
 
