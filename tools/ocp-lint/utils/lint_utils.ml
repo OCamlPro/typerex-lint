@@ -42,7 +42,7 @@ let substitute str substs =
 
 
 let relative_path =
-  let split_path = Str.split (Str.regexp (Filename.dir_sep)) in
+  let split_path str = OcpString.split str '/' in
   let rec make_relative = function
     | (dir1::root, dir2::file) when dir1 = dir2 -> make_relative (root, file)
     | (root, file) ->
@@ -66,8 +66,8 @@ let find_root root_dir basenames =
   find root_dir basenames
 
 let diff to_root path =
-  let to_root = Str.split (Str.regexp "/") to_root in
-  let path = Str.split (Str.regexp "/") path in
+  let to_root = OcpString.split to_root '/' in
+  let path = OcpString.split path '/' in
   let rec loop to_root path =
     match to_root, path with
     | dir1 :: tl1, dir2 :: tl2 when dir1 = dir2 -> loop tl1 tl2
