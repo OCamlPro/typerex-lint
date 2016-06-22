@@ -68,11 +68,13 @@ module MakeDB (DB : DATABASE_IO) = struct
     Hashtbl.iter (fun file (hash, pres) ->
         let db_path = Filename.concat !root "_olint" in
         let db_file = Filename.concat db_path (Digest.to_hex hash) in
+        let db_file_tmp = db_file ^ ".tmp" in
         let file_error =
           if Hashtbl.mem db_errors file then
             Hashtbl.find db_errors file
           else ErrorSet.empty in
-        DB.save db_file (file, pres, file_error))
+        DB.save db_file_tmp (file, pres, file_error);
+        Sys.rename db_file_tmp db_file)
       db
 
   let reset () = Hashtbl.reset db
