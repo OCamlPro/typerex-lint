@@ -40,7 +40,6 @@ let substitute str substs =
   Buffer.add_substitute buf (replace substs) str;
   Buffer.contents buf
 
-
 let relative_path =
   let split_path str = OcpString.split str '/' in
   let rec make_relative = function
@@ -94,3 +93,16 @@ let is_in_path root file path =
   let path = normalize_path root path in
   let file = normalize_path root file in
   Str.string_match (Str.regexp path) file 0
+
+(* Code from Opam *)
+
+let temp_basename prefix =
+  Printf.sprintf "%s-%d-%06x" prefix (Unix.getpid ()) (Random.int 0xFFFFFF)
+
+let rec mk_temp_dir () =
+  let s =
+    Filename.concat (Filename.get_temp_dir_name ()) (temp_basename "olint") in
+  if Sys.file_exists s then
+    mk_temp_dir ()
+  else
+    s

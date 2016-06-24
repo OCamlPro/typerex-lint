@@ -113,20 +113,47 @@ let rec load_plugins list =
 
 let init_olint_dir () = File.RawIO.safe_mkdir Lint_globals.olint_dirname
 
-let init_db no_db path =
-  let path_t = File.of_string path in
-  let olint_dirname = Lint_globals.olint_dirname in
-  try
-    if not no_db then
-      (let root_path_dir_t = Lint_utils.find_root path_t [olint_dirname] in
-       let root_t =
-         File.concat root_path_dir_t (File.of_string olint_dirname) in
-       Lint_db.DefaultDB.init root_t);
-    no_db
-  with Not_found ->
-    Printf.eprintf
-      "No olint dir found, you should use --init to use DB features.\n%!";
-    true
+let init_db_in_tmp () =
+  let tmp_dir = Lint_utils.mk_temp_dir () in
+  let olint_dir = Filename.concat tmp_dir Lint_globals.olint_dirname in
+  File.RawIO.safe_mkdir olint_dir;
+  Lint_db.DefaultDB.init (File.of_string olint_dir);
+  Some tmp_dir
+
+let clean_db_in_tmp db_dir = match db_dir with
+  | None -> ()
+  | Some dir ->
+    let root = dir in
+    let olint_dir = Filename.concat root Lint_globals.olint_dirname in
+    Array.iter (fun file ->
+        Sys.remove (Filename.concat olint_dir file))
+      (Sys.readdir olint_dir);
+    Unix.rmdir olint_dir;
+    Unix.rmdir dir
+
+let init_db no_db db_dir path = match db_dir with
+  | Some dir ->
+    let olint_dirname = Lint_globals.olint_dirname in
+    let root_t =
+      File.concat (File.of_string dir) (File.of_string olint_dirname) in
+    Lint_db.DefaultDB.init root_t;
+    db_dir, no_db
+  | None ->
+    let path_t = File.of_string path in
+    let olint_dirname = Lint_globals.olint_dirname in
+    try
+      if not no_db then
+        (let root_path_dir_t = Lint_utils.find_root path_t [olint_dirname] in
+         let root_t =
+           File.concat root_path_dir_t (File.of_string olint_dirname) in
+         Lint_db.DefaultDB.init root_t;
+         db_dir, no_db)
+      else
+        let db_dir = init_db_in_tmp () in
+        db_dir, true
+    with Not_found ->
+        let db_dir = init_db_in_tmp () in
+        db_dir, true
 
 let init_config path =
   let path_t = File.of_string path in
@@ -236,11 +263,10 @@ let from_input file pname cname inputs =
           file (Lint_db_types.Ocplint_error (Printexc.to_string exn)))
     inputs
 
-let lint_file no_db file =
-  let no_db = init_db no_db file in
-  if not no_db then
-    (Lint_db.DefaultDB.load_file file;
-     Lint_db.DefaultDB.cache ());
+let lint_file no_db db_dir file =
+  ignore (init_db no_db db_dir file);
+  Lint_db.DefaultDB.load_file file;
+  Lint_db.DefaultDB.cache ();
   let plugins = filter_plugins Lint_globals.plugins in
   let open Lint_warning_decl in
   let open Lint_warning_types in
@@ -255,49 +281,39 @@ let lint_file no_db file =
             from_input file Plugin.short_name Linter.short_name Linter.inputs)
         checks)
     plugins;
-  if not no_db then Lint_db.DefaultDB.save ()
-  else
-    begin
-      Lint_text.print
-        Format.err_formatter (Filename.dirname file) Lint_db.DefaultDB.db;
-      Lint_text.print_error
-        Format.err_formatter file Lint_db.DefaultDB.db_errors
-    end
+  Lint_db.DefaultDB.save ()
 
-let run no_db file =
-  (* needed for summary before real parallelization *)
-  if no_db then lint_file no_db file
-  else begin
-    let args = Array.copy Sys.argv in
-    let found = ref false in
-    Array.iteri (fun i arg ->
-        if arg = "--path" then begin
-          found := true;
-          args.(i) <- "--file";
-          args.(i + 1) <- file
-        end)
-      args;
-    let args = (* if ocp-lint is called without --path argument *)
-      if not !found then Array.to_list args @ ["--file"; file]
-      else Array.to_list args in
-    let cmd = String.concat " " args in
-    ignore (Sys.command cmd)
-  end
+let run db_dir file =
+  let args = Array.copy Sys.argv in
+  let found = ref false in
+  Array.iteri (fun i arg ->
+      if arg = "--path" then begin
+        found := true;
+        args.(i) <- "--file";
+        args.(i + 1) <- file
+      end)
+    args;
+  let args = (* if ocp-lint is called without --path argument *)
+    if not !found then Array.to_list args @ ["--file"; file]
+    else Array.to_list args in
+  let args = match db_dir with
+    | Some dir -> args @ [ "--db-dir"; dir ]
+    | None -> args in
+  let cmd = String.concat " " args in
+  ignore (Sys.command cmd)
 
-let lint_sequential no_db path =
+let lint_sequential no_db db_dir path =
   (* We filter the global ignored modules/files.  *)
-  let no_db = init_db no_db path in
+  (* let no_db = init_db no_db path in *)
+  let (db_dir, no_db) = init_db no_db db_dir path in
   let sources = filter_modules (scan_project path) !!ignored_files in
-  List.iter (run no_db) sources;
-  let no_db = init_db no_db path in
-  if not no_db then
-    begin
-      Lint_db.DefaultDB.merge sources;
-      Lint_text.print Format.err_formatter path Lint_db.DefaultDB.db;
-      Lint_text.print_error
-        Format.err_formatter path Lint_db.DefaultDB.db_errors
-    end;
-  Lint_text.summary path Lint_db.DefaultDB.db Lint_db.DefaultDB.db_errors
+  List.iter (run db_dir) sources;
+  Lint_db.DefaultDB.merge sources;
+  Lint_text.print Format.err_formatter path Lint_db.DefaultDB.db;
+  Lint_text.print_error
+    Format.err_formatter path Lint_db.DefaultDB.db_errors;
+  Lint_text.summary path Lint_db.DefaultDB.db Lint_db.DefaultDB.db_errors;
+  if no_db then clean_db_in_tmp db_dir
 
 (* let fork_exec file = *)
 (*   let exe = Sys.executable_name in *)

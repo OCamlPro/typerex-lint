@@ -43,3 +43,5 @@ val find_root : File.t -> string list -> File.t
 val is_in_path : string -> string -> string -> bool
 
 val normalize_path : string -> string -> string
+
+val mk_temp_dir : unit -> string

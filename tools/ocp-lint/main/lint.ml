@@ -34,6 +34,7 @@ let output_text = ref None
 let default_dir = "."
 let print_only_new = ref false
 let no_db = ref false
+let db_dir = ref None
 
 module ArgAlign = struct
   open Arg
@@ -182,6 +183,9 @@ let () =
         set_action (ActionLoadFile file)),
     "FILE   Give a file to lint";
 
+    "--db-dir", Arg.String (fun dir -> db_dir := Some dir),
+    "DIR   Give database directory";
+
     "--output-txt", Arg.String (fun file -> output_text := Some file),
     "FILE   Output results in a text file.";
 
@@ -210,10 +214,10 @@ let () =
     " \n\nPlugins arguments:\n";
   ]
 
-let start_lint_file file = Lint_actions.lint_file !no_db file
+let start_lint_file file = Lint_actions.lint_file !no_db !db_dir file
 
 let start_lint dir =
-  Lint_actions.lint_sequential !no_db dir;
+  Lint_actions.lint_sequential !no_db !db_dir dir;
   if Lint_db.DefaultDB.has_warning () then exit !exit_status
 
 let main () =
