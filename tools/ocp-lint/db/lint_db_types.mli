@@ -43,8 +43,8 @@ type errors = (string, error_set) Hashtbl.t
 
 
 module type DATABASE_IO = sig
-  val load : string -> string * plugin_map * error_set
-  val save : string -> string * plugin_map * error_set -> unit
+  val load : string -> int * string * plugin_map * error_set
+  val save : string -> int * string * plugin_map * error_set -> unit
 end
 
 module type DATABASE = sig

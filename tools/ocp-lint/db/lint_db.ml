@@ -27,6 +27,8 @@ let string_of_source = function
   | Analyse -> "Analyse"
 
 module MakeDB (DB : DATABASE_IO) = struct
+  let version = 1
+
   let root = ref ""
 
   let db = empty_db ()
@@ -41,11 +43,14 @@ module MakeDB (DB : DATABASE_IO) = struct
     let hash_filename_path = Filename.concat olint_dir hash_filename in
     if Sys.file_exists hash_filename_path then
       try
-        let (file, pres, file_error) = DB.load hash_filename_path in
-        Hashtbl.add db file (hash, pres);
-        Hashtbl.add db_errors file file_error
+        let (version_db, file, pres, file_error) = DB.load hash_filename_path in
+        if version <> version_db then
+          Format.eprintf "Outdated DB file %S, skipping it\n%!" file
+        else
+          (Hashtbl.add db file (hash, pres);
+           Hashtbl.add db_errors file file_error)
       with exn ->
-        Format.eprintf "Can't read DB file for %s, skipping it\n%!" file
+        Format.eprintf "Can't read DB file for %S, skipping it\n%!" file
 
   let init path =
     let path = File.to_string path in
@@ -73,7 +78,7 @@ module MakeDB (DB : DATABASE_IO) = struct
           if Hashtbl.mem db_errors file then
             Hashtbl.find db_errors file
           else ErrorSet.empty in
-        DB.save db_file_tmp (file, pres, file_error);
+        DB.save db_file_tmp (version, file, pres, file_error);
         Sys.rename db_file_tmp db_file)
       db
 
