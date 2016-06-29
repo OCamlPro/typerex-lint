@@ -38,6 +38,10 @@ if test "$OCAMLC" = "no"; then
    AC_MSG_ERROR([You must install the OCaml compiler])
 fi
 
+if test "${OCAMLVERSION}" = ""; then
+   AC_MSG_ERROR([No OCaml version. ocamlc -version is not parsable.])
+fi
+
 if test "$VERSION_CHECK" = "yes" ; then
   AX_COMPARE_VERSION( [$OCAMLVERSION], [lt], [${OCAML_MINIMAL_VERSION}],
   AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not supported. You need ${OCAML_MINIMAL_VERSION} at least.]))
@@ -110,6 +114,9 @@ if test "$VERSION_CHECK" = "yes" ; then
   AX_COMPARE_VERSION( [$OCAMLVERSION], [ge], [4.03],
      AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not yet supported]))
 fi
+if test "$OCAMLFIND" = "no"; then
+   AC_MSG_ERROR([You must install OCaml package 'ocamlfind'])
+fi
 AC_CHECK_TOOL([OCAML_TOOL_ocp_build],[ocp-build],[no])
 if test "$OCAML_TOOL_ocp_build" = "no"; then
    AC_MSG_ERROR([Please install OCaml tool 'ocp-build'.])
@@ -122,15 +129,34 @@ AC_CHECK_OCAML_PKG(ocplib-config)
 if test "$OCAML_PKG_ocplib_config" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'ocplib-config'.])
 fi
-AC_CHECK_OCAML_PKG(ocp-indent)
-if test "$OCAML_PKG_ocp_indent" = "no"; then
-   AC_MSG_ERROR([Please install OCaml package 'ocp-indent'.])
+AC_CHECK_OCAML_PKG(ocp-indent.lib)
+if test "$OCAML_PKG_ocp_indent.lib" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'ocp-indent.lib'.])
 fi
+OPAM_REPO=
+OPAM_REPO_OFFICIAL_REMOTE=
+OPAM_REPO_FORK_REMOTE=
+DOWNLOAD_URL_PREFIX=http://github.com//archive/
+
+###############################################################
+##                                                            #
+## From autoconf.ac:                                          #
+##                                                            #
+###############################################################
+
 
 # This file will be inserted inside autoconf/configure.ac by ocp-autoconf
 # If you create variables, do not forget to add them in ocp-autoconf.config
 # in the 'extra_config_vars' and 'extra_bool_vars' options.
 
+
+###############################################################
+##                                                            #
+## END of autoconf.ac                                         #
+##                                                            #
+###############################################################
+
+AC_SUBST(OCAMLFIND)
 AC_SUBST(CONFIGURE_ARGS)
 AC_SUBST(ROOTDIR)
 AC_SUBST(prefix)
@@ -144,6 +170,10 @@ AC_SUBST(ocamldir)
 AC_SUBST(metadir)
 AC_SUBST(PACKAGE_NAME)
 AC_SUBST(PACKAGE_VERSION)
+AC_SUBST(OPAM_REPO)
+AC_SUBST(OPAM_REPO_OFFICIAL_REMOTE)
+AC_SUBST(OPAM_REPO_FORK_REMOTE)
+AC_SUBST(DOWNLOAD_URL_PREFIX)
 AC_SUBST(OCAMLVERSION)
 AC_SUBST(OCAMLC)
 AC_SUBST(OCAMLOPT)
