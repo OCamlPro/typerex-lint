@@ -54,13 +54,13 @@ let relative_path =
 let find_root root_dir basenames =
   let rec find dirname (basenames : string list) =
     let file = File.add_basenames dirname basenames in
-    if File.X.exists file then dirname else
+    if File.exists file then dirname else
       let new_dirname = File.dirname dirname in
       if new_dirname == dirname then raise Not_found;
       find new_dirname basenames
   in
   let root_dir = if File.is_absolute root_dir then root_dir else
-      File.concat (File.X.getcwd ()) root_dir
+      File.concat (File.getcwd ()) root_dir
   in
   find root_dir basenames
 
