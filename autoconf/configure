@@ -587,8 +587,12 @@ PACKAGE_URL=''
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 OCAML_USE_BINANNOT
+DOWNLOAD_URL_PREFIX
+OPAM_REPO_FORK_REMOTE
+OPAM_REPO_OFFICIAL_REMOTE
+OPAM_REPO
 ROOTDIR
-OCAML_PKG_ocp_indent
+OCAML_PKG_ocp_indent_lib
 OCAML_PKG_ocplib_config
 OCAML_PKG_menhirLib
 OCAML_TOOL_ocp_build
@@ -3784,6 +3788,10 @@ if test "$OCAMLC" = "no"; then
    as_fn_error $? "You must install the OCaml compiler" "$LINENO" 5
 fi
 
+if test "${OCAMLVERSION}" = ""; then
+   as_fn_error $? "No OCaml version. ocamlc -version is not parsable." "$LINENO" 5
+fi
+
 if test "$VERSION_CHECK" = "yes" ; then
   for ac_prog in gawk mawk nawk awk
 do
@@ -4095,6 +4103,9 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
       fi
 
 fi
+if test "$OCAMLFIND" = "no"; then
+   as_fn_error $? "You must install OCaml package 'ocamlfind'" "$LINENO" 5
+fi
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ocp-build", so it can be a program name with args.
 set dummy ${ac_tool_prefix}ocp-build; ac_word=$2
@@ -4251,17 +4262,17 @@ if test "$OCAML_PKG_ocplib_config" = "no"; then
    as_fn_error $? "Please install OCaml package 'ocplib-config'." "$LINENO" 5
 fi
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package ocp-indent" >&5
-$as_echo_n "checking for OCaml findlib package ocp-indent... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package ocp-indent.lib" >&5
+$as_echo_n "checking for OCaml findlib package ocp-indent.lib... " >&6; }
 
   unset found
   unset pkg
   found=no
-  for pkg in ocp-indent  ; do
+  for pkg in ocp-indent.lib  ; do
     if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      OCAML_PKG_ocp_indent=$pkg
+      OCAML_PKG_ocp_indent_lib=$pkg
       ocaml_pkg_version=$($OCAMLFIND query -l $pkg|grep version: | awk '{ print $2}')
-      OCAML_PKG_ocp_indent_VERSION=$ocaml_pkg_version
+      OCAML_PKG_ocp_indent_lib_VERSION=$ocaml_pkg_version
 
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ocaml_pkg_version" >&5
 $as_echo "$ocaml_pkg_version" >&6; }
@@ -4272,18 +4283,41 @@ $as_echo "$ocaml_pkg_version" >&6; }
   if test "$found" = "no" ; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
-    OCAML_PKG_ocp_indent=no
+    OCAML_PKG_ocp_indent_lib=no
   fi
 
 
 
-if test "$OCAML_PKG_ocp_indent" = "no"; then
-   as_fn_error $? "Please install OCaml package 'ocp-indent'." "$LINENO" 5
+if test "$OCAML_PKG_ocp_indent.lib" = "no"; then
+   as_fn_error $? "Please install OCaml package 'ocp-indent.lib'." "$LINENO" 5
 fi
+OPAM_REPO=
+OPAM_REPO_OFFICIAL_REMOTE=
+OPAM_REPO_FORK_REMOTE=
+DOWNLOAD_URL_PREFIX=http://github.com//archive/
+
+###############################################################
+##                                                            #
+## From autoconf.ac:                                          #
+##                                                            #
+###############################################################
+
 
 # This file will be inserted inside autoconf/configure.ac by ocp-autoconf
 # If you create variables, do not forget to add them in ocp-autoconf.config
 # in the 'extra_config_vars' and 'extra_bool_vars' options.
+
+
+###############################################################
+##                                                            #
+## END of autoconf.ac                                         #
+##                                                            #
+###############################################################
+
+
+
+
+
 
 
 

@@ -40,9 +40,8 @@ let substitute str substs =
   Buffer.add_substitute buf (replace substs) str;
   Buffer.contents buf
 
-
 let relative_path =
-  let split_path = Str.split (Str.regexp (Filename.dir_sep)) in
+  let split_path str = OcpString.split str '/' in
   let rec make_relative = function
     | (dir1::root, dir2::file) when dir1 = dir2 -> make_relative (root, file)
     | (root, file) ->
@@ -55,19 +54,19 @@ let relative_path =
 let find_root root_dir basenames =
   let rec find dirname (basenames : string list) =
     let file = File.add_basenames dirname basenames in
-    if File.X.exists file then dirname else
+    if File.exists file then dirname else
       let new_dirname = File.dirname dirname in
       if new_dirname == dirname then raise Not_found;
       find new_dirname basenames
   in
   let root_dir = if File.is_absolute root_dir then root_dir else
-      File.concat (File.X.getcwd ()) root_dir
+      File.concat (File.getcwd ()) root_dir
   in
   find root_dir basenames
 
 let diff to_root path =
-  let to_root = Str.split (Str.regexp "/") to_root in
-  let path = Str.split (Str.regexp "/") path in
+  let to_root = OcpString.split to_root '/' in
+  let path = OcpString.split path '/' in
   let rec loop to_root path =
     match to_root, path with
     | dir1 :: tl1, dir2 :: tl2 when dir1 = dir2 -> loop tl1 tl2
@@ -94,3 +93,16 @@ let is_in_path root file path =
   let path = normalize_path root path in
   let file = normalize_path root file in
   Str.string_match (Str.regexp path) file 0
+
+(* Code from Opam *)
+
+let temp_basename prefix =
+  Printf.sprintf "%s-%d-%06x" prefix (Unix.getpid ()) (Random.int 0xFFFFFF)
+
+let rec mk_temp_dir () =
+  let s =
+    Filename.concat (Filename.get_temp_dir_name ()) (temp_basename "olint") in
+  if Sys.file_exists s then
+    mk_temp_dir ()
+  else
+    s

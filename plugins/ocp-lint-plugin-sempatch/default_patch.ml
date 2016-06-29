@@ -24,8 +24,8 @@ let default_patches =
       let tmp = Filename.get_temp_dir_name () in
       let file = Filename.basename file in
       let destfile = Filename.concat tmp file in
-      File.Dir.make_all (File.of_string @@ Filename.dirname destfile);
-      File.file_of_string destfile content;
+      Dir.make_all (File.of_string @@ Filename.dirname destfile);
+      FileString.file_of_string destfile content;
       destfile)
     Global_static_files.files
 

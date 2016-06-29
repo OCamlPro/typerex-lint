@@ -28,8 +28,8 @@ val list_plugins : Format.formatter -> unit
 val init_olint_dir : unit -> unit
 
 val init_config : string -> unit
-val init_db : bool -> string -> bool
+val init_db : bool -> string option -> string -> string option * bool
 
-val lint_file : bool -> string -> unit
+val lint_file : bool -> string option -> string -> unit
 (* val lint_parallel : string -> unit *)
-val lint_sequential : bool -> string -> unit
+val lint_sequential : bool -> string option -> string -> unit
