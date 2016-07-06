@@ -284,7 +284,7 @@ end
 struct
   let out_fun =
     try
-      ignore @@ Sys.getenv "SEMPATCH_VERBOSE";
+      ignore @@ Sys.getenv "OCAML_VERBOSE";
       print_string
     with Not_found -> ignore
   let debug msg = Printf.ksprintf
