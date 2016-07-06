@@ -19,15 +19,19 @@ let empty = {
   states = IM.empty;
 }
 
-let maybe_add_state has_to_be_absent state t =
-  let old_states = t.states in
-  if IM.mem (State.id state) old_states = has_to_be_absent then
-    failwith "trying to add a state which was already there"
-  else
-    update_states t (IM.add (State.id state) state old_states)
-
-let add_state = maybe_add_state true
-let update_state = maybe_add_state false
+let add_state
+    ?(final=false)
+    ?(updates_loc=false)
+    ?replacement_tree
+    t
+  =
+  let state = State.new_state
+      ~final
+      ~updates_loc
+      ~replacement_tree
+      ()
+  in
+  update_states t (IM.add (S.id state) state t.states), S.id state
 
 let get_state t id =
   try
@@ -83,30 +87,32 @@ let rec run t tree env =
       (current_state, env)
   in res_opt
 
-let id = S.id
-
 let () =
-  let tree = T.(Node1 (Node11 (Node12 (Node22 "foo", "bar"))))
-  and state0 = State.new_state ()
-  and state1 = State.new_state ()
-  and state2 = State.new_state ()
-  and state3 = State.new_state ()
-  and state4 = State.new_state ()
-  and state5 = State.new_state ()
+  let add_state' t_ref =
+    let t', state = add_state !t_ref in
+    t_ref := t'; state
   in
+  let tree = T.(Node1 (Node11 (Node12 (Node22 "foo", "bar"))))
+  in
+  let automaton = ref empty in
+  let state0 = add_state' automaton in
+  let state1 = add_state' automaton in
+  let state2 = add_state' automaton in
+  let state3 = add_state' automaton in
+  let state4 = add_state' automaton in
   let automaton =
-    empty
-    |> add_state state0
-    |> add_state state1
-    |> add_state state2
-    |> add_state state3
-    |> add_state state4
-    |> add_state state5
-    |> add_transition St.Unit (T.Leaf1 "foo") (id state0)
-    |> add_transition St.Unit (T.Leaf1 "bar") (id state1)
-    |> add_transition (St.Node2 (St.Node22 (id state0))) T.(Node2 (Node22 "foo")) (id state2)
-    |> add_transition (St.Node1 (St.Node12 (id state2, id state1))) T.(Node1 (Node12 (Node22 "foo", "baz"))) (id state3)
-    |> add_transition (State_tree.Node1 (State_tree.Node11 (id state3))) tree (id state4)
+    !automaton
+    |> add_transition St.Unit (T.Leaf1 "foo") state0
+    |> add_transition St.Unit (T.Leaf1 "bar") state1
+    |> add_transition
+      (St.Node2 (St.Node22 state0))
+      T.(Node2 (Node22 "foo"))
+      state2
+    |> add_transition
+      (St.Node1 (St.Node12 (state2, state1)))
+      T.(Node1 (Node12 (Node22 "foo", "baz")))
+      state3
+    |> add_transition (State_tree.Node1 (State_tree.Node11 state3)) tree state4
   in
   ignore @@
   let%map final_state, _ = run automaton tree () in

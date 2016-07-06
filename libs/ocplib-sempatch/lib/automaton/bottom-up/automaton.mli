@@ -2,11 +2,12 @@ type t
 
 val empty : t
 
-(** Fails if a state with the same id already exists *)
-val add_state : State.t -> t -> t
-
-(** Fails if no state with the same id already exists *)
-val update_state : State.t -> t -> t
+val add_state :
+  ?final:bool
+  -> ?updates_loc:bool
+  -> ?replacement_tree:Tree.t
+  -> t
+  -> (t * State.id)
 
 val get_state : t -> State.id -> State.t option
 
