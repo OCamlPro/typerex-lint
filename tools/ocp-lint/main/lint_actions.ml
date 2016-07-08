@@ -111,7 +111,8 @@ let rec load_plugins list =
         Printf.eprintf "%S: No such file or directory.\n%!" file)
     list
 
-let init_olint_dir () = File.safe_mkdir (File.of_string Lint_globals.olint_dirname)
+let init_olint_dir () =
+  File.safe_mkdir (File.of_string Lint_globals.olint_dirname)
 
 let init_db_in_tmp () =
   let tmp_dir = Lint_utils.mk_temp_dir () in
