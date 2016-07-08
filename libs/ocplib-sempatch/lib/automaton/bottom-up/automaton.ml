@@ -53,36 +53,29 @@ let go_one_step t state_tree tree =
   with Not_found -> None
 
 let rec run t tree env =
-  let res_opt =
+  let%bind state_tree, envs =
     match tree with
     | T.Node1 (T.Node12 (sub0, sub1)) ->
       let%bind state0, env0 = run t (T.Node2 sub0) env in
-      let%bind state1, env1 = run t (T.Leaf1 sub1) env in
-      let%map current_state =
-        go_one_step t (St.Node1 (St.Node12 (S.id state0, S.id state1))) tree
-      in
-      (current_state, Env.merge env0 env1)
+      let%map state1, env1 = run t (T.Leaf1 sub1) env in
+      (St.Node1 (St.Node12 (S.id state0, S.id state1))),
+      [env0; env1]
     | T.Node1 (T.Node11 sub0) ->
-      let%bind state0, env0 = run t (T.Node1 sub0) env in
-      let%map current_state =
-        go_one_step t (St.Node1 (St.Node11 (S.id state0))) tree
-      in
-      (current_state, env0)
+      let%map state0, env0 = run t (T.Node1 sub0) env in
+      (St.Node1 (St.Node11 (S.id state0))), [env0]
     | T.Node2 (T.Node21 sub0) ->
-      let%bind state0, env0 = run t (T.Node1 sub0) env in
-      let%map current_state =
-        go_one_step t (St.Node2 (St.Node21 (S.id state0))) tree
-      in
-      (current_state, env0)
+      let%map state0, env0 = run t (T.Node1 sub0) env in
+      (St.Node2 (St.Node21 (S.id state0))), [env0]
     | T.Node2 (T.Node22 sub0) ->
-      let%bind state0, env0 = run t (T.Leaf1 sub0) env in
-      let%map current_state =
-        go_one_step t (St.Node2 (St.Node22 (S.id state0))) tree
-      in
-      (current_state, env0)
+      let%map state0, env0 = run t (T.Leaf1 sub0) env in
+      (St.Node2 (St.Node22 (S.id state0))), [env0]
     | T.Leaf1 _ ->
-      let%map current_state =
-        go_one_step t St.Unit tree
-      in
-      (current_state, env)
-  in res_opt
+      Some (St.Unit, [])
+  in
+  let%map current_state =
+    go_one_step t state_tree tree
+  in
+  let merged_envs =
+    List.fold_left Env.merge env envs
+  in
+  current_state, merged_envs
