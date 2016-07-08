@@ -314,12 +314,12 @@ rule token = parse
         raise (Error(Illegal_character (Lexing.lexeme_char lexbuf 0),
                      Location.curr lexbuf));
       update_loc lexbuf None 1 false 0;
-      token lexbuf }
+      ESCAPED_EOL }
   | newline
       { update_loc lexbuf None 1 false 0;
         EOL }
   | blank +
-      { token lexbuf }
+      { SPACES }
   | "_"
       { UNDERSCORE }
   | "~"
@@ -726,7 +726,7 @@ and skip_sharp_bang = parse
             | BlankLine -> BlankLine
           in
           loop lines' docs lexbuf
-      | EOL ->
+      | EOL | ESCAPED_EOL ->
           let lines' =
             match lines with
             | NoLine -> NewLine
@@ -746,6 +746,8 @@ and skip_sharp_bang = parse
             | Before(a, f, b), BlankLine -> Before(a, b @ f, [doc])
           in
           loop NoLine docs' lexbuf
+      | SPACES ->
+        loop lines docs lexbuf
       | tok ->
           attach lines docs (lexeme_start_p lexbuf);
           tok

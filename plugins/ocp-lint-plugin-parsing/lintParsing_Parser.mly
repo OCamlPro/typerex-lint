@@ -592,6 +592,11 @@ let package_type_of_module_type pmty =
 %token <LintParsing_Docstrings.docstring> DOCSTRING
 
 %token EOL
+/* These new tokens are used by the Lexer in EOL mode to recognize
+    missing spaces and so on.
+    */
+%token SPACES
+%token ESCAPED_EOL
 
 /* Precedences and associativities.
 
