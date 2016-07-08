@@ -43,6 +43,7 @@ begin program "bup"
       "lib/automaton/bottom-up/env.ml"
       "lib/automaton/bottom-up/transitions.ml"
       "lib/automaton/bottom-up/automaton.ml"
+      "lib/automaton/bottom-up/generate.ml"
     ]
     requires = [
       "ppx_deriving"
