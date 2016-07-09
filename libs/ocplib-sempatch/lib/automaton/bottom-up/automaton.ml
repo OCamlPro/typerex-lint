@@ -52,6 +52,19 @@ let go_one_step t state_tree tree =
   try Some (IM.find current_state_id t.states)
   with Not_found -> None
 
+let states t =
+  IM.bindings t.states
+  |> List.split
+  |> snd
+
+let transitions t = t.transitions
+
+let step t stree tree env =
+  let%map current_state =
+    go_one_step t stree tree
+  in
+  current_state, env
+
 let rec run t tree env =
   let%bind state_tree, envs =
     match tree with

@@ -13,4 +13,7 @@ val get_state : t -> State.id -> State.t option
 
 val add_transition : State_tree.t -> Tree.t -> State.id -> t -> t
 
+val states : t -> State.t list
+val transitions : t -> Transitions.t
+
 val run : t -> Tree.t -> Env.t -> (State.t * Env.t) option

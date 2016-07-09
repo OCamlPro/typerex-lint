@@ -35,3 +35,6 @@ let follow map orig_states current_node =
       (Tree.Nodes.show node);
     None
 
+let iter f =
+  let f' = fun (x,y) -> f x y in
+  TransMap.iter f'

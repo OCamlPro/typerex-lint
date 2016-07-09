@@ -14,4 +14,6 @@ and t =
   | Unit
   [@@deriving show]
 
+val id_string : t -> string
+
 include Map.OrderedType with type t := t
