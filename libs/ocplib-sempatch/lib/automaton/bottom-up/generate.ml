@@ -18,7 +18,10 @@ let rec generate automaton parent_state tree = match tree with
     in
     generate automaton state0 (T.Node1 sub0)
   | T.Node1 (T.Node12 (sub0, sub1)) ->
-    let automaton, state0 = A.add_state automaton in
+    let automaton, state0 = A.add_state
+        ~replacement_tree:Tree.(Node2 (Node21 (Node12 (Node22 "blih", "bleh"))))
+        automaton
+    in
     let automaton, state1 = A.add_state automaton in
     let automaton =
       A.add_transition
@@ -40,7 +43,9 @@ let rec generate automaton parent_state tree = match tree with
     in
     generate automaton state0 (T.Node1 sub0)
   | T.Node2 (T.Node22 sub0) ->
-    let (automaton, state0) = A.add_state automaton in
+    let (automaton, state0) = A.add_state
+        automaton
+    in
     let automaton =
       A.add_transition
         St.(Node2 (Node22 state0))
@@ -65,8 +70,10 @@ let from_tree tree =
   generate automaton top_state tree
 
 let () =
-  let tree = T.(Node1 (Node11 (Node11 (Node12 (Node22 "foo", "bar"))))) in
-  let automaton = from_tree tree in
+  let tree = T.((Node11 (Node11 (Node12 (Node22 "foo", "bar"))))) in
+  let automaton = from_tree (T.Node1 tree) in
   ignore @@
-  let%map final_state, _ = Automaton.run automaton tree () in
-  Messages.debug "Final state : %s\n" @@ State.show final_state
+  let%map final_state, env = Automaton.run_node1 automaton tree in
+  Messages.debug "Final state : %s\n" @@ State.show final_state;
+  Messages.debug "Env : %s\n" @@ Env.show Tree.pp_node1 env;
+  Export.toDot stdout automaton

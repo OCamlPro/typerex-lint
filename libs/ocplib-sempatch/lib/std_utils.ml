@@ -59,6 +59,8 @@ sig
 
   val bind : 'a t -> ('a -> 'b t) -> 'b t
 
+  val both : 'a t -> 'b t -> ('a * 'b) t
+
   val to_list : 'a t -> 'a list
 
   module Infix :
@@ -66,6 +68,7 @@ sig
     val (|?) : 'a t -> 'a -> 'a
     val (>>=) : 'a t -> ('a -> 'b t) -> 'b t
     val (>|=) : 'a t -> ('a -> 'b) -> 'b t
+    val (>||) : 'a t -> 'b t -> ('a * 'b) t
   end
 end
 =
@@ -90,6 +93,8 @@ struct
     | _ -> None
 
   let zip o1 o2 = merge_inf Misc.pair o1 o2
+
+  let both = zip
 
   let value default = function
     | None -> default
@@ -117,6 +122,7 @@ struct
     let (|?) = (|?)
     let (>>=) = bind
     let (>|=) x y = map y x
+    let (>||) = both
   end
 end
 
@@ -285,7 +291,7 @@ struct
   let out_fun =
     try
       ignore @@ Sys.getenv "OCAML_VERBOSE";
-      print_string
+      output_string stderr
     with Not_found -> ignore
   let debug msg = Printf.ksprintf
       (fun msg -> out_fun ("Debug : " ^ msg))
@@ -294,6 +300,5 @@ struct
       (fun msg -> out_fun ("Warning : " ^ msg))
       msg
 end
-
 
 module List = UList

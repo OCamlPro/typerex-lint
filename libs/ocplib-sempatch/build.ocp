@@ -38,9 +38,9 @@ end
 begin program "bup"
     files = [
       "lib/automaton/bottom-up/tree.ml"
+      "lib/automaton/bottom-up/env.ml"
       "lib/automaton/bottom-up/state.ml"
       "lib/automaton/bottom-up/state_tree.ml"
-      "lib/automaton/bottom-up/env.ml"
       "lib/automaton/bottom-up/transitions.ml"
       "lib/automaton/bottom-up/automaton.ml"
       "lib/automaton/bottom-up/export.ml"

@@ -65,30 +65,42 @@ let step t stree tree env =
   in
   current_state, env
 
-let rec run t tree env =
-  let%bind state_tree, envs =
-    match tree with
-    | T.Node1 (T.Node12 (sub0, sub1)) ->
-      let%bind state0, env0 = run t (T.Node2 sub0) env in
-      let%map state1, env1 = run t (T.Leaf1 sub1) env in
+let rec run_node1 t node =
+  let%bind state_tree, env =
+    match node with
+    | T.Node12 (sub0, sub1) ->
+      let%map state0, env0 = run_node2 t sub0
+      and state1, env1 = run_leaf1 t sub1 in
+      let env0 = match State.replacement_tree state0 with
+        | Some (T.Node2 n) -> Env.set_replacement n env0
+        | _ -> env0
+      in
       (St.Node1 (St.Node12 (S.id state0, S.id state1))),
-      [env0; env1]
-    | T.Node1 (T.Node11 sub0) ->
-      let%map state0, env0 = run t (T.Node1 sub0) env in
-      (St.Node1 (St.Node11 (S.id state0))), [env0]
-    | T.Node2 (T.Node21 sub0) ->
-      let%map state0, env0 = run t (T.Node1 sub0) env in
-      (St.Node2 (St.Node21 (S.id state0))), [env0]
-    | T.Node2 (T.Node22 sub0) ->
-      let%map state0, env0 = run t (T.Leaf1 sub0) env in
-      (St.Node2 (St.Node22 (S.id state0))), [env0]
-    | T.Leaf1 _ ->
-      Some (St.Unit, [])
+      Env.merge (fun x y -> T.Node12(x, y)) env0 env1
+    | T.Node11 sub0 ->
+      let%map state0, env0 = run_node1 t sub0 in
+      (St.Node1 (St.Node11 (S.id state0))),
+      Env.map_replacement (fun r -> T.Node11 r) env0
   in
-  let%map current_state =
-    go_one_step t state_tree tree
+  let%map new_state, env = step t state_tree (T.Node1 node) env in
+  let env = match State.replacement_tree new_state with
+    | Some (T.Node1 n) -> Env.set_replacement n env
+    | _ -> env
+  in new_state, env
+
+and run_node2 t node =
+  let%bind state_tree, env =
+    match node with
+    | T.Node21 sub0 ->
+      let%map state0, env0 = run_node1 t sub0 in
+      (St.Node2 (St.Node21 (S.id state0))),
+      Env.map_replacement (fun r -> T.Node21 r) env0
+    | T.Node22 sub0 ->
+      let%map state0, env0 = run_leaf1 t sub0 in
+      (St.Node2 (St.Node22 (S.id state0))),
+      Env.map_replacement (fun r -> T.Node22 r) env0
   in
-  let merged_envs =
-    List.fold_left Env.merge env envs
-  in
-  current_state, merged_envs
+  step t state_tree (T.Node2 node) env
+
+and run_leaf1 t leaf =
+  step t St.Unit (T.Leaf1 leaf) (Env.mk_new leaf)
