@@ -25,8 +25,8 @@ begin library "ocp-lint-plugin-parsing";
 
           (* From ocaml-4.03.0 *)
         "lintParsing_Location.ml";
-        "lintParsing_Asttypes.mli";
-        "lintParsing_Parsetree.mli";
+        "lintParsing_Asttypes.ml";
+        "lintParsing_Parsetree.ml"
         "lintParsing_Docstrings.ml";
         "lintParsing_Ast_helper.ml";
         "lintParsing_Syntaxerr.ml";
@@ -40,7 +40,22 @@ begin library "ocp-lint-plugin-parsing";
   requires = [
         "ocp-lint-api";
         "ocplib-compiler"
-      ]
+  ]
+
+    build_rules = [
+    "lintParsing_Parsetree.ml" (
+      sources = [ "lintParsing_Parsetree.mli" ];
+      commands = [
+        { "cp" "-f" "lintParsing_Parsetree.mli" "lintParsing_Parsetree.ml" }
+      ];
+    )
+    "lintParsing_Asttypes.ml" (
+      sources = [ "lintParsing_Parsetree.mli" ];
+      commands = [
+        { "cp" "-f" "lintParsing_Asttypes.mli" "lintParsing_Asttypes.ml" }
+      ];
+    )
+  ]
 end
 
 
