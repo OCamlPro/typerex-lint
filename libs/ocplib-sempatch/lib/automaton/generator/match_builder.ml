@@ -45,27 +45,27 @@ let create_match loc name args pattern result =
   let here elt = L.mkloc elt loc in
   let body =
     [%expr basic_state (function
-           | [%p pattern] -> [[%e result]]
-           | _ -> [A.Trash])
-  [@@metaloc loc]
-]
-and type_constraint = [%type: A.state]
-in
-H.Vb.mk
-  ~loc
-  (H.Pat.var ~loc (here name))
-  (List.fold_left
-     (fun expr arg_name ->
-        let arg = H.Pat.constraint_
-            ~loc
-            (H.Pat.var ~loc (here arg_name))
-            type_constraint
-        in
-        [%expr fun [%p arg] -> [%e expr] [@@metaloc loc]]
-)
-body
-  (List.rev args)
-)
+        | [%p pattern] -> [[%e result]]
+        | _ -> [A.Trash])
+    ]
+      [@metaloc loc]
+  and type_constraint = [%type: A.state]
+  in
+  H.Vb.mk
+    ~loc
+    (H.Pat.var ~loc (here name))
+    (List.fold_left
+       (fun expr arg_name ->
+          let arg = H.Pat.constraint_
+              ~loc
+              (H.Pat.var ~loc (here arg_name))
+              type_constraint
+          in
+          [%expr fun [%p arg] -> [%e expr]][@metaloc loc]
+       )
+       body
+       (List.rev args)
+    )
 
 let create_record_match loc name fields =
   let here elt = L.mkloc elt loc in
