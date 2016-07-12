@@ -4,27 +4,42 @@ open Ast_mapper
 
 let bind_op = Longident.Lident ">>="
 let map_op = Longident.Lident ">|="
+let both_op = Longident.Lident ">||"
 
 let transform_to_fun self operator expr =
   let expr = self.expr self expr in
+  let loc = expr.pexp_loc in
   let descr = match expr.pexp_desc with
-  | Pexp_let (Asttypes.Nonrecursive, [binding], body) ->
-    Pexp_apply (
-      H.Exp.ident (Location.mkloc operator expr.pexp_loc),
-      [
-        "", binding.pvb_expr;
-        "", H.Exp.fun_ "" None binding.pvb_pat body;
-      ]
-    )
-  | Pexp_match (expr, cases) ->
-    Pexp_apply (
-      H.Exp.ident (Location.mkloc operator expr.pexp_loc),
-      [
-        "", expr;
-        "", H.Exp.function_ cases;
-      ]
-    )
-  | d -> d
+    | Pexp_let (Asttypes.Nonrecursive, b0::bindings, body) ->
+      let arg_pattern, both_expr =
+        List.fold_left
+          (fun (pat, expr) binding ->
+             (
+               H.Pat.tuple ~loc [binding.pvb_pat; pat],
+               H.Exp.apply ~loc
+                 (H.Exp.ident ~loc (Location.mkloc both_op loc))
+                 ["",binding.pvb_expr; "",expr]
+             )
+          )
+          (b0.pvb_pat, b0.pvb_expr)
+          bindings
+      in
+      Pexp_apply (
+        H.Exp.ident (Location.mkloc operator expr.pexp_loc),
+        [
+          "", both_expr;
+          "", H.Exp.fun_ "" None arg_pattern body;
+        ]
+      )
+    | Pexp_match (expr, cases) ->
+      Pexp_apply (
+        H.Exp.ident (Location.mkloc operator expr.pexp_loc),
+        [
+          "", expr;
+          "", H.Exp.function_ cases;
+        ]
+      )
+    | d -> d
   in default_mapper.expr self { expr with pexp_desc = descr }
 
 let mapper =
