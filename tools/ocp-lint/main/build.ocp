@@ -44,6 +44,7 @@ begin program "ocp-lint"
     "ocp-lint-plugin-parsetree"
     "ocp-lint-plugin-complex"
     "ocp-lint-plugin-indent"
+    "ocp-lint-plugin-parsing"
   ]
   link = [ "-linkall" ]
 end
