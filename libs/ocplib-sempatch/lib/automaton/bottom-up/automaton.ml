@@ -39,6 +39,18 @@ let get_state t id =
   with
   Not_found -> None
 
+let update_state id transf t =
+  match get_state t id with
+  | None -> t
+  | Some s ->
+    let new_state = transf s in
+    if State.id s <> State.id new_state then
+      Messages.warn "Changing the id of the state while updating\n";
+    update_states t (IM.add (S.id new_state) new_state t.states)
+
+let add_replacement id replacement_tree =
+  update_state id (State.set_replacement_tree replacement_tree)
+
 let add_transition stree tree dest_id t =
   update_transitions t (Transitions.add t.transitions stree tree dest_id)
 
@@ -73,7 +85,11 @@ let rec run_node1 t node =
       and state1, env1 = run_leaf1 t sub1 in
       let env0 = match State.replacement_tree state0 with
         | Some (T.Node2 n) -> Env.set_replacement n env0
-        | _ -> env0
+        | _ ->
+          env0
+      and env1 = match State.replacement_tree state1 with
+        | Some (T.Leaf1 l) -> Env.set_replacement l env1
+        | _ -> env1
       in
       (St.Node1 (St.Node12 (S.id state0, S.id state1))),
       Env.merge (fun x y -> T.Node12(x, y)) env0 env1

@@ -9,8 +9,12 @@ let printDotArrow ?params out_channel orig dest =
 
 let toDotNodes out_channel nodes =
   List.iter
-    (fun state -> Printf.fprintf out_channel "%s\n"
+    (fun state -> Printf.fprintf out_channel "%s [label=\"%s%s\"]\n"
         (State.(Identifier.show @@ id state))
+        (State.(Identifier.show @@ id state))
+        (match State.replacement_tree state with
+         | None -> ""
+         | Some t -> "\\nreplacement : " ^ (String.escaped @@ Tree.show t))
     )
     nodes
 

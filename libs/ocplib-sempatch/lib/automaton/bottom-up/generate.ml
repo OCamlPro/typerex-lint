@@ -19,7 +19,6 @@ let rec generate_node1 automaton parent_state tree = match tree with
     generate_node1 automaton state0 sub0
   | T.Node12 (sub0, sub1) ->
     let automaton, state0 = A.add_state
-        ~replacement_tree:Tree.(Node2 (Node21 (Node12 (Node22 "blih", "bleh"))))
         automaton
     in
     let automaton, state1 = A.add_state automaton in
@@ -46,6 +45,12 @@ and generate_node2 automaton parent_state tree = match tree with
     in
     generate_node1 automaton state0 sub0
   | T.Node22 sub0 ->
+    let automaton =
+      Automaton.add_replacement
+        parent_state
+        Tree.(Node2 (Node21 (Node12 (Node22 "blih", "bleh"))))
+        automaton
+    in
     let (automaton, state0) = A.add_state
         automaton
     in

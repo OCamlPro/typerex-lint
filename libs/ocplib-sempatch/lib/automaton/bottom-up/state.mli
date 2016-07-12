@@ -21,3 +21,5 @@ val is_final : t -> bool
 val updates_loc : t -> bool
 val replacement_tree : t -> Tree.t option
 val id : t -> id
+
+val set_replacement_tree : Tree.t -> t -> t
