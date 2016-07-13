@@ -29,6 +29,14 @@ let ignored = Lint_globals.Config.create_option
     (SimpleConfig.list_option SimpleConfig.string_option)
     []
 
+let db_persistence = Lint_globals.Config.create_option
+    ["db_persistence"]
+    "Time before erasing cached results (in days)."
+    "Time before erasing cached results (in days)."
+    0
+    (SimpleConfig.int_option)
+    1
+
 let scan_project path = (* todo *)
   Format.printf "Scanning files in project %S...\n%!" path;
   let found_files =
@@ -309,6 +317,7 @@ let lint_sequential no_db db_dir severity path =
   (* We filter the global ignored modules/files.  *)
   (* let no_db = init_db no_db path in *)
   let (db_dir, no_db) = init_db no_db db_dir path in
+  Lint_db.DefaultDB.clean !!db_persistence;
   let sources = filter_modules (scan_project path) !!ignored in
   List.iter (run db_dir) sources;
   Lint_db.DefaultDB.merge sources;
