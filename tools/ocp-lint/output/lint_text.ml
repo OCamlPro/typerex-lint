@@ -212,3 +212,31 @@ let print_only_new fmt path db =
               lres)
           pres)
     db
+
+let verbose_info fmt db =
+  Hashtbl.iter (fun file (hash, pres) ->
+      let triggered_plugin =
+        StringMap.filter (fun pname lres ->
+            StringMap.exists (fun lname (source, opt, ws) ->
+                let plugin_flag = check_flag [pname; "enabled"] in
+                let linter_flag = check_flag [pname; lname; "enabled"] in
+                let filters =
+                  Lint_globals.Config.get_option_value
+                    [pname; lname; "warnings"] in
+                let arr = Lint_parse_args.parse_options filters in
+                let warnings_activated =
+                  List.filter (fun warning ->
+                      arr.(warning.decl.id - 1)) ws in
+                let warning_flag = warnings_activated <> [] in
+                warning_flag && plugin_flag && linter_flag)
+              lres)
+          pres in
+      let triggered_plugin_len = StringMap.cardinal triggered_plugin in
+      let plugin_len = StringMap.cardinal pres in
+      if triggered_plugin_len = 0 then
+        Format.fprintf fmt "\027[32m%S\027[m: [%i / %i]\n%!"
+          file triggered_plugin_len plugin_len
+      else
+        Format.fprintf fmt "\027[31m%S\027[m: [%i / %i]\n%!"
+          file triggered_plugin_len plugin_len)
+    db

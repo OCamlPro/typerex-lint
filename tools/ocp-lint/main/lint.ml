@@ -35,6 +35,7 @@ let default_dir = "."
 let print_only_new = ref false
 let no_db = ref false
 let db_dir = ref None
+let verbose = ref false
 
 module ArgAlign = struct
   open Arg
@@ -212,9 +213,12 @@ let () =
     " Print only new warnings.";
     "", Arg.Unit (fun () -> ()),
     " \n\nPlugins arguments:\n";
+
+    "--verbose", Arg.Set verbose,
+    " Show extra informations.";
   ]
 
-let start_lint_file file = Lint_actions.lint_file !no_db !db_dir file
+let start_lint_file file = Lint_actions.lint_file !verbose !no_db !db_dir file
 
 let start_lint dir =
   Lint_actions.lint_sequential !no_db !db_dir dir;
