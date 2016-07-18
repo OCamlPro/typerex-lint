@@ -66,7 +66,7 @@ let static_bindings =
 
 let mk_prefixed prefix id = LI.Ldot (LI.Lident prefix, id)
 
-let mk_a = mk_prefixed "A"
+let mk_a = C.mk_aut
 let mk_t id =
   match id with
   | "Nil" -> LI.Lident "[]"

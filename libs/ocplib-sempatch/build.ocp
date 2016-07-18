@@ -4,12 +4,14 @@ begin program "abc"
     files = [
       "lib/std_utils.ml"
       "lib/automaton/generator/common.ml"
+      "lib/automaton/generator/generic.ml"
       "lib/automaton/generator/type_collector.ml"
       "lib/automaton/generator/from.ml"
       "lib/automaton/generator/wildcard.ml"
       "lib/automaton/generator/match_builder.ml"
       "lib/automaton/generator/eval_builder.ml"
       "lib/automaton/generator/automaton_processor.ml"
+      "lib/automaton/generator/untypeast.ml"
       "lib/automaton/generator/abc.ml"
     ]
     requires = [
