@@ -178,11 +178,11 @@ let str_of_type type_decls cmd =
                    :: automaton_tree;
         )]
     | `Match ->
-      (Match_builder.str_of_type poly_decls mono_decls)
+      (Match_builder.of_type_decl ~env:poly_decls mono_decls)
     | `Wildcard ->
-      (Wildcard.str_of_type poly_decls mono_decls)
+      (Wildcard.of_type_decl ~env:poly_decls mono_decls)
     | `From ->
-      (From.str_of_type poly_decls mono_decls)
+      (From.of_type_decl ~env:poly_decls mono_decls)
     | `Eval ->
       (Eval_builder.combine_all poly_decls mono_decls)
 
@@ -191,13 +191,23 @@ let is_def_of name = List.exists (fun def -> def.ptype_name.txt = name)
 let mapper = let open M in
   let perform file cmd =
     let file = match file with
-      | Some f -> f
-      | None -> Sys.argv.(1)
+      | Some f -> Some f
+      | None ->
+        if Array.length Sys.argv > 1 then
+          Some Sys.argv.(1)
+        else
+          None
     in
-    let in_file = open_in file
+    let in_file = Option.map open_in file
     in
     let tree_struct =
-      Parser.interface Lexer.token (Lexing.from_channel in_file)
+      match in_file with
+      | Some in_file ->
+        Parser.interface Lexer.token (Lexing.from_channel in_file)
+      | None ->
+        (* List.find_opt (fun dir -> Filename.concat dir "parsetree.cmi" *)
+        (* List.iter (output_string stderr) !Config.load_path; *)
+        assert false
     in
     List.bind (fun x ->
         match x.psig_desc with
