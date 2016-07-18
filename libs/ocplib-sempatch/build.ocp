@@ -8,16 +8,11 @@ end
 
 begin program "abc"
     files = [
-      "lib/automaton/generator/common.ml"
-      "lib/automaton/generator/generic.ml"
-      "lib/automaton/generator/type_collector.ml"
-      "lib/automaton/generator/from.ml"
-      "lib/automaton/generator/wildcard.ml"
-      "lib/automaton/generator/match_builder.ml"
-      "lib/automaton/generator/eval_builder.ml"
-      "lib/automaton/generator/automaton_processor.ml"
-      "lib/automaton/generator/untypeast.ml"
-      "lib/automaton/generator/abc.ml"
+      "lib/automaton/abc/abc_common.ml"
+      "lib/automaton/abc/polymorphic_types_collector.ml"
+      "lib/automaton/abc/generator.ml"
+      "lib/automaton/abc/state_tree_gen.ml"
+      "lib/automaton/abc/abc.ml"
     ]
     requires = [
       "std-utils"
@@ -28,6 +23,7 @@ begin program "abc"
     comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
 end
 
+(*
 begin program "ppx_monad"
     files = [
       "src/ppx_monad.ml"
@@ -59,17 +55,18 @@ begin program "bup"
     comp_requires = "ppx_monad:asm"
     comp += [ "-ppx" "%{ppx_monad_DST_DIR}%/ppx_monad.asm" ]
 end
+*)
 
 begin library "ocplib-sempatch"
     files = [
-      "lib/automaton/generator/tree.ml"
+      "lib/automaton_/generator/tree.ml"
       "lib/failure.ml"
       "lib/res.ml"
       "lib/ast_element.ml"
       "lib/substitution.ml"
       "lib/match.ml"
-      "lib/automaton/automaton.ml"
-      "lib/automaton/eval.ml"
+      "lib/automaton_/automaton.ml"
+      "lib/automaton_/eval.ml"
       "lib/parsing/guard.ml"
       "lib/parsing/guard_lexer.mll"
       "lib/parsing/guard_parser.mly"
@@ -88,11 +85,8 @@ begin library "ocplib-sempatch"
         "compiler-libs"
         "compiler-libs.common"
         "abc"
-        "ppx_monad"
     ]
-    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree.ml" ]
+    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton_/generator/tree.ml" ]
     comp_requires += "abc:asm"
-    comp_requires += "ppx_monad:asm"
-    comp += [ "-ppx" "%{ppx_monad_DST_DIR}%/ppx_monad.asm" ]
     ocamlyacc = "menhir"
 end

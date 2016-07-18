@@ -22,6 +22,8 @@ sig
   val compose : ('b -> 'c) -> ('a -> 'b) -> ('a -> 'c)
   val ( %> ) : ('b -> 'c) -> ('a -> 'b) -> ('a -> 'c)
 
+  val compose_binop : ('b -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'a -> 'c
+
   val id : 'a -> 'a
 end
 =
@@ -30,6 +32,8 @@ struct
   let compose f g x = f (g x)
 
   let ( %> ) = compose
+
+  let compose_binop op f x1 x2 = op (f x1) (f x2)
 
   let id x = x
 end

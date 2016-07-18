@@ -1,4 +1,4 @@
-module Nodes =
+automaton/module Nodes =
 struct
   type node1 = Node11 | Node12
   and node2 = Node21 | Node22
