@@ -1,8 +1,20 @@
 comp += [ "-w" "+A-4" ]
 
+begin library "std-utils"
+  files = [
+    "lib/std_utils/SUMisc.ml"
+    "lib/std_utils/SUFun.ml"
+    "lib/std_utils/SUOption.ml"
+    "lib/std_utils/SUError.ml"
+    "lib/std_utils/SUList.ml"
+    "lib/std_utils/SUStringMap.ml"
+    "lib/std_utils/SUMessages.ml"
+    "lib/std_utils/std_utils.ml"
+  ]
+end
+
 begin program "abc"
     files = [
-      "lib/std_utils.ml"
       "lib/automaton/generator/common.ml"
       "lib/automaton/generator/generic.ml"
       "lib/automaton/generator/type_collector.ml"
@@ -18,6 +30,7 @@ begin program "abc"
       "compiler-libs.common"
       "str"
       "ppx_tools.metaquot"
+      "std_utils"
     ]
     comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
 end
@@ -25,7 +38,6 @@ end
 begin library "ocplib-sempatch"
     files = [
       "lib/automaton/generator/tree.ml"
-      "lib/std_utils.ml"
       "lib/failure.ml"
       "lib/res.ml"
       "lib/ast_element.ml"
@@ -47,6 +59,7 @@ begin library "ocplib-sempatch"
       "lib/sempatch.ml"
     ]
     requires = [
+        "std_utils"
         "compiler-libs"
         "compiler-libs.common"
         "abc"
