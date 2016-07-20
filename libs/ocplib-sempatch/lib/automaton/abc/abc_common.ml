@@ -2,15 +2,22 @@ open Std_utils
 
 module H = Ast_helper
 
+(**************************************************)
+(* Id of type                                     *)
+(**************************************************)
+
 let id_of_path path =
   Path.name path
   |> String.map (fun c -> if c = '.' then '_' else c)
+  |> String.uncapitalize
 
 let rec id_of_typ_expr texpr =
   let open Types in
   match texpr.desc with
   | Ttuple exprs ->
     print_texpr_list exprs
+  | Tconstr (path, [], _) ->
+    Some (id_of_path path)
   | Tconstr (path, args, _) ->
     Option.map
       (fun args_str ->  args_str ^ "_" ^ (id_of_path path))
@@ -22,7 +29,15 @@ and print_texpr_list tlist =
   |> List.flip_opt
   |> Option.map (String.concat "_")
 
-let fail = Printf.ksprintf failwith
+(**************************************************)
+(* Failure handling                               *)
+(**************************************************)
+
+let fail msg = Printf.ksprintf failwith msg
+
+(**************************************************)
+(* Conversion between Types.t and Parsetree types *)
+(**************************************************)
 
 let rec longident_of_path =
   let module L = Longident in
@@ -44,3 +59,38 @@ let rec core_type_of_type_expr texpr =
       (List.map core_type_of_type_expr args)
   | _ ->
     fail "This type can't be converted to core_type"
+
+(**************************************************)
+(* Construction of longidents                     *)
+(**************************************************)
+
+module Pfx =
+struct
+  let mk prefix name =
+    Longident.Ldot (Longident.Lident prefix, name)
+
+  let cstr ident =
+    match Longident.last ident with
+    | "::" | "[]" as name -> Longident.Lident name
+    | _ -> begin
+        match ident with
+        | Longident.Lident name ->
+          Longident.Lident (String.capitalize name)
+        | Longident.Ldot (id, name) ->
+          Longident.Ldot (id, String.capitalize name)
+        | Longident.Lapply _ -> assert false
+      end
+
+  let t = mk "T"
+  let st = mk "St"
+end
+
+(**************************************************)
+(* Generation of arguments                        *)
+(**************************************************)
+
+let nth_arg n = "arg_" ^ (string_of_int n)
+let nth_state n = "state_" ^ (string_of_int n)
+
+let gen_args lst = List.mapi (fun i _ -> nth_arg i) lst
+

@@ -12,6 +12,7 @@ begin program "abc"
       "lib/automaton/abc/polymorphic_types_collector.ml"
       "lib/automaton/abc/generator.ml"
       "lib/automaton/abc/state_tree_gen.ml"
+      "lib/automaton/abc/builder_gen.ml"
       "lib/automaton/abc/abc.ml"
     ]
     requires = [
