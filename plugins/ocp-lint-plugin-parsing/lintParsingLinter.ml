@@ -57,34 +57,42 @@ let w_avoid_paren_around_if_argument = Linter.new_warning
     ~id:1
     ~short_name:"avoid_paren.if_argument"
     ~msg:"Avoid parentheses around if argument"
+    ~severity:1
 let w_direct_match_in_case = Linter.new_warning
     ~id:2
     ~short_name:"direct-match-in-case"
     ~msg:"$expr should be enclosed in parentheses"
+    ~severity:7
 let w_inconsistent_list_notations = Linter.new_warning
     ~id:3
     ~short_name:"inconsistent-list-notations"
     ~msg:"Inconsistent list notations"
+    ~severity:1
 let w_avoid_paren_around_constr_uniq_arg = Linter.new_warning
     ~id:4
     ~short_name:"avoid_paren.constr_uniq_arg"
     ~msg:"Avoid parentheses around constructor \"$constr\" uniq argument"
+    ~severity:1
 let w_avoid_paren_around_simple_expr = Linter.new_warning
     ~id:5
     ~short_name:"avoid_paren.simple_expr"
     ~msg:"Avoid parentheses around simple expression"
+    ~severity:1
 let w_avoid_paren_around_function_body = Linter.new_warning
     ~id:6
     ~short_name:"avoid_paren.function_body"
     ~msg:"Avoid parentheses around function body"
+    ~severity:1
 let w_paren_block_after_then = Linter.new_warning
     ~id:7
     ~short_name:"paren_block.then"
     ~msg:"Good practice: use '..then begin..end' instead of '..then (..)'"
+    ~severity:1
 let w_paren_block_after_else = Linter.new_warning
     ~id:8
     ~short_name:"paren_block.else"
     ~msg:"Good practice: use '..else begin..end' instead of '..else (..)'"
+    ~severity:1
 
 module Warnings = Linter.MakeWarnings(struct
     type t = warning

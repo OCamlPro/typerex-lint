@@ -26,10 +26,20 @@ type warning = {
   output: string;
 }
 
+(*
+Severity is an int between 1 - 10:
+  [1 - 2]  : no impact on the acceptance of the PR, small readabily problems
+             (ex: parenteses, ident too short, etc.)
+  [3 - 5]  : issues that should be discuss but the PR is still acceptable
+  [6 - 10] : discard PR (indentation, 80 char, perf etc.)
+*)
+
+
 and warning_declaration = {
   short_name : string; (* A short name to identify a warning *)
   message : string;    (* The displayed message *)
   id : int;            (* Warning number *)
+  severity : int;      (* Severity of the warning (1 - 10) *)
 }
 
 module type WARNINGARG = sig

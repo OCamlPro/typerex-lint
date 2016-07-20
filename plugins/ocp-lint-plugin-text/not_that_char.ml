@@ -38,11 +38,13 @@ let w_tab_for_indent = Linter.new_warning
     ~id:1
     ~short_name:"tab_for_indent"
     ~msg:"Tabulations used for indentation"
+    ~severity:10
 
 let w_non_ascii_char = Linter.new_warning
     ~id:2
     ~short_name:"non_ascii_char"
     ~msg:"Non ASCII chars like '$char' in code"
+    ~severity:3
 
 module Warnings = Linter.MakeWarnings(struct
     type t = warning

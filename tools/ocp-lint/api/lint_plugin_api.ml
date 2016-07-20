@@ -97,9 +97,9 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       SimpleConfig.string_option
       "+A"
 
-  let new_warning id ~short_name ~msg =
+  let new_warning id ~short_name ~msg ~severity =
     let open Lint_warning_types in
-    let warning_decl = { short_name; message = msg; id } in
+    let warning_decl = { short_name; message = msg; id; severity } in
     warning_decl
 
   module MakeLintPatch (C : Lint_types.LINTPATCHARG) = struct
@@ -116,9 +116,9 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       let option = [P.short_name; C.short_name; option] in
       Lint_globals.Config.create_option option short_help lhelp 0 ty default
 
-    let new_warning loc ~id ~short_name ~msg ~args =
+    let new_warning loc ~id ~short_name ~msg ~args ~severity =
       let open Lint_warning_types in
-      let decl = new_warning id ~short_name ~msg in
+      let decl = new_warning id ~short_name ~msg ~severity in
       WarningDeclaration.add decl wdecls;
       (* TODO: cago: here we have to re-set the long help with the id and the
          short_name of the warning. It will be displayed in the config file. *)
@@ -148,6 +148,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
           ~args:(map_args
                    (Match.get_substitutions matching)
                    (Patch.get_metavariables patch))
+          ~severity:1
     end
 
     let patches =
@@ -212,9 +213,9 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       let option = [P.short_name; C.short_name; option] in
       Lint_globals.Config.create_option option short_help lhelp 0 ty default
 
-    let new_warning ~id ~short_name ~msg  =
+    let new_warning ~id ~short_name ~msg ~severity  =
       let open Lint_warning_types in
-      let decl = new_warning id ~short_name ~msg in
+      let decl = new_warning id ~short_name ~msg ~severity in
       WarningDeclaration.add decl wdecls;
       decl
 

@@ -63,6 +63,7 @@ sig
         id:int ->
         short_name:string ->
         msg:string ->
+        severity: int ->
         Lint_warning_types.warning_declaration
 
       (** [create_option short_name short_details long_details ty default_value]

@@ -43,6 +43,7 @@ let line_too_long = CodeLength.new_warning
     ~short_name:"long_line"
     ~msg:"This line is too long ('$line'): it should be at \
           most of length '$max'."
+    ~severity:9
 
 module Warnings = CodeLength.MakeWarnings(struct
     type t = warning

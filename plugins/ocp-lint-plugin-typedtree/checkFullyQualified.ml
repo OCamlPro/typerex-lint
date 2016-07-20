@@ -39,6 +39,7 @@ let w_not_enough = Linter.new_warning
     ~id:1
     ~short_name:"not-qualified-enough"
     ~msg:"external identifier \"$ident\" is not fully qualified\n    (should be \"$path\")"
+    ~severity:2
 
 module Warnings = Linter.MakeWarnings(struct
     type t = warning

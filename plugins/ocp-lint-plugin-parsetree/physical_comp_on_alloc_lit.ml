@@ -53,6 +53,7 @@ let w_phys_comp = PhysCompLit.new_warning
     ~id:1
     ~short_name:"phys_comp_allocated_lit_checks"
     ~msg:"Physical comparison on '$lit'."
+    ~severity:10
 
 module Warnings = PhysCompLit.MakeWarnings(struct
     type t = warning * warning
