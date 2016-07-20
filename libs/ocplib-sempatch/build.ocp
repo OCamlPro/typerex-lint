@@ -1,6 +1,6 @@
 comp += [ "-w" "+A-4" ]
 
-begin library "std-utils"
+begin library "std_utils"
   files = [
     "lib/std_utils/SUMisc.ml"
     "lib/std_utils/SUFun.ml"
@@ -23,7 +23,6 @@ begin program "abc"
       "lib/automaton/generator/match_builder.ml"
       "lib/automaton/generator/eval_builder.ml"
       "lib/automaton/generator/automaton_processor.ml"
-      "lib/automaton/generator/untypeast.ml"
       "lib/automaton/generator/abc.ml"
     ]
     requires = [
@@ -39,7 +38,6 @@ begin library "ocplib-sempatch"
     files = [
       "lib/automaton/generator/tree.ml"
       "lib/failure.ml"
-      "lib/res.ml"
       "lib/ast_element.ml"
       "lib/substitution.ml"
       "lib/match.ml"
