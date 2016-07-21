@@ -1,26 +1,17 @@
 open Parsetree
 open Std_utils
 
-module Type =
-struct
-  type header = {
-    meta_expr : string list;
-    name : string;
-    guard : Guard.t list;
-    keyvals : string StringMap.t;
-  }
-
-  type body = Automaton.A.state
-
-  type patch = {
-    header: header;
-    body: body;
-  }
-end
-
-open Type
-
-type t = patch
+type header = {
+  meta_expr : string list;
+  name : string;
+  guard : Guard.t list;
+  keyvals : string StringMap.t;
+}
+type body = Automaton.A.state
+type patch = {
+  header: header;
+  body: body;
+}
 
 type unprocessed_header = header
 type unprocessed_body = Parsetree.expression
@@ -28,6 +19,14 @@ type unprocessed_patch = {
   unprocessed_header : unprocessed_header;
   unprocessed_body : unprocessed_body;
 }
+
+type t = patch
+
+let get_name p = p.header.name
+let get_msg p = StringMap.get "message" p.header.keyvals
+let get_metavariables p = p.header.meta_expr
+let get_guard p = p.header.guard
+let get_body p = p.body
 
 let void_header = {
   guard = [];
@@ -179,5 +178,3 @@ let preprocess { unprocessed_header = header; unprocessed_body = body} =
           };
           ))
   }
-
-let preprocess_src_expr = fun x -> x

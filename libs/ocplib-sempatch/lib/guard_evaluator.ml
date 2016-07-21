@@ -50,17 +50,16 @@ let apply_to_2 f = function
   | _ -> raise TypeError
 
 let bool f x = Bool (f x)
-let expr f x = Expr (f x)
 
 let equiv_ast = apply_to_exprs @@ apply_to_2 @@ fun e1 e2 ->
   let patch = Parsed_patches.preprocess Parsed_patches.{
       unprocessed_header =
-        { Parsed_patches.void_header with Type.name = "guard"};
+        { Parsed_patches.void_header with name = "guard"};
       unprocessed_body = e1;
     }
   in
   match
-    Eval.apply "" patch.Parsed_patches.Type.body
+    Eval.apply "" (Parsed_patches.get_body patch)
       (Ast_element.Element.Expression e2)
   with
   | [] -> false
@@ -135,7 +134,7 @@ let is_bool_lit = apply_to_exprs @@ apply_to_1 @@ fun e ->
     -> true
   | _ -> false
 
-let functions = [
+let functions : fn list = [
   "(=)", bool @@ equiv_ast;
   "(&&)", bool @@  (&&&);
   "(||)", bool @@ (|||);

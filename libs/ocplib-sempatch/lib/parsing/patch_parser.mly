@@ -22,7 +22,7 @@ sempatch:
 
 patch:
   | header = patch_header; body = patch_body
-  { let open Parsed_patches in header.Parsed_patches.Type.name, {unprocessed_header = header; unprocessed_body = body} }
+  { let open Parsed_patches in header.Parsed_patches.name, {unprocessed_header = header; unprocessed_body = body} }
 
 patch_header:
   | TITLE_DELIM name = ID eols fields = list(header_def)

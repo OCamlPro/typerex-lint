@@ -7,3 +7,7 @@ let from_list_pair l =
     M.empty
     l
 
+let get k sm =
+  try
+    Some (M.find k sm)
+  with Not_found -> None
