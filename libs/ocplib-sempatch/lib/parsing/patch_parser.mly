@@ -12,6 +12,7 @@
 %token NAME_KW
 %token GUARD_KW
 %token<string> STRING
+%token<int> NUMBER
 
 %start <(string * Parsed_patches.unprocessed_patch) list> sempatch
 %%
@@ -52,3 +53,4 @@ eols_option:
 string_or_id:
   | s = STRING { s }
   | s = ID { s }
+  | n = NUMBER { string_of_int n }
