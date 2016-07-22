@@ -36,6 +36,7 @@ let missing = MissingInterface.new_warning
     ~id:1
     ~short_name:"missing_interface"
     ~msg:"Missing interface for '$file'."
+    ~severity:4
 
 module Warnings = MissingInterface.MakeWarnings(struct
     type t = warning

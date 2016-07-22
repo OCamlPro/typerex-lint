@@ -37,11 +37,13 @@ let w_empty = ListOnSingleton.new_warning
     ~id:1
     ~short_name:"list_function_on_empty"
     ~msg:"$fun is used on an empty list."
+    ~severity:7
 
 let w_singleton = ListOnSingleton.new_warning
     ~id:2
     ~short_name:"list_function_on_singleton"
     ~msg:"$fun is used on a singleton."
+    ~severity:7
 
 module Warnings = ListOnSingleton.MakeWarnings(struct
     type t = warning

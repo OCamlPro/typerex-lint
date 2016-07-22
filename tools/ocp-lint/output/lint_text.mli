@@ -19,11 +19,11 @@
 (**************************************************************************)
 
 (** A printing function over the type [Warning_types.warning].  *)
-val print : Format.formatter -> string -> Lint_db_types.t -> unit
+val print : Format.formatter -> int -> string -> Lint_db_types.t -> unit
 
 val print_error : Format.formatter -> string -> Lint_db_types.errors -> unit
 
-val summary : string -> Lint_db_types.t -> Lint_db_types.errors -> unit
+val summary : int -> string -> Lint_db_types.t -> Lint_db_types.errors -> unit
 
 val print_only_new : Format.formatter -> string -> Lint_db_types.t -> unit
 

@@ -37,6 +37,7 @@ let w_poly = Linter.new_warning
     ~id:1
     ~short_name:"poly"
     ~msg:"Polymorphic function: '$fun' is used with '$types'."
+    ~severity:10
 
 module Warnings = Linter.MakeWarnings(struct
     type t = warning

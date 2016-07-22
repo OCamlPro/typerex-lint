@@ -38,11 +38,13 @@ let w_useless_space = Linter.new_warning
     ~id:1
     ~short_name:"useless_space"
     ~msg:"Useless space or tab at end of line"
+    ~severity:6
 
 let w_useless_line = Linter.new_warning
     ~id:2
     ~short_name:"useless_line"
     ~msg:"Useless empty line at the end of file"
+    ~severity:2
 
 module Warnings = Linter.MakeWarnings(struct
     type t = warning

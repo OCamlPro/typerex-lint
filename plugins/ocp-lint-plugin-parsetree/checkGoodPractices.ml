@@ -39,11 +39,13 @@ let w_use_instead = Linter.new_warning
     ~id:1
     ~short_name:"use-instead"
     ~msg:"Good practice: use \"$new\" instead of \"$old\""
+    ~severity:1
 
 let w_good_practice = Linter.new_warning
     ~id:2
     ~short_name:"good-practice"
     ~msg:"Good practice: $advice"
+    ~severity:1
 
 module Warnings = Linter.MakeWarnings(struct
     type t = warning

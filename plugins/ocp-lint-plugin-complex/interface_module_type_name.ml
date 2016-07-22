@@ -36,6 +36,7 @@ let w_name = ModuleTypeName.new_warning
     ~id:1
     ~short_name:"interface_module_type_name_check"
     ~msg:"Module type name '$badmodname' should be uppercase as '$goodmodname'."
+    ~severity:1
 
 module Warnings = ModuleTypeName.MakeWarnings(struct
     type t = warning

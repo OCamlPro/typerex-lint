@@ -49,11 +49,13 @@ let w_too_short = CodeIdentifierLength.new_warning
     ~id:1
     ~short_name:"identifier_too_short"
     ~msg:"$id is too short: it should be at least of size '$size'."
+    ~severity:1
 
 let w_too_long = CodeIdentifierLength.new_warning
     ~id:2
     ~short_name:"identifier_too_long"
     ~msg:"$id is too long: it should be at most of size '$size'."
+    ~severity:1
 
 module Warnings = CodeIdentifierLength.MakeWarnings(struct
     type t = warning

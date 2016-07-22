@@ -40,6 +40,7 @@ let w_tuple_arg_with_paren = Linter.new_warning
     ~id:1
     ~short_name:"tuple-arg-with-paren"
     ~msg:"Constructor \"$constr\" has a tuple argument instead of multiple arguments"
+    ~severity:9
 
 (* This one is not detected: probably discarded by the parser
 let w_single_arg_with_paren = Linter.new_warning

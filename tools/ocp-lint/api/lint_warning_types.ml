@@ -30,6 +30,7 @@ and warning_declaration = {
   short_name : string; (* A short name to identify a warning *)
   message : string;    (* The displayed message *)
   id : int;            (* Warning number *)
+  severity : int;      (* Severity of the warning (1 - 10) *)
 }
 
 module type WARNINGARG = sig

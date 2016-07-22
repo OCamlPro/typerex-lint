@@ -25,8 +25,8 @@ let print_warning ppf pname lname warning =
   if warning.loc <> Location.none then
     Format.fprintf ppf "%a" Location.print warning.loc;
 
-  Format.fprintf ppf "  Warning %d: %s/%s/%s\n"
-    warning.decl.id pname lname warning.decl.short_name;
+  Format.fprintf ppf "  Warning %d: %s/%s/%s SEVERITY %d\n"
+    warning.decl.id pname lname warning.decl.short_name warning.decl.severity;
   Format.fprintf ppf "  %s" warning.output;
   Format.fprintf ppf "@."
 
@@ -76,8 +76,7 @@ let update_breakdown tbl pname lname wid =
      Hashtbl.add new_p_htbl lname new_l_htbl;
      Hashtbl.add tbl pname new_p_htbl)
 
-
-let summary path db db_errors =
+let summary severity path db db_errors =
   let files_linted = ref StringCompat.StringSet.empty in
   let files_cached = ref StringCompat.StringSet.empty in
   let files_linted_errors = ref StringCompat.StringSet.empty in
@@ -109,7 +108,8 @@ let summary path db db_errors =
                       List.iter
                         (fun warning ->
                            let wid = warning.decl.id in
-                           if arr.(wid - 1) then
+                           if arr.(wid - 1) &&
+                              warning.decl.severity >= severity then
                              (files_linted :=
                                 StringCompat.StringSet.add file !files_linted;
                               update_breakdown
@@ -129,7 +129,8 @@ let summary path db db_errors =
                       List.iter
                         (fun warning ->
                            let wid = warning.decl.id in
-                           if arr.(wid - 1) then
+                           if arr.(wid - 1) &&
+                              warning.decl.severity >= severity then
                              (files_cached :=
                                 StringCompat.StringSet.add file !files_cached;
                               update_breakdown
@@ -269,7 +270,7 @@ let summary path db db_errors =
   StringCompat.StringSet.iter
     (Printf.printf "    - %s\n%!") !files_linted_errors
 
-let print fmt path db =
+let print fmt severity path db =
   try
     Hashtbl.iter (fun file (hash, pres) ->
         if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
@@ -285,7 +286,8 @@ let print fmt path db =
                       let arr = Lint_parse_args.parse_options filters in
                       List.iter
                         (fun warning ->
-                           if arr.(warning.decl.id - 1) then
+                           if arr.(warning.decl.id - 1) &&
+                              warning.decl.severity >= severity then
                              print_warning fmt pname lname warning)
                         ws)
                   lres)

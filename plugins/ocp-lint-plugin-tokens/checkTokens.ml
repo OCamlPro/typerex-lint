@@ -39,21 +39,25 @@ let w_non_ascii_char_in_comment = Linter.new_warning
     ~id:2
     ~short_name:"non_ascii_char.comment"
     ~msg:"Non ASCII chars in comment"
+    ~severity:1
 
 let w_non_ascii_char_in_ident = Linter.new_warning
     ~id:2
     ~short_name:"non_ascii_char.ident"
     ~msg:"Non ASCII chars in ident '$ident'"
+    ~severity:8
 
 let w_non_ascii_char_in_label = Linter.new_warning
     ~id:2
     ~short_name:"non_ascii_char.label"
     ~msg:"Non ASCII chars in label '$label'"
+    ~severity:8
 
 let w_non_ascii_char_in_string = Linter.new_warning
     ~id:2
     ~short_name:"non_ascii_char.string"
     ~msg:"Non ASCII chars in string"
+    ~severity:3
 
 module Warnings = Linter.MakeWarnings(struct
     type t = warning

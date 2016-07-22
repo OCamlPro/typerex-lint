@@ -36,6 +36,7 @@ let print_only_new = ref false
 let no_db = ref false
 let db_dir = ref None
 let verbose = ref false
+let severity_limit = ref 0
 
 module ArgAlign = struct
   open Arg
@@ -211,6 +212,10 @@ let () =
 
     "--print-only-new", Arg.Unit (fun () -> print_only_new := true),
     " Print only new warnings.";
+
+    "--severity-limit", Arg.Int (fun i -> severity_limit := i),
+    " Only display warning above this severity";
+
     "", Arg.Unit (fun () -> ()),
     " \n\nPlugins arguments:\n";
 
@@ -218,10 +223,11 @@ let () =
     " Show extra informations.";
   ]
 
-let start_lint_file file = Lint_actions.lint_file !verbose !no_db !db_dir file
+let start_lint_file file =
+  Lint_actions.lint_file !verbose !no_db !db_dir !severity_limit file
 
 let start_lint dir =
-  Lint_actions.lint_sequential !no_db !db_dir dir;
+  Lint_actions.lint_sequential !no_db !db_dir !severity_limit dir;
   if Lint_db.DefaultDB.has_warning () then exit !exit_status
 
 let main () =

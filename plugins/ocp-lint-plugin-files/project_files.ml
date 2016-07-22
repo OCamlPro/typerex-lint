@@ -40,11 +40,13 @@ let conflicting = Linter.new_warning
     ~id:1
     ~short_name:"conflicting_sources"
     ~msg:"Source files $fileA and $fileB may conflict on some file-systems"
+    ~severity:6
 
 let capitalized = Linter.new_warning
     ~id:2
     ~short_name:"capitalized_filename"
     ~msg:"Filename $file should not be capitalized"
+    ~severity:6
 
 module Warnings = Linter.MakeWarnings(struct
     type t = warning

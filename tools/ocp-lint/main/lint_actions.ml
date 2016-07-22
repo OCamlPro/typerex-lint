@@ -182,20 +182,6 @@ let init_config path =
     Lint_globals.Config.init_config file_t;
   with Not_found -> ()
 
-let output path print_only_new fmt =
-  if print_only_new then
-    Lint_text.print_only_new fmt path Lint_db.DefaultDB.db
-  else Lint_text.print fmt path Lint_db.DefaultDB.db
-
-let print path print_only_new =
-  output path print_only_new Format.err_formatter
-
-let to_text path file =
-  let oc = open_out file in
-  let fmt = Format.formatter_of_out_channel oc in
-  output path false fmt;
-  close_out oc
-
 let list_plugins fmt =
   let open Lint_warning_decl in
   let open Lint_warning_types in
@@ -278,7 +264,7 @@ let from_input file pname cname inputs =
           file (Lint_db_types.Ocplint_error (Printexc.to_string exn)))
     inputs
 
-let lint_file verbose no_db db_dir file =
+let lint_file verbose no_db db_dir severity file =
   ignore (init_db no_db db_dir file);
   Lint_db.DefaultDB.load_file file;
   Lint_db.DefaultDB.cache ();
@@ -319,17 +305,18 @@ let run db_dir file =
   let cmd = String.concat " " args in
   ignore (Sys.command cmd)
 
-let lint_sequential no_db db_dir path =
+let lint_sequential no_db db_dir severity path =
   (* We filter the global ignored modules/files.  *)
   (* let no_db = init_db no_db path in *)
   let (db_dir, no_db) = init_db no_db db_dir path in
   let sources = filter_modules (scan_project path) !!ignored in
   List.iter (run db_dir) sources;
   Lint_db.DefaultDB.merge sources;
-  Lint_text.print Format.err_formatter path Lint_db.DefaultDB.db;
+  Lint_text.print Format.err_formatter severity path Lint_db.DefaultDB.db;
   Lint_text.print_error
     Format.err_formatter path Lint_db.DefaultDB.db_errors;
-  Lint_text.summary path Lint_db.DefaultDB.db Lint_db.DefaultDB.db_errors;
+  Lint_text.summary
+    severity path Lint_db.DefaultDB.db Lint_db.DefaultDB.db_errors;
   if no_db then clean_db_in_tmp db_dir
 
 (* let fork_exec file = *)

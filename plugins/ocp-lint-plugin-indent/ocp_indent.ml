@@ -35,6 +35,7 @@ let w_check_indent = OCPIndent.new_warning
     ~id:1
     ~short_name:"ocp_indent_check"
     ~msg:"File '$file' is not indented correctly."
+    ~severity:9
 
 module Warnings = OCPIndent.MakeWarnings (
   struct
