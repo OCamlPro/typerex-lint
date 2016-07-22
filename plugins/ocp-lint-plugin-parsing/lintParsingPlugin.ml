@@ -20,8 +20,6 @@
 
 let plugin_name = "Parsing Linter"
 
-let () = Printf.eprintf "Loading plugin %S\n%!" plugin_name
-
 let details = "Analyses requiring to re-parse the file"
 
 module Plugin = Lint_plugin_api.MakePlugin (struct
