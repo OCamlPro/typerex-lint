@@ -45,7 +45,7 @@ sig
   val get_name : t -> string
   val get_msg : t -> string option
   val get_metavariables : t -> string list
-  (* val get_field : t -> string -> string *) (* When implemented *)
+  val get_field : string -> t -> string option
 
   (** {2 Application of patches} *)
 

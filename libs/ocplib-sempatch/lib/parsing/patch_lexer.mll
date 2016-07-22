@@ -7,6 +7,7 @@
 let white = [' ' '\t']+
 let newline = ('\r' | '\n' | "\r\n")
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
+let number = [ '0'-'9' ]+
 let title_delim = '@'
 let code_delim = "```"
 
@@ -23,7 +24,6 @@ rule read =
     CODE (Buffer.to_bytes str_litteral_buf |> Bytes.to_string)
   }
   | "expressions" { EXPR_KW }
-  | "message" { MESSAGES_KW }
   | "name" { NAME_KW }
   | "when" { GUARD_KW }
   | "\"" {
@@ -34,6 +34,7 @@ rule read =
   | ',' { COMMA }
   | title_delim { TITLE_DELIM }
   | id { ID (Lexing.lexeme lexbuf) }
+  | number { NUMBER (int_of_string @@ Lexing.lexeme lexbuf) }
   | comment_begin { read_comment lexbuf; read lexbuf }
   | eof { EOF }
   | _ { raise (Failure.SempatchException
