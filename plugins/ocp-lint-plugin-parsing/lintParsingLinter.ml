@@ -231,8 +231,6 @@ module MakeArg = struct
     | _ -> ()
 
   let main source =
-    Printf.eprintf "%s.%s: parsing %s\n%!"
-      Plugin.short_name Linter.short_name source;
     let ic = open_in source in
     Location.input_name := source;
     let lexbuf = Lexing.from_channel ic in
