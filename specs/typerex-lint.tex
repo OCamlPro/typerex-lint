@@ -1,0 +1,106 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fancyhdr}
+\usepackage{colortbl}
+\usepackage{multirow}
+\usepackage{pdfswitch}
+\hypersetup{urlcolor=black,linkcolor=black,citecolor=black}
+\usepackage{rotating}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{authblk}
+\usepackage[margin=1.0in]{geometry}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{epsfig}
+\usepackage{amsfonts}
+\usepackage[latin9]{inputenc}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+% \usepackage[LGR,T1]{fontenc}
+\usepackage{eurosym}
+\usepackage{lastpage}
+\usepackage{listings}
+% \usepackage[ruled,vlined]{algorithm2e}
+
+
+\title{{\bf {\tt ocp-lint}\\
+ A Plugin-based Style-Checker with Semantic Patches}}
+\author[1]{\c{C}a\~{g}da\c{s} Bozman}
+\author[1]{Th\'eophane Hufschmitt}
+\author[1]{Michael Laporte}
+\author[1,2]{Fabrice Le Fessant}
+\affil[1]{OCamlPro}
+\affil[2]{INRIA}
+\renewcommand\Authands{ and }% \author{
+\date{\today{}\\
+THIS DOCUMENT IS A DRAFT}
+
+
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0.1pt}
+\fancyhead[C]{} 
+\fancyhead[L]{Typerex-lint}
+\fancyhead[R]{Documentation}
+
+\renewcommand{\footrulewidth}{0.1pt}
+\fancyfoot[C]{} 
+\fancyfoot[L]{}
+\fancyfoot[R]{Page \thepage~of~\pageref{LastPage} }
+
+\begin{document}
+\def\ocplint{{\sf ocp-lint}}
+
+\maketitle
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Overview}
+\label{sec:overview}
+\input{overview}
+
+\section{Use Cases}
+\label{sec:use-cases}
+\input{use-cases}
+
+\section{Configuration, Build, Installation and Testsuite}
+\label{sec:config-build-install}
+\input{config-build-install}
+
+\section{Usage}
+\label{sec:usage}
+\input{usage}
+
+\section{Configuration File}
+\label{sec:configuration}
+\input{configuration}
+
+\section{Database}
+\label{sec:database}
+\input{database}
+
+\section{Using Semantic Patches}
+\label{sec:sempatch}
+\input{sempatch}
+
+\section{Extensibility}
+\label{sec:extensibility}
+\input{extensibility}
+
+\section{Related Works}
+\label{sec:related}
+\input{related}
+
+\section{Conclusion}
+\label{sec:conclusion}
+\input{conclusion}
+
+\bibliographystyle{unsrt}
+\bibliography{biblio} 
+
+\end{document}

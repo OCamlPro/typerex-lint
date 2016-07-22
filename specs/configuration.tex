@@ -1,0 +1,105 @@
+\def\ocplibconfig{{\tt ocplib-config} }
+
+\subsection{\ocplibconfig Library}
+\ocplibconfig is a library provided by \ocpbuild. It allows to create options
+for a project by a specific syntax which will create the corresponding command
+line option and an entry to a configuration file.
+
+To use them, user can either change the value with the command line option or by
+setting the configuration file. Command line option will always override the
+configuration file option.
+
+\ocplint{} provide {\tt Lint\_config} module which is a high level interface over
+the \ocplibconfig library.
+
+\paragraph{Create a new option}
+\begin{lstlisting}
+  val create_option : 
+      string list ->
+      string ->
+      string ->
+      int ->
+      'a SimpleConfig.option_class ->
+      'a ->
+      'a SimpleConfig.config_option
+\end{lstlisting}
+
+For example, to create a new option in a plugin we use:
+
+\begin{lstlisting}[language=Caml]
+  let option = MyPlugin.create_option
+    "option_short_name"     (* Option short name*)
+    "Option short details"  (* Short details *)
+    "Option long details"   (* Long details *)
+    SimpleConfig.int_option (* Type of option *)
+    default_value           (* Default value *)
+\end{lstlisting}
+
+This will create an entry {\em option\_short\_name} in the configuration and the
+option {\tt \--\--my-plugin-option-short-name} for the command line.
+
+\paragraph{Modifying an existing option}
+To change the current value of an existing option, you can use the \ocplibconfig
+syntax with the {\tt =:=} operator:
+
+{\tt option\_short\_name =:= new\_value}
+
+\paragraph{Getting the value of an option}
+To get the current value of an option, you can use the {\tt get\_value\_option}
+function :
+
+{\tt val get\_option\_value : string list -> string}
+~\\
+For example:
+
+{\tt let current\_val = Lint\_config.get\_option\_value options in ...}
+
+\subsection{The Project Configuration File}
+
+Above, a short example of the \ocplint{} configuration:
+
+\begin{lstlisting}
+(* Module to ignore during the lint. *)
+ignored_files = [
+]
+
+plugin_text = {
+
+  (* A plugin with linters on the source. *)
+  enabled = true
+
+  code_length = {
+
+    (* Enable/Disable linter "Code Length". *)
+    enabled = true
+
+    (* Module to ignore durint the lint of "Code Length" *)
+    ignored_files = [ ]
+
+    (* Enable/Disable warnings from "Code Length" *)
+    warnings = "+A"
+
+    (* Maximum line length *)
+    max_line_length = 80
+  }
+
+  ocp_indent = {
+
+    (* Enable/Disable linter "Indention with ocp-indent". *)
+    enabled = true
+
+    (* Module to ignore durint the lint of "Indention with ocp-indent" *)
+    ignored_files = [ ]
+    
+    (* Enable/Disable warnings from "Indention with ocp-indent" *)
+    warnings = "+A"
+  }
+}
+\end{lstlisting}
+
+We can enable or disable from the configuration by setting the {\bf enable}
+variable to {\tt true} or {\tt false}, we can add some module to ignore for each
+plugin, linter or globally by adding the filename to the corresponding list.
+
+Finally, we can customizable as we want in the configuration file even disable a
+specific warning from a linter.

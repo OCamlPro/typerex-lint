@@ -1,0 +1,26 @@
+\ocplint{} is not the only tool that can be used to improve the quality of
+the code of an OCaml project. In this section, we compare \ocplint{} with
+three other tools that can be used for this purpose.
+
+{\em Mascot}~\cite{mascot} was probably the most exhaustive
+style-checker for OCaml. It provided many checks in various
+categories: code, documentation, interface, metrics, and
+typography. However, it is not maintained anymore, and hard to extend,
+especially as analyses are heavily based on using Camlp4 syntax trees.
+
+{\tt ocamllint}~\cite{ocamllint} is a style-checker that runs as {\sf
+ppx}~\cite{ppx-blog} while compiling the project.  Thus, it
+requires minimum effort to be used on an OCaml project.  However, the
+number of analyses is currently very limited, and they can only be
+applied on the AST, whereas \ocplint{} can work also on text files,
+and on typedtrees.
+
+{\em Dead code analyzer}~\cite{DeadCodeAnalyzer} tries to detect
+useless patterns in an OCaml project.  For example, it detects never
+used values, types fields and constructors (that can thus be removed
+as dead code), and optional labels either always or never used. The
+tool assumes that interface files ({\tt .mli}) are compiled with the
+{\tt -keep-locs} and source files ({\tt .ml}) with {\tt
+-bin-annot}. The analysis can be quite expensive, but the tool is a
+good complement to \ocplint{}, and could be added as a plugin to
+benefit from its database and project management.

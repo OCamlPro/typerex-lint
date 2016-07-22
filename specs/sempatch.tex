@@ -1,0 +1,20 @@
+The \texttt{ocplib-sempatch} library was inspired the Semantic Patches
+from by Coccinelle~\cite{coccinelle}. It provides a simple text DSL to
+describe patterns on OCaml syntax in a patch-like style, and these
+patterns can be used to locate these patterns in source files. For
+that, it uses a regular expression engine operating on the OCaml
+AST --- the parsing AST or, when needed and possible, the typed AST\@.
+
+In \ocplint{}, we use this library to allow the user to provide its
+own OCaml patterns to recognize. For example, the following patch will
+make \ocplint{} raise a warning, proposing to replace a {\sf
+if-then-else} constructs with identical expressions in both branches
+by a simple sequence, ignoring the result of the condition:
+
+\lstinputlisting[
+  columns=flexible, basicstyle=\sf\small
+]{sempatch_example.sp}
+
+We were able to use these semantic patches to express most of the
+patterns recognized by {\sf ocamllint}.
+
