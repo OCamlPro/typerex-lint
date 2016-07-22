@@ -56,8 +56,8 @@ let mk_synonyms loc
     ?prefix_of_originals
     ?prefix_of_synonyms =
   let has_prefix = Option.is_some path_of_originals
-                 || Option.is_some prefix_of_synonyms
-                 || Option.is_some prefix_of_originals
+                   || Option.is_some prefix_of_synonyms
+                   || Option.is_some prefix_of_originals
   in
   let attrs =
     if has_prefix then [] else
@@ -168,7 +168,7 @@ let str_of_type type_decls cmd =
       let automaton_tree = List.map build_automaton_tree poly_decls in
       let automaton_typ =
         sum_of_types
-          ~extra_types:([trash_variant; final_variant])
+          ~extra_types:[trash_variant; final_variant]
           loc
           mono_decls
         |> preprocess_automaton
@@ -227,9 +227,9 @@ let mapper = let open M in
               let name = match arg with
                 | PStr [%str
                     [%e? {
-                         pexp_desc = Pexp_constant
-                             (Asttypes.Const_string (name, None)); _
-                       }
+                        pexp_desc = Pexp_constant
+                            (Asttypes.Const_string (name, None)); _
+                      }
                     ]
                   ] -> Some name
                 | _ -> None

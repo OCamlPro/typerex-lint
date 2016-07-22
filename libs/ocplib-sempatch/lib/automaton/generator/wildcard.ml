@@ -201,28 +201,28 @@ struct
     in
     let expr = [%expr [A.Trash]]
     in
-      H.Exp.case
-        pattern
-        expr
+    H.Exp.case
+      pattern
+      expr
 
   let result_of_middle middles =
-      let transition_fun =
-        H.Exp.function_ middles
-      in
-      [%str
-        let wildcard () =
-          let state = A.{
-              final = false;
-              transitions = [];
-            }
-          in
-          state.A.transitions <-
-            [
-              false,
-              ignore_meta @@ [%e transition_fun]
-            ];
-          state
-      ]
+    let transition_fun =
+      H.Exp.function_ middles
+    in
+    [%str
+      let wildcard () =
+        let state = A.{
+            final = false;
+            transitions = [];
+          }
+        in
+        state.A.transitions <-
+          [
+            false,
+            ignore_meta @@ [%e transition_fun]
+          ];
+        state
+    ]
 end
 
 include Generic.Make(Arg)

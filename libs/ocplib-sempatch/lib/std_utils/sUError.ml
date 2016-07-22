@@ -32,4 +32,3 @@ struct
   let (>>=) x f = bind_err f x
   let (>|=) x f = map_err f x
 end
-

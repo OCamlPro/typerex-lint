@@ -7,18 +7,11 @@ and t = patch_line list
 
 let inside expr = "[%__sempatch_inside " :: expr @ ["]"]
 let report expr = "[%__sempatch_report " :: expr @ ["]"]
-let replace expr replacement = "(" :: expr @ ") [@__sempatch_replace "
-                                             :: replacement @ ["]"]
+(* let replace expr replacement = "(" :: expr @ ") [@__sempatch_replace " *)
+(*                                              :: replacement @ ["]"] *)
 let maybe_replace expr _replacement _has_change = expr
 (* if has_change then replace expr replacement *)
 (* else expr *)
-
-let rec filter_map f = function
-  | [] -> []
-  | hd::tl ->
-    match f hd with
-    | Some hd' -> hd'::(filter_map f tl)
-    | None -> (filter_map f tl)
 
 let to_patch_body p =
   let rec convert_line = function

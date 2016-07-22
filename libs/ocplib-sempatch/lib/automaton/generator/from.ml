@@ -97,7 +97,7 @@ struct
       | _ ->
         H.Exp.apply
           matcher
-          (List.mapi (build_sub_from) args)
+          (List.mapi build_sub_from args)
     in [%expr ([%e result] :  A.state)]
 
   let middle_of_alias name self env typ =
@@ -119,9 +119,9 @@ struct
                           (C.mk_match name)))
           (List.map (fun (name, typ) ->
                "", H.Exp.apply
-                   (generate_froms typ)
-                   [("",(H.Exp.ident
-                           (L.mknoloc (LI.Lident name))))]
+                 (generate_froms typ)
+                 [("",(H.Exp.ident
+                         (L.mknoloc (LI.Lident name))))]
              )
               names
           )
@@ -137,9 +137,9 @@ struct
       [
         name,
         [%expr fun x -> Match.basic_state @@
-        function
-        | [%p pattern] when x = y -> [A.Final]
-        | _ -> [A.Trash]]
+          function
+          | [%p pattern] when x = y -> [A.Final]
+          | _ -> [A.Trash]]
       ]
     | Ptyp_constr ({ txt = Longident.Lident id; _ }, args) ->
       begin
@@ -167,7 +167,9 @@ struct
           self { real_type with ptype_name = Location.mknoloc name }
         with
           Not_found ->
-          raise_errorf "%s : Not in the stdlib nor declared here : %s" deriver_name id
+          raise_errorf "%s : Not in the stdlib nor declared here : %s"
+            deriver_name
+            id
       end
     | _ ->
       C.warn "Unable to create 'from' for %s\n" name;
@@ -177,7 +179,7 @@ struct
     name,
     H.Exp.ident
       (Location.mknoloc (C.mk_match @@
-             C.id name))
+                         C.id name))
 
   let middle_of_variant name cases =
     let exp =

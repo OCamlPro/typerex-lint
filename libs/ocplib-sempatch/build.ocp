@@ -2,13 +2,13 @@ comp += [ "-w" "+A-4" ]
 
 begin library "std_utils"
   files = [
-    "lib/std_utils/SUMisc.ml"
-    "lib/std_utils/SUFun.ml"
-    "lib/std_utils/SUOption.ml"
-    "lib/std_utils/SUError.ml"
-    "lib/std_utils/SUList.ml"
-    "lib/std_utils/SUStringMap.ml"
-    "lib/std_utils/SUMessages.ml"
+    "lib/std_utils/sUMisc.ml"
+    "lib/std_utils/sUFun.ml"
+    "lib/std_utils/sUOption.ml"
+    "lib/std_utils/sUError.ml"
+    "lib/std_utils/sUList.ml"
+    "lib/std_utils/sUStringMap.ml"
+    "lib/std_utils/sUMessages.ml"
     "lib/std_utils/std_utils.ml"
   ]
 end
@@ -36,7 +36,6 @@ end
 
 begin library "ocplib-sempatch"
     files = [
-      "lib/automaton/generator/tree.ml"
       "lib/failure.ml"
       "lib/ast_element.ml"
       "lib/substitution.ml"
@@ -62,7 +61,7 @@ begin library "ocplib-sempatch"
         "compiler-libs.common"
         "abc"
     ]
-    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree.ml" ]
+    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree.mli" ]
     comp_requires = "abc:asm"
     ocamlyacc = "menhir"
 end

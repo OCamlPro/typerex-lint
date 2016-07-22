@@ -11,7 +11,7 @@ struct
 
   let from_channel chan =
     Patch_parser.sempatch
-      (Patch_lexer.read)
+      Patch_lexer.read
       (Lexing.from_channel chan)
     |> List.map snd
     |> List.map Parsed_patches.preprocess

@@ -9,8 +9,12 @@ sig
 
   val deriver_name : string
 
-  val middle_of_record : string -> Parsetree.label_declaration list -> middle list
-  val middle_of_variant : string -> Parsetree.constructor_declaration list -> middle list
+  val middle_of_record : string
+    -> Parsetree.label_declaration list
+    -> middle list
+  val middle_of_variant : string
+    -> Parsetree.constructor_declaration list
+    -> middle list
   val middle_of_alias : string
     -> (Parsetree.type_declaration -> middle list)
     -> Parsetree.type_declaration list
@@ -46,7 +50,7 @@ struct
       | Ptype_variant cases ->
         Arg.middle_of_variant name cases
       | Ptype_record fields ->
-         Arg.middle_of_record name fields
+        Arg.middle_of_record name fields
       | Ptype_abstract ->
         begin
           match type_decl.ptype_manifest with

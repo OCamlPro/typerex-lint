@@ -23,9 +23,11 @@ let find_var var_name env =
     List.assoc var_name constants
   with
     Not_found ->
-    match Substitution.get_expr var_name env with
-    | Some x -> Expr x
-    | None -> raise (Undefined_var var_name)
+    begin
+      match Substitution.get_expr var_name env with
+      | Some x -> Expr x
+      | None -> raise (Undefined_var var_name)
+    end
 
 let apply_to_bool f args =
   let unwrap_bool = function
@@ -138,10 +140,10 @@ let functions : fn list = [
   "(=)", bool @@ equiv_ast;
   "(&&)", bool @@  (&&&);
   "(||)", bool @@ (|||);
-  "not", bool @@ (guard_not);
+  "not", bool @@ guard_not;
   "is_variable", bool @@ is_variable;
   "is_constant", bool @@ is_constant;
-  "is_leaf", bool @@ (fun x -> (is_variable x || is_constant x));
+  "is_leaf", bool @@ (fun x -> is_variable x || is_constant x);
   "is_integer_lit", bool @@ is_integer_lit;
   "is_string_lit", bool @@ is_string_lit;
   "is_bool_lit", bool @@ is_bool_lit;
