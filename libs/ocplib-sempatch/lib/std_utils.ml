@@ -256,6 +256,7 @@ module StringMap:
 sig
   include Map.S with type key = string
   val from_list_pair : (string * 'a) list -> 'a t
+  val get : string -> 'a t -> 'a option
 end
 =
 struct
@@ -267,6 +268,11 @@ struct
       (fun map (k, e) -> M.add k e map)
       M.empty
       l
+
+  let get k sm =
+    try
+      Some (M.find k sm)
+    with Not_found -> None
 end
 
 module Messages :

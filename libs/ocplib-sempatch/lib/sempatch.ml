@@ -16,8 +16,9 @@ struct
     |> List.map Parsed_patches.preprocess
 
   let get_name p = p.header.name
-  let get_msg p = p.header.message
   let get_metavariables p = p.header.meta_expr
+  let get_field field p = StringMap.get field p.header.keyvals
+  let get_msg = get_field "message"
 
   let apply patch ast = let open Ast_element in
     match ast with

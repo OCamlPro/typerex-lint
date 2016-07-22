@@ -1,12 +1,13 @@
 open Parsetree
+open Std_utils
 
 module Type =
 struct
   type header = {
     meta_expr : string list;
-    message : string option;
     name : string;
     guard : Guard.t list;
+    keyvals : string StringMap.t;
   }
 
   type body = Automaton.A.state
@@ -31,13 +32,13 @@ type unprocessed_patch = {
 let void_header = {
   guard = [];
   meta_expr = [];
-  message = None;
+  keyvals = StringMap.empty;
   name = "";
 }
 
 type setting =
   | Expressions of string list
-  | Message of string
+  | KeyVal of string * string
   | Name of string
   | Guard of Guard.t
 
@@ -46,7 +47,7 @@ let raisePatchError e = raise Failure.(SempatchException (Patch e))
 let add_header_field header = function
   | Guard g -> { header with guard = g :: header.guard }
   | Expressions v -> { header with meta_expr = v @ header.meta_expr }
-  | Message m -> { header with message = Some m }
+  | KeyVal (k, v) -> { header with keyvals = StringMap.add k v header.keyvals }
   | Name m -> { header with name = m }
 
 let header_from_list l = List.fold_left add_header_field void_header l
