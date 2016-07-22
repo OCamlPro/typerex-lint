@@ -325,7 +325,7 @@ let lint_sequential no_db db_dir severity path =
   Lint_text.print_error
     Format.err_formatter path Lint_db.DefaultDB.db_errors;
   Lint_text.summary
-    severity path Lint_db.DefaultDB.db Lint_db.DefaultDB.db_errors;
+    severity path no_db Lint_db.DefaultDB.db Lint_db.DefaultDB.db_errors;
   if no_db then clean_db_in_tmp db_dir
 
 (* let fork_exec file = *)

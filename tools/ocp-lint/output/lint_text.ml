@@ -76,7 +76,7 @@ let update_breakdown tbl pname lname wid =
      Hashtbl.add new_p_htbl lname new_l_htbl;
      Hashtbl.add tbl pname new_p_htbl)
 
-let summary severity path db db_errors =
+let summary severity path no_db db db_errors =
   let files_linted = ref StringCompat.StringSet.empty in
   let files_cached = ref StringCompat.StringSet.empty in
   let files_linted_errors = ref StringCompat.StringSet.empty in
@@ -191,8 +191,11 @@ let summary severity path db db_errors =
                 wtbl)
            else
              Hashtbl.iter (fun wid cpt ->
-                 Printf.printf "      * %d warning(s) raised by %S/warning #%i\n%!"
-                   cpt lname wid)
+                 Printf.printf
+                   "      * %d warning(s) raised by %S/warning #%i\n%!"
+                   cpt
+                   lname
+                   wid)
                wtbl)
            ptbl)
       else
@@ -208,8 +211,12 @@ let summary severity path db db_errors =
                  wtbl)
             else
               Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "      * %d warning(s) raised by %S/%S/warning #%i\n%!"
-                    cpt pname lname wid)
+                  Printf.printf
+                    "      * %d warning(s) raised by %S/%S/warning #%i\n%!"
+                    cpt
+                    pname
+                    lname
+                    wid)
                 wtbl)
           ptbl)
     breakdown_cached;
@@ -220,7 +227,13 @@ let summary severity path db db_errors =
 
   Printf.printf "== New Warnings ==\n%!";
   Printf.printf "  * %d file(s) were linted:\n%!" files_linted_total;
-  StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_linted;
+  StringCompat.StringSet.iter (fun file ->
+      let file_rel = Lint_utils.relative_path !(Lint_db.DefaultDB.root) file in
+      let file_norm =
+        if no_db then
+          Lint_utils.normalize_path (Sys.getcwd()) file_rel
+        else file in
+      Printf.printf "    - %s\n%!" file_norm) !files_linted;
   Printf.printf "  * %d warning(s) were emitted:\n%!" warnings_linted_total;
   Hashtbl.iter (fun pname ptbl ->
       let total =
@@ -243,8 +256,11 @@ let summary severity path db db_errors =
                 wtbl)
            else
              Hashtbl.iter (fun wid cpt ->
-                 Printf.printf "      * %d warning(s) raised by %S/warning #%i\n%!"
-                   cpt lname wid)
+                 Printf.printf
+                   "      * %d warning(s) raised by %S/warning #%i\n%!"
+                   cpt
+                   lname
+                   wid)
                wtbl)
            ptbl)
       else
@@ -260,8 +276,12 @@ let summary severity path db db_errors =
                  wtbl)
             else
               Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "      * %d warning(s) raised by %S/%S/warning #%i\n%!"
-                    cpt pname lname wid)
+                  Printf.printf
+                    "      * %d warning(s) raised by %S/%S/warning #%i\n%!"
+                    cpt
+                    pname
+                    lname
+                    wid)
                 wtbl)
           ptbl)
     breakdown_linted;
