@@ -21,8 +21,8 @@
 let (!!) = SimpleConfig.(!!)
 open Lint_warning
 
-let ignored_files = Lint_globals.Config.create_option
-    ["ignored_files"]
+let ignored = Lint_globals.Config.create_option
+    ["ignore"]
     "Module to ignore during the lint."
     "Module to ignore during the lint."
     0
@@ -62,14 +62,31 @@ let filter_plugins plugins =
                 (Lint_map.add cname lint old_lints)
             end)
           checks
-      end
-    )
+      end    )
     plugins;
   activated_plugins
 
-let filter_modules sources ignore_files =
+let is_same_file root file1 file2 =
+  let file1 = Lint_utils.relative_path root file1 in
+  let file2 = Lint_utils.relative_path root file2 in
+  file1 = file2
+
+let is_ignored root file ignored =
+  List.exists (fun source ->
+      try
+        if Sys.is_directory source then
+          Lint_utils.is_in_path root file source
+        else is_same_file root file source
+      with Sys_error _ -> is_same_file root file source)
+    ignored
+
+let filter_modules sources ignored =
+  let root = !Lint_db.DefaultDB.root in
+  let db_dir = Filename.concat root Lint_globals.olint_dirname in
   List.filter (fun source ->
-      not (List.exists (fun ignored -> ignored = source) ignore_files)) sources
+      not (is_ignored root source ignored) &&
+      not (Lint_utils.is_in_path root source db_dir))
+    sources
 
 let parse_source source =
   let tool_name = Ast_mapper.tool_name () in
@@ -152,8 +169,8 @@ let init_db no_db db_dir path = match db_dir with
         let db_dir = init_db_in_tmp () in
         db_dir, true
     with Not_found ->
-        let db_dir = init_db_in_tmp () in
-        db_dir, true
+      let db_dir = init_db_in_tmp () in
+      db_dir, true
 
 let init_config path =
   let path_t = File.of_string path in
@@ -205,14 +222,11 @@ let list_plugins fmt =
       Format.fprintf fmt "\n%!")
     Lint_globals.plugins
 
-let get_ignored_files pname cname =
+let get_ignored pname cname =
   let opt =
-    Lint_globals.Config.create_option [pname; cname; "ignored_files"]  "" "" 0
+    Lint_globals.Config.create_option [pname; cname; "ignore"]  "" "" 0
       (SimpleConfig.list_option SimpleConfig.string_option)  [] in
   !!opt
-
-let is_in_ignored_files file files =
-  List.exists (fun source -> source = file) files
 
 let from_input file pname cname inputs =
   List.iter (fun input ->
@@ -274,8 +288,8 @@ let lint_file verbose no_db db_dir file =
       Lint_map.iter (fun cname lint ->
           let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
           let module Linter = (val lint : Lint_types.LINT) in
-          let ignored_files = get_ignored_files Plugin.short_name cname in
-          if not (is_in_ignored_files file ignored_files) &&
+          let ignored = get_ignored Plugin.short_name cname in
+          if not (is_ignored !Lint_db.DefaultDB.root file ignored) &&
              not (Lint_db.DefaultDB.already_run
                     file Plugin.short_name Linter.short_name) then
             from_input file Plugin.short_name Linter.short_name Linter.inputs)
@@ -308,7 +322,7 @@ let lint_sequential no_db db_dir path =
   (* We filter the global ignored modules/files.  *)
   (* let no_db = init_db no_db path in *)
   let (db_dir, no_db) = init_db no_db db_dir path in
-  let sources = filter_modules (scan_project path) !!ignored_files in
+  let sources = filter_modules (scan_project path) !!ignored in
   List.iter (run db_dir) sources;
   Lint_db.DefaultDB.merge sources;
   Lint_text.print Format.err_formatter path Lint_db.DefaultDB.db;
