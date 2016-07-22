@@ -83,7 +83,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let details =
       Printf.sprintf "Module to ignore durint the lint of %S" lint_long_name in
     ignore @@
-    create_option [P.short_name; lint_short_name; "ignored"]
+    create_option [P.short_name; lint_short_name; "ignore"]
       details
       details
       (SimpleConfig.list_option SimpleConfig.string_option)

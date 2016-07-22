@@ -22,7 +22,7 @@ let (!!) = SimpleConfig.(!!)
 open Lint_warning
 
 let ignored = Lint_globals.Config.create_option
-    ["ignored"]
+    ["ignore"]
     "Module to ignore during the lint."
     "Module to ignore during the lint."
     0
@@ -224,7 +224,7 @@ let list_plugins fmt =
 
 let get_ignored pname cname =
   let opt =
-    Lint_globals.Config.create_option [pname; cname; "ignored"]  "" "" 0
+    Lint_globals.Config.create_option [pname; cname; "ignore"]  "" "" 0
       (SimpleConfig.list_option SimpleConfig.string_option)  [] in
   !!opt
 
