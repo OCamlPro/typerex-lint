@@ -263,7 +263,7 @@ let from_input file pname cname inputs =
           file (Lint_db_types.Ocplint_error (Printexc.to_string exn)))
     inputs
 
-let lint_file no_db db_dir file =
+let lint_file verbose no_db db_dir file =
   ignore (init_db no_db db_dir file);
   Lint_db.DefaultDB.load_file file;
   Lint_db.DefaultDB.cache ();
@@ -281,6 +281,8 @@ let lint_file no_db db_dir file =
             from_input file Plugin.short_name Linter.short_name Linter.inputs)
         checks)
     plugins;
+  if verbose then
+    Lint_text.verbose_info Format.err_formatter Lint_db.DefaultDB.db;
   Lint_db.DefaultDB.save ()
 
 let run db_dir file =

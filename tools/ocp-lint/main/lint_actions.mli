@@ -30,6 +30,6 @@ val init_olint_dir : unit -> unit
 val init_config : string -> unit
 val init_db : bool -> string option -> string -> string option * bool
 
-val lint_file : bool -> string option -> string -> unit
+val lint_file : bool-> bool -> string option -> string -> unit
 (* val lint_parallel : string -> unit *)
 val lint_sequential : bool -> string option -> string -> unit
