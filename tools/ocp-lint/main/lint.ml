@@ -216,11 +216,11 @@ let () =
     "--severity-limit", Arg.Int (fun i -> severity_limit := i),
     " Only display warning above this severity";
 
-    "", Arg.Unit (fun () -> ()),
-    " \n\nPlugins arguments:\n";
-
     "--verbose", Arg.Set verbose,
     " Show extra informations.";
+
+    "", Arg.Unit (fun () -> ()),
+    " \n\nPlugins arguments:\n";
   ]
 
 let start_lint_file file =
