@@ -43,12 +43,10 @@ module MakeDB (DB : DATABASE_IO) = struct
     let hash_filename_path = Filename.concat olint_dir hash_filename in
     if Sys.file_exists hash_filename_path then
       try
-        let (version_db, file, pres, file_error) = DB.load hash_filename_path in
-        if version <> version_db then
-          Format.eprintf "Outdated DB file %S, skipping it\n%!" file
-        else
-          (Hashtbl.add db file (hash, pres);
-           Hashtbl.add db_errors file file_error)
+        let (version_db, date, file, pres, file_error) =
+          DB.load hash_filename_path in
+        (Hashtbl.add db file (hash, pres);
+         Hashtbl.add db_errors file file_error)
       with exn ->
         Format.eprintf "Can't read DB file for %S, skipping it\n%!" file
 
@@ -78,7 +76,8 @@ module MakeDB (DB : DATABASE_IO) = struct
           if Hashtbl.mem db_errors file then
             Hashtbl.find db_errors file
           else ErrorSet.empty in
-        DB.save db_file_tmp (version, file, pres, file_error);
+        let date = Unix.time () in
+        DB.save db_file_tmp (version, date, file, pres, file_error);
         Sys.rename db_file_tmp db_file)
       db
 
@@ -139,14 +138,17 @@ module MakeDB (DB : DATABASE_IO) = struct
     else
       Hashtbl.add db_errors file (ErrorSet.singleton error)
 
-  let clean files =
-    List.iter (fun file ->
-        let db_file = Lint_utils.normalize_path !root file in
-        try
-          let (old_hash, _old_fres) = Hashtbl.find db db_file in
-          let hash = Digest.file file in
-          if old_hash <> hash then remove_entry db_file
-        with Not_found -> ())
+  let clean limit_time =
+    let db_path = Filename.concat !root "_olint" in
+    let files = Sys.readdir db_path in
+    let curr_date = Unix.time () in
+    Array.iter (fun file ->
+        let file_path = Filename.concat db_path file in
+        let (version_db, date, file, pres, file_error) =
+          DB.load file_path in
+        let limit_date = date +. (86400. *. (float limit_time)) in
+        if version <> version_db then Sys.remove file_path;
+        if curr_date >= limit_date then Sys.remove file_path)
       files
 
   let update pname lname warn =
