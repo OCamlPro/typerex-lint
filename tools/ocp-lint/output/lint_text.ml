@@ -179,19 +179,19 @@ let summary severity path db db_errors =
             Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl acc)
           ptbl 0 in
       if total > 1 then
-        (Printf.printf "    * %d warnings(s) raised by %S\n%!" total_w pname;
+        (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
          Hashtbl.iter (fun lname wtbl ->
            let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
            let total_l_w = Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
            if total_l > 1 then
-             (Printf.printf "      * %d warnings(s) raised by %S\n%!"
+             (Printf.printf "      * %d warning(s) raised by %S\n%!"
                 total_l_w lname;
               Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "        * %d Warning %i\n%!" cpt wid)
+                  Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
                 wtbl)
            else
              Hashtbl.iter (fun wid cpt ->
-                 Printf.printf "      * %d warnings(s) raised by %S/%i\n%!"
+                 Printf.printf "      * %d warning(s) raised by %S/warning #%i\n%!"
                    cpt lname wid)
                wtbl)
            ptbl)
@@ -201,19 +201,19 @@ let summary severity path db db_errors =
             let total_l_w =
               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
             if total_l > 1 then
-              (Printf.printf "      * %d warnings(s) raised by %S/%S\n%!"
+              (Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
                  total_l_w pname lname;
                Hashtbl.iter (fun wid cpt ->
-                   Printf.printf "        * %d Warning %i\n%!" cpt wid)
+                   Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
                  wtbl)
             else
               Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "      * %d warnings(s) raised by %S/%S/%i\n%!"
+                  Printf.printf "      * %d warning(s) raised by %S/%S/warning #%i\n%!"
                     cpt pname lname wid)
                 wtbl)
           ptbl)
     breakdown_cached;
-  Printf.printf "  * error(s) on %d file(s) were found in cache:\n%!"
+  Printf.printf "  * %d files(s) couldn't be linted:\n%!"
     files_cached_errors_total;
   StringCompat.StringSet.iter
     (Printf.printf "    - %s\n%!") !files_cached_errors;
@@ -231,19 +231,19 @@ let summary severity path db db_errors =
             Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl acc)
           ptbl 0 in
       if total > 1 then
-        (Printf.printf "    * %d warnings(s) raised by %S\n%!" total_w pname;
+        (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
          Hashtbl.iter (fun lname wtbl ->
            let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
            let total_l_w = Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
            if total_l > 1 then
-             (Printf.printf "      * %d warnings(s) raised by %S\n%!"
+             (Printf.printf "      * %d warning(s) raised by %S\n%!"
                 total_l_w lname;
               Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "        * %d Warning %i\n%!" cpt wid)
+                  Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
                 wtbl)
            else
              Hashtbl.iter (fun wid cpt ->
-                 Printf.printf "      * %d warnings(s) raised by %S/%i\n%!"
+                 Printf.printf "      * %d warning(s) raised by %S/warning #%i\n%!"
                    cpt lname wid)
                wtbl)
            ptbl)
@@ -253,19 +253,19 @@ let summary severity path db db_errors =
             let total_l_w =
               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
             if total_l > 1 then
-              (Printf.printf "      * %d warnings(s) raised by %S/%S\n%!"
+              (Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
                  total_l_w pname lname;
                Hashtbl.iter (fun wid cpt ->
-                   Printf.printf "        * %d Warning %i\n%!" cpt wid)
+                   Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
                  wtbl)
             else
               Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "      * %d warnings(s) raised by %S/%S/%i\n%!"
+                  Printf.printf "      * %d warning(s) raised by %S/%S/warning #%i\n%!"
                     cpt pname lname wid)
                 wtbl)
           ptbl)
     breakdown_linted;
-  Printf.printf "  * errors(s) on %d file(s) were emitted:\n%!"
+  Printf.printf "  * %d file(s) couldn't be linted:\n%!"
     files_linted_errors_total;
   StringCompat.StringSet.iter
     (Printf.printf "    - %s\n%!") !files_linted_errors
