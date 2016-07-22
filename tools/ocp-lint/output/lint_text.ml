@@ -107,7 +107,8 @@ let summary severity path db db_errors =
                       let arr = Lint_parse_args.parse_options filters in
                       List.iter
                         (fun warning ->
-                           if arr.(warning.decl.id - 1) &&
+                           let wid = warning.decl.id in
+                           if arr.(wid - 1) &&
                               warning.decl.severity >= severity then
                              (files_linted :=
                                 StringCompat.StringSet.add file !files_linted;
@@ -127,7 +128,8 @@ let summary severity path db db_errors =
                       let arr = Lint_parse_args.parse_options filters in
                       List.iter
                         (fun warning ->
-                           if arr.(warning.decl.id - 1) &&
+                           let wid = warning.decl.id in
+                           if arr.(wid - 1) &&
                               warning.decl.severity >= severity then
                              (files_cached :=
                                 StringCompat.StringSet.add file !files_cached;
