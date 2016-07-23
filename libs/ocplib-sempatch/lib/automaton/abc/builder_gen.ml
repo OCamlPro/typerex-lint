@@ -20,10 +20,17 @@ struct
     | [elt] -> Some (convert_fun elt)
     | lst -> Some (H.Pat.tuple (List.map convert_fun lst))
 
-  let add_transition current_node sub_constructor args =
+  let gen_expr_constr_states args =
+    let convert_fun = fun x -> H.Exp.ident (L.mknoloc (LI.Lident x)) in
+    match C.gen_states args with
+    | [] -> None
+    | [elt] -> Some (convert_fun elt)
+    | lst -> Some (H.Exp.tuple (List.map convert_fun lst))
+
+  let add_transition current_node sub_constructor =
     let state_node = H.Exp.construct
         (Location.mknoloc (Pfx.cstr @@ Pfx.st current_node))
-        (Some (sub_constructor args))
+        sub_constructor
     and node = H.Exp.construct
         (Location.mknoloc (Pfx.cstr @@ Pfx.t current_node)) (Some [%expr tree])
     in
@@ -51,7 +58,7 @@ struct
   *)
   let mk_body
       (current_node: string)
-      (sub_constructor : 'a list -> Parsetree.expression)
+      (sub_constructor : Parsetree.expression option)
       (args : string list)
     =
     let final = [%expr fun x -> x]
@@ -72,9 +79,15 @@ struct
       (List.fold_left
          (fun accu arg -> pipe (generate_sub_automaton arg) accu)
          final args
-       |> pipe @@ add_transition current_node sub_constructor args
+       |> pipe @@ add_transition current_node sub_constructor
       )
       args
+
+  let mk_state_constr constr =
+    let constructor = L.mknoloc @@ Pfx.st constr.Types.cd_id.Ident.name
+    and args = gen_expr_constr_states constr.Types.cd_args
+    in
+    H.Exp.construct constructor args
 
   let case_of_constructor type_name constructor =
     let pat =
@@ -88,7 +101,7 @@ struct
         )
         constructor.Types.cd_args
       |> List.flip_opt
-      |> Option.map (mk_body type_name (fun _ -> [%expr assert false]))
+      |> Option.map (mk_body type_name (Some (mk_state_constr constructor)))
       |> Option.value [%expr failwith "invalid type"]
     in
     H.Exp.case pat result
@@ -104,6 +117,18 @@ struct
     in
     name, expr
 
+  let mk_state_record fields =
+    let new_fields =
+      List.mapi (fun i field ->
+          let name = L.mknoloc @@ LI.Lident field.Types.ld_id.Ident.name
+          and value = H.Exp.ident (L.mknoloc @@ LI.Lident (C.nth_state i))
+          in
+          name, value
+        )
+        fields
+    in
+    H.Exp.record new_fields None
+
   let middle_of_record name fields =
     let open Types in
     let destructured_record =
@@ -117,7 +142,7 @@ struct
     and body =
         List.map (fun field -> C.id_of_typ_expr field.ld_type) fields
         |> List.flip_opt
-        |> Option.map (mk_body name (fun _ -> [%expr assert false]))
+        |> Option.map (mk_body name (Some (mk_state_record fields)))
         |> Option.value [%expr failwith "invalid type"]
     in
     let expr =

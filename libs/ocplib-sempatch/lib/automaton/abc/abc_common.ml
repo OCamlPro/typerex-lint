@@ -93,4 +93,5 @@ let nth_arg n = "arg_" ^ (string_of_int n)
 let nth_state n = "state_" ^ (string_of_int n)
 
 let gen_args lst = List.mapi (fun i _ -> nth_arg i) lst
+let gen_states lst = List.mapi (fun i _ -> nth_state i) lst
 
