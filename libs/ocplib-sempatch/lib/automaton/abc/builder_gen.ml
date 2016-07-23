@@ -106,14 +106,15 @@ struct
     in
     H.Exp.case pat result
 
-  let wrap_into_fun body =
-      [%expr fun parent_state tree automaton -> [%e body] ]
+  let wrap_into_fun body tree_type =
+    [%expr fun parent_state (tree : [%t tree_type]) automaton -> [%e body] ]
 
   let middle_of_variant name constructors =
     let expr =
       wrap_into_fun
         (H.Exp.match_ [%expr tree]
            (List.map (case_of_constructor name) constructors))
+        (H.Typ.constr (L.mknoloc @@ Pfx.t name) [])
     in
     name, expr
 
@@ -148,6 +149,7 @@ struct
     let expr =
       wrap_into_fun
         [%expr let [%p destructured_record] = tree in [%e body]]
+        (H.Typ.constr (L.mknoloc @@ Pfx.t name) [])
     in
     name, expr
 
