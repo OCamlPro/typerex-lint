@@ -185,3 +185,17 @@ severity : 5
 Printf.sprintf "%s" e
 ```
 
+@ Dynlink
+message: "Do not use dynamic linking"
+severity: 8
+```
+Dynlink.loadfile
+```
+
+@ Dynlink_2
+message: "Do not use dynamic linking"
+severity: 8
+```
+Dynlink.loadfile_private
+```
+
