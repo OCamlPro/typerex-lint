@@ -133,3 +133,11 @@ severity: 5
 ```
 if cond then e1 else e2
 ```
+
+@ Discarded_result
+message : "Avoid discarding the result of expressions"
+expressions: e1, e2
+severity: 6
+```
+let _ = e1 in e2
+```
