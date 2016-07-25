@@ -149,3 +149,21 @@ severity: 10
 ```
 try e1 with Sys.Break -> e2
 ```
+
+@ Identity_sprintf
+message: "Useless sprintf, use '$e' directly"
+expressions: e
+when: "is_string_lit(e)"
+severity : 5
+```
+Printf.sprintf e
+```
+
+@ Identity_sprintf_2
+message: "Useless sprintf, use '$e' directly"
+expressions: e
+severity : 5
+```
+Printf.sprintf "%s" e
+```
+
