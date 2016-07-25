@@ -93,7 +93,7 @@ struct
     let pat =
       let open Types in
       H.Pat.construct
-        (L.mknoloc @@ Pfx.t constructor.cd_id.Ident.name)
+        (L.mknoloc @@ Pfx.cstr @@ Pfx.t constructor.cd_id.Ident.name)
         (gen_pattern_constr_args constructor.cd_args)
     and result =
       List.map (fun typ ->
@@ -141,10 +141,10 @@ struct
           fields
       in H.Pat.record pattern_fields Asttypes.Closed
     and body =
-        List.map (fun field -> C.id_of_typ_expr field.ld_type) fields
-        |> List.flip_opt
-        |> Option.map (mk_body name (Some (mk_state_record fields)))
-        |> Option.value [%expr failwith "invalid type"]
+      List.map (fun field -> C.id_of_typ_expr field.ld_type) fields
+      |> List.flip_opt
+      |> Option.map (mk_body name (Some (mk_state_record fields)))
+      |> Option.value [%expr failwith "invalid type"]
     in
     let expr =
       wrap_into_fun
@@ -162,7 +162,45 @@ struct
     in
     name, expr
 
-  let middle_of_alias name _ _ _ = name, [%expr assert false]
+  let middle_of_alias name super env alias =
+    let module T = Types in
+    match alias.T.desc with
+    | T.Ttuple sub_types ->
+      let destructured_tuple =
+        (Option.value (H.Pat.tuple []) (gen_pattern_constr_args sub_types))
+      and body =
+        List.map C.id_of_typ_expr sub_types
+        |> List.flip_opt
+        |> Option.map (mk_body name (gen_expr_constr_states sub_types))
+        |> Option.value [%expr failwith "invalid type"]
+      in
+      let expr =
+        wrap_into_fun
+          [%expr let [%p destructured_tuple] = tree in [%e body]]
+          (H.Typ.constr (L.mknoloc @@ Pfx.t name) [])
+      in
+      name, expr
+    | T.Tconstr (constr_path, [], _) -> (* Just a type alias *)
+      let alias_name = C.id_of_path constr_path in
+      name,
+      H.Exp.ident (L.mknoloc @@ LI.Lident alias_name)
+    |T.Tconstr (constr_path, _, _) -> (* A real contructor *)
+      let alias_name = C.id_of_path constr_path in
+      begin
+        match C.get_type alias_name env with
+        | None ->
+          Messages.warn
+            "Invalid type %s, assuming it is abstract\n"
+            name;
+          middle_of_abstract name
+        | Some id ->
+          Messages.debug
+            "Recursing into type %s\n"
+            name;
+          super (name, id)
+      end
+    | _ -> name, [%expr failwith "Not handled by abc"]
+
 
   let result_of_middle middle =
     let bindings = List.map (fun (name, value) ->

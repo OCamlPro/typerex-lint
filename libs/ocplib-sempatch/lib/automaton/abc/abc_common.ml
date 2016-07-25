@@ -45,7 +45,8 @@ let rec longident_of_path =
   function
   | P.Pident i -> L.Lident (Ident.name i)
   | P.Pdot (path, name, _) -> L.Ldot (longident_of_path path, name)
-  | P.Papply (lhs, rhs) -> L.Lapply (longident_of_path lhs, longident_of_path rhs)
+  | P.Papply (lhs, rhs) ->
+    L.Lapply (longident_of_path lhs, longident_of_path rhs)
 
 
 let rec core_type_of_type_expr texpr =
@@ -72,6 +73,8 @@ struct
   let cstr ident =
     match Longident.last ident with
     | "::" | "[]" as name -> Longident.Lident name
+    | "Cons" -> Longident.Lident "::"
+    | "Nil" -> Longident.Lident "[]"
     | _ -> begin
         match ident with
         | Longident.Lident name ->
@@ -95,3 +98,12 @@ let nth_state n = "state_" ^ (string_of_int n)
 let gen_args lst = List.mapi (fun i _ -> nth_arg i) lst
 let gen_states lst = List.mapi (fun i _ -> nth_state i) lst
 
+(**************************************************)
+(* Searching in type environment                  *)
+(**************************************************)
+
+let get_type name env =
+  try
+    Some (List.assoc name env)
+  with
+    Not_found -> None

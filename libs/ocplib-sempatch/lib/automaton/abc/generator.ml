@@ -12,7 +12,7 @@ sig
   val middle_of_variant : string -> Types.constructor_declaration list -> middle
   val middle_of_alias : string
     -> ((string * Types.type_declaration) -> middle)
-    -> Types.type_declaration list
+    -> (string * Types.type_declaration) list
     -> Types.type_expr
     -> middle
 
@@ -25,7 +25,7 @@ module type S =
 sig
   type t
 
-  val of_type_decl : env:Types.type_declaration list
+  val of_type_decl : env:(string * Types.type_declaration) list
     -> (string * Types.type_declaration) list
     -> t
 end
@@ -45,7 +45,7 @@ struct
       | Type_variant cases ->
         Arg.middle_of_variant name cases
       | Type_record (fields, _) ->
-         Arg.middle_of_record name fields
+        Arg.middle_of_record name fields
       | Type_abstract ->
         begin
           match type_decl.type_manifest with
