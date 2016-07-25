@@ -153,7 +153,15 @@ struct
     in
     name, expr
 
-  let middle_of_abstract name = name, [%expr assert false]
+  let middle_of_abstract name =
+    let expr =
+      wrap_into_fun
+        (add_transition name (Some [%expr tree]))
+        [%type: name]
+
+    in
+    name, expr
+
   let middle_of_alias name _ _ _ = name, [%expr assert false]
 
   let result_of_middle middle =
