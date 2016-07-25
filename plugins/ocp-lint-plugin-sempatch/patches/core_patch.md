@@ -125,6 +125,24 @@ severity: 6
 + expr :: list
 ```
 
+@ ListOpOnLit_2
+expressions: list
+message: "List operation on empty list: use '$list' instead of '[] @ $list'."
+severity: 6
+```
+- [] @ list
++ list
+```
+
+@ ListOpOnLit_3
+expressions: list
+message: "List operation on empty list: use '$list' instead of '$list @ []'."
+severity: 6
+```
+- list @ []
++ list
+```
+
 @ ConstantIf
 expressions: cond, e1, e2
 message: "Constant if-then-else: there is no need to use a if-then-else."
