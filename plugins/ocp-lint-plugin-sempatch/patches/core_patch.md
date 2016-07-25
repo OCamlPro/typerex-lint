@@ -141,3 +141,11 @@ severity: 6
 ```
 let _ = e1 in e2
 ```
+
+@ Catch_Sys_Break
+message: "Do not try to catch the Sys.Break exception"
+expressions: e1, e2
+severity: 10
+```
+try e1 with Sys.Break -> e2
+```
