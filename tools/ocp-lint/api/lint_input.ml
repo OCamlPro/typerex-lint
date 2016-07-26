@@ -25,6 +25,7 @@ type input =
   | InCmt of (Cmt_format.cmt_infos -> unit)
   | InMl of (string -> unit)
   | InMli of (string -> unit)
+  | InSource of (string -> unit)
   | InAll of (string list -> unit)
   | InTokens of ( (Parser.token * Location.t) array -> unit)
 
@@ -35,6 +36,7 @@ module type TOPLEVEL = sig val main : Parsetree.toplevel_phrase -> unit end
 module type CMT = sig val main : Cmt_format.cmt_infos -> unit end
 module type ML = sig val main : string -> unit end
 module type MLI = sig val main : string -> unit end
+module type SOURCE = sig val main : string -> unit end
 module type ALL = sig val main : string list -> unit end
 module type TOKENS = sig
   val main : (Parser.token * Location.t) array -> unit end
