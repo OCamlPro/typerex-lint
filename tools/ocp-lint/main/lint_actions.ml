@@ -34,7 +34,7 @@ let db_persistence = Lint_globals.Config.create_option
     "Time before erasing cached results (in days)."
     "Time before erasing cached results (in days)."
     0
-    (SimpleConfig.int_option)
+    SimpleConfig.int_option
     1
 
 let scan_project path = (* todo *)
@@ -52,17 +52,17 @@ let filter_plugins plugins =
   Lint_plugin.iter_plugins (fun plugin checks ->
       let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
       let plugin_short_name = Plugin.short_name in
-      let plugin_opt_names = plugin_short_name :: [ "enabled" ] in
+      let plugin_opt_names = [ plugin_short_name; "enabled" ] in
       let plugin_opt_value =
         Lint_globals.Config.get_option_value plugin_opt_names in
       (* if the plugin is disable, don't try to add any linter attached to it *)
-      if (bool_of_string plugin_opt_value) then begin
+      if bool_of_string plugin_opt_value then begin
         Lint_map.iter (fun cname lint ->
-            let lint_opt_names = plugin_short_name :: cname :: [ "enabled" ] in
+            let lint_opt_names = [ plugin_short_name; cname; "enabled" ] in
             let lint_opt_value =
               Lint_globals.Config.get_option_value lint_opt_names in
             (* if the linter is disable, don't try to use it. *)
-            if (bool_of_string lint_opt_value) then begin
+            if bool_of_string lint_opt_value then begin
               let old_lints =
                 try Hashtbl.find activated_plugins plugin
                 with Not_found -> Lint_map.empty in

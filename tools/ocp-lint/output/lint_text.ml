@@ -163,7 +163,7 @@ let summary severity path no_db db db_errors =
     StringCompat.StringSet.cardinal !files_cached_errors in
   Printf.printf "Summary:\n%!";
   Printf.printf "== Infos ==\n%!";
-  Printf.printf "  * root dir: %s\n%!" !(Lint_db.DefaultDB.root);
+  Printf.printf "  * root dir: %s\n%!" !Lint_db.DefaultDB.root;
 
   Printf.printf "== Cache Infos ==\n%!";
   Printf.printf "  * %d file(s) were found in cache:\n%!" files_cached_total;
@@ -181,22 +181,22 @@ let summary severity path no_db db db_errors =
       if total > 1 then
         (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
          Hashtbl.iter (fun lname wtbl ->
-           let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
-           let total_l_w = Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
-           if total_l > 1 then
-             (Printf.printf "      * %d warning(s) raised by %S\n%!"
-                total_l_w lname;
-              Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
-                wtbl)
-           else
-             Hashtbl.iter (fun wid cpt ->
-                 Printf.printf
-                   "      * %d warning(s) raised by %S/warning #%i\n%!"
-                   cpt
-                   lname
-                   wid)
-               wtbl)
+             let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
+             let total_l_w = Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
+             if total_l > 1 then
+               (Printf.printf "      * %d warning(s) raised by %S\n%!"
+                  total_l_w lname;
+                Hashtbl.iter (fun wid cpt ->
+                    Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                  wtbl)
+             else
+               Hashtbl.iter (fun wid cpt ->
+                   Printf.printf
+                     "      * %d warning(s) raised by %S/warning #%i\n%!"
+                     cpt
+                     lname
+                     wid)
+                 wtbl)
            ptbl)
       else
         Hashtbl.iter (fun lname wtbl ->
@@ -228,7 +228,7 @@ let summary severity path no_db db db_errors =
   Printf.printf "== New Warnings ==\n%!";
   Printf.printf "  * %d file(s) were linted:\n%!" files_linted_total;
   StringCompat.StringSet.iter (fun file ->
-      let file_rel = Lint_utils.relative_path !(Lint_db.DefaultDB.root) file in
+      let file_rel = Lint_utils.relative_path !Lint_db.DefaultDB.root file in
       let file_norm =
         if no_db then
           Lint_utils.normalize_path (Sys.getcwd()) file_rel
@@ -246,22 +246,22 @@ let summary severity path no_db db db_errors =
       if total > 1 then
         (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
          Hashtbl.iter (fun lname wtbl ->
-           let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
-           let total_l_w = Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
-           if total_l > 1 then
-             (Printf.printf "      * %d warning(s) raised by %S\n%!"
-                total_l_w lname;
-              Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
-                wtbl)
-           else
-             Hashtbl.iter (fun wid cpt ->
-                 Printf.printf
-                   "      * %d warning(s) raised by %S/warning #%i\n%!"
-                   cpt
-                   lname
-                   wid)
-               wtbl)
+             let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
+             let total_l_w = Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
+             if total_l > 1 then
+               (Printf.printf "      * %d warning(s) raised by %S\n%!"
+                  total_l_w lname;
+                Hashtbl.iter (fun wid cpt ->
+                    Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                  wtbl)
+             else
+               Hashtbl.iter (fun wid cpt ->
+                   Printf.printf
+                     "      * %d warning(s) raised by %S/warning #%i\n%!"
+                     cpt
+                     lname
+                     wid)
+                 wtbl)
            ptbl)
       else
         Hashtbl.iter (fun lname wtbl ->

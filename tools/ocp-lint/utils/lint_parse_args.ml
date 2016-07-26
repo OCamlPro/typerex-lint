@@ -19,7 +19,7 @@
 (**************************************************************************)
 
 let warning_max = 512
-let active = Array.make (warning_max) true
+let active = Array.make warning_max true
 
 let letter = function
   | 'a' ->

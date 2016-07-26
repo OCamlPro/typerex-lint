@@ -204,7 +204,7 @@ let () =
       ),
     "PLUGINS Load dynamically plugins with their corresponding 'cmxs' files.";
 
-    "--save-config", Arg.Unit (fun () -> set_action (ActionSave)),
+    "--save-config", Arg.Unit (fun () -> set_action ActionSave),
     " Save ocp-lint default config file.";
 
     "--no-db-cache", Arg.Set no_db,
