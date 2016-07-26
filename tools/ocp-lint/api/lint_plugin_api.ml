@@ -325,6 +325,11 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
           let input = Lint_input.InMli (wrap_plugin_exn MLI.main) end)
     end
 
+    module MakeInputSource (Source : Lint_input.SOURCE) = struct
+      module R = Register (struct
+          let input = Lint_input.InSource (wrap_plugin_exn Source.main) end)
+    end
+
     module MakeInputAll (All : Lint_input.ALL) = struct
       module R = Register (struct
           let input = Lint_input.InAll (wrap_plugin_exn All.main) end)
