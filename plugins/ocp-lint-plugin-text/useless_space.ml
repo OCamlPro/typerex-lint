@@ -82,6 +82,6 @@ let check_file file =
 
 
 (* Registering a main entry to the linter *)
-module MainSRC = Linter.MakeInputML(struct
+module MainSRC = Linter.MakeInputSource(struct
     let main source = check_file source
   end)
