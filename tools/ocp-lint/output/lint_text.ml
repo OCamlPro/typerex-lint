@@ -182,7 +182,8 @@ let summary severity path no_db db db_errors =
         (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
          Hashtbl.iter (fun lname wtbl ->
              let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
-             let total_l_w = Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
+             let total_l_w =
+               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
              if total_l > 1 then
                (Printf.printf "      * %d warning(s) raised by %S\n%!"
                   total_l_w lname;
@@ -247,7 +248,8 @@ let summary severity path no_db db db_errors =
         (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
          Hashtbl.iter (fun lname wtbl ->
              let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
-             let total_l_w = Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
+             let total_l_w =
+               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
              if total_l > 1 then
                (Printf.printf "      * %d warning(s) raised by %S\n%!"
                   total_l_w lname;
@@ -294,24 +296,32 @@ let print fmt severity path db =
   try
     Hashtbl.iter (fun file (hash, pres) ->
         if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
-          StringMap.iter (fun pname lres ->
-              let flag = check_flag [pname; "enabled"] in
-              if flag then
-                StringMap.iter  (fun lname (_source, _opt, ws) ->
-                    let flag = check_flag [pname; lname; "enabled"] in
-                    if flag then
-                      let filters =
-                        Lint_globals.Config.get_option_value
-                          [pname; lname; "warnings"] in
-                      let arr = Lint_parse_args.parse_options filters in
-                      List.iter
-                        (fun warning ->
-                           if arr.(warning.decl.id - 1) &&
-                              warning.decl.severity >= severity then
-                             print_warning fmt pname lname warning)
-                        ws)
-                  lres)
-            pres)
+          let ws =
+            StringMap.fold (fun pname lres acc ->
+                let flag = check_flag [pname; "enabled"] in
+                if flag then
+                  StringMap.fold (fun lname (_source, _opt, ws) acc ->
+                      let flag = check_flag [pname; lname; "enabled"] in
+                      if flag then
+                        let filters =
+                          Lint_globals.Config.get_option_value
+                            [pname; lname; "warnings"] in
+                        let arr = Lint_parse_args.parse_options filters in
+                        List.fold_left
+                          (fun acc warning ->
+                             if arr.(warning.decl.id - 1) &&
+                                warning.decl.severity >= severity then
+                               (pname, lname, warning) :: acc
+                             else acc) acc ws
+                      else acc)
+                    lres acc
+                else acc)
+              pres [] in
+          let ws =
+            List.sort (fun (_, _, w1) (_, _, w2) ->
+                compare w1.loc w2.loc) ws in
+          List.iter (fun (pname, lname, w) ->
+              print_warning fmt pname lname w) ws)
       db
   with Not_found ->
     Printf.eprintf "Warning: Database contains warnings raised by plugins \
