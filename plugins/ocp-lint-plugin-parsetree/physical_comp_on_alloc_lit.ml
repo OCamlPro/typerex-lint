@@ -90,7 +90,6 @@ let iter =
   let module IterArg = struct
     include Parsetree_iter.DefaultIteratorArgument
     let enter_expression expr =
-      let open Asttypes in
       let open Parsetree in
       match expr.pexp_desc with
       | Pexp_apply (f, args) ->

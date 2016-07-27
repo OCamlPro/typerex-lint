@@ -18,8 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Lint_utils
-
 type error =
   | Plugin_already_registered of (module Lint_plugin_types.PLUGIN)
   | Linter_already_registered of string

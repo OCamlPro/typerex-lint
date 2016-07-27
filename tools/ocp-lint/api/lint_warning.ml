@@ -44,7 +44,6 @@ let cmp_loc loc1 loc2 =
   pos_cnum1 = pos_cnum2
 
 let cmp_warnings w1 w2 =
-  let open Lint_warning_types in
   let file1 = Filename.basename w1.loc.Location.loc_start.Lexing.pos_fname in
   let file2 = Filename.basename w2.loc.Location.loc_start.Lexing.pos_fname in
 

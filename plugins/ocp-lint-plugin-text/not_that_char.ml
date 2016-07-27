@@ -18,7 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open SimpleConfig (* for !! *)
 open Plugin_text
 
 module Linter = Plugin.MakeLint(struct

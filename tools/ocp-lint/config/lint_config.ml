@@ -18,10 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Lint_config_types
-
-exception ConfigParseError of string
-
 module DefaultConfig = struct
   let config_file = SimpleConfig.create_config_file (File.of_string ".ocplint")
 
