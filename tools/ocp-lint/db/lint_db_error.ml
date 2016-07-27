@@ -18,8 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Lint_utils
-
 type error =
   | File_not_found of string
   | File_not_in_db of string

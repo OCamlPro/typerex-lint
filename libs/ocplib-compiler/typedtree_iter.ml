@@ -28,7 +28,7 @@ let iter_structure iterator cmt =
   | Implementation str ->
     I.iter_structure str
   | Packed _ -> ()
-  | Interface sg -> ()
+  | Interface _ -> ()
   | Partial_implementation _ ->
     failwith "Bad .cmt file"
   | Partial_interface _ ->
@@ -39,7 +39,7 @@ let iter_signature iterator cmt =
   let module IA = (val iterator : IteratorArgument) in
   let module I = (MakeIterator(IA)) in
   match cmt.cmt_annots with
-  | Implementation str -> ()
+  | Implementation _ -> ()
   | Packed _ -> ()
   | Interface sg ->
     I.iter_signature sg

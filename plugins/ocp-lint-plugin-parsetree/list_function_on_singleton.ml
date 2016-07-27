@@ -66,7 +66,7 @@ let is_singleton f args =
           | Pexp_tuple list ->
             List.iter (fun elt ->
                 match elt.pexp_desc with
-                | Pexp_construct (loc, eopt) ->
+                | Pexp_construct (_loc, eopt) ->
                   begin match eopt with
                     | None -> Warnings.report elt.pexp_loc (Singleton f)
                     | Some _ -> ()

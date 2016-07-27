@@ -16,8 +16,6 @@
 module Parsetree = LintParsing_Parsetree
 module Location = LintParsing_Location
 
-open Location
-
 (* Docstrings *)
 
 (* A docstring is "attached" if it has been inserted in the AST. This
@@ -88,7 +86,7 @@ type docs =
 
 let empty_docs = { docs_pre = None; docs_post = None }
 
-let doc_loc = {txt = "ocaml.doc"; loc = Location.none}
+let doc_loc = {Location.txt = "ocaml.doc"; Location.loc = Location.none}
 
 let docs_attr ds =
   let open Parsetree in
@@ -135,7 +133,7 @@ type text = docstring list
 let empty_text = []
 let empty_text_lazy = lazy []
 
-let text_loc = {txt = "ocaml.text"; loc = Location.none}
+let text_loc = {Location.txt = "ocaml.text"; Location.loc = Location.none}
 
 let text_attr ds =
   let open Parsetree in
@@ -157,7 +155,7 @@ let get_docstring ~info dsl =
   let rec loop = function
     | [] -> None
     | {ds_attached = Info; _} :: rest -> loop rest
-    | ds :: rest ->
+    | ds :: _rest ->
         ds.ds_attached <- if info then Info else Docs;
         Some ds
   in

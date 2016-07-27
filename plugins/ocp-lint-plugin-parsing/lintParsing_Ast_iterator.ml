@@ -105,13 +105,13 @@ module T = struct
     | Ptyp_tuple tyl -> List.iter (sub.typ sub) tyl
     | Ptyp_constr (lid, tl) ->
         iter_loc sub lid; List.iter (sub.typ sub) tl
-    | Ptyp_object (l, o) ->
+    | Ptyp_object (l, _o) ->
         let f (_, a, t) = sub.attributes sub a; sub.typ sub t in
         List.iter f l
     | Ptyp_class (lid, tl) ->
         iter_loc sub lid; List.iter (sub.typ sub) tl
     | Ptyp_alias (t, _) -> sub.typ sub t
-    | Ptyp_variant (rl, b, ll) ->
+    | Ptyp_variant (rl, _b, ll) ->
         List.iter (row_field sub) rl
     | Ptyp_poly (_, t) -> sub.typ sub t
     | Ptyp_package (lid, l) ->
@@ -122,7 +122,7 @@ module T = struct
   let iter_type_declaration sub
       {ptype_name; ptype_params; ptype_cstrs;
        ptype_kind;
-       ptype_private;
+       ptype_private = _;
        ptype_manifest;
        ptype_attributes;
        ptype_loc} =
@@ -151,7 +151,7 @@ module T = struct
   let iter_type_extension sub
       {ptyext_path; ptyext_params;
        ptyext_constructors;
-       ptyext_private;
+       ptyext_private = _;
        ptyext_attributes} =
     iter_loc sub ptyext_path;
     List.iter (sub.extension_constructor sub) ptyext_constructors;
@@ -196,8 +196,8 @@ module CT = struct
     sub.attributes sub attrs;
     match desc with
     | Pctf_inherit ct -> sub.class_type sub ct
-    | Pctf_val (s, m, v, t) -> sub.typ sub t
-    | Pctf_method (s, p, v, t) -> sub.typ sub t
+    | Pctf_val (_s, _m, _v, t) -> sub.typ sub t
+    | Pctf_method (_s, _p, _v, t) -> sub.typ sub t
     | Pctf_constraint (t1, t2) ->
         sub.typ sub t1; sub.typ sub t2
     | Pctf_attribute x -> sub.attribute sub x
@@ -241,7 +241,7 @@ module MT = struct
     sub.location sub loc;
     match desc with
     | Psig_value vd -> sub.value_description sub vd
-    | Psig_type (rf, l) -> List.iter (sub.type_declaration sub) l
+    | Psig_type (_rf, l) -> List.iter (sub.type_declaration sub) l
     | Psig_typext te -> sub.type_extension sub te
     | Psig_exception ed -> sub.extension_constructor sub ed
     | Psig_module x -> sub.module_declaration sub x
@@ -284,9 +284,9 @@ module M = struct
     match desc with
     | Pstr_eval (x, attrs) ->
         sub.expr sub x; sub.attributes sub attrs
-    | Pstr_value (r, vbs) -> List.iter (sub.value_binding sub) vbs
+    | Pstr_value (_r, vbs) -> List.iter (sub.value_binding sub) vbs
     | Pstr_primitive vd -> sub.value_description sub vd
-    | Pstr_type (rf, l) -> List.iter (sub.type_declaration sub) l
+    | Pstr_type (_rf, l) -> List.iter (sub.type_declaration sub) l
     | Pstr_typext te -> sub.type_extension sub te
     | Pstr_exception ed -> sub.extension_constructor sub ed
     | Pstr_module x -> sub.module_binding sub x
@@ -314,7 +314,7 @@ module E = struct
     | Pexp_list exprs ->
       List.iter (sub.expr sub) exprs
     | Pexp_ident x -> iter_loc sub x
-    | Pexp_constant x -> ()
+    | Pexp_constant _x -> ()
     | Pexp_let (r, vbs, e) ->
         List.iter (sub.value_binding sub) vbs;
         sub.expr sub e

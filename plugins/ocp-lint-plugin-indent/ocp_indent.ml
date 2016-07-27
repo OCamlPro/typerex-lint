@@ -18,7 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open SimpleConfig (* for !! *)
 open Plugin_indent
 
 module OCPIndent = Plugin.MakeLint(struct

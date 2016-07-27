@@ -18,7 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-let rec iter_tokens f filename =
+let iter_tokens f filename =
   let ic = open_in filename in
   Location.input_name := filename;
   let lexbuf = Lexing.from_channel ic in
@@ -28,8 +28,12 @@ let rec iter_tokens f filename =
     let loc = Location.curr lexbuf in
     f token loc;
     iter f in
-  iter f;
-  close_in ic
+  try
+    ignore @@ iter f;
+    close_in ic
+  with e ->
+    close_in ic;
+    raise e
 
 let get_tokens filename =
   let ic = open_in filename in

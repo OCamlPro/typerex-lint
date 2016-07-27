@@ -27,8 +27,10 @@ sig
 
   (** The name of the plugin.  *)
   val name : string
+
   (** The short name of the plugin. It must be unique for each plugin. *)
   val short_name : string
+
   (** The details of the plugin.  *)
   val details : string
 
@@ -47,10 +49,13 @@ sig
   module MakeLint :
     functor (CA : Lint_types.LINTARG) ->
     sig
+
       (** The name of the linter. *)
       val name : string
+
       (** The short name of the linter. It must be unique for each linter. *)
       val short_name : string
+
       (** The details message of the linter. *)
       val details : string
 

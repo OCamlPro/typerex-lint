@@ -18,7 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open SimpleConfig (* for !! *)
 open Plugin_text
 
 module Linter = Plugin.MakeLint(struct
@@ -56,8 +55,6 @@ module Warnings = Linter.MakeWarnings(struct
 
 
 let check_line lnum line file =
-  let open Location in
-  let open Lexing in
   let len = String.length line in
   if len > 0 then
     match line.[len - 1] with

@@ -18,6 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+comp += [ "-w" "+A-4" ]
 begin library "ocp-lint-plugin-text"
   files = [
     "plugin_text.ml"
