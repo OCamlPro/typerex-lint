@@ -12,7 +12,11 @@ begin program "abc"
       "lib/automaton/abc/polymorphic_types_collector.ml"
       "lib/automaton/abc/generator.ml"
       "lib/automaton/abc/state_tree_gen.ml"
+      "lib/automaton/abc/types_to_parsetree.ml"
+      "lib/automaton/abc/sum_builder.ml"
+      "lib/automaton/abc/abstract_tree.ml"
       "lib/automaton/abc/builder_gen.ml"
+      "lib/automaton/abc/tree_convert.ml"
       "lib/automaton/abc/abc.ml"
     ]
     requires = [
@@ -24,7 +28,6 @@ begin program "abc"
     comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
 end
 
-(*
 begin program "ppx_monad"
     files = [
       "src/ppx_monad.ml"
@@ -36,27 +39,29 @@ end
 
 begin program "bup"
     files = [
-      "lib/automaton/bottom-up/tree.ml"
-      "lib/automaton/bottom-up/env.ml"
-      "lib/automaton/bottom-up/state.ml"
-      "lib/automaton/bottom-up/state_tree.ml"
-      "lib/automaton/bottom-up/transitions.ml"
-      "lib/automaton/bottom-up/automaton.ml"
-      "lib/automaton/bottom-up/export.ml"
-      "lib/automaton/bottom-up/generate.ml"
+      "lib/automaton/tree.ml"
+      "lib/automaton/automaton_env.ml"
+      "lib/automaton/state.ml"
+      "lib/automaton/state_tree.ml"
+      "lib/automaton/transitions.ml"
+      "lib/automaton/automaton.ml"
+      "lib/automaton/export.ml"
+      "lib/automaton/generate.ml"
     ]
     requires = [
+      "compiler-libs.common"
       "ppx_deriving"
       "ppx_deriving.std"
+      "abc"
       "ppx_monad"
       "std-utils"
     ]
 
-    comp += [ "-ppx" "%{ppx_deriving_DST_DIR}%/ppx_deriving %{ppx_deriving_DST_DIR}%/ppx_deriving_ord.cmxs %{ppx_deriving_DST_DIR}%/ppx_deriving_show.cmxs" ]
-    comp_requires = "ppx_monad:asm"
+    comp_requires = ["ppx_monad:asm" "abc:asm"]
+    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm" ]
     comp += [ "-ppx" "%{ppx_monad_DST_DIR}%/ppx_monad.asm" ]
+    comp += [ "-ppx" "%{ppx_deriving_DST_DIR}%/ppx_deriving %{ppx_deriving_DST_DIR}%/ppx_deriving_ord.cmxs %{ppx_deriving_DST_DIR}%/ppx_deriving_show.cmxs" ]
 end
-*)
 
 begin library "ocplib-sempatch"
     files = [

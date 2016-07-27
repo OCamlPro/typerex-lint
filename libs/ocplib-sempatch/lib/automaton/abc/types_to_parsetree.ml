@@ -1,14 +1,27 @@
+module T = Types
+
 module H = Ast_helper
+module L = Location
 module C = Abc_common
+
+let rec to_core_type type_expr =
+  match type_expr.T.desc with
+  | T.Tconstr (path, args, _) ->
+    H.Typ.constr
+      (L.mknoloc @@ C.longident_of_path path)
+      (List.map to_core_type args)
+  | T.Ttuple args ->
+    H.Typ.tuple (List.map to_core_type args)
+  | T.Tvar (Some name) ->
+    H.Typ.var name
+  | _ -> assert false (* Don't want to handle the rest *)
 
 module Arg : Generator.ARG with type result = Parsetree.structure_item =
 struct
   type result = Parsetree.structure_item
   type middle = Parsetree.type_declaration
 
-  let name = "State tree"
-
-  let state_typ = [%type: StateI.t]
+  let name = "Tree converter"
 
   let middle_of_record type_name fields =
     let fields =
@@ -17,7 +30,7 @@ struct
           fun field ->
             H.Type.field
               (Location.mknoloc field.Types.ld_id.Ident.name)
-              state_typ
+              (to_core_type field.Types.ld_type)
         )
         fields
     in
@@ -31,8 +44,7 @@ struct
         (
           fun constructor ->
             H.Type.constructor
-              (* ~args:[state_typ] *)
-              ~args:(List.map (fun _ -> state_typ) constructor.Types.cd_args)
+              ~args:(List.map to_core_type constructor.Types.cd_args)
               (Location.mknoloc constructor.Types.cd_id.Ident.name)
         )
         constructors
@@ -43,31 +55,15 @@ struct
 
   let middle_of_abstract name =
     H.Type.mk
-      ~manifest:state_typ
       (Location.mknoloc name)
 
   let middle_of_alias name _rec _env value =
-    match value.Types.desc with
-    | Types.Ttuple args ->
-      H.Type.mk
-        ~manifest:(H.Typ.tuple (List.map (fun _ -> state_typ) args))
-        (Location.mknoloc name)
-    | Types.Tconstr (constr_path, _::_, _) ->
-      H.Type.mk
-        ~manifest:(H.Typ.constr
-                     (Location.mknoloc
-                      @@ C.flatten
-                      @@ C.longident_of_path constr_path)
-                     [])
-        (Location.mknoloc name)
-    | _ ->
-      middle_of_abstract name
+    H.Type.mk
+      ~manifest:(to_core_type value)
+      (Location.mknoloc name)
 
   let result_of_middle typedefs =
-    H.Str.type_
-      (List.map
-         (fun td -> {td with Parsetree.ptype_attributes = C.deriving })
-         typedefs)
+    H.Str.type_ typedefs
 end
 
 include Generator.Make (Arg)

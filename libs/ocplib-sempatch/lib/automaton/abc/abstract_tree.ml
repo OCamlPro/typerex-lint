@@ -8,7 +8,9 @@ struct
 
   let name = "State tree"
 
-  let state_typ = [%type: StateI.t]
+  let state_typ = [%type: unit]
+
+  let deriving = [Location.mknoloc "deriving", Parsetree.PStr [%str ord, show]]
 
   let middle_of_record type_name fields =
     let fields =
@@ -31,8 +33,6 @@ struct
         (
           fun constructor ->
             H.Type.constructor
-              (* ~args:[state_typ] *)
-              ~args:(List.map (fun _ -> state_typ) constructor.Types.cd_args)
               (Location.mknoloc constructor.Types.cd_id.Ident.name)
         )
         constructors
@@ -52,21 +52,13 @@ struct
       H.Type.mk
         ~manifest:(H.Typ.tuple (List.map (fun _ -> state_typ) args))
         (Location.mknoloc name)
-    | Types.Tconstr (constr_path, _::_, _) ->
-      H.Type.mk
-        ~manifest:(H.Typ.constr
-                     (Location.mknoloc
-                      @@ C.flatten
-                      @@ C.longident_of_path constr_path)
-                     [])
-        (Location.mknoloc name)
     | _ ->
       middle_of_abstract name
 
   let result_of_middle typedefs =
     H.Str.type_
       (List.map
-         (fun td -> {td with Parsetree.ptype_attributes = C.deriving })
+         (fun td -> { td with Parsetree.ptype_attributes = deriving})
          typedefs)
 end
 

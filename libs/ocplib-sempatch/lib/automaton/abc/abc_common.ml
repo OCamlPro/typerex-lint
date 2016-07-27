@@ -86,7 +86,14 @@ struct
 
   let t = mk "T"
   let st = mk "St"
+  let n = mk "Nodes"
 end
+
+let flatten li =
+  Longident.flatten li
+  |> List.map String.uncapitalize
+  |> String.concat "__"
+  |> (fun s -> Longident.Lident s)
 
 (**************************************************)
 (* Generation of arguments                        *)
@@ -107,3 +114,6 @@ let get_type name env =
     Some (List.assoc name env)
   with
     Not_found -> None
+
+
+let deriving = [Location.mknoloc "deriving", Parsetree.PStr [%str ord, show]]

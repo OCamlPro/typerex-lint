@@ -27,7 +27,10 @@ sig
   val cstr : Longident.t -> Longident.t
   val t : string -> Longident.t
   val st : string -> Longident.t
+  val n : string -> Longident.t
 end
+
+val flatten : Longident.t -> Longident.t
 
 (**************************************************)
 (* Generation of arguments                        *)
@@ -46,3 +49,6 @@ val gen_states : 'a list -> string list
 val get_type : string
   -> (string * Types.type_declaration) list
   -> Types.type_declaration option
+
+val deriving : Parsetree.attributes
+

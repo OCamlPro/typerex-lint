@@ -1,3 +1,4 @@
+(*
 let printDotArrow ?params out_channel orig dest =
   match params with
   | None ->
@@ -62,3 +63,4 @@ let toDot out_channel automaton =
   toDotNodes out_channel (Automaton.states automaton);
   toDotArrows out_channel (Automaton.transitions automaton);
   output_string out_channel "}\n"
+   *)

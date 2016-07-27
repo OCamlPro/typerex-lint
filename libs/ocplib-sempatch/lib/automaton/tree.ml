@@ -1,35 +1,16 @@
-automaton/module Nodes =
-struct
-  type node1 = Node11 | Node12
-  and node2 = Node21 | Node22
-  and leaf1 = string
-  and t =
-    | Node1 of node1
-    | Node2 of node2
-    | Leaf1 of leaf1
-    [@@deriving ord, show]
-end
+[%%create_eval_tree]
 
-type node1 =
-  | Node11 of node1
-  | Node12 of node2 * leaf1
-and node2 =
-  | Node21 of node1
-  | Node22 of leaf1
-and leaf1 = string
-and t =
-  | Node1 of node1
-  | Node2 of node2
-  | Leaf1 of leaf1
-  [@@deriving show]
+    let pp fmt = function
+      | Expression e ->
+        Pprintast.expression fmt e
+      | Structure s ->
+        Pprintast.structure fmt s
+      | _ -> Format.pp_print_string fmt "<Opaque tree>"
 
-let to_node =
-  let module N = Nodes in
-  function
-  | Node1 (Node11 _) -> N.Node1 N.Node11
-  | Node1 (Node12 _) -> N.Node1 N.Node12
-  | Node2 (Node21 _) -> N.Node2 N.Node21
-  | Node2 (Node22 _) -> N.Node2 N.Node22
-  | Leaf1 i -> N.Leaf1 i
+    let show tree =
+      let () = pp Format.str_formatter tree in
+      Format.flush_str_formatter ()
 
-let compare_nodes n1 n2 =Nodes.compare (to_node n1) (to_node n2)
+let to_node = Convert.convert
+
+let compare_nodes n1 n2 = Nodes.compare (to_node n1) (to_node n2)
