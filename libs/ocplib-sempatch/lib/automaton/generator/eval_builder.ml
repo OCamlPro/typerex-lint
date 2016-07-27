@@ -66,7 +66,7 @@ let static_bindings =
 
 let mk_prefixed prefix id = LI.Ldot (LI.Lident prefix, id)
 
-let mk_a = mk_prefixed "A"
+let mk_a = C.mk_aut
 let mk_t id =
   match id with
   | "Nil" -> LI.Lident "[]"
@@ -250,9 +250,9 @@ let rec generate_dispatch_on_abstract_type loc decls_in_env typ =
   | Ptyp_tuple types ->
     let args = name_args types in
     let mk_sub_pattern getter =
-      (H.Pat.tuple
-         ~loc
-         (List.map (fun a -> H.Pat.var ~loc (here @@ getter a)) args))
+      H.Pat.tuple
+        ~loc
+        (List.map (fun a -> H.Pat.var ~loc (here @@ getter a)) args)
     in
     let pattern =
       H.Pat.tuple

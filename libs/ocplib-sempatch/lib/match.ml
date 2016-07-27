@@ -5,7 +5,7 @@ type t = {
   current_location : Location.t;
 }
 
-let get_patch_name t = t.patch_name
+let get_patch_name t = (t.patch_name)
 let get_location t = t.location
 let get_current_location t = t.current_location
 let get_substitutions t = t.substitutions
