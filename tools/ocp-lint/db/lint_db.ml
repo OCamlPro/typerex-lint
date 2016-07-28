@@ -34,10 +34,15 @@ module MakeDB (DB : DATABASE_IO) = struct
   let db = empty_db ()
   let db_errors = empty_db ()
 
+  let db_hash file =
+    let file_content = Lint_utils.read_file file in
+    let string_to_hash = file ^ file_content in
+    Digest.string string_to_hash
+
   let load file = db
 
   let load_file file =
-    let hash = Digest.file file in
+    let hash = db_hash file in
     let hash_filename = Digest.to_hex hash in
     let olint_dir = Filename.concat !root "_olint" in
     let hash_filename_path = Filename.concat olint_dir hash_filename in
@@ -108,7 +113,7 @@ module MakeDB (DB : DATABASE_IO) = struct
 
   let add_entry file pname lname =
     let options = Lint_config.DefaultConfig.get_linter_options pname lname in
-    let hash = Digest.file file in
+    let hash = db_hash file in
     let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then
       let (_old_hash, old_fres) = Hashtbl.find db file in
@@ -157,7 +162,7 @@ module MakeDB (DB : DATABASE_IO) = struct
       warn.Lint_warning_types.loc.Location.loc_start.Lexing.pos_fname in
     if not (Sys.file_exists file)
     then raise (Lint_db_error.Db_error (Lint_db_error.File_not_found file));
-    let hash = Digest.file file in
+    let hash = db_hash file in
     let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then
       let (_, old_pres) = Hashtbl.find db file in
@@ -181,7 +186,7 @@ module MakeDB (DB : DATABASE_IO) = struct
       raise (Lint_db_error.Db_error (Lint_db_error.File_not_in_db file))
 
   let already_run file pname lname =
-    let new_hash = Digest.file file in
+    let new_hash = db_hash file in
     let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then
       let (hash, old_fres) = Hashtbl.find db file in

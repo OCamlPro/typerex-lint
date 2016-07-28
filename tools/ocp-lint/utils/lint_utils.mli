@@ -42,6 +42,8 @@ val find_root : File.t -> string list -> File.t
 (** [is_in_path root file path] checks if the file is in the path. *)
 val is_in_path : string -> string -> string -> bool
 
+val read_file : string -> string
+
 val normalize_path : string -> string -> string
 
 val mk_temp_dir : unit -> string
