@@ -21,6 +21,14 @@
 let (!!) = SimpleConfig.(!!)
 open Lint_warning
 
+(* This structure is used to be able to reuse the parsetree, typedtree, etc
+   instead of regenerating it each time *)
+type file_t = {
+  filename: string;
+  ast: (Parsetree.structure option) lazy_t;
+  asti: (Parsetree.signature option) lazy_t;
+}
+
 let ignored = Lint_globals.Config.create_option
     ["ignore"]
     "Module to ignore during the lint."
@@ -223,7 +231,15 @@ let get_ignored pname cname =
       (SimpleConfig.list_option SimpleConfig.string_option)  [] in
   !!opt
 
-let from_input file pname cname inputs =
+
+let mk_file_t file = {
+  filename = file;
+  ast = lazy (parse_source file);
+  asti = lazy (parse_interf file);
+}
+
+let from_input file_t pname cname inputs =
+  let file = file_t.filename in
   List.iter (fun input ->
       try
         match input with
@@ -231,7 +247,7 @@ let from_input file pname cname inputs =
           Lint_db.DefaultDB.add_entry file pname cname;
           main file
         | Lint_input.InStruct main when is_source file ->
-          begin match parse_source file with
+          begin match Lazy.force file_t.ast with
             | Some ast ->
               Lint_db.DefaultDB.add_entry file pname cname;
               main ast
@@ -241,7 +257,7 @@ let from_input file pname cname inputs =
           Lint_db.DefaultDB.add_entry file pname cname;
           main file
         | Lint_input.InInterf main when is_interface file ->
-          begin match parse_interf file with
+          begin match Lazy.force file_t.asti with
             | Some ast ->
               Lint_db.DefaultDB.add_entry file pname cname;
               main ast
@@ -262,12 +278,16 @@ let from_input file pname cname inputs =
         | _ -> ()
       with
       | Lint_db_error.Db_error err ->
+        Lint_db.DefaultDB.add_entry file pname cname;
         Lint_db.DefaultDB.add_error file (Lint_db_types.Db_error err)
       | Sempatch.Failure.SempatchException e ->
+        Lint_db.DefaultDB.add_entry file pname cname;
         Lint_db.DefaultDB.add_error file (Lint_db_types.Sempatch_error e)
       | Lint_plugin_error.Plugin_error err ->
+        Lint_db.DefaultDB.add_entry file pname cname;
         Lint_db.DefaultDB.add_error file (Lint_db_types.Plugin_error err)
       | exn ->
+        Lint_db.DefaultDB.add_entry file pname cname;
         Lint_db.DefaultDB.add_error
           file (Lint_db_types.Ocplint_error (Printexc.to_string exn)))
     inputs
@@ -279,6 +299,7 @@ let lint_file verbose no_db db_dir severity file =
   let plugins = filter_plugins Lint_globals.plugins in
   let open Lint_warning_decl in
   let open Lint_warning_types in
+  let file_t = mk_file_t file in
   Lint_plugin.iter_plugins (fun plugin checks ->
       Lint_map.iter (fun cname lint ->
           let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
@@ -287,7 +308,7 @@ let lint_file verbose no_db db_dir severity file =
           if not (is_ignored !Lint_db.DefaultDB.root file ignored) &&
              not (Lint_db.DefaultDB.already_run
                     file Plugin.short_name Linter.short_name) then
-            from_input file Plugin.short_name Linter.short_name Linter.inputs)
+            from_input file_t Plugin.short_name Linter.short_name Linter.inputs)
         checks)
     plugins;
   if verbose then
