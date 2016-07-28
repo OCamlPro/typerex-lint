@@ -238,36 +238,36 @@ let mk_file_t file = {
   asti = lazy (parse_interf file);
 }
 
-let from_input file_t pname cname inputs =
+let from_input file_t pname cname version inputs =
   let file = file_t.filename in
   List.iter (fun input ->
       try
         match input with
         | Lint_input.InMl main when is_source file ->
-          Lint_db.DefaultDB.add_entry file pname cname;
+          Lint_db.DefaultDB.add_entry file pname cname version;
           main file
         | Lint_input.InStruct main when is_source file ->
           begin match Lazy.force file_t.ast with
             | Some ast ->
-              Lint_db.DefaultDB.add_entry file pname cname;
+              Lint_db.DefaultDB.add_entry file pname cname version;
               main ast
             | None -> assert false
           end
         | Lint_input.InMli main when is_interface file ->
-          Lint_db.DefaultDB.add_entry file pname cname;
+          Lint_db.DefaultDB.add_entry file pname cname version;
           main file
         | Lint_input.InInterf main when is_interface file ->
           begin match Lazy.force file_t.asti with
             | Some ast ->
-              Lint_db.DefaultDB.add_entry file pname cname;
+              Lint_db.DefaultDB.add_entry file pname cname version;
               main ast
             | None -> ()
           end
         | Lint_input.InCmt main when is_cmt file ->
-          Lint_db.DefaultDB.add_entry file pname cname;
+          Lint_db.DefaultDB.add_entry file pname cname version;
           main (Cmt_format.read_cmt file)
         | Lint_input.InAll main ->
-          Lint_db.DefaultDB.add_entry file pname cname;
+          Lint_db.DefaultDB.add_entry file pname cname version;
           main [file]
         | Lint_input.InTop main -> assert false (* TODO *)
         | Lint_input.InTokens main when is_source file || is_interface file ->
@@ -278,16 +278,16 @@ let from_input file_t pname cname inputs =
         | _ -> ()
       with
       | Lint_db_error.Db_error err ->
-        Lint_db.DefaultDB.add_entry file pname cname;
+        Lint_db.DefaultDB.add_entry file pname cname version;
         Lint_db.DefaultDB.add_error file (Lint_db_types.Db_error err)
       | Sempatch.Failure.SempatchException e ->
-        Lint_db.DefaultDB.add_entry file pname cname;
+        Lint_db.DefaultDB.add_entry file pname cname version;
         Lint_db.DefaultDB.add_error file (Lint_db_types.Sempatch_error e)
       | Lint_plugin_error.Plugin_error err ->
-        Lint_db.DefaultDB.add_entry file pname cname;
+        Lint_db.DefaultDB.add_entry file pname cname version;
         Lint_db.DefaultDB.add_error file (Lint_db_types.Plugin_error err)
       | exn ->
-        Lint_db.DefaultDB.add_entry file pname cname;
+        Lint_db.DefaultDB.add_entry file pname cname version;
         Lint_db.DefaultDB.add_error
           file (Lint_db_types.Ocplint_error (Printexc.to_string exn)))
     inputs
@@ -305,10 +305,11 @@ let lint_file verbose no_db db_dir severity file =
           let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
           let module Linter = (val lint : Lint_types.LINT) in
           let ignored = get_ignored Plugin.short_name cname in
+          let version = Linter.version in
           if not (is_ignored !Lint_db.DefaultDB.root file ignored) &&
              not (Lint_db.DefaultDB.already_run
-                    file Plugin.short_name Linter.short_name) then
-            from_input file_t Plugin.short_name Linter.short_name Linter.inputs)
+                    file Plugin.short_name Linter.short_name version) then
+            from_input file_t Plugin.short_name Linter.short_name version Linter.inputs)
         checks)
     plugins;
   if verbose then

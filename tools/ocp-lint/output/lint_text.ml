@@ -49,7 +49,8 @@ let check_flag options =
       (Lint_globals.Config.get_option_value options)
   with Not_found -> true
 
-let update_breakdown tbl pname lname wid =
+let update_breakdown tbl pname lname version wid =
+  let lname = Printf.sprintf "%s.%i" lname version in
   if Hashtbl.mem tbl pname then
     let old_p_htbl = Hashtbl.find tbl pname in
     if Hashtbl.mem old_p_htbl lname then
@@ -88,7 +89,7 @@ let summary severity path no_db db db_errors =
         StringMap.iter (fun pname lres ->
             let flag = check_flag [pname; "enabled"] in
             if flag then
-              StringMap.iter  (fun lname (source, _opt, ws) ->
+              StringMap.iter  (fun lname (version, source, _opt, ws) ->
                   let flag = check_flag [pname; lname; "enabled"] in
                   let flag_error =
                     if Hashtbl.mem db_errors file then
@@ -113,7 +114,7 @@ let summary severity path no_db db db_errors =
                              (files_linted :=
                                 StringCompat.StringSet.add file !files_linted;
                               update_breakdown
-                                breakdown_linted pname lname wid))
+                                breakdown_linted pname lname version wid))
                         ws
                     end
                   else
@@ -134,7 +135,7 @@ let summary severity path no_db db db_errors =
                              (files_cached :=
                                 StringCompat.StringSet.add file !files_cached;
                               update_breakdown
-                                breakdown_cached pname lname wid))
+                                breakdown_cached pname lname version wid))
                         ws end)
                 lres)
           pres)
@@ -300,7 +301,7 @@ let print fmt severity path db =
             StringMap.fold (fun pname lres acc ->
                 let flag = check_flag [pname; "enabled"] in
                 if flag then
-                  StringMap.fold (fun lname (_source, _opt, ws) acc ->
+                  StringMap.fold (fun lname (version, _source, _opt, ws) acc ->
                       let flag = check_flag [pname; lname; "enabled"] in
                       if flag then
                         let filters =
@@ -352,7 +353,7 @@ let print_only_new fmt path db =
   Hashtbl.iter (fun file (hash, pres) ->
       if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
         StringMap.iter (fun pname lres ->
-            StringMap.iter  (fun lname (source, _opt, ws) ->
+            StringMap.iter  (fun lname (_version, source, _opt, ws) ->
                 if source = Analyse then
                   List.iter (print_warning fmt pname lname) ws)
               lres)
@@ -363,7 +364,7 @@ let verbose_info fmt db =
   Hashtbl.iter (fun file (hash, pres) ->
       let triggered_plugin =
         StringMap.filter (fun pname lres ->
-            StringMap.exists (fun lname (source, opt, ws) ->
+            StringMap.exists (fun lname (_version, source, opt, ws) ->
                 let plugin_flag = check_flag [pname; "enabled"] in
                 let linter_flag = check_flag [pname; lname; "enabled"] in
                 let filters =

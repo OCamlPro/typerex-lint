@@ -75,7 +75,7 @@ let is_included file_res olint_dir =
     else
       Hashtbl.fold (fun file (_hash, fres2) acc ->
           StringMap.fold (fun pname lres2 acc ->
-              StringMap.fold (fun lname (_, _, wres2) acc ->
+              StringMap.fold (fun lname (_, _, _, wres2) acc ->
                   let (_, fres1) =
                     try
                       Hashtbl.find db1 file
@@ -84,7 +84,7 @@ let is_included file_res olint_dir =
                     try
                       StringMap.find pname fres1
                     with Not_found -> failwith pname in
-                  let (_, _, wres1) =
+                  let (_, _, _, wres1) =
                     try
                       StringMap.find lname pres1
                     with Not_found -> failwith lname in
