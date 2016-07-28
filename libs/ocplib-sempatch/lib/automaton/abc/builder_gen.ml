@@ -6,6 +6,8 @@ module LI = Longident
 module C = Abc_common
 module Pfx = Abc_common.Pfx
 
+let (!!) s = s ^ "_"
+
 module Arg : Generator.ARG with type result = Parsetree.structure =
 struct
   type result = Parsetree.structure
@@ -62,7 +64,7 @@ struct
       (args : string list)
     =
     let final = [%expr fun x -> x]
-    and pipe e1 e2 = [%expr [%e e1] |> [%e e2]]
+    and pipe e2 e1 = [%expr [%e e1] |> [%e e2]]
     and generate_sub_automaton (arg_number, typ_name) =
       H.Exp.apply
         (H.Exp.ident (L.mknoloc (LI.Lident typ_name)))
@@ -73,18 +75,17 @@ struct
     and add_state cont (arg_number, _typ_name) =
       let state = H.Pat.var (L.mknoloc @@ C.nth_state arg_number) in
       [%expr let (automaton, [%p state]) = A.add_state automaton in [%e cont]]
-    and args = List.mapi Misc.pair args
+    and args = List.mapi Misc.pair (List.rev args)
     in
     List.fold_left add_state
       (List.fold_left
          (fun accu arg -> pipe (generate_sub_automaton arg) accu)
-         final args
-       |> pipe @@ add_transition current_node sub_constructor
+         (add_transition current_node sub_constructor)
+         (List.rev args)
       )
       args
-
   let mk_state_constr constr =
-    let constructor = L.mknoloc @@ Pfx.st constr.Types.cd_id.Ident.name
+    let constructor = L.mknoloc @@ Pfx.st !!(constr.Types.cd_id.Ident.name)
     and args = gen_expr_constr_states constr.Types.cd_args
     in
     H.Exp.construct constructor args
@@ -107,7 +108,9 @@ struct
     H.Exp.case pat result
 
   let wrap_into_fun body tree_type =
-    [%expr fun parent_state (tree : [%t tree_type]) automaton -> [%e body] ]
+    [%expr fun parent_state (tree : [%t tree_type]) (automaton : A.t) ->
+      ([%e body] : A.t)
+    ]
 
   let middle_of_variant name constructors =
     let expr =
@@ -121,7 +124,7 @@ struct
   let mk_state_record fields =
     let new_fields =
       List.mapi (fun i field ->
-          let name = L.mknoloc @@ LI.Lident field.Types.ld_id.Ident.name
+          let name = L.mknoloc @@ Pfx.st !!(field.Types.ld_id.Ident.name)
           and value = H.Exp.ident (L.mknoloc @@ LI.Lident (C.nth_state i))
           in
           name, value
@@ -154,11 +157,13 @@ struct
     name, expr
 
   let middle_of_abstract name =
+    let cont =
+        (add_transition name (Some [%expr state_0]))
+    in
     let expr =
       wrap_into_fun
-        (add_transition name (Some [%expr tree]))
-        [%type: name]
-
+        [%expr let (automaton, state_0) = A.add_state automaton in [%e cont]]
+        (H.Typ.constr (L.mknoloc @@ Pfx.t name) [])
     in
     name, expr
 
@@ -183,7 +188,7 @@ struct
     | T.Tconstr (constr_path, [], _) -> (* Just a type alias *)
       let alias_name = C.id_of_path constr_path in
       name,
-      H.Exp.ident (L.mknoloc @@ LI.Lident alias_name)
+      [%expr fun x -> [%e H.Exp.ident (L.mknoloc @@ LI.Lident alias_name)] x]
     |T.Tconstr (constr_path, _, _) -> (* A real contructor *)
       let alias_name = C.id_of_path constr_path in
       begin

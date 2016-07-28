@@ -1,6 +1,8 @@
 module H = Ast_helper
 module C = Abc_common
 
+let (!!) = C.(!!)
+
 module Arg : Generator.ARG with type result = Parsetree.structure_item =
 struct
   type result = Parsetree.structure_item
@@ -18,7 +20,7 @@ struct
         (
           fun field ->
             H.Type.field
-              (Location.mknoloc field.Types.ld_id.Ident.name)
+              (Location.mknoloc !!(field.Types.ld_id.Ident.name))
               state_typ
         )
         fields
@@ -33,7 +35,7 @@ struct
         (
           fun constructor ->
             H.Type.constructor
-              (Location.mknoloc constructor.Types.cd_id.Ident.name)
+              (Location.mknoloc !!(constructor.Types.cd_id.Ident.name))
         )
         constructors
     in

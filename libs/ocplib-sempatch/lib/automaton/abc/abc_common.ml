@@ -89,10 +89,12 @@ struct
   let n = mk "Nodes"
 end
 
+let (!!) s = s ^ "_"
+
 let flatten li =
   Longident.flatten li
   |> List.map String.uncapitalize
-  |> String.concat "__"
+  |> String.concat "_"
   |> (fun s -> Longident.Lident s)
 
 (**************************************************)

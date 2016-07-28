@@ -5,6 +5,7 @@ module L = Location
 module C = Abc_common
 module Pfx = C.Pfx
 
+let (!!) = C.(!!)
 let unit_expr = [%expr ()]
 
 let wrap_into_fun expr typ_name =
@@ -23,7 +24,7 @@ struct
       List.map
         (
           fun field ->
-            Location.mknoloc @@ Pfx.n field.Types.ld_id.Ident.name,
+            Location.mknoloc @@ Pfx.n !!(field.Types.ld_id.Ident.name),
             unit_expr
         )
         fields
@@ -54,7 +55,7 @@ struct
                   (Location.mknoloc
                    @@ Pfx.cstr
                    @@ Pfx.n
-                     constructor.Types.cd_id.Ident.name)
+                     !!(constructor.Types.cd_id.Ident.name))
                   None;
             }
         )

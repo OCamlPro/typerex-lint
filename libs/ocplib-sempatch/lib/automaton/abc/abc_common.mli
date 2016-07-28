@@ -25,11 +25,14 @@ val core_type_of_type_expr : Types.type_expr -> Parsetree.core_type
 module Pfx:
 sig
   val cstr : Longident.t -> Longident.t
+
+  val mk : string -> string -> Longident.t
   val t : string -> Longident.t
   val st : string -> Longident.t
   val n : string -> Longident.t
 end
 
+val (!!) : string -> string
 val flatten : Longident.t -> Longident.t
 
 (**************************************************)

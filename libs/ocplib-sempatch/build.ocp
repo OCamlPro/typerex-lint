@@ -48,6 +48,7 @@ begin program "bup"
       "lib/automaton/export.ml"
       "lib/automaton/generate.ml"
     ]
+
     requires = [
       "compiler-libs.common"
       "ppx_deriving"
@@ -65,7 +66,6 @@ end
 
 begin library "ocplib-sempatch"
     files = [
-      "lib/automaton_/generator/tree.ml"
       "lib/failure.ml"
       "lib/res.ml"
       "lib/ast_element.ml"

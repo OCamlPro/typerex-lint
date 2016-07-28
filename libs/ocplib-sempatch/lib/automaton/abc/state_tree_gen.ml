@@ -1,6 +1,8 @@
 module H = Ast_helper
 module C = Abc_common
 
+let (!!) s = s ^ "_"
+
 module Arg : Generator.ARG with type result = Parsetree.structure_item =
 struct
   type result = Parsetree.structure_item
@@ -16,7 +18,7 @@ struct
         (
           fun field ->
             H.Type.field
-              (Location.mknoloc field.Types.ld_id.Ident.name)
+              (Location.mknoloc !!(field.Types.ld_id.Ident.name))
               state_typ
         )
         fields
@@ -30,10 +32,9 @@ struct
       List.map
         (
           fun constructor ->
-            H.Type.constructor
-              (* ~args:[state_typ] *)
+           H.Type.constructor
               ~args:(List.map (fun _ -> state_typ) constructor.Types.cd_args)
-              (Location.mknoloc constructor.Types.cd_id.Ident.name)
+              (Location.mknoloc !!(constructor.Types.cd_id.Ident.name))
         )
         constructors
     in

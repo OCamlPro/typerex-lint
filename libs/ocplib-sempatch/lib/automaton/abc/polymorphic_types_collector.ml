@@ -7,18 +7,24 @@ let rec from_signature_item = function
   | Sig_type (_, decl, _) -> from_type_declaration decl
   | _ -> []
 
-and from_type_declaration { type_kind; _ } =
+and from_type_declaration { type_kind; type_manifest; _ } =
   match type_kind with
   | Type_record (labels, _) ->
     List.bind from_label_declaration labels
   | Type_variant constrs ->
     List.bind from_constructor_declaration constrs
-  | _ -> []
+  | _ ->
+    begin match type_manifest with
+      | Some { desc = Ttuple types; _ } ->
+        List.bind from_type_expr types
+      | _ -> []
+    end
 
 and from_label_declaration { ld_type;  _} =
   from_type_expr ld_type
 
-and from_constructor_declaration { cd_args;  _} =
+and from_constructor_declaration { cd_args; cd_res; _} =
+  Option.(value [] @@ map from_type_expr cd_res) @
   List.bind from_type_expr cd_args
 
 and from_type_expr texpr =

@@ -5,12 +5,25 @@ open Parsetree
 let raw_stdlib = String.concat "\ntype "
     [
       "type string";
+      "bytes";
       "int";
       "char";
       "bool";
       "'a list = Nil | Cons of 'a * 'a list";
       "'a option = None | Some of 'a";
-      "'a asttypes__loc";
+      "location_t";
+      "longident_t";
+      "asttypes_constant";
+      "asttypes_rec_flag = Nonrecursive | Recursive";
+      "asttypes_direction_flag = Upto | Downto";
+      "asttypes_private_flag = Private | Public";
+      "asttypes_mutable_flag = Immutable | Mutable";
+      "asttypes_virtual_flag = Virtual | Concrete";
+      "asttypes_override_flag = Override | Fresh";
+      "asttypes_closed_flag = Closed | Open";
+      "asttypes_label = bytes";
+      "'a asttypes_loc = { txt : 'a; loc : location_t; }";
+      "asttypes_variance = Covariant | Contravariant | Invariant";
     ]
 
 let wrap_into_module module_name structure =
@@ -36,8 +49,6 @@ let stdlib =
     )
     typed_raw
 
-let deriving = Abc_common.deriving
-
 let signature =
   Cmi_format.(
     (read_cmi
@@ -58,7 +69,7 @@ let declarations =
 and implicit_decls =
   Polymorphic_types_collector.from_signature signature
 
-let all_decls = declarations @ implicit_decls
+let all_decls = stdlib @ declarations @ implicit_decls
 
 let mapper = Ast_mapper.{
     default_mapper with
@@ -70,8 +81,8 @@ let mapper = Ast_mapper.{
               when id.Asttypes.txt = "create_state_tree"
               ->
               [
-                State_tree_gen.of_type_decl ~env:[] (all_decls @ stdlib);
-                Sum_builder.of_type_decl ~env:[] (all_decls @ stdlib)
+                State_tree_gen.of_type_decl ~env:[] (all_decls);
+                Sum_builder.of_type_decl ~env:[] (all_decls)
                   [Location.mknoloc "deriving", Parsetree.PStr [%str ord]];
               ]
             | Pstr_extension ((id, _), _)
@@ -80,34 +91,65 @@ let mapper = Ast_mapper.{
               (wrap_into_module
                  "Nodes"
                  [
-                   Abstract_tree.of_type_decl ~env:[] all_decls;
-                   Sum_builder.of_type_decl ~env:[] all_decls deriving;
+                   Abstract_tree.of_type_decl ~env:[] (all_decls);
+                   Sum_builder.of_type_decl ~env:[] (all_decls)
+                     [];
                  ])
               ::
-              [
-                H.Str.include_
-                  (H.Incl.mk
-                     (H.Mod.ident
-                        (Location.mknoloc @@ Longident.Lident "Parsetree")));
-                Types_to_parsetree.of_type_decl ~env:[] implicit_decls;
+                [%str
+           type nonrec string = string
+           type nonrec bool = bool
+           type nonrec int = int
+           type nonrec char = char
+           type nonrec 'a option = 'a option = None | Some of 'a
+           type nonrec bytes = bytes
+           type location_t = Location.t
+           type asttypes_constant = Asttypes.constant
+           type asttypes_label = Asttypes.label
+           type asttypes_rec_flag = Asttypes.rec_flag = Nonrecursive |
+                                                        Recursive
+           type asttypes_direction_flag = Asttypes.direction_flag = Upto |
+                                                                    Downto
+           type asttypes_private_flag = Asttypes.private_flag = Private |
+                                                                Public
+           type asttypes_mutable_flag = Asttypes.mutable_flag = Immutable |
+                                                                Mutable
+           type asttypes_virtual_flag = Asttypes.virtual_flag = Virtual |
+                                                                Concrete
+           type asttypes_override_flag = Asttypes.override_flag = Override |
+                                                                  Fresh
+           type asttypes_closed_flag = Asttypes.closed_flag =  Closed | Open
+           type asttypes_variance = Asttypes.variance = Covariant |
+                                                        Contravariant |
+                                                        Invariant
+           type 'a asttypes_loc = 'a Location.loc = { txt : 'a; loc :
+                                                        Location.t; }
+           type longident_t = Longident.t
+]
+@
+[
+                Types_to_parsetree.of_type_decl ~env:[]
+                  (filter_monomorph @@ implicit_decls) None;
+                Types_to_parsetree.of_type_decl ~env:[]
+                  (declarations) (Some "Parsetree");
                 Sum_builder.of_type_decl
                   ~env:[]
-                  (filter_monomorph all_decls)
+                  (filter_monomorph @@ all_decls)
                   [];
                 (wrap_into_module
                   "Convert"
                   [
-                    Tree_convert.of_type_decl ~env:[] all_decls;
+                    Tree_convert.of_type_decl ~env:[] (all_decls);
                     Tree_convert.Sum.of_type_decl
                       ~env:[]
-                      (filter_monomorph all_decls);
+                      (filter_monomorph @@ all_decls);
                   ]);
               ]
             | Pstr_extension ((id, _), _)
               when id.Asttypes.txt = "automaton_builder"
               ->
-              Builder_gen.of_type_decl ~env:(stdlib @ all_decls)
-                all_decls
+              Builder_gen.of_type_decl ~env:all_decls
+                (filter_monomorph @@ all_decls)
             | _ -> [stri]
           )
           str

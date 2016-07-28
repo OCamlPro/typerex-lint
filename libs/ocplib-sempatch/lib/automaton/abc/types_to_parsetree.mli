@@ -1,1 +1,2 @@
-include Generator.S with type t = Parsetree.structure_item
+include Generator.S
+  with type t = string option -> Parsetree.structure_item
