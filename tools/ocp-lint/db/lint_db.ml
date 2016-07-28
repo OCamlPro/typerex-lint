@@ -132,6 +132,7 @@ module MakeDB (DB : DATABASE_IO) = struct
       Hashtbl.add db file (hash, new_fres)
 
   let add_error file error =
+    let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db_errors file then
       let error_set = Hashtbl.find db_errors file in
       Hashtbl.replace db_errors file (ErrorSet.add error error_set)
