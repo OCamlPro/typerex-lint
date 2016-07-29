@@ -125,6 +125,24 @@ severity: 6
 + expr :: list
 ```
 
+@ ListOpOnLit_2
+expressions: list
+message: "List operation on empty list: use '$list' instead of '[] @ $list'."
+severity: 6
+```
+- [] @ list
++ list
+```
+
+@ ListOpOnLit_3
+expressions: list
+message: "List operation on empty list: use '$list' instead of '$list @ []'."
+severity: 6
+```
+- list @ []
++ list
+```
+
 @ ConstantIf
 expressions: cond, e1, e2
 message: "Constant if-then-else: there is no need to use a if-then-else."
@@ -133,3 +151,51 @@ severity: 5
 ```
 if cond then e1 else e2
 ```
+
+@ Discarded_result
+message : "Avoid discarding the result of expressions"
+expressions: e1, e2
+severity: 6
+```
+let _ = e1 in e2
+```
+
+@ Catch_Sys_Break
+message: "Do not try to catch the Sys.Break exception"
+expressions: e1, e2
+severity: 10
+```
+try e1 with Sys.Break -> e2
+```
+
+@ Identity_sprintf
+message: "Useless sprintf, use '$e' directly"
+expressions: e
+when: "is_string_lit(e)"
+severity : 5
+```
+Printf.sprintf e
+```
+
+@ Identity_sprintf_2
+message: "Useless sprintf, use '$e' directly"
+expressions: e
+severity : 5
+```
+Printf.sprintf "%s" e
+```
+
+@ Dynlink
+message: "Do not use dynamic linking"
+severity: 8
+```
+Dynlink.loadfile
+```
+
+@ Dynlink_2
+message: "Do not use dynamic linking"
+severity: 8
+```
+Dynlink.loadfile_private
+```
+

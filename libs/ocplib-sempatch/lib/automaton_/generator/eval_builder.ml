@@ -250,9 +250,9 @@ let rec generate_dispatch_on_abstract_type loc decls_in_env typ =
   | Ptyp_tuple types ->
     let args = name_args types in
     let mk_sub_pattern getter =
-      (H.Pat.tuple
-         ~loc
-         (List.map (fun a -> H.Pat.var ~loc (here @@ getter a)) args))
+      H.Pat.tuple
+        ~loc
+        (List.map (fun a -> H.Pat.var ~loc (here @@ getter a)) args)
     in
     let pattern =
       H.Pat.tuple

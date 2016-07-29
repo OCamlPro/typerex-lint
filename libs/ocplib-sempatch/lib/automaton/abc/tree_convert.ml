@@ -106,8 +106,8 @@ struct
                   ["", [%expr node]])))
 
   let middle_of_abstract = middle_of_anything
-  let middle_of_record = Fun.flip @@ Misc.const middle_of_anything
-  let middle_of_variant = Fun.flip @@ Misc.const middle_of_anything
+  let middle_of_record = Fun.flip @@ Fun.const middle_of_anything
+  let middle_of_variant = Fun.flip @@ Fun.const middle_of_anything
   let middle_of_alias name _ _ _ = middle_of_anything name
 
   let result_of_middle middles =

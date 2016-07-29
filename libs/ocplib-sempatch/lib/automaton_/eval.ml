@@ -2,8 +2,6 @@ open Std_utils
 module A = Automaton.A
 module T = Ast_element.Element
 
-let setloc = Match.set_current_location
-
 let semilazy_product_bind f l1 ll2 = match l1 with
   | [] -> []
   | _ -> List.product_bind f l1 (Lazy.force ll2)
