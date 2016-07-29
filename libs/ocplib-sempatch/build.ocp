@@ -1,6 +1,6 @@
 comp += [ "-w" "+A-4" ]
 
-begin library "std_utils"
+begin library "std-utils"
   files = [
     "lib/std_utils/sUMisc.ml"
     "lib/std_utils/sUFun.ml"
@@ -15,23 +15,60 @@ end
 
 begin program "abc"
     files = [
-      "lib/automaton/generator/common.ml"
-      "lib/automaton/generator/generic.ml"
-      "lib/automaton/generator/type_collector.ml"
-      "lib/automaton/generator/from.ml"
-      "lib/automaton/generator/wildcard.ml"
-      "lib/automaton/generator/match_builder.ml"
-      "lib/automaton/generator/eval_builder.ml"
-      "lib/automaton/generator/automaton_processor.ml"
-      "lib/automaton/generator/abc.ml"
+      "lib/automaton/abc/abc_common.ml"
+      "lib/automaton/abc/polymorphic_types_collector.ml"
+      "lib/automaton/abc/generator.ml"
+      "lib/automaton/abc/state_tree_gen.ml"
+      "lib/automaton/abc/types_to_parsetree.ml"
+      "lib/automaton/abc/sum_builder.ml"
+      "lib/automaton/abc/abstract_tree.ml"
+      "lib/automaton/abc/builder_gen.ml"
+      "lib/automaton/abc/tree_convert.ml"
+      "lib/automaton/abc/abc.ml"
     ]
     requires = [
+      "std-utils"
       "compiler-libs.common"
       "str"
       "ppx_tools.metaquot"
-      "std_utils"
     ]
     comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
+end
+
+begin program "ppx_monad"
+    files = [
+      "src/ppx_monad.ml"
+    ]
+    requires = [
+    "compiler-libs.common"
+    ]
+end
+
+begin program "bup"
+    files = [
+      "lib/automaton/tree.ml"
+      "lib/automaton/automaton_env.ml"
+      "lib/automaton/state.ml"
+      "lib/automaton/state_tree.ml"
+      "lib/automaton/transitions.ml"
+      "lib/automaton/automaton.ml"
+      "lib/automaton/export.ml"
+      "lib/automaton/generate.ml"
+    ]
+
+    requires = [
+      "compiler-libs.common"
+      "ppx_deriving"
+      "ppx_deriving.std"
+      "abc"
+      "ppx_monad"
+      "std-utils"
+    ]
+
+    comp_requires = ["ppx_monad:asm" "abc:asm"]
+    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm" ]
+    comp += [ "-ppx" "%{ppx_monad_DST_DIR}%/ppx_monad.asm" ]
+    comp += [ "-ppx" "%{ppx_deriving_DST_DIR}%/ppx_deriving %{ppx_deriving_DST_DIR}%/ppx_deriving_ord.cmxs %{ppx_deriving_DST_DIR}%/ppx_deriving_show.cmxs" ]
 end
 
 begin library "ocplib-sempatch"
@@ -40,8 +77,8 @@ begin library "ocplib-sempatch"
       "lib/ast_element.ml"
       "lib/substitution.ml"
       "lib/match.ml"
-      "lib/automaton/automaton.ml"
-      "lib/automaton/eval.ml"
+      "lib/automaton_/automaton.ml"
+      "lib/automaton_/eval.ml"
       "lib/parsing/guard.ml"
       "lib/parsing/guard_lexer.mll"
       "lib/parsing/guard_parser.mly"
@@ -56,12 +93,12 @@ begin library "ocplib-sempatch"
       "lib/sempatch.ml"
     ]
     requires = [
-        "std_utils"
+        "std-utils"
         "compiler-libs"
         "compiler-libs.common"
         "abc"
     ]
     comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree.mli" ]
-    comp_requires = "abc:asm"
+    comp_requires += "abc:asm"
     ocamlyacc = "menhir"
 end

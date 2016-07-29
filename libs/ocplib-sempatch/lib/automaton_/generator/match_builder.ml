@@ -102,10 +102,10 @@ struct
     in
     [
       create_match
-        name
-        args
-        pattern
-        result
+      name
+      args
+      pattern
+      result
     ]
 
   let create_variant_match type_name variant =
@@ -213,20 +213,20 @@ struct
       []
 
   let middle_of_abstract name =
-    let pattern =
-      H.Pat.construct
-        (L.mknoloc (C.mk_exploded @@ C.cstr name))
-        (Some [%pat? y])
-    in
-    let expr = [%expr
-      fun x -> basic_state @@ function
-        | [%p pattern] when x = y -> [A.Final]
-        | _ -> [A.Trash]
-    ]
-    in
-    H.Vb.mk
-      (H.Pat.var (L.mknoloc name))
-      expr
+          let pattern =
+            H.Pat.construct
+              (L.mknoloc (C.mk_exploded @@ C.cstr name))
+              (Some [%pat? y])
+          in
+          let expr = [%expr
+            fun x -> basic_state @@ function
+              | [%p pattern] when x = y -> [A.Final]
+              | _ -> [A.Trash]
+          ]
+          in
+          H.Vb.mk
+            (H.Pat.var (L.mknoloc name))
+            expr
 
   let result_of_middle decls =
     let module_body = preamble @ [H.Str.value Nonrecursive decls] in
