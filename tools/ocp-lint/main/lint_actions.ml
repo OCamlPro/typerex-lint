@@ -206,6 +206,10 @@ let init_config path =
     Lint_globals.Config.init_config file_t;
   with Not_found -> ()
 
+let init_config_file file =
+  let file_t = File.of_string file in
+  Lint_globals.Config.init_config file_t
+
 let list_plugins fmt =
   let open Lint_warning_decl in
   let open Lint_warning_types in

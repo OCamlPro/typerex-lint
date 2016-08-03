@@ -35,6 +35,7 @@ let default_dir = "."
 let print_only_new = ref false
 let no_db = ref false
 let db_dir = ref None
+let config_file = ref ""
 let verbose = ref false
 let severity_limit = ref 0
 let good_plugins = ref []
@@ -178,11 +179,16 @@ let () =
     " Initialise a project";
 
     "--path", Arg.String (fun dir ->
-        Lint_actions.init_config dir;
+        if !config_file <> ""
+        then Lint_actions.init_config_file !config_file
+        else Lint_actions.init_config dir;
         set_action (ActionLoadDir dir)),
     "DIR   Give a project dir path";
 
     "--file", Arg.String (fun file ->
+        if !config_file <> ""
+        then Lint_actions.init_config_file !config_file
+        else Lint_actions.init_config (Filename.dirname file);
         set_action (ActionLoadFile file)),
     "FILE   Give a file to lint";
 
@@ -207,6 +213,9 @@ let () =
 
     "--save-config", Arg.Unit (fun () -> set_action ActionSave),
     " Save ocp-lint default config file.";
+
+    "--load-config", Arg.String (fun file -> config_file := file),
+    "FILE Specify which config file ocp-lint should use.";
 
     "--no-db-cache", Arg.Set no_db,
     " Ignore the database.";

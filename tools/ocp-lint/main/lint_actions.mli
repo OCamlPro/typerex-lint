@@ -28,6 +28,7 @@ val list_plugins : Format.formatter -> unit
 val init_olint_dir : unit -> unit
 
 val init_config : string -> unit
+val init_config_file : string -> unit
 val init_db : bool -> string option -> string -> string option * bool
 
 val lint_file : bool -> bool -> string option -> int -> string -> unit
