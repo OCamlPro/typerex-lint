@@ -37,6 +37,7 @@ let no_db = ref false
 let db_dir = ref None
 let verbose = ref false
 let severity_limit = ref 0
+let good_plugins = ref []
 
 module ArgAlign = struct
   open Arg
@@ -199,7 +200,7 @@ let () =
 
     "--load-plugins", Arg.String (fun files ->
         let l = (Str.split (Str.regexp ",") files) in
-        Lint_actions.load_plugins l;
+        good_plugins := Lint_actions.load_plugins l;
         add_simple_args ();
       ),
     "PLUGINS Load dynamically plugins with their corresponding 'cmxs' files.";
@@ -227,7 +228,7 @@ let start_lint_file file =
   Lint_actions.lint_file !verbose !no_db !db_dir !severity_limit file
 
 let start_lint dir =
-  Lint_actions.lint_sequential !no_db !db_dir !severity_limit dir;
+  Lint_actions.lint_sequential !no_db !db_dir !severity_limit !good_plugins dir;
   if Lint_db.DefaultDB.has_warning () then exit !exit_status
 
 let main () =

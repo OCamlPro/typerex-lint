@@ -128,21 +128,29 @@ let is_cmxs file = Filename.check_suffix file ".cmxs"
 let ( // ) = Filename.concat
 
 let rec load_plugins list =
-  List.iter (fun file ->
-      try
-        if Sys.is_directory file then begin
-          let files = ref [] in
-          Lint_utils.iter_files (fun f ->
-              files := (file // f) :: !files) file;
-          load_plugins (List.filter is_cmxs !files)
-        end
-        else if Filename.check_suffix file "cmxs" then
-          Dynlink.loadfile file
-        else
-          Printf.eprintf "Cannot load %S\n%!" file
-      with _ ->
-        Printf.eprintf "%S: No such file or directory.\n%!" file)
-    list
+  List.fold_left (fun acc file ->
+        try
+          if Sys.is_directory file then begin
+            let files = ref [] in
+            Lint_utils.iter_files (fun f ->
+                files := (file // f) :: !files) file;
+            load_plugins (List.filter is_cmxs !files) @ acc
+          end
+          else if Filename.check_suffix file "cmxs" then
+            (Dynlink.loadfile file;
+             file :: acc)
+          else
+            (Printf.eprintf "Cannot load %S\n%!" file;
+             acc)
+        with
+        | Sys_error _ ->
+          Printf.eprintf "%S: No such file or directory.\n%!" file;
+          acc
+        | Lint_plugin_error.Plugin_error err ->
+          let str = Lint_plugin_error.to_string err in
+          Printf.eprintf "Error while dynlinking : %s \n%!" str;
+          acc)
+      [] list
 
 let init_olint_dir () =
   File.safe_mkdir (File.of_string Lint_globals.olint_dirname)
@@ -316,7 +324,22 @@ let lint_file verbose no_db db_dir severity file =
     Lint_text.verbose_info Format.err_formatter Lint_db.DefaultDB.db;
   Lint_db.DefaultDB.save ()
 
-let run db_dir file =
+let purify_load_plugins args gd_plugins =
+  if gd_plugins <> []
+  then
+    let str = String.concat ","  gd_plugins in
+    Array.iteri (fun i arg ->
+        if arg = "--load-plugins" then begin
+          args.(i + 1) <- str
+        end) args
+  else
+    Array.iteri (fun i arg ->
+        if arg = "--load-plugins" then begin
+          args.(i) <- "";
+          args.(i + 1) <- ""
+        end) args
+
+let run db_dir gd_plugins file =
   let args = Array.copy Sys.argv in
   let found = ref false in
   Array.iteri (fun i arg ->
@@ -326,6 +349,7 @@ let run db_dir file =
         args.(i + 1) <- file
       end)
     args;
+  purify_load_plugins args gd_plugins;
   let args = (* if ocp-lint is called without --path argument *)
     if not !found then Array.to_list args @ ["--file"; file]
     else Array.to_list args in
@@ -335,13 +359,13 @@ let run db_dir file =
   let cmd = String.concat " " args in
   ignore (Sys.command cmd)
 
-let lint_sequential no_db db_dir severity path =
+let lint_sequential no_db db_dir severity gd_plugins path =
   (* We filter the global ignored modules/files.  *)
   (* let no_db = init_db no_db path in *)
   let (db_dir, no_db) = init_db no_db db_dir path in
   Lint_db.DefaultDB.clean !!db_persistence;
   let sources = filter_modules (scan_project path) !!ignored in
-  List.iter (run db_dir) sources;
+  List.iter (run db_dir gd_plugins) sources;
   Lint_db.DefaultDB.merge sources;
   Lint_text.print Format.err_formatter severity path Lint_db.DefaultDB.db;
   Lint_text.print_error

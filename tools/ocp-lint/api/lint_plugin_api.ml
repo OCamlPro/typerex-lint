@@ -24,11 +24,9 @@ open Lint_warning
 open Lint_warning_decl
 
 let register_plugin plugin =
-  try
-    let _ = Lint_plugin.find Lint_globals.plugins plugin in
-    raise (Plugin_error(Plugin_already_registered plugin))
-  with Not_found ->
+  if Lint_plugin.check_uniqueness Lint_globals.plugins plugin then
     Lint_plugin.add Lint_globals.plugins plugin Lint_map.empty
+  else raise (Plugin_error(Plugin_already_registered plugin))
 
 let register_main plugin cname new_lint =
   try
@@ -54,6 +52,14 @@ let register_main plugin cname new_lint =
         Lint_globals.plugins plugin (Lint_map.add cname new_lint lints)
   with Not_found ->
     raise (Plugin_error(Plugin_not_found plugin))
+
+let check_lint_uniqueness plugins plugin short_name =
+  let lints = Lint_plugin.find Lint_globals.plugins plugin in
+  let res = ref true in
+  Lint_map.iter (fun lname _ ->
+      if lname = short_name then res := false)
+    lints;
+  !res
 
 module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
 
@@ -212,6 +218,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let details = C.details
     let enable = C.enable
     let wdecls = WarningDeclaration.empty ()
+    let is_unique = check_lint_uniqueness Lint_globals.plugins plugin C.short_name
 
     let create_option option short_help lhelp ty default =
       let option = [P.short_name; C.short_name; option] in
@@ -265,17 +272,20 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     module Register(I : Lint_input.INPUT) =
     struct
       let () =
-        let module Lint = struct
-          let name = name
-          let version = version
-          let short_name = short_name
-          let details = details
-          let enable = enable
-          let inputs = [ I.input ]
-          let wdecls = wdecls
-        end in
-        let lint = (module Lint : Lint_types.LINT) in
-        register_main plugin C.short_name lint
+        if not is_unique then
+          raise (Plugin_error(Linter_already_registered short_name))
+        else
+          let module Lint = struct
+            let name = name
+            let version = version
+            let short_name = short_name
+            let details = details
+            let enable = enable
+            let inputs = [ I.input ]
+            let wdecls = wdecls
+          end in
+          let lint = (module Lint : Lint_types.LINT) in
+          register_main plugin C.short_name lint
     end
 
     let wrap_plugin_exn f =
@@ -338,8 +348,5 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       details
       details
       SimpleConfig.enable_option P.enable;
-    try
       register_plugin plugin
-    with Plugin_error(error) ->
-      failwith (Lint_plugin_error.to_string error)
 end (* MakePlugin*)

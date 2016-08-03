@@ -34,6 +34,11 @@ val find :
   (module Lint_plugin_types.PLUGIN) ->
   (module Lint_types.LINT) Lint_map.t
 
+val check_uniqueness :
+  t ->
+  (module Lint_plugin_types.PLUGIN) ->
+  bool
+
 (** [iter_plugins f] applies f to all bindings in the global data structure
     [plugins]. [f] receives the [plugin] as first argument and the [Lint_map.t]
     associated to this plugin as second. *)

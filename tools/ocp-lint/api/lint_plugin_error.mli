@@ -21,10 +21,10 @@
 (** Type [error] is used to handle all internal errors for plugins. *)
 type error =
   | Plugin_already_registered of (module Lint_plugin_types.PLUGIN)
+  | Linter_already_registered of string
   | Plugin_not_found of (module Lint_plugin_types.PLUGIN)
   | Patch_file_not_found of string
   | Syntax_error of string
-
   | Plugin_exception of exn
 
 (** [to_string err] returns a string representation of [err].  *)
