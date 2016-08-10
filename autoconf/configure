@@ -4066,43 +4066,6 @@ fi
 
 
 
-if test "$VERSION_CHECK" = "yes" ; then
-
-
-
-  # Used to indicate true or false condition
-  ax_compare_version=false
-
-  # Convert the two version strings to be compared into a format that
-  # allows a simple string comparison.  The end result is that a version
-  # string of the form 1.12.5-r617 will be converted to the form
-  # 0001001200050617.  In other words, each number is zero padded to four
-  # digits, and non digits are removed.
-
-  ax_compare_version_A=`echo "$OCAMLVERSION" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-  ax_compare_version_B=`echo "4.03" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
-                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
-                     -e 's/[^0-9]//g'`
-
-
-    ax_compare_version=`echo "x$ax_compare_version_A
-x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/true/;s/x${ax_compare_version_B}/false/;1q"`
-
-
-
-    if test "$ax_compare_version" = "true" ; then
-    as_fn_error $? "Your version of OCaml: $OCAMLVERSION is not yet supported" "$LINENO" 5
-      fi
-
-fi
 if test "$OCAMLFIND" = "no"; then
    as_fn_error $? "You must install OCaml package 'ocamlfind'" "$LINENO" 5
 fi
@@ -4291,9 +4254,9 @@ $as_echo "not found" >&6; }
 if test "$OCAML_PKG_ocp_indent.lib" = "no"; then
    as_fn_error $? "Please install OCaml package 'ocp-indent.lib'." "$LINENO" 5
 fi
-OPAM_REPO=
-OPAM_REPO_OFFICIAL_REMOTE=
-OPAM_REPO_FORK_REMOTE=
+OPAM_REPO=/home/lefessan/WindowsSharedFolder/opam-repository-with-archives
+OPAM_REPO_OFFICIAL_REMOTE=ocaml
+OPAM_REPO_FORK_REMOTE=origin
 DOWNLOAD_URL_PREFIX=http://github.com//archive/
 
 ###############################################################

@@ -829,6 +829,11 @@ module DefaultIteratorArgument = struct
       let leave_module_type_declaration _ = ()
 #endif
 
+#if OCAML_VERSION >= "4.03"
+     let enter_types_declaration _ = ()
+     let leave_types_declaration _ = ()
+#endif
+
       let enter_structure _ = ()
       let enter_value_description _ = ()
       let enter_type_declaration _ = ()
@@ -851,6 +856,7 @@ module DefaultIteratorArgument = struct
       let enter_class_structure _ = ()
     let enter_class_field _ = ()
     let enter_structure_item _ = ()
+
 
 
       let leave_structure _ = ()
