@@ -237,7 +237,15 @@ let start_lint_file file =
   Lint_actions.lint_file !verbose !no_db !db_dir !severity_limit file
 
 let start_lint dir =
-  Lint_actions.lint_sequential !no_db !db_dir !severity_limit !good_plugins dir;
+  let master_config = Filename.temp_file ".ocplint" "" in
+  Lint_globals.Config.save_master master_config;
+  Lint_actions.lint_sequential
+    !no_db
+    !db_dir
+    !severity_limit
+    !good_plugins
+    master_config
+    dir;
   if Lint_db.DefaultDB.has_warning () then exit !exit_status
 
 let main () =

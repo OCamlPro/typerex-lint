@@ -328,6 +328,16 @@ let lint_file verbose no_db db_dir severity file =
     Lint_text.verbose_info Format.err_formatter Lint_db.DefaultDB.db;
   Lint_db.DefaultDB.save ()
 
+let add_config_option args cfg =
+  let found = ref false in
+  Array.iteri (fun i arg ->
+      if arg = "--load-config" then begin
+        found := true;
+        args.(i + 1) <- cfg
+      end)
+    args;
+  !found
+
 let purify_load_plugins args gd_plugins =
   if gd_plugins <> []
   then
@@ -343,7 +353,24 @@ let purify_load_plugins args gd_plugins =
           args.(i + 1) <- ""
         end) args
 
-let run db_dir gd_plugins file =
+let is_config_file =
+  let split_path str = OcpString.split str '/' in
+  let rec is_config_file = function
+    | (dir1::root, dir2::file) when dir1 = dir2 -> is_config_file (root, file)
+    | ([], _) -> true
+    | ([ "" ], _) -> true
+    | (_, _) -> false
+  in
+  fun cfg file ->
+    is_config_file (split_path cfg, split_path file)
+
+let get_config_deps config_map file =
+  List.filter (fun cfg -> is_config_file cfg file) config_map
+
+let run db_dir gd_plugins master_config config_map file =
+  let configs = get_config_deps config_map file in
+  let tmp_config =
+    Lint_globals.Config.load_and_save master_config configs in
   let args = Array.copy Sys.argv in
   let found = ref false in
   Array.iteri (fun i arg ->
@@ -354,28 +381,77 @@ let run db_dir gd_plugins file =
       end)
     args;
   purify_load_plugins args gd_plugins;
+  let found_load_cfg = add_config_option args tmp_config in
   let args = (* if ocp-lint is called without --path argument *)
     if not !found then Array.to_list args @ ["--file"; file]
     else Array.to_list args in
   let args = match db_dir with
     | Some dir -> args @ [ "--db-dir"; dir ]
     | None -> args in
+  let args =
+    if not found_load_cfg then args @ ["--load-config"; tmp_config]
+    else args in
   let cmd = String.concat " " args in
-  ignore (Sys.command cmd)
+  ignore (Sys.command cmd);
+  file, (configs, tmp_config)
 
-let lint_sequential no_db db_dir severity gd_plugins path =
+let rec config_map_rec curr acc =
+  let files = Sys.readdir curr in
+  Array.fold_left (fun acc file ->
+      let curr_file = Filename.concat curr file in
+      if file = ".ocplint" then curr :: acc
+      else
+      if Sys.is_directory curr_file
+      then config_map_rec curr_file acc
+      else acc)
+    acc files
+
+let config_map path = config_map_rec path []
+
+let clean_tmp_cfg tmp_configs master_cfg =
+  List.iter (fun (_, (_, file)) ->
+      Sys.remove file;
+      try Sys.remove (file ^ ".old") with _ -> ())
+    tmp_configs;
+  Sys.remove master_cfg;
+  try Sys.remove (master_cfg ^ ".old")
+  with _ -> ()
+
+let lint_sequential no_db db_dir severity gd_plugins master_config path =
   (* We filter the global ignored modules/files.  *)
   (* let no_db = init_db no_db path in *)
   let (db_dir, no_db) = init_db no_db db_dir path in
   Lint_db.DefaultDB.clean !!db_persistence;
   let sources = filter_modules (scan_project path) !!ignored in
-  List.iter (run db_dir gd_plugins) sources;
+  let config_map = config_map path in
+  let tmp_configs =
+    List.map (run db_dir gd_plugins master_config config_map) sources in
+  let tmp_configs =
+    List.map (fun (file, (cfgs, cfg_tmp)) ->
+        Lint_utils.normalize_path !Lint_db.DefaultDB.root file,
+        (cfgs,
+         cfg_tmp)) tmp_configs in
   Lint_db.DefaultDB.merge sources;
-  Lint_text.print Format.err_formatter severity path Lint_db.DefaultDB.db;
+  Lint_text.print
+    Format.err_formatter
+    master_config
+    tmp_configs
+    severity
+    path
+    Lint_db.DefaultDB.db;
   Lint_text.print_error
-    Format.err_formatter path Lint_db.DefaultDB.db_errors;
+    Format.err_formatter
+    path
+    Lint_db.DefaultDB.db_errors;
   Lint_text.summary
-    severity path no_db Lint_db.DefaultDB.db Lint_db.DefaultDB.db_errors;
+    master_config
+    tmp_configs
+    severity
+    path
+    no_db
+    Lint_db.DefaultDB.db
+    Lint_db.DefaultDB.db_errors;
+  clean_tmp_cfg tmp_configs master_config;
   if no_db then clean_db_in_tmp db_dir
 
 (* let fork_exec file = *)

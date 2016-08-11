@@ -34,4 +34,5 @@ val init_db : bool -> string option -> string -> string option * bool
 val lint_file : bool -> bool -> string option -> int -> string -> unit
 
 (* val lint_parallel : string -> unit *)
-val lint_sequential : bool -> string option -> int -> string list -> string -> unit
+val lint_sequential :
+  bool -> string option -> int -> string list -> string -> string -> unit

@@ -49,6 +49,13 @@ let check_flag options =
       (Lint_globals.Config.get_option_value options)
   with Not_found -> true
 
+let update_files_linted tbl file cfgs =
+  if Hashtbl.mem tbl file then
+    let old_cfgs = Hashtbl.find tbl file in
+    let new_cfgs = (StringCompat.StringSet.to_list old_cfgs) @ cfgs in
+    Hashtbl.replace tbl file (StringCompat.StringSet.of_list new_cfgs)
+  else Hashtbl.add tbl file (StringCompat.StringSet.of_list cfgs)
+
 let update_breakdown tbl pname lname version wid =
   let lname = Printf.sprintf "%s.%i" lname version in
   if Hashtbl.mem tbl pname then
@@ -77,14 +84,20 @@ let update_breakdown tbl pname lname version wid =
      Hashtbl.add new_p_htbl lname new_l_htbl;
      Hashtbl.add tbl pname new_p_htbl)
 
-let summary severity path no_db db db_errors =
-  let files_linted = ref StringCompat.StringSet.empty in
+let summary master_config file_config severity path no_db db db_errors =
+  let files_linted = Hashtbl.create 42 in
   let files_cached = ref StringCompat.StringSet.empty in
   let files_linted_errors = ref StringCompat.StringSet.empty in
   let files_cached_errors = ref StringCompat.StringSet.empty in
   let breakdown_linted = Hashtbl.create 42 in
   let breakdown_cached = Hashtbl.create 42 in
   Hashtbl.iter (fun file (hash, pres) ->
+      let file_with_cfg = List.mem_assoc file file_config in
+      let (configs, config_tmp) =
+        if file_with_cfg then List.assoc file file_config
+        else ([], "") in
+      if file_with_cfg then
+        Lint_globals.Config.load_config_tmp master_config config_tmp;
       if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
         StringMap.iter (fun pname lres ->
             let flag = check_flag [pname; "enabled"] in
@@ -111,8 +124,7 @@ let summary severity path no_db db db_errors =
                            let wid = warning.decl.id in
                            if arr.(wid - 1) &&
                               warning.decl.severity >= severity then
-                             (files_linted :=
-                                StringCompat.StringSet.add file !files_linted;
+                             (update_files_linted files_linted file configs;
                               update_breakdown
                                 breakdown_linted pname lname version wid))
                         ws
@@ -149,7 +161,7 @@ let summary severity path no_db db db_errors =
               wtbl acc)
           ptbl acc)
       breakdown_cached 0 in
-  let files_linted_total = StringCompat.StringSet.cardinal !files_linted in
+  let files_linted_total = Hashtbl.length files_linted in
   let warnings_linted_total =
     Hashtbl.fold (fun pname ptbl acc ->
         Hashtbl.fold (fun lname wtbl acc ->
@@ -229,13 +241,18 @@ let summary severity path no_db db db_errors =
 
   Printf.printf "== New Warnings ==\n%!";
   Printf.printf "  * %d file(s) were linted:\n%!" files_linted_total;
-  StringCompat.StringSet.iter (fun file ->
+  Hashtbl.iter (fun file cfgs ->
       let file_rel = Lint_utils.relative_path !Lint_db.DefaultDB.root file in
       let file_norm =
         if no_db then
           Lint_utils.normalize_path (Sys.getcwd()) file_rel
         else file in
-      Printf.printf "    - %s\n%!" file_norm) !files_linted;
+      Printf.printf "    - %s\n%!" file_norm;
+      StringCompat.StringSet.iter (fun cfg ->
+          let cfg = Filename.concat cfg ".ocplint" in
+          Printf.printf "        * %s\n" cfg)
+        cfgs)
+    files_linted;
   Printf.printf "  * %d warning(s) were emitted:\n%!" warnings_linted_total;
   Hashtbl.iter (fun pname ptbl ->
       let total =
@@ -293,9 +310,15 @@ let summary severity path no_db db db_errors =
   StringCompat.StringSet.iter
     (Printf.printf "    - %s\n%!") !files_linted_errors
 
-let print fmt severity path db =
+let print fmt master_config file_config severity path db =
   try
     Hashtbl.iter (fun file (hash, pres) ->
+        let file_with_cfg = List.mem_assoc file file_config in
+        let (_configs, config_tmp) =
+          if file_with_cfg then List.assoc file file_config
+          else ([], "") in
+        if file_with_cfg then
+          Lint_globals.Config.load_config_tmp master_config config_tmp;
         if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
           let ws =
             StringMap.fold (fun pname lres acc ->

@@ -40,4 +40,10 @@ module type CONFIG = sig
 
   val save : unit -> unit
 
+  val save_master : string -> unit
+
+  val load_and_save : string -> string list -> string
+
+  val load_config_tmp : string -> string -> unit
+
 end

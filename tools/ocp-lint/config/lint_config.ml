@@ -63,4 +63,41 @@ module DefaultConfig = struct
 
   let save () =
     SimpleConfig.save_with_help config_file
+
+  let save_master filename =
+    let filename = File.of_string filename in
+    let old_filename = SimpleConfig.config_file config_file in
+    SimpleConfig.set_config_file config_file filename;
+    SimpleConfig.save config_file;
+    SimpleConfig.set_config_file config_file old_filename
+
+  let load_configs master configs =
+    SimpleConfig.set_config_file config_file master;
+    SimpleConfig.load config_file;
+    List.iter (fun cfg_dir ->
+        let cfg = Filename.concat cfg_dir ".ocplint" in
+        let cfg = File.of_string cfg in
+        SimpleConfig.set_config_file config_file cfg;
+        SimpleConfig.load config_file)
+      configs
+
+  let load_and_save master configs =
+    let master_t = File.of_string master in
+    let filename = Filename.temp_file ".ocplint" "" in
+    let filename_t = File.of_string filename in
+    load_configs master_t configs;
+    SimpleConfig.set_config_file config_file filename_t;
+    SimpleConfig.save config_file;
+    SimpleConfig.set_config_file config_file master_t;
+    SimpleConfig.load config_file;
+    File.to_string filename_t
+
+  let load_config_tmp master config =
+    let master = File.of_string master in
+    let config = File.of_string config in
+    SimpleConfig.set_config_file config_file master;
+    SimpleConfig.load config_file;
+    SimpleConfig.set_config_file config_file config;
+    SimpleConfig.load config_file
+
 end
