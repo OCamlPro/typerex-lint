@@ -11,19 +11,22 @@
 
 
 (* Module to ignore during the lint. *)
-ignored_files = [
+ignore = [
 ]
+
+(* Time before erasing cached results (in days). *)
+db_persistence = 1
 plugin_typedtree = {
 
 (* A plugin with linters on typed tree. *)
-  enabled = false
+  enabled = true
   fully_qualified_identifiers = {
 
 (* Enable/Disable linter "Fully-Qualified Identifiers". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "Fully-Qualified Identifiers" *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "Fully-Qualified Identifiers" *)
@@ -32,21 +35,33 @@ plugin_typedtree = {
       Pervasives;
       StringCompat;
     ]
-    ignore_operators = false
+    ignore_operators = true
     ignore_depth = 2
+  }
+  polymorphic_function = {
+
+(* Enable/Disable linter "Polymorphic function". *)
+    enabled = true
+
+(* Module to ignore durint the lint of "Polymorphic function" *)
+    ignore = [
+    ]
+
+(* Enable/Disable warnings from "Polymorphic function" *)
+    warnings = "+A"
   }
 }
 plugin_text = {
 
 (* A plugin with linters on the source. *)
-  enabled = false
+  enabled = true
   code_length = {
 
 (* Enable/Disable linter "Code Length". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "Code Length" *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "Code Length" *)
@@ -55,30 +70,42 @@ plugin_text = {
 (* Maximum line length *)
     max_line_length = 80
   }
-  ocp_indent = {
+  useless_space_line = {
 
-(* Enable/Disable linter "Indention with ocp-indent". *)
-    enabled = false
+(* Enable/Disable linter "Useless space character and empty line at the end of file.". *)
+    enabled = true
 
-(* Module to ignore durint the lint of "Indention with ocp-indent" *)
-    ignored_files = [
+(* Module to ignore durint the lint of "Useless space character and empty line at the end of file." *)
+    ignore = [
     ]
 
-(* Enable/Disable warnings from "Indention with ocp-indent" *)
+(* Enable/Disable warnings from "Useless space character and empty line at the end of file." *)
+    warnings = "+A"
+  }
+  not_that_char = {
+
+(* Enable/Disable linter "Detect use of unwanted chars in files". *)
+    enabled = true
+
+(* Module to ignore durint the lint of "Detect use of unwanted chars in files" *)
+    ignore = [
+    ]
+
+(* Enable/Disable warnings from "Detect use of unwanted chars in files" *)
     warnings = "+A"
   }
 }
 plugin_patch = {
 
 (* Detect pattern with semantic patch. *)
-  enabled = false
+  enabled = true
   sempatch_lint_default = {
 
 (* Enable/Disable linter "Lint from semantic patches (default)". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "Lint from semantic patches (default)" *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "Lint from semantic patches (default)" *)
@@ -87,27 +114,44 @@ plugin_patch = {
   sempatch_lint_user_defined = {
 
 (* Enable/Disable linter "Lint from semantic patches (user defined).". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "Lint from semantic patches (user defined)." *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "Lint from semantic patches (user defined)." *)
     warnings = "+A"
   }
 }
+plugin_parsing = {
+
+(* Analyses requiring to re-parse the file *)
+  enabled = true
+  raw_syntax = {
+
+(* Enable/Disable linter "Raw Syntax". *)
+    enabled = true
+
+(* Module to ignore durint the lint of "Raw Syntax" *)
+    ignore = [
+    ]
+
+(* Enable/Disable warnings from "Raw Syntax" *)
+    warnings = "+A"
+  }
+}
 plugin_parsetree = {
 
 (* A plugin with linters on parsetree. *)
-  enabled = false
+  enabled = true
   code_identifier_length = {
 
 (* Enable/Disable linter "Code Identifier Length". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "Code Identifier Length" *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "Code Identifier Length" *)
@@ -122,10 +166,10 @@ plugin_parsetree = {
   code_list_on_singleton = {
 
 (* Enable/Disable linter "List function on singleton". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "List function on singleton" *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "List function on singleton" *)
@@ -134,10 +178,10 @@ plugin_parsetree = {
   phys_comp_allocated_lit = {
 
 (* Enable/Disable linter "Physical comparison between allocated litterals.". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "Physical comparison between allocated litterals." *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "Physical comparison between allocated litterals." *)
@@ -146,27 +190,56 @@ plugin_parsetree = {
   fabrice_good_practices = {
 
 (* Enable/Disable linter "Good Practices". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "Good Practices" *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "Good Practices" *)
+    warnings = "+A"
+  }
+  check_constr_args = {
+
+(* Enable/Disable linter "Check Constructor Arguments". *)
+    enabled = true
+
+(* Module to ignore durint the lint of "Check Constructor Arguments" *)
+    ignore = [
+    ]
+
+(* Enable/Disable warnings from "Check Constructor Arguments" *)
+    warnings = "+A"
+  }
+}
+plugin_indent = {
+
+(* A plugin with linters on the source. *)
+  enabled = true
+  ocp_indent = {
+
+(* Enable/Disable linter "Indention with ocp-indent". *)
+    enabled = true
+
+(* Module to ignore durint the lint of "Indention with ocp-indent" *)
+    ignore = [
+    ]
+
+(* Enable/Disable warnings from "Indention with ocp-indent" *)
     warnings = "+A"
   }
 }
 plugin_file_system = {
 
 (* A plugin with linters on file system like interface missing, etc. *)
-  enabled = false
+  enabled = true
   interface_missing = {
 
 (* Enable/Disable linter "Missing interface". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "Missing interface" *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "Missing interface" *)
@@ -175,10 +248,10 @@ plugin_file_system = {
   project_files = {
 
 (* Enable/Disable linter "File Names". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "File Names" *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "File Names" *)
@@ -188,17 +261,22 @@ plugin_file_system = {
 plugin_complex = {
 
 (* A plugin with linters on different inputs. *)
-  enabled = false
+  enabled = true
   interface_module_type_name = {
 
 (* Enable/Disable linter "Checks on module type name.". *)
-    enabled = false
+    enabled = true
 
 (* Module to ignore durint the lint of "Checks on module type name." *)
-    ignored_files = [
+    ignore = [
     ]
 
 (* Enable/Disable warnings from "Checks on module type name." *)
     warnings = "+A"
   }
 }
+
+(*
+ The following options are not used (errors, obsolete, ...) 
+*)
+ignored = [ ]

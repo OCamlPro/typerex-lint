@@ -69,7 +69,7 @@ let fail_db res p = match res with
 let is_included file_res olint_dir =
   if not (Sys.file_exists file_res) then (Fail (No_db file_res))
   else
-    let db1 = read_db (Filename.concat olint_dir "db") in
+    let db1 = read_db olint_dir in
     let db2 = read_db file_res in
     if Hashtbl.length db2 = 0 then (Fail (Empty_db file_res))
     else
@@ -183,9 +183,8 @@ let _ =
   let ocplint = Sys.argv.(1) in
   let parent = Sys.argv.(2) in
   let olint_dir = Filename.concat parent "_olint" in
-  let db_file = Filename.concat olint_dir "db" in
-  if not (Sys.file_exists olint_dir) then Unix.mkdir olint_dir 0o755;
-  if (Sys.file_exists db_file) then Sys.remove db_file;
+  ignore (Sys.command ("rm -rf " ^ olint_dir));
+  Unix.mkdir olint_dir 0o755;
   Printf.printf "Running tests...\n%!";
   let test_dirs = find_directories parent in
 

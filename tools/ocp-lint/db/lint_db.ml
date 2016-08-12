@@ -39,7 +39,23 @@ module MakeDB (DB : DATABASE_IO) = struct
     let string_to_hash = file ^ file_content in
     Digest.string string_to_hash
 
-  let load file = db
+  let load dir =
+    if Sys.is_directory dir then
+      let files = Sys.readdir dir in
+      Array.iter (fun file ->
+        let path = Filename.concat dir file in
+        try
+          let (version_db, date, filename, pres, file_error) =
+            DB.load path in
+          (Hashtbl.add db filename (file, pres);
+           Hashtbl.add db_errors file file_error)
+        with exn ->
+          Format.eprintf "Can't read DB file for %S, skipping it\n%!" file)
+        files;
+      db
+    else
+      (Printf.eprintf "Db Error : %s should be a dir\n%!" dir;
+       db)
 
   let load_file file =
     let hash = db_hash file in
