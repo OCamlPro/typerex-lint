@@ -25,7 +25,6 @@ begin library "ocp-lint-db"
     "lint_db.ml"
   ]
   requires = [
-    "ocplib-sempatch"
     "ocplib-system"
     "ocp-lint-api-types"
     "ocp-lint-config"

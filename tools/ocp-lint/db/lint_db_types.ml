@@ -21,7 +21,7 @@
 type error =
   | Db_error of Lint_db_error.error
   | Plugin_error of Lint_plugin_error.error
-  | Sempatch_error of Sempatch.Failure.t
+  | Sempatch_error of string
   | Ocplint_error of string
 
 module StringMap = Map.Make(String)

@@ -38,7 +38,7 @@ let print_error ppf error =
       Lint_plugin_error.to_string err
     | Sempatch_error err ->
       Printf.eprintf "Sem_error\n%!";
-      Sempatch.Failure.to_string err
+      err
     | Ocplint_error str -> Printf.eprintf "OCPL_error\n%!"; str
   in
   Format.fprintf ppf "  %s\n%!" str
