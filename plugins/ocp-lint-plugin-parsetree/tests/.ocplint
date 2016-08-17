@@ -211,6 +211,18 @@ plugin_parsetree = {
 (* Enable/Disable warnings from "Check Constructor Arguments" *)
     warnings = "+A"
   }
+  code_redefine_stdlib_module = {
+
+(* Enable/Disable linter "Refedine Stdlib Module". *)
+    enabled = true
+
+(* Module to ignore durint the lint of "Refedine Stdlib Module" *)
+    ignore = [
+    ]
+
+(* Enable/Disable warnings from "Refedine Stdlib Module" *)
+    warnings = "+A"
+  }
 }
 plugin_indent = {
 
@@ -275,8 +287,3 @@ plugin_complex = {
     warnings = "+A"
   }
 }
-
-(*
- The following options are not used (errors, obsolete, ...) 
-*)
-ignored = [ ]
