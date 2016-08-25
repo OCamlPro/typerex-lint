@@ -62,6 +62,7 @@ module type DATABASE = sig
   val save : unit -> unit
   val merge : string list -> unit
   val reset : unit -> unit
+  val print_debug : t -> unit
   val remove_entry : string -> unit
   val add_entry : string -> string -> string -> int -> unit
   val add_error : string -> error -> unit

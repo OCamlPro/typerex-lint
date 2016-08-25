@@ -51,3 +51,5 @@ val print_only_new :
   unit
 
 val verbose_info : Format.formatter -> Lint_db_types.t -> unit
+
+val debug_db : Lint_db_types.t -> unit

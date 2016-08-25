@@ -243,6 +243,9 @@ let get_ignored pname cname =
       (SimpleConfig.list_option SimpleConfig.string_option)  [] in
   !!opt
 
+let print_db dir =
+  let db = Lint_db.DefaultDB.load dir in
+  Lint_db.DefaultDB.print_debug db
 
 let mk_file_t file = {
   filename = file;

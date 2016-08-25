@@ -107,7 +107,7 @@ module MakeDB (DB : DATABASE_IO) = struct
 
   let merge sources = List.iter load_file sources
 
-  let print_debug () =
+  let print_debug db =
     Printf.printf "============= DB Debug ============\n%!";
     Hashtbl.iter (fun file (hash, pres) ->
         Printf.printf "%s[HASH] :\n%!" file;
@@ -141,7 +141,7 @@ module MakeDB (DB : DATABASE_IO) = struct
         if not (StringMap.mem lname old_pres) then
           let new_pres =
             StringMap.add
-              lname (version, Analyse, options, []) (StringMap.remove lname old_pres) in
+              lname (version, Analyse, options, []) old_pres in
           let new_fres = StringMap.add
               pname new_pres (StringMap.remove pname old_fres) in
           Hashtbl.replace db file (hash, new_fres)

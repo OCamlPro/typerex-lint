@@ -24,6 +24,7 @@ type action =
   | ActionNone
   | ActionList
   | ActionInit
+  | ActionPrint of string
   | ActionSave
   | ActionLoadDir of string
   | ActionLoadFile of string
@@ -195,6 +196,9 @@ let () =
     "--db-dir", Arg.String (fun dir -> db_dir := Some dir),
     "DIR   Give database directory";
 
+    "--print-db", Arg.String (fun dir -> set_action (ActionPrint dir)),
+    "DIR   Give the path to a _olint dir to print the db";
+
     "--output-txt", Arg.String (fun file -> output_text := Some file),
     "FILE   Output results in a text file.";
 
@@ -268,6 +272,8 @@ let main () =
   | ActionList ->
     Lint_actions.list_plugins Format.std_formatter;
     exit 0
+  | ActionPrint dir ->
+    Lint_actions.print_db dir
   | ActionInit ->
     Lint_globals.Config.save ();
     Lint_actions.init_olint_dir ()

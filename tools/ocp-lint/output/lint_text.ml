@@ -410,3 +410,19 @@ let verbose_info fmt db =
         Format.fprintf fmt "\027[31m%S\027[m: [%i / %i]\n%!"
           file triggered_plugin_len plugin_len)
     db
+
+let debug_db db =
+  Hashtbl.iter (fun file (hash, pres) ->
+      let ws =
+        StringMap.fold (fun pname lres acc ->
+            StringMap.fold (fun lname (version, _source, _opt, ws) acc ->
+                List.fold_left
+                  (fun acc warning -> (pname, lname, warning) :: acc) acc ws)
+              lres acc)
+          pres [] in
+      let ws =
+        List.sort (fun (_, _, w1) (_, _, w2) ->
+            compare w1.loc w2.loc) ws in
+      List.iter (fun (pname, lname, w) ->
+          print_warning Format.std_formatter pname lname w) ws)
+    db
