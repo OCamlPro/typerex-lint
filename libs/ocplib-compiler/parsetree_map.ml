@@ -27,7 +27,7 @@ open Parsetree
 
 module type MapArgument = sig
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
   val enter_exception_declaration :
     exception_declaration -> exception_declaration
   val enter_modtype_declaration : modtype_declaration -> modtype_declaration
@@ -122,15 +122,9 @@ module MakeMap(Map : MapArgument) : sig
   val map_signature : Parsetree.signature -> Parsetree.signature
 end = struct
 
-  let may_map f v =
-    match v with
-        None -> v
-      | Some x -> Some (f x)
-
-
   open Misc
 
-#if OCAML_VERSION <> "4.01.0+ocp1"
+#if OCAML_VERSION >= "4.02"
   let map_include_infos map i =
     let {
      pincl_mod;
@@ -157,13 +151,13 @@ end = struct
         Pstr_value (rec_flag, List.map map_value_binding list)
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pstr_eval exp -> Pstr_eval (map_expression exp)
 #else
       | Pstr_eval (exp,attributes) -> Pstr_eval (map_expression exp, attributes)
 #endif
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pstr_primitive (name, v) ->
         Pstr_primitive (name, map_value_description v)
 #else
@@ -172,7 +166,7 @@ end = struct
 #endif
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pstr_exception (name, decl) ->
         Pstr_exception (name, map_exception_declaration decl)
 #else
@@ -181,14 +175,14 @@ end = struct
 #endif
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pstr_exn_rebind (name, lid) ->
         Pstr_exn_rebind (name, lid)
 #endif
 
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pstr_module (name, mexpr) ->
         Pstr_module (name, map_module_expr mexpr)
 #else
@@ -197,7 +191,7 @@ end = struct
 #endif
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pstr_modtype (name, mtype) ->
         Pstr_modtype (name, map_module_type mtype)
 #else
@@ -206,7 +200,7 @@ end = struct
 #endif
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pstr_open (ovf, lid) -> Pstr_open (ovf, lid)
 #else
       | Pstr_open m -> Pstr_open (map_open_description m)
@@ -214,7 +208,7 @@ end = struct
 
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pstr_recmodule list ->
         let list =
           List.map (fun (name, mtype, mexpr) ->
@@ -227,14 +221,17 @@ end = struct
         Pstr_recmodule (List.map map_module_binding list)
 #endif
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pstr_type list ->
         Pstr_type (List.map (
           fun (name, decl) ->
             (name, map_type_declaration decl) ) list)
-#else
+#elif OCAML_VERSION < "4.03"
       | Pstr_type list ->
         Pstr_type (List.map map_type_declaration list)
+#else
+      | Pstr_type (recflag, list) ->
+        Pstr_type (recflag, List.map map_type_declaration list)
 #endif
 
 
@@ -257,7 +254,7 @@ end = struct
       | Pstr_include mexpr ->
         Pstr_include (map_include_infos map_module_expr mexpr)
 
-#if OCAML_VERSION <> "4.01.0+ocp1"
+#if OCAML_VERSION >= "4.02"
     | Pstr_typext t ->
       Pstr_typext (map_type_extension t)
     | Pstr_attribute _
@@ -287,7 +284,7 @@ end = struct
       | Ptype_record list ->
         let list = List.map map_label_declaration list in
         Ptype_record list
-#if OCAML_VERSION <> "4.01.0+ocp1"
+#if OCAML_VERSION >= "4.02"
       | Ptype_open -> Ptype_open
 #endif
     in
@@ -309,7 +306,7 @@ end = struct
         let pat1 = map_pattern pat1 in
         Ppat_alias (pat1, text)
       | Ppat_tuple list -> Ppat_tuple (List.map map_pattern list)
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Ppat_construct (lid, args, arity) ->
         Ppat_construct (lid, may_map map_pattern args, arity)
 #else
@@ -333,10 +330,15 @@ end = struct
       | Ppat_unpack _
       | Ppat_var _ -> pat.ppat_desc
 
-#if OCAML_VERSION <> "4.01.0+ocp1"
+#if OCAML_VERSION >= "4.02"
     | Ppat_interval (_, _) -> pat.ppat_desc
     | Ppat_exception pat -> Ppat_exception (map_pattern pat)
     | Ppat_extension _ -> pat.ppat_desc
+#endif
+
+#if OCAML_VERSION >= "4.04"
+  | Ppat_open (path, pat) ->
+    Ppat_open (path, map_pattern pat)
 #endif
 
    in
@@ -352,7 +354,7 @@ end = struct
         Pexp_let (rec_flag,
                   List.map map_value_binding list,
                   map_expression exp)
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pexp_function (label, expo, cases) ->
         Pexp_function (label, may_map map_expression expo,
                        List.map map_value_binding cases)
@@ -382,7 +384,7 @@ end = struct
       | Pexp_tuple list ->
         Pexp_tuple (List.map map_expression list)
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pexp_construct (lid, args, arity) ->
         Pexp_construct (lid, may_map map_expression args, arity )
 #else
@@ -441,7 +443,7 @@ end = struct
           dir,
           map_expression exp3
         )
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pexp_when (exp1, exp2) ->
         Pexp_when (
           map_expression exp1,
@@ -471,7 +473,7 @@ end = struct
         Pexp_object (map_class_structure cl)
       | Pexp_pack (mexpr) ->
         Pexp_pack (map_module_expr mexpr)
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pexp_constraint (e, cto1, cto2) ->
         Pexp_constraint (map_expression e,
                          may_map map_core_type cto1,
@@ -490,15 +492,25 @@ end = struct
         Pexp_poly (map_expression e, may_map map_core_type cto)
       | Pexp_newtype _
       | Pexp_open _
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pexp_assertfalse
 #else
       | Pexp_extension _
 #endif
 
+#if OCAML_VERSION >= "4.03"
+      | Pexp_unreachable
+#endif
       | Pexp_ident _
       | Pexp_constant _
       | Pexp_new _ -> exp.pexp_desc
+
+#if OCAML_VERSION >= "4.04"
+  | Pexp_letexception (exn_decl, exp) ->
+    Pexp_letexception (map_extension_constructor exn_decl,
+                       map_expression exp)
+#endif
+
     in
     let exp = if exp.pexp_desc != exp_desc then
         { exp with pexp_desc = exp_desc    } else exp in
@@ -519,7 +531,7 @@ end = struct
     let item = Map.enter_signature_item item in
     let sig_desc =
       match item.psig_desc with
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Psig_value (name, v) ->
           Psig_value (name, map_value_description v)
 #else
@@ -527,18 +539,21 @@ end = struct
           Psig_value (map_value_description v)
 #endif
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Psig_type list -> Psig_type (
         List.map (fun (name, decl) ->
           (name, map_type_declaration decl)
         ) list
       )
-#else
+#elif OCAML_VERSION < "4.03"
       | Psig_type list -> Psig_type (List.map map_type_declaration list)
+#else
+      | Psig_type (recflag, list) ->
+        Psig_type (recflag, List.map map_type_declaration list)
 #endif
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Psig_exception (name, decl) ->
         Psig_exception (name, map_exception_declaration decl)
 #else
@@ -548,7 +563,7 @@ end = struct
 
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Psig_module (name, mtype) ->
         Psig_module (name, map_module_type mtype)
 #else
@@ -557,7 +572,7 @@ end = struct
 #endif
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Psig_recmodule list ->
         Psig_recmodule (List.map (
           fun (name, mtype) ->
@@ -568,7 +583,7 @@ end = struct
 #endif
 
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Psig_modtype (name, mdecl) ->
         Psig_modtype (name, map_modtype_declaration mdecl)
 #else
@@ -576,13 +591,13 @@ end = struct
         Psig_modtype (map_module_type_declaration mdecl)
 #endif
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Psig_open _ -> item.psig_desc
 #else
       | Psig_open o -> Psig_open (map_open_description o)
 #endif
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Psig_include mty -> Psig_include (map_module_type mty)
 #else
       | Psig_include mty -> Psig_include (
@@ -594,7 +609,7 @@ end = struct
       | Psig_class_type list ->
         Psig_class_type (List.map map_class_type_declaration list)
 
-#if OCAML_VERSION <> "4.01.0+ocp1"
+#if OCAML_VERSION >= "4.02"
       | Psig_typext t ->
             Psig_typext (map_type_extension t)
       | Psig_attribute _
@@ -618,18 +633,18 @@ end = struct
     let mty = Map.enter_module_type mty in
     let mty_desc =
       match mty.pmty_desc with
-        Pmty_ident lid -> mty.pmty_desc
+        Pmty_ident _lid -> mty.pmty_desc
       | Pmty_signature sg -> Pmty_signature (map_signature sg)
       | Pmty_functor (name, mtype1, mtype2) ->
         Pmty_functor (name,
-#if OCAML_VERSION <> "4.01.0+ocp1"
+#if OCAML_VERSION >= "4.02"
                       may_map
 #endif
                       map_module_type mtype1,
                       map_module_type mtype2)
       | Pmty_with (mtype, list) ->
         Pmty_with (map_module_type mtype,
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
                    List.map (fun (lid, withc) ->
                      (lid, map_with_constraint withc)
                    ) list)
@@ -638,7 +653,7 @@ end = struct
 #endif
       | Pmty_typeof mexpr ->
         Pmty_typeof (map_module_expr mexpr)
-#if OCAML_VERSION <> "4.01.0+ocp1"
+#if OCAML_VERSION >= "4.02"
       | Pmty_alias _
       | Pmty_extension _ -> mty.pmty_desc
 #endif
@@ -649,22 +664,22 @@ end = struct
     let cstr = Map.enter_with_constraint cstr in
     let cstr =
       match cstr with
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pwith_type decl -> Pwith_type (map_type_declaration decl)
 #else
       | Pwith_type (lid,decl) -> Pwith_type (lid, map_type_declaration decl)
 #endif
 
       | Pwith_typesubst decl -> Pwith_typesubst (map_type_declaration decl)
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pwith_module (lid) -> cstr
 #else
-      | Pwith_module (lid1, lid2) -> cstr
+      | Pwith_module (_lid1, _lid2) -> cstr
 #endif
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pwith_modsubst (lid) -> cstr
 #else
-      | Pwith_modsubst (s, lid) -> cstr
+      | Pwith_modsubst (_s, _lid) -> cstr
 #endif
     in
     Map.leave_with_constraint cstr
@@ -673,11 +688,11 @@ end = struct
     let mexpr = Map.enter_module_expr mexpr in
     let mod_desc =
       match mexpr.pmod_desc with
-        Pmod_ident (lid) -> mexpr.pmod_desc
+        Pmod_ident (_lid) -> mexpr.pmod_desc
       | Pmod_structure st -> Pmod_structure (map_structure st)
       | Pmod_functor (name, mtype, mexpr) ->
         Pmod_functor (name,
-#if OCAML_VERSION <> "4.01.0+ocp1"
+#if OCAML_VERSION >= "4.02"
                       may_map
 #endif
                       map_module_type mtype,
@@ -690,7 +705,7 @@ end = struct
                          map_module_type mod_type)
       | Pmod_unpack exp ->
         Pmod_unpack (map_expression exp)
-#if OCAML_VERSION <> "4.01.0+ocp1"
+#if OCAML_VERSION >= "4.02"
       | Pmod_extension _ -> mexpr.pmod_desc
 #endif
     in
@@ -717,7 +732,7 @@ end = struct
                  map_class_expr cl)
       | Pcl_constr (loc, ctl) ->
         Pcl_constr (loc, List.map map_core_type ctl)
-#if OCAML_VERSION <> "4.01.0+ocp1"
+#if OCAML_VERSION >= "4.02"
       | Pcl_extension _ -> cexpr.pcl_desc
 #endif
     in
@@ -730,7 +745,7 @@ end = struct
         Pcty_signature csg -> Pcty_signature (map_class_signature csg)
       | Pcty_constr (lid, list) ->
         Pcty_constr (lid, List.map map_core_type list)
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pcty_fun (label, ct, cl) ->
         Pcty_fun (label, map_core_type ct, map_class_type cl)
 #else
@@ -746,7 +761,7 @@ end = struct
     let csig_self = map_core_type cs.pcsig_self in
     let csig_fields = List.map map_class_type_field cs.pcsig_fields in
     Map.leave_class_signature {
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
         cs with  (* for pcsig_loc *)
 #endif
         pcsig_self = csig_self; pcsig_fields = csig_fields }
@@ -756,7 +771,7 @@ end = struct
     let ctf = Map.enter_class_type_field ctf in
     let ctf_desc =
       match ctf.pctf_desc with
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pctf_inher ct -> Pctf_inher (map_class_type ct)
 #else
       | Pctf_inherit ct -> Pctf_inherit (map_class_type ct)
@@ -764,7 +779,7 @@ end = struct
       | Pctf_val (s, mut, virt, ct) ->
         Pctf_val (s, mut, virt, map_core_type ct)
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pctf_virt  (s, priv, ct) ->
         Pctf_virt (s, priv, map_core_type ct)
       | Pctf_meth  (s, priv, ct) ->
@@ -798,7 +813,7 @@ end = struct
         Ptyp_variant (List.map map_row_field list, bool, labels)
       | Ptyp_poly (list, ct) -> Ptyp_poly (list, map_core_type ct)
       | Ptyp_package pack -> Ptyp_package (map_package_type pack)
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Ptyp_object list -> Ptyp_object (List.map map_core_field_type list)
       | Ptyp_class (lid, list, labels) ->
         Ptyp_class (lid, List.map map_core_type list, labels)
@@ -815,14 +830,14 @@ end = struct
 
   and map_class_structure cs =
     let cs = Map.enter_class_structure cs in
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
     let cstr_pat = map_pattern cs.pcstr_pat in
 #else
     let cstr_pat = map_pattern cs.pcstr_self in
 #endif
     let cstr_fields = List.map map_class_field cs.pcstr_fields in
     Map.leave_class_structure {
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       pcstr_pat = cstr_pat;
 #else
       pcstr_self = cstr_pat;
@@ -831,7 +846,7 @@ end = struct
 
   and map_row_field rf =
     match rf with
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
     | Rtag (label, bool, list) ->
         Rtag (label, bool, List.map map_core_type list)
 #else
@@ -844,7 +859,7 @@ end = struct
     let cf = Map.enter_class_field cf in
     let cf_desc =
       match cf.pcf_desc with
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
       | Pcf_constr (cty, cty') ->
         Pcf_constr (map_core_type cty, map_core_type cty')
       | Pcf_valvirt (name, mut, cty) ->
@@ -879,7 +894,7 @@ end = struct
     in
     Map.leave_class_field { cf with pcf_desc = cf_desc }
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
 
   and map_case (pat, exp) =
     (map_pattern pat, map_expression exp)
@@ -968,7 +983,7 @@ end = struct
      pext_name;
        pext_kind = (match pext_kind with
          Pext_decl (ctl, cto) ->
-           let ctl = List.map map_core_type ctl in
+           let ctl = map_constructor_arguments ctl in
            let cto = may_map map_core_type cto in
            Pext_decl(ctl, cto)
        | Pext_rebind _ -> pext_kind);
@@ -976,6 +991,19 @@ end = struct
      pext_attributes;
      } in
      Map.leave_extension_constructor c
+
+and map_constructor_arguments args =
+#if OCAML_VERSION < "4.03"
+    List.map map_core_type args
+#else
+  match args with
+  | Pcstr_record list ->
+      Pcstr_record
+        (List.map (fun ld ->
+             { ld with pld_type = map_core_type ld.pld_type }) list)
+  | Pcstr_tuple args ->
+      Pcstr_tuple (List.map map_core_type args)
+#endif
 
 (*
 and extension_constructor =
@@ -1092,7 +1120,7 @@ and extension_constructor_kind =
     } = Map.enter_constructor_declaration c in
     let c =  {
      pcd_name;
-     pcd_args = List.map map_core_type pcd_args;
+     pcd_args = map_constructor_arguments pcd_args;
      pcd_res = may_map map_core_type pcd_res;
      pcd_loc;
      pcd_attributes;
@@ -1152,7 +1180,7 @@ module DefaultMapArgument = struct
   let leave_class_field t = t
   let leave_structure_item t = t
 
-#if OCAML_VERSION = "4.01.0+ocp1"
+#if OCAML_VERSION < "4.02"
   let enter_exception_declaration t = t
   let leave_exception_declaration t = t
   let leave_core_field_type t = t

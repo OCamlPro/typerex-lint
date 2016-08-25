@@ -110,10 +110,6 @@ AC_SUBST(OCAMLLIB)
 AC_SUBST(OCAMLOPT)
 AC_SUBST(OCAMLDEP)
 AC_SUBST(OCAMLBIN)
-if test "$VERSION_CHECK" = "yes" ; then
-  AX_COMPARE_VERSION( [$OCAMLVERSION], [ge], [4.03],
-     AC_MSG_ERROR([Your version of OCaml: $OCAMLVERSION is not yet supported]))
-fi
 if test "$OCAMLFIND" = "no"; then
    AC_MSG_ERROR([You must install OCaml package 'ocamlfind'])
 fi
@@ -133,9 +129,9 @@ AC_CHECK_OCAML_PKG(ocp-indent.lib)
 if test "$OCAML_PKG_ocp_indent.lib" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'ocp-indent.lib'.])
 fi
-OPAM_REPO=
-OPAM_REPO_OFFICIAL_REMOTE=
-OPAM_REPO_FORK_REMOTE=
+OPAM_REPO=/home/lefessan/WindowsSharedFolder/opam-repository-with-archives
+OPAM_REPO_OFFICIAL_REMOTE=ocaml
+OPAM_REPO_FORK_REMOTE=origin
 DOWNLOAD_URL_PREFIX=http://github.com//archive/
 
 ###############################################################
