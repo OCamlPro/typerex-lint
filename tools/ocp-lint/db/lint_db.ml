@@ -40,6 +40,7 @@ module MakeDB (DB : DATABASE_IO) = struct
     Digest.string string_to_hash
 
   let load dir =
+    let db = empty_db () in
     if Sys.is_directory dir then
       let files = Sys.readdir dir in
       Array.iter (fun file ->
@@ -135,12 +136,16 @@ module MakeDB (DB : DATABASE_IO) = struct
       let (_old_hash, old_fres) = Hashtbl.find db file in
       if StringMap.mem pname old_fres then
         let old_pres = StringMap.find pname old_fres in
-        let new_pres =
-          StringMap.add
-            lname (version, Analyse, options, []) (StringMap.remove lname old_pres) in
-        let new_fres = StringMap.add
-            pname new_pres (StringMap.remove pname old_fres) in
-        Hashtbl.replace db file (hash, new_fres)
+        (* if linter already register, nothing to do *)
+        (* this can happen when a linter as several mains *)
+        if not (StringMap.mem lname old_pres) then
+          let new_pres =
+            StringMap.add
+              lname (version, Analyse, options, []) (StringMap.remove lname old_pres) in
+          let new_fres = StringMap.add
+              pname new_pres (StringMap.remove pname old_fres) in
+          Hashtbl.replace db file (hash, new_fres)
+        else ()
       else
         let new_pres = StringMap.add
             lname (version, Analyse, options, []) StringMap.empty in
