@@ -111,8 +111,9 @@ let parse_interf source =
   with Syntaxerr.Error _ ->
     raise Lint_plugin_error.(Plugin_error (Syntax_error source))
 
-let is_source file = Filename.check_suffix file ".ml"
+let is_implementation file = Filename.check_suffix file ".ml"
 let is_interface file = Filename.check_suffix file ".mli"
+let is_source file = is_interface file || is_implementation file
 let is_cmt file = Filename.check_suffix file ".cmt"
 let is_cmt file = Filename.check_suffix file ".cmt"
 let is_cmxs file = Filename.check_suffix file ".cmxs"
@@ -227,10 +228,10 @@ let from_input file pname cname inputs =
   List.iter (fun input ->
       try
         match input with
-        | Lint_input.InMl main when is_source file ->
+        | Lint_input.InMl main when is_implementation file ->
           Lint_db.DefaultDB.add_entry file pname cname;
           main file
-        | Lint_input.InStruct main when is_source file ->
+        | Lint_input.InStruct main when is_implementation file ->
           begin match parse_source file with
             | Some ast ->
               Lint_db.DefaultDB.add_entry file pname cname;
@@ -238,6 +239,9 @@ let from_input file pname cname inputs =
             | None -> assert false
           end
         | Lint_input.InMli main when is_interface file ->
+          Lint_db.DefaultDB.add_entry file pname cname;
+          main file
+        | Lint_input.InSource main when is_source file ->
           Lint_db.DefaultDB.add_entry file pname cname;
           main file
         | Lint_input.InInterf main when is_interface file ->
@@ -254,7 +258,7 @@ let from_input file pname cname inputs =
           Lint_db.DefaultDB.add_entry file pname cname;
           main [file]
         | Lint_input.InTop main -> assert false (* TODO *)
-        | Lint_input.InTokens main when is_source file || is_interface file ->
+        | Lint_input.InTokens main when is_implementation file || is_interface file ->
           begin try
               main (Lexer_iter.get_tokens file)
             with exn -> ()
@@ -358,7 +362,7 @@ let lint_sequential no_db db_dir severity path =
 (*   let no_db = init_db false all path in *)
 
 (*   (\* All inputs for each analyze *\) *)
-(*   let mls = List.filter is_source all in *)
+(*   let mls = List.filter is_implementation all in *)
 (*   let mlis = List.filter is_interface all in *)
 
 (*   let cmts = *)

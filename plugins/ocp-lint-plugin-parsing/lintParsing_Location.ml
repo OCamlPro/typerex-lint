@@ -220,7 +220,7 @@ let rec highlight_locations ppf locs =
 
 (* Print the location in some way or another *)
 
-open Format
+open! Format
 
 let absolute_path s = (* This function could go into Filename *)
   let open Filename in
@@ -391,7 +391,7 @@ let error_of_exn exn =
 let rec default_error_reporter ppf ({loc; msg; sub; if_highlight} as err) =
   let highlighted =
     if if_highlight <> "" && loc.loc_start.pos_fname = "//toplevel//" then
-      let rec collect_locs locs {loc; sub; if_highlight; _} =
+      let rec collect_locs locs {loc; sub; _} =
         List.fold_left collect_locs (loc :: locs) sub
       in
       let locs = collect_locs [] err in

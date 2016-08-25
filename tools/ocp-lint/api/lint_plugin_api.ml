@@ -107,14 +107,9 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let name = C.name
     let short_name = C.short_name
     let details = C.details
-    let patches = C.patches
     let enable = C.enable
 
     let wdecls = WarningDeclaration.empty ()
-
-    let create_option option short_help lhelp ty default =
-      let option = [P.short_name; C.short_name; option] in
-      Lint_globals.Config.create_option option short_help lhelp 0 ty default
 
     let new_warning loc ~id ~short_name ~msg ~args ~severity =
       let open Lint_warning_types in
@@ -214,7 +209,6 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       Lint_globals.Config.create_option option short_help lhelp 0 ty default
 
     let new_warning ~id ~short_name ~msg ~severity  =
-      let open Lint_warning_types in
       let decl = new_warning id ~short_name ~msg ~severity in
       WarningDeclaration.add decl wdecls;
       decl
@@ -308,6 +302,11 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     module MakeInputMLI (MLI : Lint_input.MLI) = struct
       module R = Register (struct
           let input = Lint_input.InMli (wrap_plugin_exn MLI.main) end)
+    end
+
+    module MakeInputSource (Source : Lint_input.SOURCE) = struct
+      module R = Register (struct
+          let input = Lint_input.InSource (wrap_plugin_exn Source.main) end)
     end
 
     module MakeInputAll (All : Lint_input.ALL) = struct

@@ -82,6 +82,6 @@ let max_line_length = CodeLength.create_option
     default_value
 
 (* Registering a main entry to the linter *)
-module MainSRC = CodeLength.MakeInputML(struct
+module MainSRC = CodeLength.MakeInputSource(struct
     let main source = check_file !!max_line_length source
   end)

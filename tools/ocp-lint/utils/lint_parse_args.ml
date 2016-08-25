@@ -61,7 +61,7 @@ let parse_opt active flags s =
       | '+' -> loop_letter_num set (i+1)
       | '-' -> loop_letter_num clear (i+1)
       | '@' -> loop_letter_num set_all (i+1)
-      | c -> error ()
+      | _ -> error ()
   and loop_letter_num myset i =
     if i >= String.length s then error () else
       match s.[i] with
