@@ -98,59 +98,58 @@ let summary master_config file_config severity path no_db db db_errors =
         else ([], "") in
       if file_with_cfg then
         Lint_globals.Config.load_config_tmp master_config config_tmp;
-      if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
-        StringMap.iter (fun pname lres ->
-            let flag = check_flag [pname; "enabled"] in
-            if flag then
-              StringMap.iter  (fun lname (version, source, _opt, ws) ->
-                  let flag = check_flag [pname; lname; "enabled"] in
-                  let flag_error =
-                    if Hashtbl.mem db_errors file then
-                      let err_set = Hashtbl.find db_errors file in
-                      not (ErrorSet.is_empty err_set)
-                    else false
-                  in
-                  if flag && source = Analyse then
-                    begin
-                      if flag_error then
-                        files_linted_errors :=
-                          StringCompat.StringSet.add file !files_linted_errors;
-                      let filters =
-                        Lint_globals.Config.get_option_value
-                          [pname; lname; "warnings"] in
-                      let arr = Lint_parse_args.parse_options filters in
-                      List.iter
-                        (fun warning ->
-                           let wid = warning.decl.id in
-                           if arr.(wid - 1) &&
-                              warning.decl.severity >= severity then
-                             (update_files_linted files_linted file configs;
-                              update_breakdown
-                                breakdown_linted pname lname version wid))
-                        ws
-                    end
-                  else
-                  if flag && source = Cache then
-                    begin
-                      if flag_error then
-                        files_cached_errors :=
-                          StringCompat.StringSet.add file !files_cached_errors;
-                      let filters =
-                        Lint_globals.Config.get_option_value
-                          [pname; lname; "warnings"] in
-                      let arr = Lint_parse_args.parse_options filters in
-                      List.iter
-                        (fun warning ->
-                           let wid = warning.decl.id in
-                           if arr.(wid - 1) &&
-                              warning.decl.severity >= severity then
-                             (files_cached :=
-                                StringCompat.StringSet.add file !files_cached;
-                              update_breakdown
-                                breakdown_cached pname lname version wid))
-                        ws end)
-                lres)
-          pres)
+      StringMap.iter (fun pname lres ->
+          let flag = check_flag [pname; "enabled"] in
+          if flag then
+            StringMap.iter  (fun lname (version, source, _opt, ws) ->
+                let flag = check_flag [pname; lname; "enabled"] in
+                let flag_error =
+                  if Hashtbl.mem db_errors file then
+                    let err_set = Hashtbl.find db_errors file in
+                    not (ErrorSet.is_empty err_set)
+                  else false
+                in
+                if flag && source = Analyse then
+                  begin
+                    if flag_error then
+                      files_linted_errors :=
+                        StringCompat.StringSet.add file !files_linted_errors;
+                    let filters =
+                      Lint_globals.Config.get_option_value
+                        [pname; lname; "warnings"] in
+                    let arr = Lint_parse_args.parse_options filters in
+                    List.iter
+                      (fun warning ->
+                         let wid = warning.decl.id in
+                         if arr.(wid - 1) &&
+                            warning.decl.severity >= severity then
+                           (update_files_linted files_linted file configs;
+                            update_breakdown
+                              breakdown_linted pname lname version wid))
+                      ws
+                  end
+                else
+                if flag && source = Cache then
+                  begin
+                    if flag_error then
+                      files_cached_errors :=
+                        StringCompat.StringSet.add file !files_cached_errors;
+                    let filters =
+                      Lint_globals.Config.get_option_value
+                        [pname; lname; "warnings"] in
+                    let arr = Lint_parse_args.parse_options filters in
+                    List.iter
+                      (fun warning ->
+                         let wid = warning.decl.id in
+                         if arr.(wid - 1) &&
+                            warning.decl.severity >= severity then
+                           (files_cached :=
+                              StringCompat.StringSet.add file !files_cached;
+                            update_breakdown
+                              breakdown_cached pname lname version wid))
+                      ws end)
+              lres)
+        pres)
     db;
   let files_cached_total = StringCompat.StringSet.cardinal !files_cached in
   let warnings_cached_total =
@@ -319,33 +318,32 @@ let print fmt master_config file_config severity path db =
           else ([], "") in
         if file_with_cfg then
           Lint_globals.Config.load_config_tmp master_config config_tmp;
-        if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
-          let ws =
-            StringMap.fold (fun pname lres acc ->
-                let flag = check_flag [pname; "enabled"] in
-                if flag then
-                  StringMap.fold (fun lname (version, _source, _opt, ws) acc ->
-                      let flag = check_flag [pname; lname; "enabled"] in
-                      if flag then
-                        let filters =
-                          Lint_globals.Config.get_option_value
-                            [pname; lname; "warnings"] in
-                        let arr = Lint_parse_args.parse_options filters in
-                        List.fold_left
-                          (fun acc warning ->
-                             if arr.(warning.decl.id - 1) &&
-                                warning.decl.severity >= severity then
-                               (pname, lname, warning) :: acc
-                             else acc) acc ws
-                      else acc)
-                    lres acc
-                else acc)
-              pres [] in
-          let ws =
-            List.sort (fun (_, _, w1) (_, _, w2) ->
-                compare w1.loc w2.loc) ws in
-          List.iter (fun (pname, lname, w) ->
-              print_warning fmt pname lname w) ws)
+        let ws =
+          StringMap.fold (fun pname lres acc ->
+              let flag = check_flag [pname; "enabled"] in
+              if flag then
+                StringMap.fold (fun lname (version, _source, _opt, ws) acc ->
+                    let flag = check_flag [pname; lname; "enabled"] in
+                    if flag then
+                      let filters =
+                        Lint_globals.Config.get_option_value
+                          [pname; lname; "warnings"] in
+                      let arr = Lint_parse_args.parse_options filters in
+                      List.fold_left
+                        (fun acc warning ->
+                           if arr.(warning.decl.id - 1) &&
+                              warning.decl.severity >= severity then
+                             (pname, lname, warning) :: acc
+                           else acc) acc ws
+                    else acc)
+                  lres acc
+              else acc)
+            pres [] in
+        let ws =
+          List.sort (fun (_, _, w1) (_, _, w2) ->
+              compare w1.loc w2.loc) ws in
+        List.iter (fun (pname, lname, w) ->
+            print_warning fmt pname lname w) ws)
       db
   with Not_found ->
     Printf.eprintf "Warning: Database contains warnings raised by plugins \
@@ -354,16 +352,14 @@ let print fmt master_config file_config severity path db =
 let print_error ppf path db_error =
   let has_error = ref false in
   Hashtbl.iter (fun file error_set ->
-      if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) &&
-         not (ErrorSet.is_empty error_set) then
+      if not (ErrorSet.is_empty error_set) then
         has_error := true
     ) db_error;
   if !has_error then
     begin
       Format.fprintf ppf "=== Errors ===\n%!";
       Hashtbl.iter (fun file error_set ->
-          if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) &&
-             not (ErrorSet.is_empty error_set) then
+          if not (ErrorSet.is_empty error_set) then
             begin
               Format.fprintf ppf "%S:\n%!" file;
               ErrorSet.iter (print_error ppf) error_set
@@ -374,13 +370,12 @@ let print_error ppf path db_error =
 
 let print_only_new fmt path db =
   Hashtbl.iter (fun file (hash, pres) ->
-      if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
-        StringMap.iter (fun pname lres ->
-            StringMap.iter  (fun lname (_version, source, _opt, ws) ->
-                if source = Analyse then
-                  List.iter (print_warning fmt pname lname) ws)
-              lres)
-          pres)
+      StringMap.iter (fun pname lres ->
+          StringMap.iter  (fun lname (_version, source, _opt, ws) ->
+              if source = Analyse then
+                List.iter (print_warning fmt pname lname) ws)
+            lres)
+        pres)
     db
 
 let verbose_info fmt db =
