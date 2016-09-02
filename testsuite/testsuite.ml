@@ -76,34 +76,36 @@ let is_included file_res olint_dir =
       Hashtbl.fold (fun file (_hash, fres2) acc ->
           StringMap.fold (fun pname lres2 acc ->
               StringMap.fold (fun lname (_, _, _, wres2) acc ->
-                  let (_, fres1) =
-                    try
-                      Hashtbl.find db1 file
-                    with Not_found -> failwith file in
-                  let pres1 =
-                    try
-                      StringMap.find pname fres1
-                    with Not_found -> failwith pname in
-                  let (_, _, _, wres1) =
-                    try
-                      StringMap.find lname pres1
-                    with Not_found -> failwith lname in
+                  if wres2 = [] then acc
+                  else
+                    let (_, fres1) =
+                      try
+                        Hashtbl.find db1 file
+                      with Not_found -> failwith file in
+                    let pres1 =
+                      try
+                        StringMap.find pname fres1
+                      with Not_found -> failwith pname in
+                    let (_, _, _, wres1) =
+                      try
+                        StringMap.find lname pres1
+                      with Not_found -> failwith lname in
 
-                  (* TODO dépend de l'ordre, il faut changer ça *)
-                  let l =
-                     (List.length wres1) = (List.length wres2) in
-                  let flag =
-                    List.for_all (fun w1 ->
-                        try
-                          ignore (List.find (fun w2 ->
-                              Lint_warning.cmp_warnings w1 w2) wres2);
-                          true
-                        with Not_found -> false
-                      ) wres1
-                  in
+                    (* TODO dépend de l'ordre, il faut changer ça *)
+                    let l =
+                      (List.length wres1) = (List.length wres2) in
+                    let flag =
+                      List.for_all (fun w1 ->
+                          try
+                            ignore (List.find (fun w2 ->
+                                Lint_warning.cmp_warnings w1 w2) wres2);
+                            true
+                          with Not_found -> false
+                        ) wres1
+                    in
 
-                  if flag && l then acc
-                  else fail_warnings acc wres1 wres2)
+                    if flag && l then acc
+                    else fail_warnings acc wres1 wres2)
                 lres2 acc)
             fres2 acc)
         db2 Ok
@@ -128,8 +130,8 @@ let run_command prog args dir  =
 
 let check_tests test_dirs olint_dir =
   List.map (fun dir ->
-    let db_path = Filename.concat dir "ocp-lint.result" in
-    is_included db_path olint_dir, dir) test_dirs
+      let db_path = Filename.concat dir "ocp-lint.result" in
+      is_included db_path olint_dir, dir) test_dirs
 
 let starts_with str ~substring =
   let len_sub = String.length substring in

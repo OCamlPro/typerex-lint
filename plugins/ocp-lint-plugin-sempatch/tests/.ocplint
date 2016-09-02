@@ -19,11 +19,11 @@ db_persistence = 1
 plugin_typedtree = {
 
 (* A plugin with linters on typed tree. *)
-  enabled = true
+  enabled = false
   fully_qualified_identifiers = {
 
 (* Enable/Disable linter "Fully-Qualified Identifiers". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Fully-Qualified Identifiers" *)
     ignore = [
@@ -35,13 +35,13 @@ plugin_typedtree = {
       Pervasives;
       StringCompat;
     ]
-    ignore_operators = true
+    ignore_operators = false
     ignore_depth = 2
   }
   polymorphic_function = {
 
 (* Enable/Disable linter "Polymorphic function". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Polymorphic function" *)
     ignore = [
@@ -54,11 +54,11 @@ plugin_typedtree = {
 plugin_text = {
 
 (* A plugin with linters on the source. *)
-  enabled = true
+  enabled = false
   code_length = {
 
 (* Enable/Disable linter "Code Length". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Code Length" *)
     ignore = [
@@ -73,7 +73,7 @@ plugin_text = {
   useless_space_line = {
 
 (* Enable/Disable linter "Useless space character and empty line at the end of file.". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Useless space character and empty line at the end of file." *)
     ignore = [
@@ -85,7 +85,7 @@ plugin_text = {
   not_that_char = {
 
 (* Enable/Disable linter "Detect use of unwanted chars in files". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Detect use of unwanted chars in files" *)
     ignore = [
@@ -98,11 +98,11 @@ plugin_text = {
 plugin_patch = {
 
 (* Detect pattern with semantic patch. *)
-  enabled = true
+  enabled = false
   sempatch_lint_default = {
 
 (* Enable/Disable linter "Lint from semantic patches (default)". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Lint from semantic patches (default)" *)
     ignore = [
@@ -114,7 +114,7 @@ plugin_patch = {
   sempatch_lint_user_defined = {
 
 (* Enable/Disable linter "Lint from semantic patches (user defined).". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Lint from semantic patches (user defined)." *)
     ignore = [
@@ -127,11 +127,11 @@ plugin_patch = {
 plugin_parsing = {
 
 (* Analyses requiring to re-parse the file *)
-  enabled = true
+  enabled = false
   raw_syntax = {
 
 (* Enable/Disable linter "Raw Syntax". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Raw Syntax" *)
     ignore = [
@@ -144,11 +144,11 @@ plugin_parsing = {
 plugin_parsetree = {
 
 (* A plugin with linters on parsetree. *)
-  enabled = true
+  enabled = false
   code_identifier_length = {
 
 (* Enable/Disable linter "Code Identifier Length". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Code Identifier Length" *)
     ignore = [
@@ -166,7 +166,7 @@ plugin_parsetree = {
   code_list_on_singleton = {
 
 (* Enable/Disable linter "List function on singleton". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "List function on singleton" *)
     ignore = [
@@ -178,7 +178,7 @@ plugin_parsetree = {
   phys_comp_allocated_lit = {
 
 (* Enable/Disable linter "Physical comparison between allocated litterals.". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Physical comparison between allocated litterals." *)
     ignore = [
@@ -190,7 +190,7 @@ plugin_parsetree = {
   fabrice_good_practices = {
 
 (* Enable/Disable linter "Good Practices". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Good Practices" *)
     ignore = [
@@ -202,7 +202,7 @@ plugin_parsetree = {
   check_constr_args = {
 
 (* Enable/Disable linter "Check Constructor Arguments". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Check Constructor Arguments" *)
     ignore = [
@@ -214,7 +214,7 @@ plugin_parsetree = {
   code_redefine_stdlib_module = {
 
 (* Enable/Disable linter "Refedine Stdlib Module". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Refedine Stdlib Module" *)
     ignore = [
@@ -227,11 +227,11 @@ plugin_parsetree = {
 plugin_indent = {
 
 (* A plugin with linters on the source. *)
-  enabled = true
+  enabled = false
   ocp_indent = {
 
 (* Enable/Disable linter "Indention with ocp-indent". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Indention with ocp-indent" *)
     ignore = [
@@ -244,11 +244,11 @@ plugin_indent = {
 plugin_file_system = {
 
 (* A plugin with linters on file system like interface missing, etc. *)
-  enabled = true
+  enabled = false
   interface_missing = {
 
 (* Enable/Disable linter "Missing interface". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Missing interface" *)
     ignore = [
@@ -260,7 +260,7 @@ plugin_file_system = {
   project_files = {
 
 (* Enable/Disable linter "File Names". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "File Names" *)
     ignore = [
@@ -273,11 +273,11 @@ plugin_file_system = {
 plugin_complex = {
 
 (* A plugin with linters on different inputs. *)
-  enabled = true
+  enabled = false
   interface_module_type_name = {
 
 (* Enable/Disable linter "Checks on module type name.". *)
-    enabled = true
+    enabled = false
 
 (* Module to ignore durint the lint of "Checks on module type name." *)
     ignore = [
