@@ -94,6 +94,14 @@ let is_in_path root file path =
   let file = normalize_path root file in
   Str.string_match (Str.regexp path) file 0
 
+let read_file f =
+  let ic = open_in f in
+  let n = in_channel_length ic in
+  let s = Bytes.create n in
+  really_input ic s 0 n;
+  close_in ic;
+  s
+
 (* Code from Opam *)
 
 let temp_basename prefix =

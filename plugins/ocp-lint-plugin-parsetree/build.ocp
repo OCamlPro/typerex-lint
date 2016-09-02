@@ -29,9 +29,20 @@ begin library "ocp-lint-plugin-parsetree"
 
     "checkGoodPractices.ml";
     "checkConstructorArgs.ml";
+
+    "redefine_std_lib.ml"
+
   ]
   requires = [
+    "ocp-lint-stdlib-helper"
     "ocp-lint-config"
     "ocp-lint-api"
+  ]
+end
+
+(* Helper for linter running checks on stdlib *)
+begin library "ocp-lint-stdlib-helper"
+  files = [
+    "std_lib.ml"
   ]
 end

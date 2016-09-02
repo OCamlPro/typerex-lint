@@ -22,6 +22,7 @@ open Lint_utils
 
 type error =
   | Plugin_already_registered of (module Lint_plugin_types.PLUGIN)
+  | Linter_already_registered of string
   | Plugin_not_found of (module Lint_plugin_types.PLUGIN)
   | Patch_file_not_found of string
   | Syntax_error of string
@@ -32,7 +33,9 @@ exception Plugin_error of error
 let to_string = function
   | Plugin_already_registered plugin ->
     let module P = (val plugin : Lint_plugin_types.PLUGIN) in
-    Printf.sprintf "Plugin '%s' is already registered." P.name
+    Printf.sprintf "Plugin '%s' is already registered." P.short_name
+  | Linter_already_registered lname ->
+    Printf.sprintf "Linter '%s' is already registered." lname
   | Plugin_not_found plugin ->
     let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
     Printf.sprintf "Plugin '%s' is not found." Plugin.name

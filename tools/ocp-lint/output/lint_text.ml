@@ -38,7 +38,7 @@ let print_error ppf error =
       Lint_plugin_error.to_string err
     | Sempatch_error err ->
       Printf.eprintf "Sem_error\n%!";
-      Sempatch.Failure.to_string err
+      err
     | Ocplint_error str -> Printf.eprintf "OCPL_error\n%!"; str
   in
   Format.fprintf ppf "  %s\n%!" str
@@ -49,7 +49,15 @@ let check_flag options =
       (Lint_globals.Config.get_option_value options)
   with Not_found -> true
 
-let update_breakdown tbl pname lname wid =
+let update_files_linted tbl file cfgs =
+  if Hashtbl.mem tbl file then
+    let old_cfgs = Hashtbl.find tbl file in
+    let new_cfgs = (StringCompat.StringSet.to_list old_cfgs) @ cfgs in
+    Hashtbl.replace tbl file (StringCompat.StringSet.of_list new_cfgs)
+  else Hashtbl.add tbl file (StringCompat.StringSet.of_list cfgs)
+
+let update_breakdown tbl pname lname version wid =
+  let lname = Printf.sprintf "%s.%i" lname version in
   if Hashtbl.mem tbl pname then
     let old_p_htbl = Hashtbl.find tbl pname in
     if Hashtbl.mem old_p_htbl lname then
@@ -76,68 +84,72 @@ let update_breakdown tbl pname lname wid =
      Hashtbl.add new_p_htbl lname new_l_htbl;
      Hashtbl.add tbl pname new_p_htbl)
 
-let summary severity path db db_errors =
-  let files_linted = ref StringCompat.StringSet.empty in
+let summary master_config file_config severity path no_db db db_errors =
+  let files_linted = Hashtbl.create 42 in
   let files_cached = ref StringCompat.StringSet.empty in
   let files_linted_errors = ref StringCompat.StringSet.empty in
   let files_cached_errors = ref StringCompat.StringSet.empty in
   let breakdown_linted = Hashtbl.create 42 in
   let breakdown_cached = Hashtbl.create 42 in
   Hashtbl.iter (fun file (hash, pres) ->
-      if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
-        StringMap.iter (fun pname lres ->
-            let flag = check_flag [pname; "enabled"] in
-            if flag then
-              StringMap.iter  (fun lname (source, _opt, ws) ->
-                  let flag = check_flag [pname; lname; "enabled"] in
-                  let flag_error =
-                    if Hashtbl.mem db_errors file then
-                      let err_set = Hashtbl.find db_errors file in
-                      not (ErrorSet.is_empty err_set)
-                    else false
-                  in
-                  if flag && source = Analyse then
-                    begin
-                      if flag_error then
-                        files_linted_errors :=
-                          StringCompat.StringSet.add file !files_linted_errors;
-                      let filters =
-                        Lint_globals.Config.get_option_value
-                          [pname; lname; "warnings"] in
-                      let arr = Lint_parse_args.parse_options filters in
-                      List.iter
-                        (fun warning ->
-                           let wid = warning.decl.id in
-                           if arr.(wid - 1) &&
-                              warning.decl.severity >= severity then
-                             (files_linted :=
-                                StringCompat.StringSet.add file !files_linted;
-                              update_breakdown
-                                breakdown_linted pname lname wid))
-                        ws
-                    end
-                  else
-                  if flag && source = Cache then
-                    begin
-                      if flag_error then
-                        files_cached_errors :=
-                          StringCompat.StringSet.add file !files_cached_errors;
-                      let filters =
-                        Lint_globals.Config.get_option_value
-                          [pname; lname; "warnings"] in
-                      let arr = Lint_parse_args.parse_options filters in
-                      List.iter
-                        (fun warning ->
-                           let wid = warning.decl.id in
-                           if arr.(wid - 1) &&
-                              warning.decl.severity >= severity then
-                             (files_cached :=
-                                StringCompat.StringSet.add file !files_cached;
-                              update_breakdown
-                                breakdown_cached pname lname wid))
-                        ws end)
-                lres)
-          pres)
+      let file_with_cfg = List.mem_assoc file file_config in
+      let (configs, config_tmp) =
+        if file_with_cfg then List.assoc file file_config
+        else ([], "") in
+      if file_with_cfg then
+        Lint_globals.Config.load_config_tmp master_config config_tmp;
+      StringMap.iter (fun pname lres ->
+          let flag = check_flag [pname; "enabled"] in
+          if flag then
+            StringMap.iter  (fun lname (version, source, _opt, ws) ->
+                let flag = check_flag [pname; lname; "enabled"] in
+                let flag_error =
+                  if Hashtbl.mem db_errors file then
+                    let err_set = Hashtbl.find db_errors file in
+                    not (ErrorSet.is_empty err_set)
+                  else false
+                in
+                if flag && source = Analyse then
+                  begin
+                    if flag_error then
+                      files_linted_errors :=
+                        StringCompat.StringSet.add file !files_linted_errors;
+                    let filters =
+                      Lint_globals.Config.get_option_value
+                        [pname; lname; "warnings"] in
+                    let arr = Lint_parse_args.parse_options filters in
+                    List.iter
+                      (fun warning ->
+                         let wid = warning.decl.id in
+                         if arr.(wid - 1) &&
+                            warning.decl.severity >= severity then
+                           (update_files_linted files_linted file configs;
+                            update_breakdown
+                              breakdown_linted pname lname version wid))
+                      ws
+                  end
+                else
+                if flag && source = Cache then
+                  begin
+                    if flag_error then
+                      files_cached_errors :=
+                        StringCompat.StringSet.add file !files_cached_errors;
+                    let filters =
+                      Lint_globals.Config.get_option_value
+                        [pname; lname; "warnings"] in
+                    let arr = Lint_parse_args.parse_options filters in
+                    List.iter
+                      (fun warning ->
+                         let wid = warning.decl.id in
+                         if arr.(wid - 1) &&
+                            warning.decl.severity >= severity then
+                           (files_cached :=
+                              StringCompat.StringSet.add file !files_cached;
+                            update_breakdown
+                              breakdown_cached pname lname version wid))
+                      ws end)
+              lres)
+        pres)
     db;
   let files_cached_total = StringCompat.StringSet.cardinal !files_cached in
   let warnings_cached_total =
@@ -148,7 +160,7 @@ let summary severity path db db_errors =
               wtbl acc)
           ptbl acc)
       breakdown_cached 0 in
-  let files_linted_total = StringCompat.StringSet.cardinal !files_linted in
+  let files_linted_total = Hashtbl.length files_linted in
   let warnings_linted_total =
     Hashtbl.fold (fun pname ptbl acc ->
         Hashtbl.fold (fun lname wtbl acc ->
@@ -163,7 +175,7 @@ let summary severity path db db_errors =
     StringCompat.StringSet.cardinal !files_cached_errors in
   Printf.printf "Summary:\n%!";
   Printf.printf "== Infos ==\n%!";
-  Printf.printf "  * root dir: %s\n%!" !(Lint_db.DefaultDB.root);
+  Printf.printf "  * root dir: %s\n%!" !Lint_db.DefaultDB.root;
 
   Printf.printf "== Cache Infos ==\n%!";
   Printf.printf "  * %d file(s) were found in cache:\n%!" files_cached_total;
@@ -179,21 +191,25 @@ let summary severity path db db_errors =
             Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl acc)
           ptbl 0 in
       if total > 1 then
-        (Printf.printf "    * %d warnings(s) raised by %S\n%!" total_w pname;
+        (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
          Hashtbl.iter (fun lname wtbl ->
-           let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
-           let total_l_w = Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
-           if total_l > 1 then
-             (Printf.printf "      * %d warnings(s) raised by %S\n%!"
-                total_l_w lname;
-              Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "        * %d Warning %i\n%!" cpt wid)
-                wtbl)
-           else
-             Hashtbl.iter (fun wid cpt ->
-                 Printf.printf "      * %d warnings(s) raised by %S/%i\n%!"
-                   cpt lname wid)
-               wtbl)
+             let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
+             let total_l_w =
+               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
+             if total_l > 1 then
+               (Printf.printf "      * %d warning(s) raised by %S\n%!"
+                  total_l_w lname;
+                Hashtbl.iter (fun wid cpt ->
+                    Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                  wtbl)
+             else
+               Hashtbl.iter (fun wid cpt ->
+                   Printf.printf
+                     "      * %d warning(s) raised by %S/warning #%i\n%!"
+                     cpt
+                     lname
+                     wid)
+                 wtbl)
            ptbl)
       else
         Hashtbl.iter (fun lname wtbl ->
@@ -201,26 +217,41 @@ let summary severity path db db_errors =
             let total_l_w =
               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
             if total_l > 1 then
-              (Printf.printf "      * %d warnings(s) raised by %S/%S\n%!"
+              (Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
                  total_l_w pname lname;
                Hashtbl.iter (fun wid cpt ->
-                   Printf.printf "        * %d Warning %i\n%!" cpt wid)
+                   Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
                  wtbl)
             else
               Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "      * %d warnings(s) raised by %S/%S/%i\n%!"
-                    cpt pname lname wid)
+                  Printf.printf
+                    "      * %d warning(s) raised by %S/%S/warning #%i\n%!"
+                    cpt
+                    pname
+                    lname
+                    wid)
                 wtbl)
           ptbl)
     breakdown_cached;
-  Printf.printf "  * error(s) on %d file(s) were found in cache:\n%!"
+  Printf.printf "  * %d files(s) couldn't be linted:\n%!"
     files_cached_errors_total;
   StringCompat.StringSet.iter
     (Printf.printf "    - %s\n%!") !files_cached_errors;
 
   Printf.printf "== New Warnings ==\n%!";
   Printf.printf "  * %d file(s) were linted:\n%!" files_linted_total;
-  StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_linted;
+  Hashtbl.iter (fun file cfgs ->
+      let file_rel = Lint_utils.relative_path !Lint_db.DefaultDB.root file in
+      let file_norm =
+        if no_db then
+          Lint_utils.normalize_path (Sys.getcwd()) file_rel
+        else file in
+      Printf.printf "    - %s\n%!" file_norm;
+      StringCompat.StringSet.iter (fun cfg ->
+          let cfg = Filename.concat cfg ".ocplint" in
+          Printf.printf "        * %s\n" cfg)
+        cfgs)
+    files_linted;
   Printf.printf "  * %d warning(s) were emitted:\n%!" warnings_linted_total;
   Hashtbl.iter (fun pname ptbl ->
       let total =
@@ -231,21 +262,25 @@ let summary severity path db db_errors =
             Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl acc)
           ptbl 0 in
       if total > 1 then
-        (Printf.printf "    * %d warnings(s) raised by %S\n%!" total_w pname;
+        (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
          Hashtbl.iter (fun lname wtbl ->
-           let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
-           let total_l_w = Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
-           if total_l > 1 then
-             (Printf.printf "      * %d warnings(s) raised by %S\n%!"
-                total_l_w lname;
-              Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "        * %d Warning %i\n%!" cpt wid)
-                wtbl)
-           else
-             Hashtbl.iter (fun wid cpt ->
-                 Printf.printf "      * %d warnings(s) raised by %S/%i\n%!"
-                   cpt lname wid)
-               wtbl)
+             let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
+             let total_l_w =
+               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
+             if total_l > 1 then
+               (Printf.printf "      * %d warning(s) raised by %S\n%!"
+                  total_l_w lname;
+                Hashtbl.iter (fun wid cpt ->
+                    Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                  wtbl)
+             else
+               Hashtbl.iter (fun wid cpt ->
+                   Printf.printf
+                     "      * %d warning(s) raised by %S/warning #%i\n%!"
+                     cpt
+                     lname
+                     wid)
+                 wtbl)
            ptbl)
       else
         Hashtbl.iter (fun lname wtbl ->
@@ -253,45 +288,62 @@ let summary severity path db db_errors =
             let total_l_w =
               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
             if total_l > 1 then
-              (Printf.printf "      * %d warnings(s) raised by %S/%S\n%!"
+              (Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
                  total_l_w pname lname;
                Hashtbl.iter (fun wid cpt ->
-                   Printf.printf "        * %d Warning %i\n%!" cpt wid)
+                   Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
                  wtbl)
             else
               Hashtbl.iter (fun wid cpt ->
-                  Printf.printf "      * %d warnings(s) raised by %S/%S/%i\n%!"
-                    cpt pname lname wid)
+                  Printf.printf
+                    "      * %d warning(s) raised by %S/%S/warning #%i\n%!"
+                    cpt
+                    pname
+                    lname
+                    wid)
                 wtbl)
           ptbl)
     breakdown_linted;
-  Printf.printf "  * errors(s) on %d file(s) were emitted:\n%!"
+  Printf.printf "  * %d file(s) couldn't be linted:\n%!"
     files_linted_errors_total;
   StringCompat.StringSet.iter
     (Printf.printf "    - %s\n%!") !files_linted_errors
 
-let print fmt severity path db =
+let print fmt master_config file_config severity path db =
   try
     Hashtbl.iter (fun file (hash, pres) ->
-        if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
-          StringMap.iter (fun pname lres ->
+        let file_with_cfg = List.mem_assoc file file_config in
+        let (_configs, config_tmp) =
+          if file_with_cfg then List.assoc file file_config
+          else ([], "") in
+        if file_with_cfg then
+          Lint_globals.Config.load_config_tmp master_config config_tmp;
+        let ws =
+          StringMap.fold (fun pname lres acc ->
               let flag = check_flag [pname; "enabled"] in
               if flag then
-                StringMap.iter  (fun lname (_source, _opt, ws) ->
+                StringMap.fold (fun lname (version, _source, _opt, ws) acc ->
                     let flag = check_flag [pname; lname; "enabled"] in
                     if flag then
                       let filters =
                         Lint_globals.Config.get_option_value
                           [pname; lname; "warnings"] in
                       let arr = Lint_parse_args.parse_options filters in
-                      List.iter
-                        (fun warning ->
+                      List.fold_left
+                        (fun acc warning ->
                            if arr.(warning.decl.id - 1) &&
                               warning.decl.severity >= severity then
-                             print_warning fmt pname lname warning)
-                        ws)
-                  lres)
-            pres)
+                             (pname, lname, warning) :: acc
+                           else acc) acc ws
+                    else acc)
+                  lres acc
+              else acc)
+            pres [] in
+        let ws =
+          List.sort (fun (_, _, w1) (_, _, w2) ->
+              compare w1.loc w2.loc) ws in
+        List.iter (fun (pname, lname, w) ->
+            print_warning fmt pname lname w) ws)
       db
   with Not_found ->
     Printf.eprintf "Warning: Database contains warnings raised by plugins \
@@ -300,16 +352,14 @@ let print fmt severity path db =
 let print_error ppf path db_error =
   let has_error = ref false in
   Hashtbl.iter (fun file error_set ->
-      if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) &&
-         not (ErrorSet.is_empty error_set) then
+      if not (ErrorSet.is_empty error_set) then
         has_error := true
     ) db_error;
   if !has_error then
     begin
       Format.fprintf ppf "=== Errors ===\n%!";
       Hashtbl.iter (fun file error_set ->
-          if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) &&
-             not (ErrorSet.is_empty error_set) then
+          if not (ErrorSet.is_empty error_set) then
             begin
               Format.fprintf ppf "%S:\n%!" file;
               ErrorSet.iter (print_error ppf) error_set
@@ -320,20 +370,19 @@ let print_error ppf path db_error =
 
 let print_only_new fmt path db =
   Hashtbl.iter (fun file (hash, pres) ->
-      if Lint_utils.(is_in_path !Lint_db.DefaultDB.root file path) then
-        StringMap.iter (fun pname lres ->
-            StringMap.iter  (fun lname (source, _opt, ws) ->
-                if source = Analyse then
-                  List.iter (print_warning fmt pname lname) ws)
-              lres)
-          pres)
+      StringMap.iter (fun pname lres ->
+          StringMap.iter  (fun lname (_version, source, _opt, ws) ->
+              if source = Analyse then
+                List.iter (print_warning fmt pname lname) ws)
+            lres)
+        pres)
     db
 
 let verbose_info fmt db =
   Hashtbl.iter (fun file (hash, pres) ->
       let triggered_plugin =
         StringMap.filter (fun pname lres ->
-            StringMap.exists (fun lname (source, opt, ws) ->
+            StringMap.exists (fun lname (_version, source, opt, ws) ->
                 let plugin_flag = check_flag [pname; "enabled"] in
                 let linter_flag = check_flag [pname; lname; "enabled"] in
                 let filters =
@@ -355,4 +404,20 @@ let verbose_info fmt db =
       else
         Format.fprintf fmt "\027[31m%S\027[m: [%i / %i]\n%!"
           file triggered_plugin_len plugin_len)
+    db
+
+let debug_db db =
+  Hashtbl.iter (fun file (hash, pres) ->
+      let ws =
+        StringMap.fold (fun pname lres acc ->
+            StringMap.fold (fun lname (version, _source, _opt, ws) acc ->
+                List.fold_left
+                  (fun acc warning -> (pname, lname, warning) :: acc) acc ws)
+              lres acc)
+          pres [] in
+      let ws =
+        List.sort (fun (_, _, w1) (_, _, w2) ->
+            compare w1.loc w2.loc) ws in
+      List.iter (fun (pname, lname, w) ->
+          print_warning Format.std_formatter pname lname w) ws)
     db

@@ -26,6 +26,22 @@ let create () = Hashtbl.create 42
 
 let add = Hashtbl.replace
 
+let mem = Hashtbl.mem
+
 let find = Hashtbl.find
+
+let exist_name plugins short_name =
+  let res = ref false in
+  Hashtbl.iter (fun p _ ->
+      let module Plugin = (val p : Lint_plugin_types.PLUGIN) in
+      let p_short_name = Plugin.short_name in
+      if p_short_name = short_name then res := true)
+    plugins;
+  !res
+
+let check_uniqueness plugins plugin =
+  let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
+  let short_name = Plugin.short_name in
+  not (mem plugins plugin) && not (exist_name plugins short_name)
 
 let iter_plugins apply plugins = Hashtbl.iter apply plugins

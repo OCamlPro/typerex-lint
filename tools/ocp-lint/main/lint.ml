@@ -24,6 +24,7 @@ type action =
   | ActionNone
   | ActionList
   | ActionInit
+  | ActionPrint of string
   | ActionSave
   | ActionLoadDir of string
   | ActionLoadFile of string
@@ -35,8 +36,10 @@ let default_dir = "."
 let print_only_new = ref false
 let no_db = ref false
 let db_dir = ref None
+let config_file = ref ""
 let verbose = ref false
 let severity_limit = ref 0
+let good_plugins = ref []
 
 module ArgAlign = struct
   open Arg
@@ -177,16 +180,24 @@ let () =
     " Initialise a project";
 
     "--path", Arg.String (fun dir ->
-        Lint_actions.init_config dir;
+        if !config_file <> ""
+        then Lint_actions.init_config_file !config_file
+        else Lint_actions.init_config dir;
         set_action (ActionLoadDir dir)),
     "DIR   Give a project dir path";
 
     "--file", Arg.String (fun file ->
+        if !config_file <> ""
+        then Lint_actions.init_config_file !config_file
+        else Lint_actions.init_config (Filename.dirname file);
         set_action (ActionLoadFile file)),
     "FILE   Give a file to lint";
 
     "--db-dir", Arg.String (fun dir -> db_dir := Some dir),
     "DIR   Give database directory";
+
+    "--print-db", Arg.String (fun dir -> set_action (ActionPrint dir)),
+    "DIR   Give the path to a _olint dir to print the db";
 
     "--output-txt", Arg.String (fun file -> output_text := Some file),
     "FILE   Output results in a text file.";
@@ -199,13 +210,16 @@ let () =
 
     "--load-plugins", Arg.String (fun files ->
         let l = (Str.split (Str.regexp ",") files) in
-        Lint_actions.load_plugins l;
+        good_plugins := Lint_actions.load_plugins l;
         add_simple_args ();
       ),
     "PLUGINS Load dynamically plugins with their corresponding 'cmxs' files.";
 
-    "--save-config", Arg.Unit (fun () -> set_action (ActionSave)),
+    "--save-config", Arg.Unit (fun () -> set_action ActionSave),
     " Save ocp-lint default config file.";
+
+    "--load-config", Arg.String (fun file -> config_file := file),
+    "FILE Specify which config file ocp-lint should use.";
 
     "--no-db-cache", Arg.Set no_db,
     " Ignore the database.";
@@ -216,18 +230,26 @@ let () =
     "--severity-limit", Arg.Int (fun i -> severity_limit := i),
     " Only display warning above this severity";
 
-    "", Arg.Unit (fun () -> ()),
-    " \n\nPlugins arguments:\n";
-
     "--verbose", Arg.Set verbose,
     " Show extra informations.";
+
+    "", Arg.Unit (fun () -> ()),
+    " \n\nPlugins arguments:\n";
   ]
 
 let start_lint_file file =
   Lint_actions.lint_file !verbose !no_db !db_dir !severity_limit file
 
 let start_lint dir =
-  Lint_actions.lint_sequential !no_db !db_dir !severity_limit dir;
+  let master_config = Filename.temp_file ".ocplint" "" in
+  Lint_globals.Config.save_master master_config;
+  Lint_actions.lint_sequential
+    !no_db
+    !db_dir
+    !severity_limit
+    !good_plugins
+    master_config
+    dir;
   if Lint_db.DefaultDB.has_warning () then exit !exit_status
 
 let main () =
@@ -250,6 +272,8 @@ let main () =
   | ActionList ->
     Lint_actions.list_plugins Format.std_formatter;
     exit 0
+  | ActionPrint dir ->
+    Lint_actions.print_db dir
   | ActionInit ->
     Lint_globals.Config.save ();
     Lint_actions.init_olint_dir ()

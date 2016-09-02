@@ -20,7 +20,7 @@
 
 (** [load_plugins files] load dynamically files or files in a specific
     directory given in the command line with '--load' option. *)
-val load_plugins : string list -> unit
+val load_plugins : string list -> string list
 
 val list_plugins : Format.formatter -> unit
 
@@ -28,9 +28,13 @@ val list_plugins : Format.formatter -> unit
 val init_olint_dir : unit -> unit
 
 val init_config : string -> unit
+val init_config_file : string -> unit
 val init_db : bool -> string option -> string -> string option * bool
+
+val print_db : string -> unit
 
 val lint_file : bool -> bool -> string option -> int -> string -> unit
 
 (* val lint_parallel : string -> unit *)
-val lint_sequential : bool -> string option -> int -> string -> unit
+val lint_sequential :
+  bool -> string option -> int -> string list -> string -> string -> unit

@@ -21,7 +21,7 @@
 type error =
   | Db_error of Lint_db_error.error
   | Plugin_error of Lint_plugin_error.error
-  | Sempatch_error of Sempatch.Failure.t
+  | Sempatch_error of string
   | Ocplint_error of string
 
 module StringMap : Map.S with type key = string
@@ -31,7 +31,10 @@ module ErrorSet : Set.S with type elt = error
 type source = Cache | Analyse
 
 type warning_list =
-  source * (string list * string) list * Lint_warning_types.warning list
+  int *
+  source *
+  (string list * string) list *
+  Lint_warning_types.warning list
 type linter_map = warning_list StringMap.t
 type plugin_map = linter_map StringMap.t
 type file_map = Digest.t * plugin_map
@@ -58,11 +61,12 @@ module type DATABASE = sig
   val save : unit -> unit
   val merge : string list -> unit
   val reset : unit -> unit
+  val print_debug : t -> unit
   val remove_entry : string -> unit
-  val add_entry : string -> string -> string -> unit
+  val add_entry : string -> string -> string -> int -> unit
   val add_error : string -> error -> unit
   val clean : int -> unit
   val update : string -> string -> Lint_warning_types.warning -> unit
-  val already_run : string -> string -> string -> bool
+  val already_run : string -> string -> string -> int -> bool
   val has_warning : unit -> bool
 end
