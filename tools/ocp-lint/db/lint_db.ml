@@ -65,11 +65,11 @@ module MakeDB (DB : DATABASE_IO) = struct
     let hash_filename_path = Filename.concat olint_dir hash_filename in
     if Sys.file_exists hash_filename_path then
       try
-        let (version_db, date, file, pres, file_error) =
+        let (_version_db, _date, file, pres, file_error) =
           DB.load hash_filename_path in
         (Hashtbl.add db file (hash, pres);
          Hashtbl.add db_errors file file_error)
-      with exn ->
+      with _ ->
         Format.eprintf "Can't read DB file for %S, skipping it\n%!" file
 
   let init path =
@@ -171,7 +171,7 @@ module MakeDB (DB : DATABASE_IO) = struct
     let curr_date = Unix.time () in
     Array.iter (fun file ->
         let file_path = Filename.concat db_path file in
-        let (version_db, date, file, pres, file_error) =
+        let (version_db, date, _file, _pres, _file_error) =
           DB.load file_path in
         let limit_date = date +. (86400. *. (float limit_time)) in
         if version <> version_db then Sys.remove file_path;
@@ -224,9 +224,9 @@ module MakeDB (DB : DATABASE_IO) = struct
 
   let has_warning () =
     let warning_count =
-      Hashtbl.fold (fun file (hash, pres) count ->
-          StringMap.fold (fun pname lres count ->
-              StringMap.fold  (fun lname (_version, _src, _opt, ws) count ->
+      Hashtbl.fold (fun _file (_hash, pres) count ->
+          StringMap.fold (fun _pname lres count ->
+              StringMap.fold  (fun _lname (_src, _opt, ws) count ->
                   count + (List.length ws))
                 lres count)
             pres count)

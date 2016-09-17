@@ -18,9 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open StringCompat
-open SimpleConfig (* for !! *)
-
 module Plugin = Plugin_parsetree.Plugin
 
 module Linter = Plugin.MakeLint(struct
@@ -65,7 +62,7 @@ let iter_structure ast =
 
     include Parsetree_iter.DefaultIteratorArgument
 
-    let enter_binding toplevel pat exp = ()
+    let enter_binding _toplevel _pat _exp = ()
     (*
       if toplevel then
         match pat.ppat_desc, exp.pexp_desc with

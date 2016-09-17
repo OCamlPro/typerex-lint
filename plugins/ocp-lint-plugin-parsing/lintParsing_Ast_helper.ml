@@ -22,7 +22,7 @@ module Docstrings = LintParsing_Docstrings
 
 open Asttypes
 open Parsetree
-open Docstrings
+open! Docstrings
 
 type lid = Longident.t loc
 type str = string loc

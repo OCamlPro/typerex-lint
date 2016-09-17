@@ -27,8 +27,10 @@ sig
 
   (** The name of the plugin.  *)
   val name : string
+
   (** The short name of the plugin. It must be unique for each plugin. *)
   val short_name : string
+
   (** The details of the plugin.  *)
   val details : string
 
@@ -47,10 +49,13 @@ sig
   module MakeLint :
     functor (CA : Lint_types.LINTARG) ->
     sig
+
       (** The name of the linter. *)
       val name : string
+
       (** The short name of the linter. It must be unique for each linter. *)
       val short_name : string
+
       (** The details message of the linter. *)
       val details : string
 
@@ -99,6 +104,7 @@ sig
       module MakeInputCMT : functor (I : Lint_input.CMT) -> sig end
       module MakeInputML : functor (I : Lint_input.ML) -> sig end
       module MakeInputMLI : functor (I : Lint_input.MLI) -> sig end
+      module MakeInputSource : functor (I : Lint_input.SOURCE) -> sig end
       module MakeInputAll : functor (I : Lint_input.ALL) -> sig end
       module MakeInputTokens : functor (I : Lint_input.TOKENS) -> sig end
     end

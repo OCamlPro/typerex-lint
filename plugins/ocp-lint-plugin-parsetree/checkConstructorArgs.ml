@@ -18,9 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open StringCompat
-open SimpleConfig (* for !! *)
-
 module Plugin = Plugin_parsetree.Plugin
 
 module Linter = Plugin.MakeLint(struct
@@ -61,7 +58,6 @@ let iter_structure ast =
   let module Iter = Parsetree_iter.MakeIterator(struct
       open Asttypes
       open Parsetree
-      open Longident
 
     include Parsetree_iter.DefaultIteratorArgument
 
