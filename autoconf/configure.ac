@@ -117,6 +117,10 @@ AC_CHECK_TOOL([OCAML_TOOL_ocp_build],[ocp-build],[no])
 if test "$OCAML_TOOL_ocp_build" = "no"; then
    AC_MSG_ERROR([Please install OCaml tool 'ocp-build'.])
 fi
+AC_CHECK_OCAML_PKG(ppx_tools)
+if test "$OCAML_PKG_ppx_tools" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'ppx_tools'.])
+fi
 AC_CHECK_OCAML_PKG(menhirLib)
 if test "$OCAML_PKG_menhirLib" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'menhirLib'.])
