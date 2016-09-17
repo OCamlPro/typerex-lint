@@ -27,7 +27,7 @@ let string_of_source = function
   | Analyse -> "Analyse"
 
 module MakeDB (DB : DATABASE_IO) = struct
-  let version = 1
+  let current_version = 1
 
   let root = ref ""
 
@@ -46,10 +46,10 @@ module MakeDB (DB : DATABASE_IO) = struct
       Array.iter (fun file ->
         let path = Filename.concat dir file in
         try
-          let (version_db, date, filename, pres, file_error) =
+          let { db_file_name; db_file_pres; db_file_error } =
             DB.load path in
-          (Hashtbl.add db filename (file, pres);
-           Hashtbl.add db_errors file file_error)
+          (Hashtbl.add db db_file_name (file, db_file_pres);
+           Hashtbl.add db_errors file db_file_error)
         with exn ->
           Format.eprintf "Can't read DB file for %S, skipping it\n%!" file)
         files;
@@ -65,10 +65,10 @@ module MakeDB (DB : DATABASE_IO) = struct
     let hash_filename_path = Filename.concat olint_dir hash_filename in
     if Sys.file_exists hash_filename_path then
       try
-        let (version_db, date, file, pres, file_error) =
+        let { db_file_name; db_file_pres; db_file_error } =
           DB.load hash_filename_path in
-        (Hashtbl.add db file (hash, pres);
-         Hashtbl.add db_errors file file_error)
+        (Hashtbl.add db db_file_name (hash, db_file_pres);
+         Hashtbl.add db_errors db_file_name db_file_error)
       with exn ->
         Format.eprintf "Can't read DB file for %S, skipping it\n%!" file
 
@@ -90,17 +90,21 @@ module MakeDB (DB : DATABASE_IO) = struct
       db
 
   let save () =
-    Hashtbl.iter (fun file (hash, pres) ->
+    Hashtbl.iter (fun file (hash, db_file_pres) ->
         let db_path = Filename.concat !root "_olint" in
-        let db_file = Filename.concat db_path (Digest.to_hex hash) in
-        let db_file_tmp = db_file ^ ".tmp" in
-        let file_error =
+        let db_file_name = Filename.concat db_path (Digest.to_hex hash) in
+        let db_file_tmp = db_file_name ^ ".tmp" in
+        let db_file_error =
           if Hashtbl.mem db_errors file then
             Hashtbl.find db_errors file
           else ErrorSet.empty in
-        let date = Unix.time () in
-        DB.save db_file_tmp (version, date, file, pres, file_error);
-        Sys.rename db_file_tmp db_file)
+        let db_date = Unix.time () in
+        DB.save db_file_tmp { db_version = current_version;
+                              db_date;
+                              db_file_name;
+                              db_file_pres;
+                              db_file_error };
+        Sys.rename db_file_tmp db_file_name)
       db
 
   let reset () = Hashtbl.reset db
@@ -128,33 +132,33 @@ module MakeDB (DB : DATABASE_IO) = struct
     let file = Lint_utils.normalize_path !root file in
     Hashtbl.remove db file
 
-  let add_entry file pname lname version =
-    let options = Lint_config.DefaultConfig.get_linter_options pname lname in
+  let add_entry ~file ~plugin ~linter ~version =
+    let options = Lint_config.DefaultConfig.get_linter_options plugin linter in
     let hash = db_hash file in
     let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then
       let (_old_hash, old_fres) = Hashtbl.find db file in
-      if StringMap.mem pname old_fres then
-        let old_pres = StringMap.find pname old_fres in
+      if StringMap.mem plugin old_fres then
+        let old_pres = StringMap.find plugin old_fres in
         (* if linter already register, nothing to do *)
         (* this can happen when a linter as several mains *)
-        if not (StringMap.mem lname old_pres) then
+        if not (StringMap.mem linter old_pres) then
           let new_pres =
             StringMap.add
-              lname (version, Analyse, options, []) old_pres in
+              linter (version, Analyse, options, []) old_pres in
           let new_fres = StringMap.add
-              pname new_pres (StringMap.remove pname old_fres) in
+              plugin new_pres (StringMap.remove plugin old_fres) in
           Hashtbl.replace db file (hash, new_fres)
         else ()
       else
         let new_pres = StringMap.add
-            lname (version, Analyse, options, []) StringMap.empty in
-        let new_fres = StringMap.add pname new_pres old_fres in
+            linter (version, Analyse, options, []) StringMap.empty in
+        let new_fres = StringMap.add plugin new_pres old_fres in
         Hashtbl.replace db file (hash, new_fres)
     else
       let new_pres = StringMap.add
-          lname (version, Analyse, options, []) StringMap.empty in
-      let new_fres = StringMap.add pname new_pres StringMap.empty in
+          linter (version, Analyse, options, []) StringMap.empty in
+      let new_fres = StringMap.add plugin new_pres StringMap.empty in
       Hashtbl.add db file (hash, new_fres)
 
   let add_error file error =
@@ -171,10 +175,9 @@ module MakeDB (DB : DATABASE_IO) = struct
     let curr_date = Unix.time () in
     Array.iter (fun file ->
         let file_path = Filename.concat db_path file in
-        let (version_db, date, file, pres, file_error) =
-          DB.load file_path in
-        let limit_date = date +. (86400. *. (float limit_time)) in
-        if version <> version_db then Sys.remove file_path;
+        let { db_version; db_date } = DB.load file_path in
+        let limit_date = db_date +. (86400. *. (float limit_time)) in
+        if current_version <> db_version then Sys.remove file_path;
         if curr_date >= limit_date then Sys.remove file_path)
       files
 
