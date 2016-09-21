@@ -421,7 +421,7 @@ let clean_tmp_cfg tmp_configs master_cfg =
   try Sys.remove (master_cfg ^ ".old")
   with _ -> ()
 
-let lint_sequential no_db db_dir severity gd_plugins master_config path =
+let lint_sequential no_db db_dir severity pdetail pwarning perror gd_plugins master_config path =
   (* We filter the global ignored modules/files.  *)
   (* let no_db = init_db no_db path in *)
   let (db_dir, no_db) = init_db no_db db_dir path in
@@ -441,25 +441,33 @@ let lint_sequential no_db db_dir severity gd_plugins master_config path =
          cfg_tmp)) tmp_configs in
   Printf.eprintf "\nMergin database...%!";
   Lint_db.DefaultDB.merge sources;
-  Lint_text.print
-    Format.err_formatter
-    master_config
-    tmp_configs
-    severity
-    path
-    Lint_db.DefaultDB.db;
-  Lint_text.print_error
-    Format.err_formatter
-    path
-    Lint_db.DefaultDB.db_errors;
+  Printf.eprintf "\n%!";
+  if pwarning then
+    Lint_text.print
+      Format.err_formatter
+      master_config
+      tmp_configs
+      severity
+      path
+      Lint_db.DefaultDB.db;
+  if perror then
+    Lint_text.print_error
+      Format.err_formatter
+      path
+      Lint_db.DefaultDB.db_errors;
   Lint_text.summary
     master_config
     tmp_configs
     severity
     path
+    pdetail
     no_db
     Lint_db.DefaultDB.db
     Lint_db.DefaultDB.db_errors;
+  if not perror && not pwarning && not pdetail then
+    Printf.eprintf
+      "\n Use --pwarning to display the warnings\n Use --perror to display \
+the errors\n Use --pall to display all details\n%!";
   clean_tmp_cfg tmp_configs master_config;
   if no_db then clean_db_in_tmp db_dir
 
