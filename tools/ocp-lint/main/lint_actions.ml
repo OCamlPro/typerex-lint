@@ -428,13 +428,18 @@ let lint_sequential no_db db_dir severity gd_plugins master_config path =
   Lint_db.DefaultDB.clean !!db_persistence;
   let sources = filter_modules (scan_project path) !!ignored in
   let config_map = config_map path in
+  let len = List.length sources in
   let tmp_configs =
-    List.map (run db_dir gd_plugins master_config config_map) sources in
+    List.mapi (fun i x ->
+        if i mod 100 = 0 then Printf.eprintf "Running analyses... %d / %d\r%!" i len;
+        run db_dir gd_plugins master_config config_map x) sources in
+  Printf.eprintf "\rRunning analyses... %d / %d\nNormalizing pathes...%!" len len;
   let tmp_configs =
     List.map (fun (file, (cfgs, cfg_tmp)) ->
         Lint_utils.normalize_path !Lint_db.DefaultDB.root file,
         (cfgs,
          cfg_tmp)) tmp_configs in
+  Printf.eprintf "\nMergin database...%!";
   Lint_db.DefaultDB.merge sources;
   Lint_text.print
     Format.err_formatter
