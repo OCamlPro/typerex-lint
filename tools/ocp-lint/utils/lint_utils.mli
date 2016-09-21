@@ -18,21 +18,25 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** [iter_files ~recdir apply dirname] iters on the given dirname and apply
-    the function [apply] to all the found files. If [recdir] is set to false
-    it only scans the files in the given directory and does not iter recursively
-    in the subdirectories. *)
+(** [iter_files ~recdir apply dirname] iters on the given dirname and
+    apply the function [apply] to all the found files (relative names
+    to the [dirname] directory). If [recdir] is set to false it only
+    scans the files in the given directory and does not iter
+    recursively in the subdirectories. *)
 val iter_files : ?recdir:bool -> (string -> unit) -> string -> unit
 
 (** [substitute str substs] subsitutes the string [str] with the given
      substitutes list [substs]. It replaces all the '$ID' by the
-     matching string in the list. *)
+     matching string in the list. The function is not efficient on
+    long lists of arguments. *)
 val substitute : string -> (string * string) list -> string
 
 (** [absolute_path root filename] give the absolute path of a file. *)
 val absolute_path : string -> string -> string
 
-(** [relative root filename] give the relative to root path of a file. *)
+(** [relative root file] give the relative path to [root] of [file].
+    [root] and [file] are expected to be absolute filenames.
+*)
 val relative_path : string -> string -> string
 
 (** [find_root root_dir basenames] recurcively looks for the basenames in the

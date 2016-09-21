@@ -21,5 +21,8 @@
 (** [parse_options filters] parse the arguments given in the command line
     or found in the config file to enable/disable warnings in a specific
     linter. It returns a [bool array], each position in the array correspond
-    to a warning number. *)
+    to a warning number.
+    The returned array is not allocated, but shared between all the calls
+    to the function. Its current size is 512.
+*)
 val parse_options : string -> bool array
