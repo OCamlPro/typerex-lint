@@ -44,10 +44,18 @@ type error_set = ErrorSet.t
 type t = (string, file_map) Hashtbl.t
 type errors = (string, error_set) Hashtbl.t
 
+type db_file_entry = {
+  db_version : int;
+  db_date : float;
+  db_file_name : string;
+  db_file_pres : plugin_map;
+  db_file_error : error_set;
+}
 
+(* The current IO atom is a file entry. *)
 module type DATABASE_IO = sig
-  val load : string -> int * float * string * plugin_map * error_set
-  val save : string -> int * float * string * plugin_map * error_set -> unit
+  val load : string -> db_file_entry
+  val save : string -> db_file_entry -> unit
 end
 
 module type DATABASE = sig
@@ -63,7 +71,7 @@ module type DATABASE = sig
   val reset : unit -> unit
   val print_debug : t -> unit
   val remove_entry : string -> unit
-  val add_entry : string -> string -> string -> int -> unit
+  val add_entry : file:string -> plugin:string -> linter:string -> version:int -> unit
   val add_error : string -> error -> unit
   val clean : int -> unit
   val update : string -> string -> Lint_warning_types.warning -> unit
