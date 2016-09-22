@@ -149,6 +149,10 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
             None -> "You should use ... instead of ..."
           | Some msg -> msg in
         (* TODO Warning number can be override by the user. *)
+        let severity_opt = Patch.get_field "severity" patch in
+        let severity = match severity_opt with
+          | None -> 1
+          | Some str -> try int_of_string str with exn -> 1 in
         new_warning (Match.get_location matching)
           ~id:id
           ~short_name:(Patch.get_name patch)
@@ -156,7 +160,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
           ~args:(map_args
                    (Match.get_substitutions matching)
                    (Patch.get_metavariables patch))
-          ~severity:1
+          ~severity:severity
     end
 
     let patches =
