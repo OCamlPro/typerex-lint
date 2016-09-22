@@ -32,12 +32,13 @@ module ErrorSet = Set.Make(struct
 
 type source = Cache | Analyse
 
-type warning_list =
-  int *
-  source *
-  (string list * string) list *
-  Lint_warning_types.warning list
-type linter_map = warning_list StringMap.t
+type linter_result = {
+  res_version : int;
+  res_source : source;
+  res_options : (string list * string) list;
+  res_warnings: Lint_warning_types.warning list;
+}
+type linter_map = linter_result StringMap.t
 type plugin_map = linter_map StringMap.t
 type file_map = Digest.t * plugin_map
 
@@ -57,6 +58,7 @@ module type DATABASE = sig
   val root : string ref
   val init : File.t -> unit
   val load : string -> t
+  (* Load the file _olint/XXX containing the db for that file *)
   val load_file : string -> unit
   val cache : unit -> unit
   val save : unit -> unit

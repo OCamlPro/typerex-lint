@@ -81,8 +81,8 @@ module MakeDB (DB : DATABASE_IO) = struct
         let new_pres =
           StringMap.fold (fun pname lres acc ->
               let new_lres =
-                StringMap.fold  (fun lname (version, _src, opt, ws) acc ->
-                    StringMap.add lname (version, Cache, opt, ws) acc)
+                StringMap.fold  (fun lname res acc ->
+                    StringMap.add lname { res with res_source = Cache } acc)
                   lres StringMap.empty in
               StringMap.add pname new_lres acc)
             pres StringMap.empty in
@@ -113,11 +113,13 @@ module MakeDB (DB : DATABASE_IO) = struct
         Printf.printf "%s[HASH] :\n%!" file;
         StringMap.iter (fun pname lres ->
             Printf.printf "  %s :\n%!" pname;
-            StringMap.iter  (fun lname (_version, source, _opt, ws) ->
+            StringMap.iter  (fun lname { res_warnings; res_source } ->
                 Printf.printf "    %s-%s[%d] - | %!"
-                  lname (string_of_source source) (List.length ws);
+                  lname (string_of_source res_source)
+                  (List.length res_warnings);
                 List.iter (fun w ->
-                    Printf.printf "%s; " w.Lint_warning_types.output) ws;
+                    Printf.printf "%s; " w.Lint_warning_types.output)
+                  res_warnings;
                 Printf.printf " |\n%!")
               lres)
           pres)
@@ -128,34 +130,40 @@ module MakeDB (DB : DATABASE_IO) = struct
     let file = Lint_utils.normalize_path !root file in
     Hashtbl.remove db file
 
-  let add_entry file pname lname version =
-    let options = Lint_config.DefaultConfig.get_linter_options pname lname in
+  let add_entry file pname lname res_version =
+    let res_source = Analyse in
+    let res_options =
+      Lint_config.DefaultConfig.get_linter_options pname lname in
     let hash = db_hash file in
     let file = Lint_utils.normalize_path !root file in
-    if Hashtbl.mem db file then
-      let (_old_hash, old_fres) = Hashtbl.find db file in
-      if StringMap.mem pname old_fres then
-        let old_pres = StringMap.find pname old_fres in
+    match Hashtbl.find db file with
+    | exception Not_found ->
+      let new_pres = StringMap.add
+          lname { res_version; res_source; res_options;
+                  res_warnings = [] } StringMap.empty in
+      let new_fres = StringMap.add pname new_pres StringMap.empty in
+      Hashtbl.add db file (hash, new_fres)
+    | (_old_hash, old_fres) ->
+      match StringMap.find pname old_fres with
+      | exception Not_found ->
+        let new_pres = StringMap.add
+            lname { res_version; res_source; res_options;
+                    res_warnings = [] } StringMap.empty in
+        let new_fres = StringMap.add pname new_pres old_fres in
+        Hashtbl.replace db file (hash, new_fres)
+
+      | old_pres ->
         (* if linter already register, nothing to do *)
         (* this can happen when a linter as several mains *)
         if not (StringMap.mem lname old_pres) then
           let new_pres =
             StringMap.add
-              lname (version, Analyse, options, []) old_pres in
+              lname { res_version; res_source; res_options;
+                      res_warnings =  [] } old_pres in
           let new_fres = StringMap.add
               pname new_pres (StringMap.remove pname old_fres) in
           Hashtbl.replace db file (hash, new_fres)
         else ()
-      else
-        let new_pres = StringMap.add
-            lname (version, Analyse, options, []) StringMap.empty in
-        let new_fres = StringMap.add pname new_pres old_fres in
-        Hashtbl.replace db file (hash, new_fres)
-    else
-      let new_pres = StringMap.add
-          lname (version, Analyse, options, []) StringMap.empty in
-      let new_fres = StringMap.add pname new_pres StringMap.empty in
-      Hashtbl.add db file (hash, new_fres)
 
   let add_error file error =
     let file = Lint_utils.normalize_path !root file in
@@ -190,8 +198,10 @@ module MakeDB (DB : DATABASE_IO) = struct
       if StringMap.mem pname old_pres then
         let old_lres = StringMap.find pname old_pres in
         if StringMap.mem lname old_lres then
-          let version, src, opt, old_wres = StringMap.find lname old_lres in
-          let new_wres = version, src, opt, warn :: old_wres in
+          let res (* version, src, opt, old_wres *) =
+            StringMap.find lname old_lres in
+          let new_wres = { res with
+                           res_warnings =  warn :: res.res_warnings } in
           let new_lres =
             StringMap.add lname new_wres (StringMap.remove lname old_lres) in
           let new_pres =
@@ -214,10 +224,11 @@ module MakeDB (DB : DATABASE_IO) = struct
       if hash = new_hash && StringMap.mem pname old_fres then
         let old_pres = StringMap.find pname old_fres in
         if StringMap.mem lname old_pres then
-          let version_db, _src, opt, _warn = StringMap.find lname old_pres in
+          let { res_version;
+                res_options } = StringMap.find lname old_pres in
           let options =
             Lint_config.DefaultConfig.get_linter_options pname lname in
-          options = opt && version = version_db
+          options = res_options && version = res_version
         else false
       else false
     else false
@@ -226,8 +237,8 @@ module MakeDB (DB : DATABASE_IO) = struct
     let warning_count =
       Hashtbl.fold (fun file (hash, pres) count ->
           StringMap.fold (fun pname lres count ->
-              StringMap.fold  (fun lname (_version, _src, _opt, ws) count ->
-                  count + (List.length ws))
+              StringMap.fold  (fun lname { res_warnings } count ->
+                  count + (List.length res_warnings))
                 lres count)
             pres count)
         db 0 in
