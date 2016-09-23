@@ -40,6 +40,7 @@ val summary :
   int ->
   string ->
   bool ->
+  bool ->
   Lint_db_types.t ->
   Lint_db_types.errors ->
   unit

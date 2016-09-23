@@ -40,6 +40,9 @@ let config_file = ref ""
 let verbose = ref false
 let severity_limit = ref 0
 let good_plugins = ref []
+let pwarning = ref false
+let perror = ref false
+let pall = ref false
 
 module ArgAlign = struct
   open Arg
@@ -233,6 +236,15 @@ let () =
     "--verbose", Arg.Set verbose,
     " Show extra informations.";
 
+    "--pall", Arg.Set pall,
+    " Show all the details";
+
+    "--pwarning", Arg.Set pwarning,
+    " Show warnings";
+
+    "--perror", Arg.Set perror,
+    " Show errors";
+
     "", Arg.Unit (fun () -> ()),
     " \n\nPlugins arguments:\n";
   ]
@@ -247,6 +259,9 @@ let start_lint dir =
     !no_db
     !db_dir
     !severity_limit
+    !pall
+    !pwarning
+    !perror
     !good_plugins
     master_config
     dir;

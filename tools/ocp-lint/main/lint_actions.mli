@@ -37,4 +37,13 @@ val lint_file : bool -> bool -> string option -> int -> string -> unit
 
 (* val lint_parallel : string -> unit *)
 val lint_sequential :
-  bool -> string option -> int -> string list -> string -> string -> unit
+  bool ->
+  string option ->
+  int ->
+  bool ->
+  bool ->
+  bool ->
+  string list ->
+  string ->
+  string ->
+  unit

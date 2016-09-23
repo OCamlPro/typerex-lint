@@ -84,7 +84,7 @@ let update_breakdown tbl pname lname version wid =
      Hashtbl.add new_p_htbl lname new_l_htbl;
      Hashtbl.add tbl pname new_p_htbl)
 
-let summary master_config file_config severity path no_db db db_errors =
+let summary master_config file_config severity path details no_db db db_errors =
   let files_linted = Hashtbl.create 42 in
   let files_cached = ref StringCompat.StringSet.empty in
   let files_linted_errors = ref StringCompat.StringSet.empty in
@@ -173,85 +173,99 @@ let summary master_config file_config severity path no_db db db_errors =
     StringCompat.StringSet.cardinal !files_linted_errors in
   let files_cached_errors_total =
     StringCompat.StringSet.cardinal !files_cached_errors in
-  Printf.printf "Summary:\n%!";
-  Printf.printf "== Infos ==\n%!";
-  Printf.printf "  * root dir: %s\n%!" !Lint_db.DefaultDB.root;
+  if not no_db then begin
+    Printf.printf "Summary:\n%!";
+    Printf.printf "== Infos ==\n%!";
+    Printf.printf "  * root dir: %s\n%!" !Lint_db.DefaultDB.root;
 
-  Printf.printf "== Cache Infos ==\n%!";
-  Printf.printf "  * %d file(s) were found in cache:\n%!" files_cached_total;
-  StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_cached;
-  Printf.printf "  * %d warning(s) were found in cache:\n%!"
-    warnings_cached_total;
-  Hashtbl.iter (fun pname ptbl ->
-      let total =
+    Printf.printf "== Cache Infos ==\n%!";
+    if details then begin
+      Printf.printf "  * %d file(s) were found in cache:\n%!" files_cached_total;
+      StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_cached;
+    end
+    else
+      Printf.printf "  * %d file(s) were found in cache\n%!" files_cached_total;
+    Printf.printf "  * %d warning(s) were found in cache:\n%!"
+      warnings_cached_total;
+    Hashtbl.iter (fun pname ptbl ->
+        let total =
         Hashtbl.fold (fun lname wtbl acc -> acc + 1)
           ptbl 0 in
-      let total_w =
-        Hashtbl.fold (fun lname wtbl acc ->
-            Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl acc)
-          ptbl 0 in
-      if total > 1 then
-        (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
-         Hashtbl.iter (fun lname wtbl ->
-             let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
-             let total_l_w =
-               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
-             if total_l > 1 then
-               (Printf.printf "      * %d warning(s) raised by %S\n%!"
-                  total_l_w lname;
+        let total_w =
+          Hashtbl.fold (fun lname wtbl acc ->
+              Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl acc)
+            ptbl 0 in
+        if total > 1 then
+          (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
+           Hashtbl.iter (fun lname wtbl ->
+               let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
+               let total_l_w =
+                 Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
+               if total_l > 1 then
+                 (Printf.printf "      * %d warning(s) raised by %S\n%!"
+                    total_l_w lname;
+                  Hashtbl.iter (fun wid cpt ->
+                      Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                    wtbl)
+               else
+                 Hashtbl.iter (fun wid cpt ->
+                     Printf.printf
+                       "      * %d warning(s) raised by %S/warning #%i\n%!"
+                       cpt
+                       lname
+                       wid)
+                   wtbl)
+             ptbl)
+        else
+          Hashtbl.iter (fun lname wtbl ->
+              let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
+              let total_l_w =
+                Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
+              if total_l > 1 then
+                (Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
+                   total_l_w pname lname;
+                 Hashtbl.iter (fun wid cpt ->
+                     Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                   wtbl)
+              else
                 Hashtbl.iter (fun wid cpt ->
-                    Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
-                  wtbl)
-             else
-               Hashtbl.iter (fun wid cpt ->
-                   Printf.printf
-                     "      * %d warning(s) raised by %S/warning #%i\n%!"
-                     cpt
-                     lname
-                     wid)
-                 wtbl)
-           ptbl)
-      else
-        Hashtbl.iter (fun lname wtbl ->
-            let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
-            let total_l_w =
-              Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
-            if total_l > 1 then
-              (Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
-                 total_l_w pname lname;
-               Hashtbl.iter (fun wid cpt ->
-                   Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
-                 wtbl)
-            else
-              Hashtbl.iter (fun wid cpt ->
-                  Printf.printf
-                    "      * %d warning(s) raised by %S/%S/warning #%i\n%!"
-                    cpt
-                    pname
-                    lname
-                    wid)
+                    Printf.printf
+                      "      * %d warning(s) raised by %S/%S/warning #%i\n%!"
+                      cpt
+                      pname
+                      lname
+                      wid)
                 wtbl)
-          ptbl)
-    breakdown_cached;
-  Printf.printf "  * %d files(s) couldn't be linted:\n%!"
-    files_cached_errors_total;
-  StringCompat.StringSet.iter
-    (Printf.printf "    - %s\n%!") !files_cached_errors;
-
+            ptbl)
+      breakdown_cached;
+    if details then begin
+      Printf.printf "  * %d files(s) couldn't be linted:\n%!"
+        files_cached_errors_total;
+      StringCompat.StringSet.iter
+        (Printf.printf "    - %s\n%!") !files_cached_errors;
+    end
+    else
+      Printf.printf "  * %d files(s) couldn't be linted\n%!"
+        files_cached_errors_total
+  end;
   Printf.printf "== New Warnings ==\n%!";
-  Printf.printf "  * %d file(s) were linted:\n%!" files_linted_total;
-  Hashtbl.iter (fun file cfgs ->
-      let file_rel = Lint_utils.relative_path !Lint_db.DefaultDB.root file in
-      let file_norm =
-        if no_db then
-          Lint_utils.normalize_path (Sys.getcwd()) file_rel
-        else file in
-      Printf.printf "    - %s\n%!" file_norm;
-      StringCompat.StringSet.iter (fun cfg ->
-          let cfg = Filename.concat cfg ".ocplint" in
-          Printf.printf "        * %s\n" cfg)
-        cfgs)
-    files_linted;
+  if details then begin
+    Printf.printf "  * %d file(s) were linted:\n%!" files_linted_total;
+    Hashtbl.iter (fun file cfgs ->
+        let file_rel = Lint_utils.relative_path !Lint_db.DefaultDB.root file in
+        let file_norm =
+          if no_db then
+            Lint_utils.normalize_path (Sys.getcwd()) file_rel
+          else file in
+        Printf.printf "    - %s\n%!" file_norm;
+        StringCompat.StringSet.iter (fun cfg ->
+            let cfg = Filename.concat cfg ".ocplint" in
+            Printf.printf "        * %s\n" cfg)
+          cfgs)
+      files_linted;
+  end
+  else
+    Printf.printf "  * %d file(s) were linted\n%!" files_linted_total;
   Printf.printf "  * %d warning(s) were emitted:\n%!" warnings_linted_total;
   Hashtbl.iter (fun pname ptbl ->
       let total =
@@ -304,10 +318,15 @@ let summary master_config file_config severity path no_db db db_errors =
                 wtbl)
           ptbl)
     breakdown_linted;
-  Printf.printf "  * %d file(s) couldn't be linted:\n%!"
-    files_linted_errors_total;
-  StringCompat.StringSet.iter
-    (Printf.printf "    - %s\n%!") !files_linted_errors
+  if details then begin
+    Printf.printf "  * %d file(s) couldn't be linted:\n%!"
+      files_linted_errors_total;
+    StringCompat.StringSet.iter
+      (Printf.printf "    - %s\n%!") !files_linted_errors
+  end
+  else
+    Printf.printf "  * %d file(s) couldn't be linted\n%!"
+      files_linted_errors_total
 
 let print fmt master_config file_config severity path db =
   try

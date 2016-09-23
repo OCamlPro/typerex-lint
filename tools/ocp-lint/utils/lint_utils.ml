@@ -25,7 +25,10 @@ let iter_files ?(recdir=true) apply dirname =
         try
           let file = Filename.concat dir file in
           if Sys.is_directory (Filename.concat dirname file) then begin
-            if recdir then iter dirname file
+            if not (String.get file 0 = '.') &&
+               not (String.get file 0 = '_') &&
+               recdir then
+              iter dirname file
           end else
             apply file
         with Sys_error err ->
