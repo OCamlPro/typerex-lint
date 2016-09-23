@@ -18,6 +18,13 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+type file_struct = {
+  name : string;
+  norm : string;
+  hash : string;
+  ignored : string list;
+}
+
 (** [iter_files ~recdir apply dirname] iters on the given dirname and
     apply the function [apply] to all the found files (relative names
     to the [dirname] directory). If [recdir] is set to false it only
@@ -52,5 +59,11 @@ val read_file : string -> string
 (** [normalize_path root file] normalize a path given the root dir. *)
 val normalize_path : root:string -> file:string -> string
 
-(** [mk_temp_dir ()] make a temporary directory to store the db. *)
-val mk_temp_dir : unit -> string
+(** [mk_temp_dir prefix] make a temporary directory to store the db. *)
+val mk_temp_dir : string -> string
+
+val db_hash : string -> string
+
+val save_file_struct : string -> file_struct -> string
+
+val read_file_struct : string -> file_struct

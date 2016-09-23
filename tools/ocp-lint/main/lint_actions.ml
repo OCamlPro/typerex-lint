@@ -166,21 +166,24 @@ let init_olint_dir () =
   File.safe_mkdir (File.of_string Lint_globals.olint_dirname)
 
 let init_db_in_tmp () =
-  let tmp_dir = Lint_utils.mk_temp_dir () in
+  let tmp_dir = Lint_utils.mk_temp_dir "olint" in
   let olint_dir = Filename.concat tmp_dir Lint_globals.olint_dirname in
   File.safe_mkdir (File.of_string olint_dir);
   Lint_db.DefaultDB.init (File.of_string olint_dir);
   Some tmp_dir
+
+let clean_dir dir =
+   Array.iter (fun file ->
+      Sys.remove (Filename.concat dir file))
+     (Sys.readdir dir);
+   Unix.rmdir dir
 
 let clean_db_in_tmp db_dir = match db_dir with
   | None -> ()
   | Some dir ->
     let root = dir in
     let olint_dir = Filename.concat root Lint_globals.olint_dirname in
-    Array.iter (fun file ->
-        Sys.remove (Filename.concat olint_dir file))
-      (Sys.readdir olint_dir);
-    Unix.rmdir olint_dir;
+    clean_dir olint_dir;
     Unix.rmdir dir
 
 let init_db no_db db_dir path = match db_dir with
@@ -263,36 +266,36 @@ let mk_file_t file = {
   asti = lazy (parse_interf file);
 }
 
-let from_input file_t pname cname version inputs =
+let from_input file_struct file_t pname cname version inputs =
   let file = file_t.filename in
   List.iter (fun input ->
       try
         match input with
         | Lint_input.InMl main when is_source file ->
-          Lint_db.DefaultDB.add_entry file pname cname version;
+          Lint_db.DefaultDB.add_entry file_struct pname cname version;
           main file
         | Lint_input.InStruct main when is_source file ->
           begin match Lazy.force file_t.ast with
             | Some ast ->
-              Lint_db.DefaultDB.add_entry file pname cname version;
+              Lint_db.DefaultDB.add_entry file_struct pname cname version;
               main ast
             | None -> assert false
           end
         | Lint_input.InMli main when is_interface file ->
-          Lint_db.DefaultDB.add_entry file pname cname version;
+          Lint_db.DefaultDB.add_entry file_struct pname cname version;
           main file
         | Lint_input.InInterf main when is_interface file ->
           begin match Lazy.force file_t.asti with
             | Some ast ->
-              Lint_db.DefaultDB.add_entry file pname cname version;
+              Lint_db.DefaultDB.add_entry file_struct pname cname version;
               main ast
             | None -> ()
           end
         | Lint_input.InCmt main when is_cmt file ->
-          Lint_db.DefaultDB.add_entry file pname cname version;
+          Lint_db.DefaultDB.add_entry file_struct pname cname version;
           main (Cmt_format.read_cmt file)
         | Lint_input.InAll main ->
-          Lint_db.DefaultDB.add_entry file pname cname version;
+          Lint_db.DefaultDB.add_entry file_struct pname cname version;
           main [file]
         | Lint_input.InTop main -> assert false (* TODO *)
         | Lint_input.InTokens main when is_source file || is_interface file ->
@@ -303,20 +306,23 @@ let from_input file_t pname cname version inputs =
         | _ -> ()
       with
       | Lint_db_error.Db_error err ->
-        Lint_db.DefaultDB.add_entry file pname cname version;
+        Lint_db.DefaultDB.add_entry file_struct pname cname version;
         Lint_db.DefaultDB.add_error file (Lint_db_types.Db_error err)
       | Lint_plugin_error.Plugin_error err ->
-        Lint_db.DefaultDB.add_entry file pname cname version;
+        Lint_db.DefaultDB.add_entry file_struct pname cname version;
         Lint_db.DefaultDB.add_error file (Lint_db_types.Plugin_error err)
       | exn ->
-        Lint_db.DefaultDB.add_entry file pname cname version;
+        Lint_db.DefaultDB.add_entry file_struct pname cname version;
         Lint_db.DefaultDB.add_error
           file (Lint_db_types.Ocplint_error (Printexc.to_string exn)))
     inputs
 
-let lint_file ~verbose ~no_db ~db_dir ~severity ~file =
+let lint_file ~verbose ~no_db ~db_dir ~severity ~file_struct =
+  let file = file_struct.Lint_utils.name in
+  let file_norm = file_struct.Lint_utils.norm in
+  let file_hash = file_struct.Lint_utils.hash in
   ignore (init_db no_db db_dir file);
-  Lint_db.DefaultDB.load_file file;
+  Lint_db.DefaultDB.load_file file_struct;
   Lint_db.DefaultDB.cache ();
   let plugins = filter_plugins Lint_globals.plugins in
   let open Lint_warning_decl in
@@ -326,12 +332,18 @@ let lint_file ~verbose ~no_db ~db_dir ~severity ~file =
       Lint_map.iter (fun cname lint ->
           let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
           let module Linter = (val lint : Lint_types.LINT) in
-          let ignored = get_ignored Plugin.short_name cname in
+          (* let ignored = get_ignored Plugin.short_name cname in *)
           let version = Linter.version in
-          if not (is_ignored !Lint_db.DefaultDB.root file ignored) &&
+          if (* not (is_ignored !Lint_db.DefaultDB.root file ignored) && *)
              not (Lint_db.DefaultDB.already_run
-                    file Plugin.short_name Linter.short_name version) then
-            from_input file_t Plugin.short_name Linter.short_name version Linter.inputs)
+                    file_struct Plugin.short_name Linter.short_name version) then
+            from_input
+              file_struct
+              file_t
+              Plugin.short_name
+              Linter.short_name
+              version
+              Linter.inputs)
         checks)
     plugins;
   if verbose then
@@ -377,8 +389,13 @@ let is_config_file =
 let get_config_deps config_map file =
   List.filter (fun cfg -> is_config_file cfg file) config_map
 
-let run db_dir gd_plugins master_config config_map file =
+let run db_dir gd_plugins master_config config_map temp_dir file =
   let open Lint_parallel_engine in
+  let open Lint_utils in
+  let file_norm = Lint_utils.normalize_path !Lint_db.DefaultDB.root file in
+  let hash = Lint_utils.db_hash file in
+  let file_struct = { name = file; norm = file_norm; hash; ignored = [] } in
+  let temp_file = Lint_utils.save_file_struct temp_dir file_struct in
   let configs = get_config_deps config_map file in
   let tmp_config =
     Lint_globals.Config.load_and_save master_config configs in
@@ -388,13 +405,13 @@ let run db_dir gd_plugins master_config config_map file =
       if arg = "--path" then begin
         found := true;
         args.(i) <- "--file";
-        args.(i + 1) <- file
+        args.(i + 1) <- temp_file
       end)
     args;
   purify_load_plugins args gd_plugins;
   let found_load_cfg = add_config_option args tmp_config in
   let args = (* if ocp-lint is called without --path argument *)
-    if not !found then Array.to_list args @ ["--file"; file]
+    if not !found then Array.to_list args @ ["--file"; temp_file]
     else Array.to_list args in
   let args = match db_dir with
     | Some dir -> args @ [ "--db-dir"; dir ]
@@ -410,7 +427,7 @@ let run db_dir gd_plugins master_config config_map file =
       Unix.stdout
       Unix.stderr in
   mark_running file pid;
-  file_config_dep := (file, (configs, tmp_config))::!file_config_dep
+  file_config_dep := (file_struct, (configs, tmp_config))::!file_config_dep
 
 let rec config_map_rec curr acc =
   let files = Sys.readdir curr in
@@ -444,10 +461,13 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
   let sources = filter_modules (scan_project path) !!ignored in
   let config_map = config_map path in
   let len = List.length sources in
+
+  let tmp_file_dir = Lint_utils.mk_temp_dir "olintfile" in
+  File.safe_mkdir (File.of_string tmp_file_dir);
   mark_waiting sources;
   let start_list = get_start_list (!!jobs - 1) sources in
   List.iter (fun file ->
-      run db_dir gd_plugins master_config config_map file
+      run db_dir gd_plugins master_config config_map tmp_file_dir file
     ) start_list;
   while waiting_file () do
     let processed_files = done_files len in
@@ -466,6 +486,9 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
         Lint_utils.normalize_path !Lint_db.DefaultDB.root file,
         (cfgs,
          cfg_tmp)) !file_config_dep in
+  clean_dir tmp_file_dir;
+  Printf.eprintf "\rRunning analyses... %d / %d" len len;
+  let sources = List.map (fun (file_str, _) -> file_str) tmp_configs in
   Printf.eprintf "\nMergin database...%!";
   Lint_db.DefaultDB.merge sources;
   Printf.eprintf "\n%!";

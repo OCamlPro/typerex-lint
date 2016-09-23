@@ -250,7 +250,8 @@ let () =
   ]
 
 let start_lint_file file =
-  Lint_actions.lint_file !verbose !no_db !db_dir !severity_limit file
+  let file_struct = Lint_utils.read_file_struct file in
+  Lint_actions.lint_file !verbose !no_db !db_dir !severity_limit file_struct
 
 let start_lint dir =
   let master_config = Filename.temp_file ".ocplint" "" in

@@ -93,12 +93,12 @@ let summary ~master_config ~file_config ~severity ~path
   let breakdown_linted = Hashtbl.create 42 in
   let breakdown_cached = Hashtbl.create 42 in
   Hashtbl.iter (fun file (hash, pres) ->
-      let file_with_cfg = List.mem_assoc file file_config in
-      let (configs, config_tmp) =
-        if file_with_cfg then List.assoc file file_config
-        else ([], "") in
-      if file_with_cfg then
-        Lint_globals.Config.load_config_tmp master_config config_tmp;
+      (* let file_with_cfg = List.mem_assoc file file_config in *)
+      (* let (configs, config_tmp) = *)
+      (*   if file_with_cfg then List.assoc file file_config *)
+      (*   else ([], "") in *)
+      (* if file_with_cfg then *)
+      (*   Lint_globals.Config.load_config_tmp master_config config_tmp; *)
       StringMap.iter (fun pname lres ->
           let flag = check_flag [pname; "enabled"] in
           if flag then
@@ -126,7 +126,7 @@ let summary ~master_config ~file_config ~severity ~path
                          let wid = warning.decl.id in
                          if arr.(wid - 1) &&
                             warning.decl.severity >= severity then
-                           (update_files_linted files_linted file configs;
+                           ((* update_files_linted files_linted file configs; *)
                             update_breakdown
                               breakdown_linted pname lname res_version wid))
                       res_warnings
@@ -334,12 +334,12 @@ let summary ~master_config ~file_config ~severity ~path
 let print fmt master_config file_config severity path db =
   try
     Hashtbl.iter (fun file (hash, pres) ->
-        let file_with_cfg = List.mem_assoc file file_config in
-        let (_configs, config_tmp) =
-          if file_with_cfg then List.assoc file file_config
-          else ([], "") in
-        if file_with_cfg then
-          Lint_globals.Config.load_config_tmp master_config config_tmp;
+        (* let file_with_cfg = List.mem_assoc file file_config in *)
+        (* let (_configs, config_tmp) = *)
+        (*   if file_with_cfg then List.assoc file file_config *)
+        (*   else ([], "") in *)
+        (* if file_with_cfg then *)
+        (*   Lint_globals.Config.load_config_tmp master_config config_tmp; *)
         let ws =
           StringMap.fold (fun pname lres acc ->
               let flag = check_flag [pname; "enabled"] in

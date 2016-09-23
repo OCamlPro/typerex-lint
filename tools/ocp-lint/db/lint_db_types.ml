@@ -68,15 +68,15 @@ module type DATABASE = sig
   val init : File.t -> unit
 
   val load : string -> t
-  val load_file : string -> unit
+  val load_file : Lint_utils.file_struct -> unit
   val cache : unit -> unit
   val save : unit -> unit
-  val merge : string list -> unit
+  val merge : Lint_utils.file_struct list -> unit
   val reset : unit -> unit
   val print_debug : t -> unit
   val remove_entry : string -> unit
   val add_entry :
-    file:string ->
+    file_struct:Lint_utils.file_struct ->
     pname:string ->
     lname:string ->
     version:string -> unit
@@ -87,7 +87,7 @@ module type DATABASE = sig
     lname:string ->
     warning:Lint_warning_types.warning -> unit
   val already_run :
-    file:string ->
+    file_struct:Lint_utils.file_struct ->
     pname:string ->
     lname:string ->
     version:string -> bool
