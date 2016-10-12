@@ -72,7 +72,8 @@ module type DATABASE = sig
   val reset : unit -> unit
   val print_debug : t -> unit
   val remove_entry : string -> unit
-  val add_entry : file:string -> plugin:string -> linter:string -> version:int -> unit
+  val add_entry : file:string -> pname:string ->
+    lname:string -> version:int -> unit
   val add_error : string -> error -> unit
   val clean : int -> unit
   val update : string -> string -> Lint_warning_types.warning -> unit

@@ -66,19 +66,54 @@ module type DATABASE = sig
   val db_errors : errors
   val root : string ref
   val init : File.t -> unit
+
+  (* [load dir] : load the entire database composed of files from [dir]. *)
   val load : string -> t
-  (* Load the file _olint/XXX containing the db for that file *)
+  (* [load_file file] Load the file _olint/XXX containing the db for
+     the file [file]. *)
   val load_file : string -> unit
+
+  (* mark all the entries as coming from the cache (source =  Cache) *)
   val cache : unit -> unit
+
+  (* save all the files from the database *)
   val save : unit -> unit
+
+  (* merge the cached entries for the list of files into the
+     in-memory database *)
   val merge : string list -> unit
+
+  (* clear the in-memory database *)
   val reset : unit -> unit
   val print_debug : t -> unit
+
+  (* [remove_entry file] remove the entry for file [file] from the
+     in-memory database *)
   val remove_entry : string -> unit
-  val add_entry : file:string -> plugin:string -> linter:string -> version:int -> unit
+
+  (* [add_entry ...] adds an empty entry in the in-memory database
+     for a file (no warnings are declared) *)
+  val add_entry :
+    file:string ->
+    pname:string ->
+    lname:string ->
+    version:int -> unit
+
+  (* [add_error file error] associates an error with a file *)
   val add_error : string -> error -> unit
+
+  (* [clean ndays] clean all files on disk corresponding to files analysed
+     more than [ndays] ago. *)
   val clean : int -> unit
+
+  (* [update pname lname warning] adds this warning to the file
+     provided in warning.loc in the in-memory database *)
   val update : string -> string -> Lint_warning_types.warning -> unit
+
+  (* [already_run pname lname file version] checks whether an analysis was
+     already run on a particular file. *)
   val already_run : string -> string -> string -> int -> bool
+
+  (* whether the database contains a warning... *)
   val has_warning : unit -> bool
 end

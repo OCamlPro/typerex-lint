@@ -37,7 +37,6 @@ begin program "ocp-lint"
   ]
   requires = [
     "ocp-lint-lib"
-    "ocp-lint-plugin-sempatch"
     "ocp-lint-plugin-files"
     "ocp-lint-plugin-text"
     "ocp-lint-plugin-typedtree"

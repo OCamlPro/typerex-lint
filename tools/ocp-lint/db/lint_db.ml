@@ -20,7 +20,7 @@
 
 open Lint_db_types
 
-let empty_db () = Hashtbl.create 42
+let empty_db () = (Hashtbl.create 1027 : Lint_db_types.t)
 
 let string_of_source = function
   | Cache -> "Cache"
@@ -32,7 +32,7 @@ module MakeDB (DB : DATABASE_IO) = struct
   let root = ref ""
 
   let db = empty_db ()
-  let db_errors = empty_db ()
+  let db_errors = Hashtbl.create 1027
 
   let db_hash file =
     let file_content = Lint_utils.read_file file in
