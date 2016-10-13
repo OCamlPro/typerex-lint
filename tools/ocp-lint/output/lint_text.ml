@@ -101,7 +101,9 @@ let summary master_config file_config severity path details no_db db db_errors =
       StringMap.iter (fun pname lres ->
           let flag = check_flag [pname; "enabled"] in
           if flag then
-            StringMap.iter  (fun lname (version, source, _opt, ws) ->
+            StringMap.iter  (fun lname { res_version;
+                                         res_source;
+                                         res_warnings } ->
                 let flag = check_flag [pname; lname; "enabled"] in
                 let flag_error =
                   if Hashtbl.mem db_errors file then
@@ -109,7 +111,7 @@ let summary master_config file_config severity path details no_db db db_errors =
                     not (ErrorSet.is_empty err_set)
                   else false
                 in
-                if flag && source = Analyse then
+                if flag && res_source = Analyse then
                   begin
                     if flag_error then
                       files_linted_errors :=
@@ -125,11 +127,11 @@ let summary master_config file_config severity path details no_db db db_errors =
                             warning.decl.severity >= severity then
                            (update_files_linted files_linted file configs;
                             update_breakdown
-                              breakdown_linted pname lname version wid))
-                      ws
+                              breakdown_linted pname lname res_version wid))
+                      res_warnings
                   end
                 else
-                if flag && source = Cache then
+                if flag && res_source = Cache then
                   begin
                     if flag_error then
                       files_cached_errors :=
@@ -146,8 +148,8 @@ let summary master_config file_config severity path details no_db db db_errors =
                            (files_cached :=
                               StringCompat.StringSet.add file !files_cached;
                             update_breakdown
-                              breakdown_cached pname lname version wid))
-                      ws end)
+                              breakdown_cached pname lname res_version wid))
+                      res_warnings end)
               lres)
         pres)
     db;
@@ -341,7 +343,7 @@ let print fmt master_config file_config severity path db =
           StringMap.fold (fun pname lres acc ->
               let flag = check_flag [pname; "enabled"] in
               if flag then
-                StringMap.fold (fun lname (version, _source, _opt, ws) acc ->
+                StringMap.fold (fun lname { res_version; res_warnings } acc ->
                     let flag = check_flag [pname; lname; "enabled"] in
                     if flag then
                       let filters =
@@ -353,7 +355,7 @@ let print fmt master_config file_config severity path db =
                            if arr.(warning.decl.id - 1) &&
                               warning.decl.severity >= severity then
                              (pname, lname, warning) :: acc
-                           else acc) acc ws
+                           else acc) acc res_warnings
                     else acc)
                   lres acc
               else acc)
@@ -390,9 +392,9 @@ let print_error ppf path db_error =
 let print_only_new fmt path db =
   Hashtbl.iter (fun file (hash, pres) ->
       StringMap.iter (fun pname lres ->
-          StringMap.iter  (fun lname (_version, source, _opt, ws) ->
-              if source = Analyse then
-                List.iter (print_warning fmt pname lname) ws)
+          StringMap.iter  (fun lname { res_source; res_warnings } ->
+              if res_source = Analyse then
+                List.iter (print_warning fmt pname lname) res_warnings)
             lres)
         pres)
     db
@@ -401,7 +403,7 @@ let verbose_info fmt db =
   Hashtbl.iter (fun file (hash, pres) ->
       let triggered_plugin =
         StringMap.filter (fun pname lres ->
-            StringMap.exists (fun lname (_version, source, opt, ws) ->
+            StringMap.exists (fun lname { res_warnings } ->
                 let plugin_flag = check_flag [pname; "enabled"] in
                 let linter_flag = check_flag [pname; lname; "enabled"] in
                 let filters =
@@ -410,7 +412,7 @@ let verbose_info fmt db =
                 let arr = Lint_parse_args.parse_options filters in
                 let warnings_activated =
                   List.filter (fun warning ->
-                      arr.(warning.decl.id - 1)) ws in
+                      arr.(warning.decl.id - 1)) res_warnings in
                 let warning_flag = warnings_activated <> [] in
                 warning_flag && plugin_flag && linter_flag)
               lres)
@@ -429,9 +431,10 @@ let debug_db db =
   Hashtbl.iter (fun file (hash, pres) ->
       let ws =
         StringMap.fold (fun pname lres acc ->
-            StringMap.fold (fun lname (version, _source, _opt, ws) acc ->
+            StringMap.fold (fun lname { res_warnings } acc ->
                 List.fold_left
-                  (fun acc warning -> (pname, lname, warning) :: acc) acc ws)
+                  (fun acc warning -> (pname, lname, warning) :: acc) acc
+                  res_warnings)
               lres acc)
           pres [] in
       let ws =

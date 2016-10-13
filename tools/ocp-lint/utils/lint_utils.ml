@@ -43,6 +43,7 @@ let substitute str substs =
   Buffer.add_substitute buf (replace substs) str;
   Buffer.contents buf
 
+(* Beware: not Windows compatible ! *)
 let relative_path =
   let split_path str = OcpString.split str '/' in
   let rec make_relative = function
@@ -54,6 +55,8 @@ let relative_path =
     make_relative (split_path root, split_path file)
     |> String.concat Filename.dir_sep
 
+(* [find_root root file] tries to find if [file] is present somewhere in the
+   direct hierarchy of [root]. *)
 let find_root root_dir basenames =
   let rec find dirname (basenames : string list) =
     let file = File.add_basenames dirname basenames in
@@ -67,6 +70,7 @@ let find_root root_dir basenames =
   in
   find root_dir basenames
 
+(* Beware: not Windows compatible ! *)
 let diff to_root path =
   let to_root = OcpString.split to_root '/' in
   let path = OcpString.split path '/' in

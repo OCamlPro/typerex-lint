@@ -23,9 +23,13 @@ open Lint_config_types
 exception ConfigParseError of string
 
 module DefaultConfig = struct
-  let config_file = SimpleConfig.create_config_file (File.of_string ".ocplint")
 
-  let init_config file =
+  let dot_file = ref ""
+
+  let config_file = SimpleConfig.create_config_file (File.of_string "")
+
+  let init_config set_dot_file file =
+    dot_file := set_dot_file;
     SimpleConfig.set_config_file config_file file;
     SimpleConfig.load config_file
 
@@ -43,14 +47,16 @@ module DefaultConfig = struct
   let get_option_value option_name =
     SimpleConfig.LowLevel.get_simple_option config_file option_name
 
+  (* Move to OcpList or even to List *)
+  let rec list_starts_with oi name =
+    match oi, name with
+    | _, [] -> true
+    | [], _ -> false
+    | x :: oi, y :: name when x = y -> list_starts_with oi name
+    | _ -> false
+
   let is_option_of name oi =
-    try
-      let diff =
-        List.mapi (fun i n ->
-            (List.nth oi.SimpleConfig.LowLevel.option_name i) = n)
-          name in
-      List.for_all (fun b -> b) diff
-    with _ -> false
+    list_starts_with oi.SimpleConfig.LowLevel.option_name name
 
   let get_linter_options plugin_name linter_name =
     let name = [ plugin_name; linter_name ] in
@@ -64,6 +70,8 @@ module DefaultConfig = struct
   let save () =
     SimpleConfig.save_with_help config_file
 
+  (* Save the config under [filename] without changing the file
+     associated with the config. *)
   let save_master filename =
     let filename = File.of_string filename in
     let old_filename = SimpleConfig.config_file config_file in
@@ -71,19 +79,23 @@ module DefaultConfig = struct
     SimpleConfig.save config_file;
     SimpleConfig.set_config_file config_file old_filename
 
+  (* Load [master] file, then load ".ocplint" present in each
+     directory of [configs]. *)
   let load_configs master configs =
     SimpleConfig.set_config_file config_file master;
     SimpleConfig.load config_file;
     List.iter (fun cfg_dir ->
-        let cfg = Filename.concat cfg_dir ".ocplint" in
+        let cfg = Filename.concat cfg_dir !dot_file in
         let cfg = File.of_string cfg in
         SimpleConfig.set_config_file config_file cfg;
         SimpleConfig.load config_file)
       configs
 
+  (* load [master], load .ocplint from [configs], returned a temporary
+     saved config. *)
   let load_and_save master configs =
     let master_t = File.of_string master in
-    let filename = Filename.temp_file ".ocplint" "" in
+    let filename = Filename.temp_file !dot_file "" in
     let filename_t = File.of_string filename in
     load_configs master_t configs;
     SimpleConfig.set_config_file config_file filename_t;
@@ -92,6 +104,7 @@ module DefaultConfig = struct
     SimpleConfig.load config_file;
     File.to_string filename_t
 
+  (* load [master] and then [config] *)
   let load_config_tmp master config =
     let master = File.of_string master in
     let config = File.of_string config in

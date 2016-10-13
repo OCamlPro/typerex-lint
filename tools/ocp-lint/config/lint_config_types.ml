@@ -21,7 +21,8 @@
 module type CONFIG = sig
   val config_file : SimpleConfig.config_file
 
-  val init_config : File.t -> unit
+  (* [init_config dot_file filename] reads the initial configuration *)
+  val init_config : string -> File.t -> unit
 
   val simple_args : unit -> (string * Arg.spec * string) list
 

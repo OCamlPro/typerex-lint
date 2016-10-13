@@ -19,5 +19,4 @@
 (**************************************************************************)
 
 val iter_tokens : (Parser.token -> Location.t -> unit) -> string -> unit
-
 val get_tokens : string -> (Parser.token * Location.t) array

@@ -27,9 +27,15 @@ let rec iter_tokens f filename =
     let token = Lexer.token_with_comments lexbuf in
     let loc = Location.curr lexbuf in
     f token loc;
-    iter f in
-  iter f;
-  close_in ic
+    match token with
+    | Parser.EOF ->
+      close_in ic
+    | _ ->
+      iter f
+  in
+  try
+    iter f
+  with e -> close_in ic; raise e
 
 let get_tokens filename =
   let ic = open_in filename in

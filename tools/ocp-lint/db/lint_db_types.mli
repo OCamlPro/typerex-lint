@@ -30,12 +30,13 @@ module ErrorSet : Set.S with type elt = error
 
 type source = Cache | Analyse
 
-type warning_list =
-  int *
-  source *
-  (string list * string) list *
-  Lint_warning_types.warning list
-type linter_map = warning_list StringMap.t
+type linter_result = {
+  res_version : int;
+  res_source : source;
+  res_options : (string list * string) list;
+  res_warnings: Lint_warning_types.warning list;
+}
+type linter_map = linter_result StringMap.t
 type plugin_map = linter_map StringMap.t
 type file_map = Digest.t * plugin_map
 
@@ -71,7 +72,8 @@ module type DATABASE = sig
   val reset : unit -> unit
   val print_debug : t -> unit
   val remove_entry : string -> unit
-  val add_entry : file:string -> plugin:string -> linter:string -> version:int -> unit
+  val add_entry : file:string -> pname:string ->
+    lname:string -> version:int -> unit
   val add_error : string -> error -> unit
   val clean : int -> unit
   val update : string -> string -> Lint_warning_types.warning -> unit
