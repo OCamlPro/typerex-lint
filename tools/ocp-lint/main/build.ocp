@@ -54,7 +54,8 @@ begin program "ocp-lint-minimal"
   ]
   requires = [
         "ocp-lint-lib"
-        "ocplib-compiler"
+          "compiler-libs.common"
+
   ]
   link = [ "-linkall" ]
 end

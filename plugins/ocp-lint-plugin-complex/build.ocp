@@ -28,5 +28,6 @@ begin library "ocp-lint-plugin-complex"
   requires = [
     "ocp-lint-config"
     "ocp-lint-api"
+    "ocplib-compiler"
   ]
 end

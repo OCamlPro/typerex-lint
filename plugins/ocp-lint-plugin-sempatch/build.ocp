@@ -37,11 +37,12 @@ end
 begin library "ocp-lint-patch"
   files = [ *)
     "plugin_patch.ml"
-    "default_patch.ml"
-    "user_patch.ml"
+    "lint_sempatch.ml"
   ]
   requires = [
+    "ocplib-sempatch"
     "ocp-lint-api"
+    "ocplib-compiler"
         (*    "ocp-lint-static-patch-files" *)
   ]
 end

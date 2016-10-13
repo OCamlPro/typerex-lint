@@ -19,7 +19,6 @@
 (**************************************************************************)
 
 open Lint_plugin_error
-open Sempatch
 open Lint_warning
 open Lint_warning_decl
 
@@ -108,111 +107,6 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let open Lint_warning_types in
     let warning_decl = { short_name; message = msg; id; severity } in
     warning_decl
-
-  module MakeLintPatch (C : Lint_types.LINTPATCHARG) = struct
-
-    let name = C.name
-    let version = C.version
-    let short_name = C.short_name
-    let details = C.details
-    let patches = C.patches
-    let enable = C.enable
-
-    let wdecls = WarningDeclaration.empty ()
-
-    let create_option option short_help lhelp ty default =
-      let option = [P.short_name; C.short_name; option] in
-      Lint_globals.Config.create_option option short_help lhelp 0 ty default
-
-    let new_warning loc ~id ~short_name ~msg ~args ~severity =
-      let open Lint_warning_types in
-      let decl = new_warning id ~short_name ~msg ~severity in
-      WarningDeclaration.add decl wdecls;
-      (* TODO: cago: here we have to re-set the long help with the id and the
-         short_name of the warning. It will be displayed in the config file. *)
-      let msg = Lint_utils.substitute decl.message args in
-      Warning.add P.short_name C.short_name loc decl msg
-
-    (* TODO This function should be exported in ocp-sempatch. *)
-    let map_args env args =
-      List.map (fun str ->
-          match Substitution.get str env with
-          | Some ast -> (str, Ast_element.to_string ast)
-          | None -> (str, "xx"))
-        args
-
-    module Warnings = struct
-      let report id matching patch =
-        let msg =
-          match Patch.get_msg patch with
-          (* TODO replace by the result of the patch. *)
-            None -> "You should use ... instead of ..."
-          | Some msg -> msg in
-        (* TODO Warning number can be override by the user. *)
-        let severity_opt = Patch.get_field "severity" patch in
-        let severity = match severity_opt with
-          | None -> 1
-          | Some str -> try int_of_string str with exn -> 1 in
-        new_warning (Match.get_location matching)
-          ~id:id
-          ~short_name:(Patch.get_name patch)
-          ~msg
-          ~args:(map_args
-                   (Match.get_substitutions matching)
-                   (Patch.get_metavariables patch))
-          ~severity:severity
-    end
-
-    let patches =
-      List.map (fun filename ->
-          if Sys.file_exists filename then
-            try
-              let ic = open_in filename in
-              let patches = Patch.from_channel ic in
-              close_in ic;
-              patches
-            with
-              Failure.SempatchException e ->
-              Printf.eprintf "Sempatch failure : %s\n" (Failure.to_string e);
-              []
-          else
-            (raise (Plugin_error(Patch_file_not_found filename))))
-        C.patches
-
-    let iter =
-      let module IterArg = struct
-        include Parsetree_iter.DefaultIteratorArgument
-        let enter_expression structure =
-          List.iteri (fun i patches ->
-              let matches =
-                Patch.parallel_apply
-                  patches (Ast_element.from_expression structure) in
-              List.iter (fun matching ->
-                  let patch =
-                    List.find
-                      (fun p ->
-                         Patch.get_name p = Match.get_patch_name matching)
-                      patches in
-                  Warnings.report (i + 1) matching patch)
-                matches)
-            patches
-      end in
-      (module IterArg : Parsetree_iter.IteratorArgument)
-
-    let () =
-      let module Lint = struct
-        let name = name
-        let version = version
-        let short_name = short_name
-        let details = details
-        let enable = enable
-        let inputs = [Lint_input.InStruct (Parsetree_iter.iter_structure iter)]
-        let wdecls = wdecls
-      end in
-      let lint = (module Lint : Lint_types.LINT) in
-      register_main plugin C.short_name lint;
-      create_default_lint_option C.short_name C.name C.enable
-  end (* MakeLintPatch *)
 
   module MakeLint (C : Lint_types.LINTARG) = struct
 

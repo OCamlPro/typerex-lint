@@ -32,13 +32,6 @@ sig
   (** The details of the plugin.  *)
   val details : string
 
-  (** [MakeLintPatch] is a functor which takes a module of type
-      [Lint.LintPatchArg] as argument. It allows to create a linter based
-      on semantic patches (see ocplib-sempatch). It takes the files names of
-      the patches as arguments and automatically register the linter
-      into a plugin. *)
-  module MakeLintPatch : functor (CA : Lint_types.LINTPATCHARG) ->  sig end
-
   (** [MakeLint] is a functor which takes a module of type [Lint.LintArg] as
       argument. It allows to create a linter and automatically register it to
       the plugin in the global [Globals.plugins]. The functor allows to create

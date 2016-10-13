@@ -44,10 +44,6 @@ begin library "ocp-lint-api"
     (* Compiler libs (Location, Longident, etc. *)
     "compiler-libs"
 
-    (* Other libraries: sempatch and some iterators. *)
-    "ocplib-sempatch"
-    "ocplib-compiler"
-
     (* Internal dependencies. *)
     "ocp-lint-config"
     "ocp-lint-db"

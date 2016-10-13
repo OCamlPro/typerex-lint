@@ -287,7 +287,7 @@ let from_input file_t pname cname version inputs =
         | Lint_input.InTop main -> assert false (* TODO *)
         | Lint_input.InTokens main when is_source file || is_interface file ->
           begin try
-              main (Lexer_iter.get_tokens file)
+              main file
             with exn -> ()
           end
         | _ -> ()
@@ -295,10 +295,6 @@ let from_input file_t pname cname version inputs =
       | Lint_db_error.Db_error err ->
         Lint_db.DefaultDB.add_entry file pname cname version;
         Lint_db.DefaultDB.add_error file (Lint_db_types.Db_error err)
-      | Sempatch.Failure.SempatchException e ->
-        let str = Sempatch.Failure.to_string e in
-        Lint_db.DefaultDB.add_entry file pname cname version;
-        Lint_db.DefaultDB.add_error file (Lint_db_types.Sempatch_error str)
       | Lint_plugin_error.Plugin_error err ->
         Lint_db.DefaultDB.add_entry file pname cname version;
         Lint_db.DefaultDB.add_error file (Lint_db_types.Plugin_error err)
