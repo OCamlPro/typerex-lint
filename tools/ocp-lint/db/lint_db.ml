@@ -152,7 +152,6 @@ module MakeDB (DB : DATABASE_IO) = struct
                     res_warnings = [] } StringMap.empty in
         let new_fres = StringMap.add pname new_pres old_fres in
         Hashtbl.replace db file (hash, new_fres)
-
       | old_pres ->
         (* if linter already register, nothing to do *)
         (* this can happen when a linter as several mains *)
@@ -168,10 +167,10 @@ module MakeDB (DB : DATABASE_IO) = struct
 
   let add_error file error =
     let file = Lint_utils.normalize_path !root file in
-    if Hashtbl.mem db_errors file then
+    try
       let error_set = Hashtbl.find db_errors file in
       Hashtbl.replace db_errors file (ErrorSet.add error error_set)
-    else
+    with Not_found ->
       Hashtbl.add db_errors file (ErrorSet.singleton error)
 
   let clean limit_time =
@@ -192,13 +191,20 @@ module MakeDB (DB : DATABASE_IO) = struct
     if not (Sys.file_exists file)
     then raise (Lint_db_error.Db_error (Lint_db_error.File_not_found file));
     let file = Lint_utils.normalize_path !root file in
-    if Hashtbl.mem db file then
-      let (hash, old_pres) = Hashtbl.find db file in
-      if StringMap.mem pname old_pres then
-        let old_lres = StringMap.find pname old_pres in
-        if StringMap.mem lname old_lres then
-          let res (* version, src, opt, old_wres *) =
-            StringMap.find lname old_lres in
+    match Hashtbl.find db file with
+    | exception Not_found ->
+      raise (Lint_db_error.Db_error (Lint_db_error.File_not_in_db file))
+    | (hash, old_pres) ->
+      match StringMap.find pname old_pres with
+      | exception Not_found ->
+        raise (Lint_db_error.Db_error
+                 (Lint_db_error.Plugin_not_in_db (file, pname)))
+      | old_lres ->
+        match StringMap.find lname old_lres with
+        | exception Not_found ->
+          raise (Lint_db_error.Db_error
+                   (Lint_db_error.Linter_not_in_db (file, pname, lname)))
+        | res ->
           let new_wres = { res with
                            res_warnings =  warning :: res.res_warnings } in
           let new_lres =
@@ -206,31 +212,25 @@ module MakeDB (DB : DATABASE_IO) = struct
           let new_pres =
             StringMap.add pname new_lres (StringMap.remove pname old_pres) in
           Hashtbl.replace db file (hash, new_pres)
-        else
-          raise (Lint_db_error.Db_error
-                   (Lint_db_error.Linter_not_in_db (file, pname, lname)))
-      else
-        raise (Lint_db_error.Db_error
-                 (Lint_db_error.Plugin_not_in_db (file, pname)))
-    else
-      raise (Lint_db_error.Db_error (Lint_db_error.File_not_in_db file))
 
   let already_run ~file_struct ~pname ~lname ~version =
     let file = file_struct.Lint_utils.norm in
     let new_hash = file_struct.Lint_utils.hash in
-    if Hashtbl.mem db file then
+    try
       let (hash, old_fres) = Hashtbl.find db file in
-      if hash = new_hash && StringMap.mem pname old_fres then
-        let old_pres = StringMap.find pname old_fres in
-        if StringMap.mem lname old_pres then
-          let { res_version;
-                res_options } = StringMap.find lname old_pres in
-          let options =
-            Lint_config.DefaultConfig.get_linter_options pname lname in
-          options = res_options && version = res_version
+      try
+        if hash = new_hash then
+          let old_pres = StringMap.find pname old_fres in
+          try
+            let { res_version;
+                  res_options } = StringMap.find lname old_pres in
+            let options =
+              Lint_config.DefaultConfig.get_linter_options pname lname in
+            options = res_options && version = res_version
+          with Not_found -> false
         else false
-      else false
-    else false
+      with Not_found -> false
+    with Not_found -> false
 
   let has_warning () =
     let warning_count =

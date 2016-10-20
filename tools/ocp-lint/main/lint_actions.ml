@@ -332,9 +332,9 @@ let lint_file ~verbose ~no_db ~db_dir ~severity ~file_struct =
       Lint_map.iter (fun cname lint ->
           let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
           let module Linter = (val lint : Lint_types.LINT) in
-          (* let ignored = get_ignored Plugin.short_name cname in *)
+          let ignored = get_ignored Plugin.short_name cname in
           let version = Linter.version in
-          if (* not (is_ignored !Lint_db.DefaultDB.root file ignored) && *)
+          if not (is_ignored !Lint_db.DefaultDB.root file ignored) &&
              not (Lint_db.DefaultDB.already_run
                     file_struct Plugin.short_name Linter.short_name version) then
             from_input
@@ -455,13 +455,11 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
     ~perror ~gd_plugins ~master_config ~path =
   let open Lint_parallel_engine in
   (* We filter the global ignored modules/files.  *)
-  (* let no_db = init_db no_db path in *)
   let (db_dir, no_db) = init_db no_db db_dir path in
   Lint_db.DefaultDB.clean !!db_persistence;
   let sources = filter_modules (scan_project path) !!ignored in
   let config_map = config_map path in
   let len = List.length sources in
-
   let tmp_file_dir = Lint_utils.mk_temp_dir "olintfile" in
   File.safe_mkdir (File.of_string tmp_file_dir);
   mark_waiting sources;
@@ -477,18 +475,12 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
     try
       mark_done pid;
       let file = find_next_waiting () in
-      run db_dir gd_plugins master_config config_map file
+      run db_dir gd_plugins master_config config_map tmp_file_dir file
     with Not_found -> ()
   done;
-  Printf.eprintf "\rRunning analyses... %d / %d\nNormalizing pathes...%!" len len;
-  let tmp_configs =
-    List.map (fun (file, (cfgs, cfg_tmp)) ->
-        Lint_utils.normalize_path !Lint_db.DefaultDB.root file,
-        (cfgs,
-         cfg_tmp)) !file_config_dep in
   clean_dir tmp_file_dir;
   Printf.eprintf "\rRunning analyses... %d / %d" len len;
-  let sources = List.map (fun (file_str, _) -> file_str) tmp_configs in
+  let sources = List.map (fun (file_str, _) -> file_str) !file_config_dep in
   Printf.eprintf "\nMergin database...%!";
   Lint_db.DefaultDB.merge sources;
   Printf.eprintf "\n%!";
@@ -496,7 +488,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
     Lint_text.print
       Format.err_formatter
       master_config
-      tmp_configs
+      !file_config_dep
       severity
       path
       Lint_db.DefaultDB.db;
@@ -507,7 +499,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
       Lint_db.DefaultDB.db_errors;
   Lint_text.summary
     master_config
-    tmp_configs
+    !file_config_dep
     severity
     path
     pdetail
@@ -518,7 +510,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
     Printf.eprintf
       "\n Use --pwarning to display the warnings\n Use --perror to display \
 the errors\n Use --pall to display all details\n%!";
-  clean_tmp_cfg tmp_configs master_config;
+  clean_tmp_cfg !file_config_dep master_config;
   if no_db then clean_db_in_tmp db_dir
 
 (* let fork_exec file = *)
