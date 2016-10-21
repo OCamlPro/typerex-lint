@@ -104,5 +104,5 @@ let check_tokens tokens =
 
 (* Registering a main entry to the linter *)
 module MainSRC = Linter.MakeInputTokens(struct
-    let main source = check_tokens source
+    let main source = check_tokens (Lexer_iter.get_tokens source)
   end)

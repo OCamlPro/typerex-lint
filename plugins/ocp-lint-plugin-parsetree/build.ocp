@@ -37,6 +37,7 @@ begin library "ocp-lint-plugin-parsetree"
     "ocp-lint-stdlib-helper"
     "ocp-lint-config"
     "ocp-lint-api"
+    "ocplib-compiler"
   ]
 end
 
