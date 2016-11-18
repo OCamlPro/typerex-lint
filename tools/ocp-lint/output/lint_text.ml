@@ -84,7 +84,8 @@ let update_breakdown tbl pname lname version wid =
      Hashtbl.add new_p_htbl lname new_l_htbl;
      Hashtbl.add tbl pname new_p_htbl)
 
-let summary master_config file_config severity path details no_db db db_errors =
+let summary ~master_config ~file_config ~severity ~path
+    ~pdetails ~no_db ~db ~db_errors =
   let files_linted = Hashtbl.create 42 in
   let files_cached = ref StringCompat.StringSet.empty in
   let files_linted_errors = ref StringCompat.StringSet.empty in
@@ -181,7 +182,7 @@ let summary master_config file_config severity path details no_db db db_errors =
     Printf.printf "  * root dir: %s\n%!" !Lint_db.DefaultDB.root;
 
     Printf.printf "== Cache Infos ==\n%!";
-    if details then begin
+    if pdetails then begin
       Printf.printf "  * %d file(s) were found in cache:\n%!" files_cached_total;
       StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_cached;
     end
@@ -240,7 +241,7 @@ let summary master_config file_config severity path details no_db db db_errors =
                 wtbl)
             ptbl)
       breakdown_cached;
-    if details then begin
+    if pdetails then begin
       Printf.printf "  * %d files(s) couldn't be linted:\n%!"
         files_cached_errors_total;
       StringCompat.StringSet.iter
@@ -251,7 +252,7 @@ let summary master_config file_config severity path details no_db db db_errors =
         files_cached_errors_total
   end;
   Printf.printf "== New Warnings ==\n%!";
-  if details then begin
+  if pdetails then begin
     Printf.printf "  * %d file(s) were linted:\n%!" files_linted_total;
     Hashtbl.iter (fun file cfgs ->
         let file_rel = Lint_utils.relative_path !Lint_db.DefaultDB.root file in
@@ -320,7 +321,7 @@ let summary master_config file_config severity path details no_db db db_errors =
                 wtbl)
           ptbl)
     breakdown_linted;
-  if details then begin
+  if pdetails then begin
     Printf.printf "  * %d file(s) couldn't be linted:\n%!"
       files_linted_errors_total;
     StringCompat.StringSet.iter

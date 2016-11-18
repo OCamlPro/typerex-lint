@@ -46,8 +46,11 @@ val find_root : File.t -> string list -> File.t
 (** [is_in_path root file path] checks if the file is in the path. *)
 val is_in_path : string -> string -> string -> bool
 
+(** [read_file file] get the content of the file as a string. *)
 val read_file : string -> string
 
-val normalize_path : string -> string -> string
+(** [normalize_path root file] normalize a path given the root dir. *)
+val normalize_path : root:string -> file:string -> string
 
+(** [mk_temp_dir ()] make a temporary directory to store the db. *)
 val mk_temp_dir : unit -> string

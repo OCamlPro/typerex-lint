@@ -32,4 +32,6 @@ module WarningDeclaration : sig
   val union : t -> t -> t
 
   val iter : (Lint_warning_types.warning_declaration -> unit) -> t -> unit
+
+  val fold : (Lint_warning_types.warning_declaration -> 'a -> 'a) -> t -> 'a -> 'a
 end

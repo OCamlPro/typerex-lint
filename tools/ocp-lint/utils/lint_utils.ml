@@ -93,7 +93,7 @@ let absolute_path root path =
   let new_path = diff path_to_root path in
   absolute_path new_path
 
-let normalize_path root file =
+let normalize_path ~root ~file =
   relative_path root (absolute_path root file)
 
 let is_in_path root file path =
