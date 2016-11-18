@@ -190,9 +190,9 @@ module MakeDB (DB : DATABASE_IO) = struct
         if curr_date >= limit_date then Sys.remove file_path)
       files
 
-  let update pname lname warn =
+  let update ~pname ~lname ~warning =
     let file =
-      warn.Lint_warning_types.loc.Location.loc_start.Lexing.pos_fname in
+      warning.Lint_warning_types.loc.Location.loc_start.Lexing.pos_fname in
     if not (Sys.file_exists file)
     then raise (Lint_db_error.Db_error (Lint_db_error.File_not_found file));
     let hash = db_hash file in
@@ -205,7 +205,7 @@ module MakeDB (DB : DATABASE_IO) = struct
           let res (* version, src, opt, old_wres *) =
             StringMap.find lname old_lres in
           let new_wres = { res with
-                           res_warnings =  warn :: res.res_warnings } in
+                           res_warnings =  warning :: res.res_warnings } in
           let new_lres =
             StringMap.add lname new_wres (StringMap.remove lname old_lres) in
           let new_pres =
@@ -220,7 +220,7 @@ module MakeDB (DB : DATABASE_IO) = struct
     else
       raise (Lint_db_error.Db_error (Lint_db_error.File_not_in_db file))
 
-  let already_run file pname lname version =
+  let already_run ~file ~pname ~lname ~version =
     let new_hash = db_hash file in
     let file = Lint_utils.normalize_path !root file in
     if Hashtbl.mem db file then

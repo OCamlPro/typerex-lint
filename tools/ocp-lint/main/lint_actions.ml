@@ -304,7 +304,7 @@ let from_input file_t pname cname version inputs =
           file (Lint_db_types.Ocplint_error (Printexc.to_string exn)))
     inputs
 
-let lint_file verbose no_db db_dir severity file =
+let lint_file ~verbose ~no_db ~db_dir ~severity ~file =
   ignore (init_db no_db db_dir file);
   Lint_db.DefaultDB.load_file file;
   Lint_db.DefaultDB.cache ();
@@ -417,7 +417,8 @@ let clean_tmp_cfg tmp_configs master_cfg =
   try Sys.remove (master_cfg ^ ".old")
   with _ -> ()
 
-let lint_sequential no_db db_dir severity pdetail pwarning perror gd_plugins master_config path =
+let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
+    ~perror ~gd_plugins ~master_config ~path =
   (* We filter the global ignored modules/files.  *)
   (* let no_db = init_db no_db path in *)
   let (db_dir, no_db) = init_db no_db db_dir path in
