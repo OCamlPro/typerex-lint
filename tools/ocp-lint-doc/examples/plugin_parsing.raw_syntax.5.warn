@@ -1,0 +1,3 @@
+File filename, line 1, characters 8-11:
+  Warning 5: plugin_parsing/raw_syntax/avoid_paren.simple_expr SEVERITY 1
+  Avoid parentheses around simple expression

@@ -1,0 +1,3 @@
+File filename, line 1, characters 8-19:
+  Warning 6: plugin_parsing/raw_syntax/avoid_paren.function_body SEVERITY 1
+  Avoid parentheses around function body

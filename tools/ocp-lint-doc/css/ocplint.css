@@ -1,0 +1,17 @@
+.sidebar-nav li a.sub-menu {
+    padding-left:20px;
+}
+
+table {
+    width: 100%
+}
+
+table tr {
+    padding: 5px;
+}
+table th {
+    padding: 5px;
+}
+table td {
+    padding: 5px;
+}
