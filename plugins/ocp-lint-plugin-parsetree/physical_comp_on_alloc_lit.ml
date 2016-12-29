@@ -68,7 +68,11 @@ let is_allocated_lit expr =
   let open Asttypes in
   let open Parsetree in
   match expr.pexp_desc with
+#if OCAML_VERSION < "4.03.0"
   | Pexp_constant (Const_string _) ->  true, String
+#else
+  | Pexp_constant (Pconst_string (_, _)) ->  true, String
+#endif
   | Pexp_tuple _ -> true, Tuple
   | Pexp_construct (_, Some _) -> true, Construct_some
   | Pexp_variant (_, Some _) -> true, Variant_some

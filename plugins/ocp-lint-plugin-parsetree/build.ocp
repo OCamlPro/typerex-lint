@@ -33,6 +33,7 @@ begin library "ocp-lint-plugin-parsetree"
     "redefine_std_lib.ml"
 
   ]
+  pp = ["ocp-pp"]
   requires = [
     "ocp-lint-stdlib-helper"
     "ocp-lint-config"
