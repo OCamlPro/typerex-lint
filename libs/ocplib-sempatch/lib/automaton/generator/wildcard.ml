@@ -97,8 +97,16 @@ struct
   let middle_of_variant_field type_name variant =
     let variant_name = variant.pcd_name.txt in
     let here elt = L.mknoloc elt in
+#if OCAML_VERSION < "4.03.0"
+    let pcd_args = variant.pcd_args in
+#else
+    let pcd_args =
+      match variant.pcd_args with
+      | Pcstr_tuple l -> l
+      | Pcstr_record l -> List.map (fun lbl -> lbl.pld_type) l in
+#endif
     let args = List.mapi (fun idx _ -> "state_" ^ (string_of_int idx))
-        variant.pcd_args
+        pcd_args
     in
     let pattern =
       H.Pat.construct
@@ -106,7 +114,7 @@ struct
         (Some (
             H.Pat.construct
               (here @@ Longident.Lident (C.cstr variant_name))
-              (generate_patterns variant.pcd_args)
+              (generate_patterns pcd_args)
           ))
     and results =
       let sub_results = generate_tuple args in

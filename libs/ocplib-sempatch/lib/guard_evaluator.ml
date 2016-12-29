@@ -88,7 +88,11 @@ let is_int_in_range = fun args ->
     begin
       let int_expr =
         match e.pexp_desc with
+#if OCAML_VERSION < "4.03.0"
         | Pexp_constant (Asttypes.Const_int i) -> Some i
+#else
+        | Pexp_constant (Pconst_integer (str, _)) -> Some (int_of_string str)
+#endif
         | _ -> None
       in
       Option.fold (fun _ i -> min <= i && max >= i) false int_expr
@@ -101,11 +105,15 @@ let is_in_range = fun args ->
     begin
       let int_expr =
         match e.pexp_desc with
+#if OCAML_VERSION < "4.03.0"
         | Pexp_constant (Asttypes.Const_int i) -> Some i
         | Pexp_constant (Asttypes.Const_int32 i) -> Some (Int32.to_int i)
         | Pexp_constant (Asttypes.Const_int64 i) -> Some (Int64.to_int i)
         | Pexp_constant (Asttypes.Const_nativeint i) ->
           Some (Nativeint.to_int i)
+#else
+        | Pexp_constant (Pconst_integer (i, _)) -> Some (int_of_string i)
+#endif
         | _ -> None
       in
       Option.fold (fun _ i -> min <= i && max >= i) false int_expr
@@ -114,16 +122,24 @@ let is_in_range = fun args ->
 
 let is_integer_lit = apply_to_exprs @@ apply_to_1 @@ fun e ->
   match e.pexp_desc with
+#if OCAML_VERSION < "4.03.0"
   | Pexp_constant (Asttypes.Const_int _)
   | Pexp_constant (Asttypes.Const_int32 _)
   | Pexp_constant (Asttypes.Const_int64 _)
   | Pexp_constant (Asttypes.Const_nativeint _)
+#else
+  | Pexp_constant (Pconst_integer _)
+#endif
     -> true
   | _ -> false
 
 let is_string_lit = apply_to_exprs @@ apply_to_1 @@ fun e ->
   match e.pexp_desc with
+#if OCAML_VERSION < "4.03.0"
   | Pexp_constant (Asttypes.Const_string _)
+#else
+  | Pexp_constant (Pconst_string _)
+#endif
     -> true
   | _ -> false
 

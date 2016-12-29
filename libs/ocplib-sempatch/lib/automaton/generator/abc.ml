@@ -39,12 +39,22 @@ let variant_of_type_decl loc type_decl =
   in
   let args =
     match type_decl.ptype_manifest with
+#if OCAML_VERSION < "4.03.0"
     | Some typ -> [typ]
     | None ->
       [H.Typ.constr
          ~loc
          (L.mkloc type_lid loc)
          (type_decl.ptype_params |> List.map fst)]
+#else
+    | Some typ -> Pcstr_tuple [typ]
+    | None ->
+      Pcstr_tuple
+        [H.Typ.constr
+           ~loc
+           (L.mkloc type_lid loc)
+           (type_decl.ptype_params |> List.map fst)]
+#endif
   in
   H.Type.constructor
     ~loc
@@ -129,6 +139,7 @@ let str_of_type type_decls cmd =
     let mono_decls = Common.filter_decls poly_decls in
     let mk_type_module =
       fun (name, preamble, sum_type) ->
+#if OCAML_VERSION < "4.03"
         H.Str.module_ ~loc
           (H.Mb.mk ~loc
              (L.mkloc name loc)
@@ -136,6 +147,15 @@ let str_of_type type_decls cmd =
                 (preamble @
                  [H.Str.type_ ~loc
                     sum_type ])))
+#else
+        H.Str.module_ ~loc
+          (H.Mb.mk ~loc
+             (L.mkloc name loc)
+             (H.Mod.structure ~loc
+                (preamble @
+                 [H.Str.type_ ~loc
+                    Recursive sum_type ])))
+#endif
     in
     match cmd with
     | `Ast_types ->
@@ -209,10 +229,24 @@ let mapper = let open M in
         (* List.iter (output_string stderr) !Config.load_path; *)
         assert false
     in
+#if OCAML_VERSION < "4.03.0"
     List.bind (fun x ->
         match x.psig_desc with
         | Psig_type types when is_def_of "expression" types ->
           str_of_type types cmd
+#else
+    let constant = List.hd
+        (List.filter (fun x ->
+             match x.psig_desc with | Psig_type (_,_) -> true | _ -> false)
+        tree_struct) in
+    let constant_types = match constant.psig_desc with
+      | Psig_type (_, types) -> types
+      | _ -> [] in
+    List.bind (fun x ->
+        match x.psig_desc with
+        | Psig_type (_rec,types) when is_def_of "expression" types ->
+          str_of_type (constant_types @ types) cmd
+#endif
         | _ -> []
       )
       tree_struct
@@ -227,8 +261,13 @@ let mapper = let open M in
               let name = match arg with
                 | PStr [%str
                     [%e? {
+#if OCAML_VERSION < "4.03.0"
                         pexp_desc = Pexp_constant
-                            (Asttypes.Const_string (name, None)); _
+                            (Const_string (name, None)); _
+#else
+                        pexp_desc = Pexp_constant
+                            (Pconst_string (name, None)); _
+#endif
                       }
                     ]
                   ] -> Some name
