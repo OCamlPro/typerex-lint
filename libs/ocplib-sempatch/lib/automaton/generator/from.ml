@@ -56,12 +56,20 @@ struct
   let nth_arg n = Printf.sprintf "sub_%i" n
 
   let args_pattern case =
+#if OCAML_VERSION < "4.03.0"
+    let pcd_args = case.pcd_args in
+#else
+    let pcd_args =
+      match case.pcd_args with
+      | Pcstr_tuple l -> l
+      | Pcstr_record l -> List.map (fun lbl -> lbl.pld_type) l in
+#endif
     let elts =
       List.mapi (fun idx _ ->
           H.Pat.var
             (L.mknoloc (nth_arg idx))
         )
-        case.pcd_args
+        pcd_args
     in
     match elts with
     | [] -> None
@@ -80,14 +88,25 @@ struct
   let generate_sub_match typ var_name =
     H.Exp.apply
       (generate_froms typ)
+#if OCAML_VERSION < "4.03.0"
       ["", H.Exp.ident (L.mknoloc (LI.Lident var_name))]
+#else
+      [Nolabel, H.Exp.ident (L.mknoloc (LI.Lident var_name))]
+#endif
 
   let build_sub_from index typ =
     let arg_name = "sub_" ^ (string_of_int index) in
+#if OCAML_VERSION < "4.03.0"
     "",
     H.Exp.apply
       (generate_froms typ)
       ["", H.Exp.ident (L.mknoloc (LI.Lident arg_name))]
+#else
+    Nolabel,
+    H.Exp.apply
+      (generate_froms typ)
+      [Nolabel, H.Exp.ident (L.mknoloc (LI.Lident arg_name))]
+#endif
 
   let apply_from name args =
     let matcher = H.Exp.ident (L.mknoloc (C.mk_match name)) in
@@ -118,10 +137,17 @@ struct
           (H.Exp.ident (Location.mknoloc
                           (C.mk_match name)))
           (List.map (fun (name, typ) ->
+#if OCAML_VERSION < "4.03.0"
                "", H.Exp.apply
                  (generate_froms typ)
                  [("",(H.Exp.ident
                          (L.mknoloc (LI.Lident name))))]
+#else
+               Nolabel, H.Exp.apply
+                 (generate_froms typ)
+                 [(Nolabel,(H.Exp.ident
+                         (L.mknoloc (LI.Lident name))))]
+#endif
              )
               names
           )
@@ -186,6 +212,13 @@ struct
       H.Exp.function_
         (List.map
            (fun case ->
+#if OCAML_VERSION < "4.03.0"
+              let pcd_args = case.pcd_args in
+#else
+              let pcd_args = match case.pcd_args with
+              | Pcstr_tuple args -> args
+              | Pcstr_record l -> List.map (fun lbl -> lbl.pld_type) l in
+#endif
               H.Exp.case
                 (H.Pat.construct
                    (Location.mknoloc (LI.Lident (C.cstr case.pcd_name.txt)))
@@ -193,7 +226,7 @@ struct
                 )
                 (apply_from
                    (name ^ "_" ^ Common.id case.pcd_name.txt)
-                   case.pcd_args
+                   pcd_args
                 )
            )
            cases
@@ -202,6 +235,7 @@ struct
 
   let middle_of_record name fields =
     let exp =
+#if OCAML_VERSION < "4.03.0"
       H.Exp.fun_
         ""
         None
@@ -227,6 +261,33 @@ struct
                fields
             )
         )
+#else
+      H.Exp.fun_
+        Nolabel
+        None
+        (H.Pat.record
+           (List.map (fun field ->
+                let name = field.pld_name.txt in
+                (Location.mknoloc (LI.Lident name)),
+                H.Pat.var (Location.mknoloc name)
+              )
+               fields)
+           Closed
+        )
+        (
+          H.Exp.apply
+            (H.Exp.ident (L.mknoloc (C.mk_match name)))
+            (List.map
+               (fun field ->
+                  Nolabel,
+                  generate_sub_match
+                    field.pld_type
+                    field.pld_name.txt
+               )
+               fields
+            )
+        )
+#endif
     in [name, exp]
 
   let result_of_middle middles =

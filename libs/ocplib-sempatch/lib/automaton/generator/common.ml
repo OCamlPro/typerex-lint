@@ -1,7 +1,8 @@
 module LI = Longident
 module L =Location
-open Parsetree
 open Asttypes
+open Parsetree
+
 open Std_utils
 
 let print_longident lid = String.concat "__" (LI.flatten lid)
@@ -73,7 +74,11 @@ let get_val_decls = List.bind (
 
 let get_type_decls = List.bind (
     fun stri -> match stri.pstr_desc with
+#if OCAML_VERSION < "4.03.0"
       | Pstr_type t -> t
+#else
+      | Pstr_type (_recflag, t) -> t
+#endif
       | _ -> []
   )
 
@@ -109,6 +114,7 @@ type longident__t = Longident.t =
   | Ldot of Longident.t * string
   | Lapply of Longident.t * Longident.t
 
+#if OCAML_VERSION < "4.03.0"
 type constant =
     Const_int of int
   | Const_char of char
@@ -117,6 +123,13 @@ type constant =
   | Const_int32 of int32
   | Const_int64 of int64
   | Const_nativeint of nativeint
+#else
+(* type constant = *)
+(*     Pconst_integer of string * char option *)
+(*   | Pconst_char of char *)
+(*   | Pconst_string of string * string option *)
+(*   | Pconst_float of string * char option *)
+#endif
 
 and rec_flag = Nonrecursive | Recursive
 and direction_flag  = Upto | Downto
@@ -126,6 +139,11 @@ and virtual_flag = Virtual | Concrete
 and override_flag = Override | Fresh
 and closed_flag = Closed | Open
 and label
+#if OCAML_VERSION < "4.03.0"
+#else
+and arg_label = Nolabel | Labelled of string | Optional of string
+#endif
+
 and 'a loc = {
   txt : 'a;
   loc : Location.t;

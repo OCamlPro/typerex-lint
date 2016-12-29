@@ -175,7 +175,14 @@ let generate_match_on_variant loc cases =
   let here elt = L.mkloc elt loc in
   let generate_match case =
     let name = case.pcd_name.txt in
-    let args = name_args case.pcd_args
+#if OCAML_VERSION < "4.03.0"
+    let pcd_args = case.pcd_args in
+#else
+    let pcd_args = match case.pcd_args with
+      | Pcstr_tuple args -> args
+      | Pcstr_record l -> List.map (fun lbl -> lbl.pld_type) l in
+#endif
+    let args = name_args pcd_args
     in
     let mk_sub_pattern constr getter =
       H.Pat.construct

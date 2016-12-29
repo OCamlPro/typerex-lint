@@ -32,6 +32,7 @@ begin program "abc"
       "std_utils"
     ]
     comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
+    pp = [ "ocp-pp" ]
 end
 
 begin library "ocplib-sempatch"
@@ -47,7 +48,9 @@ begin library "ocplib-sempatch"
       "lib/parsing/guard_parser.mly"
       "lib/parsing/parsed_patches.ml"
       "lib/parsing/raw_patch.ml"
-      "lib/guard_evaluator.ml"
+      "lib/guard_evaluator.ml" (
+        pp = [ "ocp-pp" ]
+      )
       "lib/parsing/code_lexer.mll"
       "lib/parsing/code_parser.mly"
       "lib/parsing/patch_lexer.mll"
@@ -61,7 +64,16 @@ begin library "ocplib-sempatch"
         "compiler-libs.common"
         "abc"
     ]
-    comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree.mli" ]
+    if ocaml_version < "4.04.0" then {
+      if ocaml_version < "4.03.0" then {
+        comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree402.mli" ]
+      }
+      else {
+        comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree403.mli" ]
+      }
+    } else {
+      comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree404.mli" ]
+    }
     comp_requires = "abc:asm"
     ocamlyacc = "menhir"
 end
