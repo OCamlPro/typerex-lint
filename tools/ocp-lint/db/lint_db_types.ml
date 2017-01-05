@@ -33,7 +33,7 @@ module ErrorSet = Set.Make(struct
 type source = Cache | Analyse
 
 type linter_result = {
-  res_version : int;
+  res_version : string;
   res_source : source;
   res_options : (string list * string) list;
   res_warnings: Lint_warning_types.warning list;
@@ -79,7 +79,7 @@ module type DATABASE = sig
     file:string ->
     pname:string ->
     lname:string ->
-    version:int -> unit
+    version:string -> unit
   val add_error : string -> error -> unit
   val clean : int -> unit
   val update :
@@ -90,6 +90,6 @@ module type DATABASE = sig
     file:string ->
     pname:string ->
     lname:string ->
-    version:int -> bool
+    version:string -> bool
   val has_warning : unit -> bool
 end

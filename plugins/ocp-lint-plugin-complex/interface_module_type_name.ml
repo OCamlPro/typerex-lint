@@ -24,7 +24,7 @@ let details = "Checks if the module type name is capitalized."
 
 module ModuleTypeName = PluginComplex.MakeLint(struct
     let name = "Checks on module type name."
-    let version = 1
+    let version = "1"
     let short_name = "interface_module_type_name"
     let details = details
     let enable = true

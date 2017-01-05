@@ -20,7 +20,7 @@
 
 module type LINTARG = sig
   val name : string
-  val version : int
+  val version : string
   val short_name : string
   val details : string
   val enable : bool
@@ -33,7 +33,7 @@ end
 
 module type LINT = sig
   val name : string
-  val version : int
+  val version : string
   val short_name : string
   val details : string
   val enable : bool

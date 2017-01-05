@@ -57,7 +57,7 @@ let update_files_linted tbl file cfgs =
   else Hashtbl.add tbl file (StringCompat.StringSet.of_list cfgs)
 
 let update_breakdown tbl pname lname version wid =
-  let lname = Printf.sprintf "%s.%i" lname version in
+  let lname = Printf.sprintf "%s.%s" lname version in
   if Hashtbl.mem tbl pname then
     let old_p_htbl = Hashtbl.find tbl pname in
     if Hashtbl.mem old_p_htbl lname then

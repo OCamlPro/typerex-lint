@@ -58,7 +58,7 @@ type source = Cache | Analyse
     res_warnings: the warning that was raised by the linter
 **)
 type linter_result = {
-  res_version : int;
+  res_version : string;
   res_source : source;
   res_options : (string list * string) list;
   res_warnings: Lint_warning_types.warning list;
@@ -124,7 +124,7 @@ module type DATABASE = sig
   (* [add_entry ...] adds an empty entry in the in-memory database
      for a file (no warnings are declared) *)
   val add_entry : file:string -> pname:string ->
-    lname:string -> version:int -> unit
+    lname:string -> version:string -> unit
   (* [add_error file error] associates an error with a file *)
   val add_error : string -> error -> unit
   (* [clean ndays] clean all files on disk corresponding to files analysed
@@ -135,7 +135,7 @@ module type DATABASE = sig
   val update : pname:string -> lname:string -> warning:Lint_warning_types.warning -> unit
   (* [already_run file pname lname version] checks whether an analysis was
      already run on a particular file. *)
-  val already_run : file:string -> pname:string -> lname:string -> version:int -> bool
+  val already_run : file:string -> pname:string -> lname:string -> version:string -> bool
   (* whether the database contains a warning... *)
   val has_warning : unit -> bool
 end
