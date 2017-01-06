@@ -25,7 +25,7 @@ module Plugin = Plugin_parsetree.Plugin
 
 module Linter = Plugin.MakeLint(struct
     let name = "Check Constructor Arguments"
-    let version = 1
+    let version = "1"
     let short_name = "check_constr_args"
     let details = "Check that constructor arguments are ok."
     let enable = true

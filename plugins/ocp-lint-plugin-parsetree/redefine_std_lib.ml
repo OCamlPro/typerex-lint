@@ -23,7 +23,7 @@ let details =
 
 module RedefineStdLib = Plugin_parsetree.Plugin.MakeLint(struct
     let name = "Refedine Stdlib Module"
-    let version = 1
+    let version = "1"
     let short_name = "code_redefine_stdlib_module"
     let details = details
     let enable = true

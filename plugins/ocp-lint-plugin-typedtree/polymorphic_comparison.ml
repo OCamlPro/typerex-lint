@@ -25,7 +25,7 @@ module Plugin = Plugin_typedtree.Plugin
 
 module Linter = Plugin.MakeLint(struct
     let name = "Polymorphic function"
-    let version = 1
+    let version = "1"
     let short_name = "polymorphic_function"
     let details = "Detects all polymorphic functions."
     let enable = true

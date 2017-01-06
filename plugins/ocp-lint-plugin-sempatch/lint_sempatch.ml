@@ -94,9 +94,18 @@ let user_patches =
     !files
   with Not_found -> []
 
+let generate_version linter_version patches =
+  if user_patches = [] then
+    linter_version
+  else
+    let patches_content = List.map Lint_utils.read_file patches in
+    let patches_content_str =
+      List.fold_left (fun acc str -> acc ^ str) "" patches_content in
+    Digest.to_hex (Digest.string patches_content_str)
+
 module LintSempatch = Plugin_patch.PluginPatch.MakeLint(struct
     let name = "Lint from semantic patches."
-    let version = 1
+    let version = generate_version "1" user_patches
     let short_name = "sempatch_lint"
     let details = "Lint from semantic patches."
     let enable = true

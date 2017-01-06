@@ -23,7 +23,7 @@ open Plugin_text
 
 module Linter = Plugin.MakeLint(struct
     let name = "Detect use of unwanted chars in files"
-    let version = 1
+    let version = "1"
     let short_name = "not_that_char"
     let details =
       "Detect use of unwanted chars in files, such as tabs or non-ASCII chars"
