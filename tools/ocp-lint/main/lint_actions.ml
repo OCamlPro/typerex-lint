@@ -45,6 +45,16 @@ let db_persistence = Lint_globals.Config.create_option
     SimpleConfig.int_option
     1
 
+let jobs = Lint_globals.Config.create_option
+    ["jobs"]
+    "Number of parallel jobs"
+    "Number of parallel jobs"
+    0
+    SimpleConfig.int_option
+    4
+
+let file_config_dep = ref []
+
 let scan_project path = (* todo *)
   Format.printf "Scanning files in project %S...\n%!" path;
   let found_files =
@@ -368,6 +378,7 @@ let get_config_deps config_map file =
   List.filter (fun cfg -> is_config_file cfg file) config_map
 
 let run db_dir gd_plugins master_config config_map file =
+  let open Lint_parallel_engine in
   let configs = get_config_deps config_map file in
   let tmp_config =
     Lint_globals.Config.load_and_save master_config configs in
@@ -391,9 +402,15 @@ let run db_dir gd_plugins master_config config_map file =
   let args =
     if not found_load_cfg then args @ ["--load-config"; tmp_config]
     else args in
-  let cmd = String.concat " " args in
-  ignore (Sys.command cmd);
-  file, (configs, tmp_config)
+  let pid =
+    Unix.create_process
+      (List.hd args)
+      (Array.of_list args)
+      Unix.stdin
+      Unix.stdout
+      Unix.stderr in
+  mark_running file pid;
+  file_config_dep := (file, (configs, tmp_config))::!file_config_dep
 
 let rec config_map_rec curr acc =
   let files = Sys.readdir curr in
@@ -419,6 +436,7 @@ let clean_tmp_cfg tmp_configs master_cfg =
 
 let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
     ~perror ~gd_plugins ~master_config ~path =
+  let open Lint_parallel_engine in
   (* We filter the global ignored modules/files.  *)
   (* let no_db = init_db no_db path in *)
   let (db_dir, no_db) = init_db no_db db_dir path in
@@ -426,16 +444,28 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
   let sources = filter_modules (scan_project path) !!ignored in
   let config_map = config_map path in
   let len = List.length sources in
-  let tmp_configs =
-    List.mapi (fun i x ->
-        if i mod 100 = 0 then Printf.eprintf "Running analyses... %d / %d\r%!" i len;
-        run db_dir gd_plugins master_config config_map x) sources in
+  mark_waiting sources;
+  let start_list = get_start_list (!!jobs - 1) sources in
+  List.iter (fun file ->
+      run db_dir gd_plugins master_config config_map file
+    ) start_list;
+  while waiting_file () do
+    let processed_files = done_files len in
+    if processed_files mod 100 = 0 then
+      Printf.eprintf "Running analyses... %d / %d\r%!" processed_files len;
+    let pid, _status = Unix.waitpid [] 0 in
+    try
+      mark_done pid;
+      let file = find_next_waiting () in
+      run db_dir gd_plugins master_config config_map file
+    with Not_found -> ()
+  done;
   Printf.eprintf "\rRunning analyses... %d / %d\nNormalizing pathes...%!" len len;
   let tmp_configs =
     List.map (fun (file, (cfgs, cfg_tmp)) ->
         Lint_utils.normalize_path !Lint_db.DefaultDB.root file,
         (cfgs,
-         cfg_tmp)) tmp_configs in
+         cfg_tmp)) !file_config_dep in
   Printf.eprintf "\nMergin database...%!";
   Lint_db.DefaultDB.merge sources;
   Printf.eprintf "\n%!";

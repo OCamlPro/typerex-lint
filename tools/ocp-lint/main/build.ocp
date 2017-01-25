@@ -20,6 +20,7 @@
 
 begin library "ocp-lint-lib"
   files = [
+    "lint_parallel_engine.ml"
     "lint_actions.ml"
     "lint.ml"
   ]
