@@ -95,9 +95,9 @@ module MakeDB (DB : DATABASE_IO) = struct
         let db_file_name = Filename.concat db_path (Digest.to_hex hash) in
         let db_file_tmp = db_file_name ^ ".tmp" in
         let db_file_error =
-          if Hashtbl.mem db_errors file then
+          try
             Hashtbl.find db_errors file
-          else ErrorSet.empty in
+          with Not_found -> ErrorSet.empty in
         let db_date = Unix.time () in
         DB.save db_file_tmp { db_version = current_version;
                               db_date;
