@@ -25,20 +25,26 @@ open Lint_warning
 
 (**************************** Sempatch utils ******************************)
 
+type patch_source = File of string | Content of string
+
 let read_patches =
-  List.map (fun filename ->
-      if Sys.file_exists filename then
-        try
-          let ic = open_in filename in
-          let patches = Patch.from_channel ic in
-          close_in ic;
-          patches
-        with
-          Failure.SempatchException e ->
-          Printf.eprintf "Sempatch failure : %s\n" (Failure.to_string e);
-          []
-      else
-        (raise (Plugin_error(Patch_file_not_found filename))))
+  List.map (fun patch_source ->
+      match patch_source with
+      | File filename ->
+        if Sys.file_exists filename then
+          try
+            let ic = open_in filename in
+            let patches = Patch.from_channel ic in
+            close_in ic;
+            patches
+          with
+            Failure.SempatchException e ->
+            Printf.eprintf "Sempatch failure : %s\n" (Failure.to_string e);
+            []
+        else
+          (raise (Plugin_error(Patch_file_not_found filename)))
+      | Content cnt ->
+        Patch.from_lexbuf (Lexing.from_string cnt))
 
 let wdecls = WarningDeclaration.empty ()
 
@@ -74,14 +80,7 @@ let sempatch_report lname decl matching patch =
 
 let default_patches =
   (* To add a static file, edit plugins/ocp-lint-patch/build.ocp *)
-  List.map (fun (file, content) ->
-      let tmp = Filename.get_temp_dir_name () in
-      let file = Filename.basename file in
-      let destfile = Filename.concat tmp file in
-      Dir.make_all (File.of_string @@ Filename.dirname destfile);
-      FileString.file_of_string destfile content;
-      destfile)
-    Global_static_files.files
+  List.map (fun (file, content) -> Content content) Global_static_files.files
 
 let user_patches =
   try
@@ -89,16 +88,21 @@ let user_patches =
     let files = ref [] in
     Lint_utils.iter_files (fun file ->
         if Filename.check_suffix file ".md" then
-          files := (Filename.concat path file) :: !files)
+          files := (File (Filename.concat path file)) :: !files)
       path;
     !files
   with Not_found -> []
 
 let generate_version linter_version patches =
-  if user_patches = [] then
+  if patches = [] then
     linter_version
   else
-    let patches_content = List.map Lint_utils.read_file patches in
+    let patches_file =
+      List.fold_left (fun acc p ->
+          match p with
+          | File s -> s :: acc
+          | Content _ -> acc) [] patches in
+    let patches_content = List.map Lint_utils.read_file patches_file in
     let patches_content_str =
       List.fold_left (fun acc str -> acc ^ str) "" patches_content in
     Digest.to_hex (Digest.string patches_content_str)

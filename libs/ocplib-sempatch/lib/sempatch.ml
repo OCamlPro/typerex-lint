@@ -9,12 +9,14 @@ module Patch =
 struct
   include Parsed_patches
 
-  let from_channel chan =
-    Patch_parser.sempatch
-      Patch_lexer.read
-      (Lexing.from_channel chan)
+  let from_lexbuf lexbuf =
+    Patch_parser.sempatch Patch_lexer.read lexbuf
     |> List.map snd
     |> List.map Parsed_patches.preprocess
+
+  let from_channel chan =
+    let lexbuf = Lexing.from_channel chan in
+    from_lexbuf lexbuf
 
   let get_name p = p.header.name
   let get_metavariables p = p.header.meta_expr
