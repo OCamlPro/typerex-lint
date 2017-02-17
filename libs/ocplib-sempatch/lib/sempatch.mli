@@ -40,6 +40,7 @@ sig
 
   (** Generate a list of patches *)
   val from_channel : in_channel -> t list
+  val from_lexbuf : Lexing.lexbuf -> t list
 
   (** Accessors for patch metadatas *)
   val get_name : t -> string
