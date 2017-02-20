@@ -21,6 +21,16 @@
 open Lint_warning_types
 open Lint_db_types
 
+let find_cfg_tmp file config_dep =
+  let open Lint_utils in
+  try
+    let (_, (configs, cfg_tmp)) =
+      List.find (fun (file_struct, (_, tmp_cfg)) ->
+          file = file_struct.name
+        ) config_dep in
+    configs, Some cfg_tmp
+  with Not_found -> [], None
+
 let print_warning ppf pname lname warning =
   if warning.loc <> Location.none then
     Format.fprintf ppf "%a" Location.print warning.loc;
@@ -93,12 +103,10 @@ let summary ~master_config ~file_config ~severity ~path
   let breakdown_linted = Hashtbl.create 42 in
   let breakdown_cached = Hashtbl.create 42 in
   Hashtbl.iter (fun file (hash, pres) ->
-      (* let file_with_cfg = List.mem_assoc file file_config in *)
-      (* let (configs, config_tmp) = *)
-      (*   if file_with_cfg then List.assoc file file_config *)
-      (*   else ([], "") in *)
-      (* if file_with_cfg then *)
-      (*   Lint_globals.Config.load_config_tmp master_config config_tmp; *)
+      let configs, cfg_opt = find_cfg_tmp file file_config in
+      (match cfg_opt with
+       | None -> ()
+       | Some cfg -> Lint_globals.Config.load_config_tmp master_config cfg);
       StringMap.iter (fun pname lres ->
           let flag = check_flag [pname; "enabled"] in
           if flag then
@@ -126,7 +134,7 @@ let summary ~master_config ~file_config ~severity ~path
                          let wid = warning.decl.id in
                          if arr.(wid - 1) &&
                             warning.decl.severity >= severity then
-                           ((* update_files_linted files_linted file configs; *)
+                           (update_files_linted files_linted file configs;
                             update_breakdown
                               breakdown_linted pname lname res_version wid))
                       res_warnings
@@ -251,16 +259,12 @@ let summary ~master_config ~file_config ~severity ~path
       Printf.printf "  * %d files(s) couldn't be linted\n%!"
         files_cached_errors_total
   end;
+
   Printf.printf "== New Warnings ==\n%!";
   if pdetails then begin
     Printf.printf "  * %d file(s) were linted:\n%!" files_linted_total;
     Hashtbl.iter (fun file cfgs ->
-        let file_rel = Lint_utils.relative_path !Lint_db.DefaultDB.root file in
-        let file_norm =
-          if no_db then
-            Lint_utils.normalize_path (Sys.getcwd()) file_rel
-          else file in
-        Printf.printf "    - %s\n%!" file_norm;
+        Printf.printf "    - %s\n%!" file;
         StringCompat.StringSet.iter (fun cfg ->
             let cfg = Filename.concat cfg ".ocplint" in
             Printf.printf "        * %s\n" cfg)
@@ -334,12 +338,10 @@ let summary ~master_config ~file_config ~severity ~path
 let print fmt master_config file_config severity path db =
   try
     Hashtbl.iter (fun file (hash, pres) ->
-        (* let file_with_cfg = List.mem_assoc file file_config in *)
-        (* let (_configs, config_tmp) = *)
-        (*   if file_with_cfg then List.assoc file file_config *)
-        (*   else ([], "") in *)
-        (* if file_with_cfg then *)
-        (*   Lint_globals.Config.load_config_tmp master_config config_tmp; *)
+        let configs ,cfg_opt = find_cfg_tmp file file_config in
+        (match cfg_opt with
+         | None -> ()
+         | Some cfg -> Lint_globals.Config.load_config_tmp master_config cfg);
         let ws =
           StringMap.fold (fun pname lres acc ->
               let flag = check_flag [pname; "enabled"] in

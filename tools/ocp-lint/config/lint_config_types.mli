@@ -19,10 +19,12 @@
 (**************************************************************************)
 
 module type CONFIG = sig
+  val config_file_name : string
+
   val config_file : SimpleConfig.config_file
 
-  (* [init_config dot_file filename] reads the initial configuration *)
-  val init_config : string -> File.t -> unit
+  (* [init_config filename] reads the initial configuration *)
+  val init_config : File.t -> unit
 
   (* [simple_args ()] produce Arg arguments from the config file *)
   val simple_args : unit -> (string * Arg.spec * string) list

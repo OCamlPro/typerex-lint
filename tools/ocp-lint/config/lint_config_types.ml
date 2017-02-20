@@ -19,9 +19,11 @@
 (**************************************************************************)
 
 module type CONFIG = sig
+  val config_file_name : string
+
   val config_file : SimpleConfig.config_file
 
-  val init_config : string -> File.t -> unit
+  val init_config : File.t -> unit
 
   val simple_args : unit -> (string * Arg.spec * string) list
 

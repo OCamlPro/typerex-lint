@@ -60,7 +60,10 @@ let scan_project path = (* todo *)
   let found_files =
     let files = ref [] in
     Lint_utils.iter_files (fun file ->
-        files := (Filename.concat path file) :: !files) path;
+        let file = if path = Filename.current_dir_name then
+            file
+          else Filename.concat path file in
+        files := file :: !files) path;
     !files in
   Format.printf "Found '%d' file(s)\n%!" (List.length found_files);
   found_files
@@ -172,18 +175,12 @@ let init_db_in_tmp () =
   Lint_db.DefaultDB.init (File.of_string olint_dir);
   Some tmp_dir
 
-let clean_dir dir =
-   Array.iter (fun file ->
-      Sys.remove (Filename.concat dir file))
-     (Sys.readdir dir);
-   Unix.rmdir dir
-
 let clean_db_in_tmp db_dir = match db_dir with
   | None -> ()
   | Some dir ->
     let root = dir in
     let olint_dir = Filename.concat root Lint_globals.olint_dirname in
-    clean_dir olint_dir;
+    Dir.remove_all (File.of_string olint_dir);
     Unix.rmdir dir
 
 let init_db no_db db_dir path = match db_dir with
@@ -202,7 +199,7 @@ let init_db no_db db_dir path = match db_dir with
          let root_t =
            File.concat root_path_dir_t (File.of_string olint_dirname) in
          Lint_db.DefaultDB.init root_t;
-         db_dir, no_db)
+         Some (File.to_string root_path_dir_t), no_db)
       else
         let db_dir = init_db_in_tmp () in
         db_dir, true
@@ -212,16 +209,16 @@ let init_db no_db db_dir path = match db_dir with
 
 let init_config path =
   let path_t = File.of_string path in
-  let config_file = Lint_globals.config_file in
+  let config_file = Lint_globals.Config.config_file_name in
   try
     let root_path_t = Lint_utils.find_root path_t [config_file] in
     let file_t = File.concat root_path_t (File.of_string config_file) in
-    Lint_globals.Config.init_config ".ocplint" file_t;
+    Lint_globals.Config.init_config file_t;
   with Not_found -> ()
 
 let init_config_file file =
   let file_t = File.of_string file in
-  Lint_globals.Config.init_config ".ocplint" file_t
+  Lint_globals.Config.init_config file_t
 
 let list_plugins fmt =
   let open Lint_warning_decl in
@@ -319,8 +316,6 @@ let from_input file_struct file_t pname cname version inputs =
 
 let lint_file ~verbose ~no_db ~db_dir ~severity ~file_struct =
   let file = file_struct.Lint_utils.name in
-  let file_norm = file_struct.Lint_utils.norm in
-  let file_hash = file_struct.Lint_utils.hash in
   ignore (init_db no_db db_dir file);
   Lint_db.DefaultDB.load_file file_struct;
   Lint_db.DefaultDB.cache ();
@@ -336,7 +331,8 @@ let lint_file ~verbose ~no_db ~db_dir ~severity ~file_struct =
           let version = Linter.version in
           if not (is_ignored !Lint_db.DefaultDB.root file ignored) &&
              not (Lint_db.DefaultDB.already_run
-                    file_struct Plugin.short_name Linter.short_name version) then
+                    file_struct Plugin.short_name Linter.short_name version)
+          then
             from_input
               file_struct
               file_t
@@ -392,9 +388,7 @@ let get_config_deps config_map file =
 let run db_dir gd_plugins master_config config_map temp_dir file =
   let open Lint_parallel_engine in
   let open Lint_utils in
-  let file_norm = Lint_utils.normalize_path !Lint_db.DefaultDB.root file in
-  let hash = Lint_utils.db_hash file in
-  let file_struct = { name = file; norm = file_norm; hash; ignored = [] } in
+  let file_struct = mk_file_struct !Lint_db.DefaultDB.root file [] in
   let temp_file = Lint_utils.save_file_struct temp_dir file_struct in
   let configs = get_config_deps config_map file in
   let tmp_config =
@@ -422,7 +416,7 @@ let run db_dir gd_plugins master_config config_map temp_dir file =
   let pid =
     Unix.create_process
       (List.hd args)
-      (Array.of_list args)
+      (Array.of_list (List.filter (fun elt -> elt <> "") args))
       Unix.stdin
       Unix.stdout
       Unix.stderr in
@@ -432,7 +426,8 @@ let run db_dir gd_plugins master_config config_map temp_dir file =
 let rec config_map_rec curr acc =
   let files = Sys.readdir curr in
   Array.fold_left (fun acc file ->
-      let curr_file = Filename.concat curr file in
+      let curr_file =
+        if curr <> "." then Filename.concat curr file else file in
       if file = ".ocplint" then curr :: acc
       else
       if Sys.is_directory curr_file
@@ -478,10 +473,13 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
       run db_dir gd_plugins master_config config_map tmp_file_dir file
     with Not_found -> ()
   done;
-  clean_dir tmp_file_dir;
+  Dir.remove_all (File.of_string tmp_file_dir);
   Printf.eprintf "\rRunning analyses... %d / %d" len len;
-  let sources = List.map (fun (file_str, _) -> file_str) !file_config_dep in
   Printf.eprintf "\nMergin database...%!";
+  let sources =
+    List.map (fun file ->
+        Lint_utils.mk_file_struct !Lint_db.DefaultDB.root file []
+      ) sources in
   Lint_db.DefaultDB.merge sources;
   Printf.eprintf "\n%!";
   if pwarning then

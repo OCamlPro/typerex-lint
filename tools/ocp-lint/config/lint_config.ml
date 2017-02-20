@@ -24,12 +24,11 @@ exception ConfigParseError of string
 
 module DefaultConfig = struct
 
-  let dot_file = ref ""
+  let config_file_name = ".ocplint"
 
   let config_file = SimpleConfig.create_config_file (File.of_string "")
 
-  let init_config set_dot_file file =
-    dot_file := set_dot_file;
+  let init_config file =
     SimpleConfig.set_config_file config_file file;
     SimpleConfig.load config_file
 
@@ -83,6 +82,7 @@ module DefaultConfig = struct
       plugin_options
 
   let save () =
+    SimpleConfig.set_config_file config_file (File.of_string config_file_name);
     SimpleConfig.save_with_help config_file
 
   let save_master filename =
@@ -98,7 +98,7 @@ module DefaultConfig = struct
     SimpleConfig.set_config_file config_file master;
     SimpleConfig.load config_file;
     List.iter (fun cfg_dir ->
-        let cfg = Filename.concat cfg_dir !dot_file in
+        let cfg = Filename.concat cfg_dir config_file_name in
         let cfg = File.of_string cfg in
         SimpleConfig.set_config_file config_file cfg;
         SimpleConfig.load config_file)
@@ -106,7 +106,7 @@ module DefaultConfig = struct
 
   let load_and_save master configs =
     let master_t = File.of_string master in
-    let filename = Filename.temp_file !dot_file "" in
+    let filename = Filename.temp_file config_file_name "" in
     let filename_t = File.of_string filename in
     load_configs master_t configs;
     SimpleConfig.set_config_file config_file filename_t;

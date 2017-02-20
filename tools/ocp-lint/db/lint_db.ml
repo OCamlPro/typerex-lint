@@ -63,8 +63,8 @@ module MakeDB (DB : DATABASE_IO) = struct
       try
         let { db_file_name; db_file_pres; db_file_error } =
           DB.load hash_filename_path in
-        (Hashtbl.add db db_file_name (hash, db_file_pres);
-         Hashtbl.add db_errors db_file_name db_file_error)
+        (Hashtbl.add db file (hash, db_file_pres);
+         Hashtbl.add db_errors file db_file_error)
       with exn ->
         Format.eprintf "Can't read DB file for %S, skipping it\n%!" file
 
@@ -218,18 +218,14 @@ module MakeDB (DB : DATABASE_IO) = struct
     let new_hash = file_struct.Lint_utils.hash in
     try
       let (hash, old_fres) = Hashtbl.find db file in
-      try
-        if hash = new_hash then
-          let old_pres = StringMap.find pname old_fres in
-          try
-            let { res_version;
-                  res_options } = StringMap.find lname old_pres in
-            let options =
-              Lint_config.DefaultConfig.get_linter_options pname lname in
-            options = res_options && version = res_version
-          with Not_found -> false
-        else false
-      with Not_found -> false
+      if hash = new_hash then
+        let old_pres = StringMap.find pname old_fres in
+          let { res_version;
+                res_options } = StringMap.find lname old_pres in
+          let options =
+            Lint_config.DefaultConfig.get_linter_options pname lname in
+          options = res_options && version = res_version
+      else false
     with Not_found -> false
 
   let has_warning () =

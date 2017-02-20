@@ -134,6 +134,14 @@ let rec mk_temp_dir prefix =
   else
     s
 
+let mk_file_struct root file ignored =
+  let file_norm =
+    if root <> "." then
+      normalize_path root file
+    else file in
+  let hash = db_hash file in
+  { name = file; norm = file_norm; hash; ignored = [] }
+
 let save_file_struct dir fstruct =
   let file =  temp_basename "ocp-lint-file" in
   let path = Filename.concat dir file in

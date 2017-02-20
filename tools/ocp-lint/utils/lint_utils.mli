@@ -64,6 +64,8 @@ val mk_temp_dir : string -> string
 
 val db_hash : string -> string
 
+val mk_file_struct : string -> string -> string list -> file_struct
+
 val save_file_struct : string -> file_struct -> string
 
 val read_file_struct : string -> file_struct
