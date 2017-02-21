@@ -48,7 +48,7 @@ val lint_file :
   no_db:bool ->
   db_dir:string option ->
   severity:int ->
-  file:string ->
+  file_struct:Lint_utils.file_struct ->
   unit
 
 (* [lint_sequential no_db db_dir severity pdetail pwarning perror

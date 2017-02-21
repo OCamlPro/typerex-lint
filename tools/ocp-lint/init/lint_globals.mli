@@ -31,6 +31,4 @@ val plugins :
   ((module Lint_plugin_types.PLUGIN), (module Lint_types.LINT) Lint_map.t)
     Hashtbl.t
 
-val config_file : string
-
 val olint_dirname : string

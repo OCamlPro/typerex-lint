@@ -22,7 +22,7 @@
 val print :
   Format.formatter ->
   string ->
-  (string * ((string list) * string)) list ->
+  (Lint_utils.file_struct * ((string list) * string)) list ->
   int ->
   string ->
   Lint_db_types.t ->
@@ -48,7 +48,7 @@ val print_error :
    print summary of the db. *)
 val summary :
   master_config:string ->
-  file_config:(string * ((string list) * string)) list ->
+  file_config:(Lint_utils.file_struct * ((string list) * string)) list ->
   severity:int ->
   path:string ->
   pdetails:bool ->

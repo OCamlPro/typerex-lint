@@ -34,11 +34,6 @@ module MakeDB (DB : DATABASE_IO) = struct
   let db = empty_db ()
   let db_errors = Hashtbl.create 1027
 
-  let db_hash file =
-    let file_content = Lint_utils.read_file file in
-    let string_to_hash = file ^ file_content in
-    Digest.string string_to_hash
-
   let load dir =
     let db = empty_db () in
     if Sys.is_directory dir then
@@ -58,8 +53,9 @@ module MakeDB (DB : DATABASE_IO) = struct
       (Printf.eprintf "Db Error : %s should be a dir\n%!" dir;
        db)
 
-  let load_file file =
-    let hash = db_hash file in
+  let load_file file_struct =
+    let file = file_struct.Lint_utils.name in
+    let hash = file_struct.Lint_utils.hash in
     let hash_filename = Digest.to_hex hash in
     let olint_dir = Filename.concat !root "_olint" in
     let hash_filename_path = Filename.concat olint_dir hash_filename in
@@ -67,8 +63,8 @@ module MakeDB (DB : DATABASE_IO) = struct
       try
         let { db_file_name; db_file_pres; db_file_error } =
           DB.load hash_filename_path in
-        (Hashtbl.add db db_file_name (hash, db_file_pres);
-         Hashtbl.add db_errors db_file_name db_file_error)
+        (Hashtbl.add db file (hash, db_file_pres);
+         Hashtbl.add db_errors file db_file_error)
       with exn ->
         Format.eprintf "Can't read DB file for %S, skipping it\n%!" file
 
@@ -134,13 +130,13 @@ module MakeDB (DB : DATABASE_IO) = struct
     let file = Lint_utils.normalize_path !root file in
     Hashtbl.remove db file
 
-  let add_entry ~file ~pname ~lname ~version =
+  let add_entry ~file_struct ~pname ~lname ~version =
     let res_version = version in
     let res_source = Analyse in
     let res_options =
       Lint_config.DefaultConfig.get_linter_options pname lname in
-    let hash = db_hash file in
-    let file = Lint_utils.normalize_path !root file in
+    let hash = file_struct.Lint_utils.hash in
+    let file = file_struct.Lint_utils.norm in
     match Hashtbl.find db file with
     | exception Not_found ->
       let new_pres = StringMap.add
@@ -156,7 +152,6 @@ module MakeDB (DB : DATABASE_IO) = struct
                     res_warnings = [] } StringMap.empty in
         let new_fres = StringMap.add pname new_pres old_fres in
         Hashtbl.replace db file (hash, new_fres)
-
       | old_pres ->
         (* if linter already register, nothing to do *)
         (* this can happen when a linter as several mains *)
@@ -172,10 +167,10 @@ module MakeDB (DB : DATABASE_IO) = struct
 
   let add_error file error =
     let file = Lint_utils.normalize_path !root file in
-    if Hashtbl.mem db_errors file then
+    try
       let error_set = Hashtbl.find db_errors file in
       Hashtbl.replace db_errors file (ErrorSet.add error error_set)
-    else
+    with Not_found ->
       Hashtbl.add db_errors file (ErrorSet.singleton error)
 
   let clean limit_time =
@@ -195,15 +190,21 @@ module MakeDB (DB : DATABASE_IO) = struct
       warning.Lint_warning_types.loc.Location.loc_start.Lexing.pos_fname in
     if not (Sys.file_exists file)
     then raise (Lint_db_error.Db_error (Lint_db_error.File_not_found file));
-    let hash = db_hash file in
     let file = Lint_utils.normalize_path !root file in
-    if Hashtbl.mem db file then
-      let (_, old_pres) = Hashtbl.find db file in
-      if StringMap.mem pname old_pres then
-        let old_lres = StringMap.find pname old_pres in
-        if StringMap.mem lname old_lres then
-          let res (* version, src, opt, old_wres *) =
-            StringMap.find lname old_lres in
+    match Hashtbl.find db file with
+    | exception Not_found ->
+      raise (Lint_db_error.Db_error (Lint_db_error.File_not_in_db file))
+    | (hash, old_pres) ->
+      match StringMap.find pname old_pres with
+      | exception Not_found ->
+        raise (Lint_db_error.Db_error
+                 (Lint_db_error.Plugin_not_in_db (file, pname)))
+      | old_lres ->
+        match StringMap.find lname old_lres with
+        | exception Not_found ->
+          raise (Lint_db_error.Db_error
+                   (Lint_db_error.Linter_not_in_db (file, pname, lname)))
+        | res ->
           let new_wres = { res with
                            res_warnings =  warning :: res.res_warnings } in
           let new_lres =
@@ -211,31 +212,21 @@ module MakeDB (DB : DATABASE_IO) = struct
           let new_pres =
             StringMap.add pname new_lres (StringMap.remove pname old_pres) in
           Hashtbl.replace db file (hash, new_pres)
-        else
-          raise (Lint_db_error.Db_error
-                   (Lint_db_error.Linter_not_in_db (file, pname, lname)))
-      else
-        raise (Lint_db_error.Db_error
-                 (Lint_db_error.Plugin_not_in_db (file, pname)))
-    else
-      raise (Lint_db_error.Db_error (Lint_db_error.File_not_in_db file))
 
-  let already_run ~file ~pname ~lname ~version =
-    let new_hash = db_hash file in
-    let file = Lint_utils.normalize_path !root file in
-    if Hashtbl.mem db file then
+  let already_run ~file_struct ~pname ~lname ~version =
+    let file = file_struct.Lint_utils.norm in
+    let new_hash = file_struct.Lint_utils.hash in
+    try
       let (hash, old_fres) = Hashtbl.find db file in
-      if hash = new_hash && StringMap.mem pname old_fres then
+      if hash = new_hash then
         let old_pres = StringMap.find pname old_fres in
-        if StringMap.mem lname old_pres then
           let { res_version;
                 res_options } = StringMap.find lname old_pres in
           let options =
             Lint_config.DefaultConfig.get_linter_options pname lname in
           options = res_options && version = res_version
-        else false
       else false
-    else false
+    with Not_found -> false
 
   let has_warning () =
     let warning_count =

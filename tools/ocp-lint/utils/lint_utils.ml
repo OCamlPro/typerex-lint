@@ -18,19 +18,26 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+type file_struct = {
+  name : string;
+  norm : string;
+  hash : string;
+  ignored : string list;
+}
+
 let iter_files ?(recdir=true) apply dirname =
   let rec iter dirname dir =
     let files = Sys.readdir (Filename.concat dirname dir) in
     Array.iter (fun file ->
         try
-          let file = Filename.concat dir file in
-          if Sys.is_directory (Filename.concat dirname file) then begin
+          let file_p = Filename.concat dir file in
+          if Sys.is_directory (Filename.concat dirname file_p) then begin
             if not (String.get file 0 = '.') &&
                not (String.get file 0 = '_') &&
                recdir then
-              iter dirname file
+              iter dirname file_p
           end else
-            apply file
+            apply file_p
         with Sys_error err ->
           Printf.eprintf "Scanning Error: %s\n%!" err)
       files
@@ -109,15 +116,42 @@ let read_file f =
   close_in ic;
   s
 
+let db_hash file =
+  let file_content = read_file file in
+  let string_to_hash = file ^ file_content in
+  Digest.string string_to_hash
+
 (* Code from Opam *)
 
 let temp_basename prefix =
   Printf.sprintf "%s-%d-%06x" prefix (Unix.getpid ()) (Random.int 0xFFFFFF)
 
-let rec mk_temp_dir () =
+let rec mk_temp_dir prefix =
   let s =
-    Filename.concat (Filename.get_temp_dir_name ()) (temp_basename "olint") in
+    Filename.concat (Filename.get_temp_dir_name ()) (temp_basename prefix) in
   if Sys.file_exists s then
-    mk_temp_dir ()
+    mk_temp_dir prefix
   else
     s
+
+let mk_file_struct root file ignored =
+  let file_norm =
+    if root <> "." then
+      normalize_path root file
+    else file in
+  let hash = db_hash file in
+  { name = file; norm = file_norm; hash; ignored = [] }
+
+let save_file_struct dir fstruct =
+  let file =  temp_basename "ocp-lint-file" in
+  let path = Filename.concat dir file in
+  let oc = open_out path in
+  output_value oc fstruct;
+  close_out oc;
+  path
+
+let read_file_struct file =
+  let ic = open_in file in
+  let fstruct = input_value ic in
+  close_in ic;
+  fstruct
