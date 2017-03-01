@@ -19,7 +19,8 @@
 (**************************************************************************)
 
 begin library "ocp-lint-plugin-parsing";
-
+  install_META = true
+  install_subdir = "ocp-lint-plugins"
   files = [
         "lintParsingPlugin.ml";
 

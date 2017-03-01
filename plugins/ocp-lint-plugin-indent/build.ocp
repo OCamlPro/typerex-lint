@@ -19,6 +19,8 @@
 (**************************************************************************)
 
 begin library "ocp-lint-plugin-indent"
+  install_META = true
+  install_subdir = "ocp-lint-plugins"
   files = [
     "plugin_indent.ml"
     "ocp_indent.ml"

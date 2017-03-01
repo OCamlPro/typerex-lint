@@ -20,6 +20,8 @@
 
 
 begin library "ocp-lint-plugin-sempatch"
+  install_META = true
+  install_subdir = "ocp-lint-plugins"
   files = [
    "global_static_files.ml"
 

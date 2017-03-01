@@ -140,6 +140,35 @@ let is_cmxs file = Filename.check_suffix file ".cmxs"
 
 let ( // ) = Filename.concat
 
+let load_installed_plugins () =
+  let good_plugins = ref [] in
+  let exe_name_path = Sys.executable_name in
+  let exe_name =
+    try
+      Filename.chop_extension (Filename.basename exe_name_path)
+    with Invalid_argument err -> Filename.basename exe_name_path in
+  if exe_name = "ocp-lint-minimal" then
+    begin
+      let bin_dir = Filename.dirname exe_name_path in
+      let lib_dir = Filename.concat bin_dir "../lib" in
+      let plugins_dir = Filename.concat lib_dir "ocp-lint-plugins" in
+      if Sys.file_exists plugins_dir && Sys.is_directory plugins_dir then
+        begin
+          let plugins = Sys.readdir plugins_dir in
+          Printf.eprintf "Trying to load %d plugin(s)...\n%!"
+            (Array.length plugins);
+          Array.iter (fun plugin ->
+              try
+                Fl_dynload.load_packages [ plugin ];
+                good_plugins := plugin :: !good_plugins
+              with Dynlink.Error err ->
+                Printf.eprintf "Can not load %S plugin: %s\n%!"
+                  plugin (Dynlink.error_message err)
+            ) plugins;
+        end;
+    end;
+  !good_plugins
+
 let rec load_plugins list =
   List.fold_left (fun acc file ->
         try
@@ -385,7 +414,7 @@ let is_config_file =
 let get_config_deps config_map file =
   List.filter (fun cfg -> is_config_file cfg file) config_map
 
-let run db_dir gd_plugins master_config config_map temp_dir file =
+let run db_dir ins_plugins gd_plugins master_config config_map temp_dir file =
   let open Lint_parallel_engine in
   let open Lint_utils in
   let file_struct = mk_file_struct !Lint_db.DefaultDB.root file [] in
@@ -412,6 +441,9 @@ let run db_dir gd_plugins master_config config_map temp_dir file =
     | None -> args in
   let args =
     if not found_load_cfg then args @ ["--load-config"; tmp_config]
+    else args in
+  let args = if ins_plugins <> [] then
+      args @ [ "--load-installed-plugins"; String.concat "," ins_plugins ]
     else args in
   let pid =
     Unix.create_process
@@ -447,7 +479,7 @@ let clean_tmp_cfg tmp_configs master_cfg =
   with _ -> ()
 
 let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
-    ~perror ~gd_plugins ~master_config ~path =
+    ~perror ~gd_plugins ~ins_plugins ~master_config ~path =
   let open Lint_parallel_engine in
   (* We filter the global ignored modules/files.  *)
   let (db_dir, no_db) = init_db no_db db_dir path in
@@ -460,7 +492,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
   mark_waiting sources;
   let start_list = get_start_list (!!jobs - 1) sources in
   List.iter (fun file ->
-      run db_dir gd_plugins master_config config_map tmp_file_dir file
+      run db_dir ins_plugins gd_plugins master_config config_map tmp_file_dir file
     ) start_list;
   while waiting_file () do
     let processed_files = done_files len in
@@ -470,7 +502,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
     try
       mark_done pid;
       let file = find_next_waiting () in
-      run db_dir gd_plugins master_config config_map tmp_file_dir file
+      run db_dir ins_plugins gd_plugins master_config config_map tmp_file_dir file
     with Not_found -> ()
   done;
   Dir.remove_all (File.of_string tmp_file_dir);

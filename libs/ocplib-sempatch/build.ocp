@@ -1,6 +1,7 @@
 comp += [ "-w" "+A-4" ]
 
 begin library "std_utils"
+  install_META = true
   files = [
     "lib/std_utils/sUMisc.ml"
     "lib/std_utils/sUFun.ml"
@@ -36,6 +37,7 @@ begin program "abc"
 end
 
 begin library "ocplib-sempatch"
+    install_META = true
     files = [
       "lib/failure.ml"
       "lib/ast_element.ml"

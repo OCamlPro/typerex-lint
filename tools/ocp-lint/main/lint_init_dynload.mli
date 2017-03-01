@@ -18,35 +18,4 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-plugin-parsetree"
-  install_META = true
-  install_subdir = "ocp-lint-plugins"
-  files = [
-    "plugin_parsetree.ml"
-
-    (* All linters attached to Parsetree plugin. *)
-    "identifier_length.ml"
-    "list_function_on_singleton.ml"
-    "physical_comp_on_alloc_lit.ml"
-
-    "checkGoodPractices.ml";
-    "checkConstructorArgs.ml";
-
-    "redefine_std_lib.ml"
-
-  ]
-  pp = ["ocp-pp"]
-  requires = [
-    "ocp-lint-stdlib-helper"
-    "ocp-lint-config"
-    "ocp-lint-api"
-    "ocplib-compiler"
-  ]
-end
-
-(* Helper for linter running checks on stdlib *)
-begin library "ocp-lint-stdlib-helper"
-  files = [
-    "std_lib.ml"
-  ]
-end
+val init : unit -> unit
