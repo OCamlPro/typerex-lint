@@ -482,6 +482,13 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
     ~perror ~gd_plugins ~ins_plugins ~master_config ~path =
   let open Lint_parallel_engine in
   (* We filter the global ignored modules/files.  *)
+  if Hashtbl.length Lint_globals.plugins = 0 then
+    Printf.eprintf "There is no plugin loaded.\n%!"
+  else
+  if Hashtbl.length (filter_plugins Lint_globals.plugins) = 0 then
+    Printf.eprintf
+      "There is no plugin activated at the root of your project.\n%!"
+  else
   let (db_dir, no_db) = init_db no_db db_dir path in
   Lint_db.DefaultDB.clean !!db_persistence;
   let sources = filter_modules (scan_project path) !!ignored in
