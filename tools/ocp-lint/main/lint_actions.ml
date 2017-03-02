@@ -462,7 +462,7 @@ let rec config_map_rec curr acc =
         if curr <> "." then Filename.concat curr file else file in
       if file = ".ocplint" then curr :: acc
       else
-      if Sys.is_directory curr_file
+      if Sys.file_exists curr_file && Sys.is_directory curr_file
       then config_map_rec curr_file acc
       else acc)
     acc files
