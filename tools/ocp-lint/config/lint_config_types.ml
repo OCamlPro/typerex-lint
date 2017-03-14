@@ -40,11 +40,11 @@ module type CONFIG = sig
 
   val get_linter_options_details :
     pname:string ->
-    lname:string -> (string list * string list* string) list
+    lname:string -> (string * string * string) list
 
   val get_linter_options :
     pname:string ->
-    lname:string -> (string list * string) list
+    lname:string -> (string * string) list
 
   val save : unit -> unit
 
