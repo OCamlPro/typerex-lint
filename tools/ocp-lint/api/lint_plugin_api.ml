@@ -105,8 +105,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
 
   let new_warning id ~short_name ~msg ~severity =
     let open Lint_warning_types in
-    let warning_decl = { short_name; message = msg; id; severity } in
-    warning_decl
+    { short_name; message = msg; id; severity }
 
   module MakeLint (C : Lint_types.LINTARG) = struct
 
@@ -116,7 +115,8 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let details = C.details
     let enable = C.enable
     let wdecls = WarningDeclaration.empty ()
-    let is_unique = check_lint_uniqueness Lint_globals.plugins plugin C.short_name
+    let is_unique =
+      check_lint_uniqueness Lint_globals.plugins plugin C.short_name
 
     let create_option option short_help lhelp ty default =
       let option = [P.short_name; C.short_name; option] in
@@ -186,8 +186,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
           register_main plugin C.short_name lint
     end
 
-    let wrap_plugin_exn f =
-      function arg ->
+    let wrap_plugin_exn f arg =
       try
         ( f arg : unit )
       with
@@ -246,5 +245,5 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       details
       details
       SimpleConfig.enable_option P.enable;
-      register_plugin plugin
+    register_plugin plugin
 end (* MakePlugin*)

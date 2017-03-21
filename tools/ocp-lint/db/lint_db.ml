@@ -39,19 +39,21 @@ module MakeDB (DB : DATABASE_IO) = struct
     if Sys.is_directory dir then
       let files = Sys.readdir dir in
       Array.iter (fun file ->
-        let path = Filename.concat dir file in
-        try
-          let { db_file_name; db_file_pres; db_file_error } =
-            DB.load path in
-          (Hashtbl.add db db_file_name (file, db_file_pres);
-           Hashtbl.add db_errors file db_file_error)
-        with exn ->
-          Format.eprintf "Can't read DB file for %S, skipping it\n%!" file)
+          let path = Filename.concat dir file in
+          try
+            let { db_file_name; db_file_pres; db_file_error } =
+              DB.load path in
+            (Hashtbl.add db db_file_name (file, db_file_pres);
+             Hashtbl.add db_errors file db_file_error)
+          with exn ->
+            Format.eprintf "Can't read DB file for %S, skipping it\n%!" file)
         files;
       db
     else
-      (Printf.eprintf "Db Error : %s should be a dir\n%!" dir;
-       db)
+      begin
+        Printf.eprintf "Db Error : %s should be a dir\n%!" dir;
+        db
+      end
 
   let load_file file_struct =
     let file = file_struct.Lint_utils.name in
@@ -145,35 +147,40 @@ module MakeDB (DB : DATABASE_IO) = struct
       let new_fres = StringMap.add pname new_pres StringMap.empty in
       Hashtbl.add db file (hash, new_fres)
     | (_old_hash, old_fres) ->
-      match StringMap.find pname old_fres with
-      | exception Not_found ->
-        let new_pres = StringMap.add
-            lname { res_version; res_source; res_options;
-                    res_warnings = [] } StringMap.empty in
-        let new_fres = StringMap.add pname new_pres old_fres in
-        Hashtbl.replace db file (hash, new_fres)
-      | old_pres ->
-        (* if linter already register, nothing to do *)
-        (* this can happen when a linter as several mains *)
-        try
-          let old_lres = StringMap.find lname old_pres in
-          if res_version <> old_lres.res_version ||
-             res_options <> old_lres.res_options then
-            let new_pres = StringMap.add lname
-                { res_version; res_source; res_options;
-                  res_warnings = [] }
-                (StringMap.remove lname old_pres) in
-            let new_fres =
-              StringMap.add pname new_pres (StringMap.remove pname old_fres) in
-            Hashtbl.replace db file (hash, new_fres)
-        with Not_found ->
-          let new_pres =
-            StringMap.add
+      begin
+        match StringMap.find pname old_fres with
+        | exception Not_found ->
+          let new_pres = StringMap.add
               lname { res_version; res_source; res_options;
-                      res_warnings =  [] } old_pres in
-          let new_fres = StringMap.add
-              pname new_pres (StringMap.remove pname old_fres) in
+                      res_warnings = [] } StringMap.empty in
+          let new_fres = StringMap.add pname new_pres old_fres in
           Hashtbl.replace db file (hash, new_fres)
+        | old_pres ->
+          (* if linter already register, nothing to do *)
+          (* this can happen when a linter as several mains *)
+          try
+            let old_lres = StringMap.find lname old_pres in
+            if res_version <> old_lres.res_version ||
+               res_options <> old_lres.res_options then
+              let new_pres = StringMap.add lname
+                  { res_version; res_source; res_options;
+                    res_warnings = [] }
+                  (StringMap.remove lname old_pres) in
+              let new_fres =
+                StringMap.add
+                  pname
+                  new_pres
+                  (StringMap.remove pname old_fres) in
+              Hashtbl.replace db file (hash, new_fres)
+          with Not_found ->
+            let new_pres =
+              StringMap.add
+                lname { res_version; res_source; res_options;
+                        res_warnings =  [] } old_pres in
+            let new_fres = StringMap.add
+                pname new_pres (StringMap.remove pname old_fres) in
+            Hashtbl.replace db file (hash, new_fres)
+      end
 
   let add_error file error =
     let file = Lint_utils.normalize_path !root file in
@@ -205,23 +212,33 @@ module MakeDB (DB : DATABASE_IO) = struct
     | exception Not_found ->
       raise (Lint_db_error.Db_error (Lint_db_error.File_not_in_db file))
     | (hash, old_pres) ->
-      match StringMap.find pname old_pres with
-      | exception Not_found ->
-        raise (Lint_db_error.Db_error
-                 (Lint_db_error.Plugin_not_in_db (file, pname)))
-      | old_lres ->
-        match StringMap.find lname old_lres with
+      begin
+        match StringMap.find pname old_pres with
         | exception Not_found ->
           raise (Lint_db_error.Db_error
-                   (Lint_db_error.Linter_not_in_db (file, pname, lname)))
-        | res ->
-          let new_wres = { res with
-                           res_warnings =  warning :: res.res_warnings } in
-          let new_lres =
-            StringMap.add lname new_wres (StringMap.remove lname old_lres) in
-          let new_pres =
-            StringMap.add pname new_lres (StringMap.remove pname old_pres) in
-          Hashtbl.replace db file (hash, new_pres)
+                   (Lint_db_error.Plugin_not_in_db (file, pname)))
+        | old_lres ->
+          begin
+            match StringMap.find lname old_lres with
+            | exception Not_found ->
+              raise (Lint_db_error.Db_error
+                       (Lint_db_error.Linter_not_in_db (file, pname, lname)))
+            | res ->
+              let new_wres = { res with
+                               res_warnings =  warning :: res.res_warnings } in
+              let new_lres =
+                StringMap.add
+                  lname
+                  new_wres
+                  (StringMap.remove lname old_lres) in
+              let new_pres =
+                StringMap.add
+                  pname
+                  new_lres
+                  (StringMap.remove pname old_pres) in
+              Hashtbl.replace db file (hash, new_pres)
+          end
+      end
 
   let already_run ~file_struct ~pname ~lname ~version =
     let file = file_struct.Lint_utils.norm in

@@ -18,7 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(* Parse warning options "à la OCaml", i.e. "+A-43-12..16" *)
+(* Parse warning options "a la OCaml", i.e. "+A-43-12..16" *)
 
 let warning_max = 512
 let active = Array.make warning_max true
