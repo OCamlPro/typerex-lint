@@ -158,9 +158,14 @@ module MakeArg = struct
                 | None ->
                   match pcd.pcd_args with
                   (* Detect "A of (int)" *)
-                  | Pcstr_tuple [ { ptyp_desc = Ptyp_tuple [_] }] ->
-                    Warnings.report pcd.pcd_loc
-                      (AvoidParenAroundConstrUniqArg pcd.pcd_name.txt)
+                  | Pcstr_tuple [ { ptyp_desc = Ptyp_tuple [ typ ] }] ->
+                    begin
+                      match typ.ptyp_desc with
+                      | Ptyp_arrow _ -> ()
+                      | _ ->
+                        Warnings.report pcd.pcd_loc
+                          (AvoidParenAroundConstrUniqArg pcd.pcd_name.txt)
+                    end
                   | _ -> ()
                 ) variants
             | _ -> ()
