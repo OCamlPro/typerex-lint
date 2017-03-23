@@ -138,7 +138,7 @@ module MakeDB (DB : DATABASE_IO) = struct
     let res_options =
       Lint_config.DefaultConfig.get_linter_options pname lname in
     let hash = file_struct.Lint_utils.hash in
-    let file = file_struct.Lint_utils.norm in
+    let file = file_struct.Lint_utils.name in
     match Hashtbl.find db file with
     | exception Not_found ->
       let new_pres = StringMap.add
@@ -183,7 +183,6 @@ module MakeDB (DB : DATABASE_IO) = struct
       end
 
   let add_error file error =
-    let file = Lint_utils.normalize_path !root file in
     try
       let error_set = Hashtbl.find db_errors file in
       Hashtbl.replace db_errors file (ErrorSet.add error error_set)
@@ -202,46 +201,64 @@ module MakeDB (DB : DATABASE_IO) = struct
         if curr_date >= limit_date then Sys.remove file_path)
       files
 
+  let update_loc file loc =
+    let open Location in
+    let open Lexing in
+    let old_pos_start = loc.loc_start in
+    let old_pos_end = loc.loc_end in
+    let new_pos_start = { old_pos_start with pos_fname = file } in
+    let new_pos_end = { old_pos_end with pos_fname = file } in
+    { loc with loc_start = new_pos_start; loc_end = new_pos_end }
+
   let update ~pname ~lname ~warning =
-    let file =
-      warning.Lint_warning_types.loc.Location.loc_start.Lexing.pos_fname in
-    if not (Sys.file_exists file)
-    then raise (Lint_db_error.Db_error (Lint_db_error.File_not_found file));
-    let file = Lint_utils.normalize_path !root file in
-    match Hashtbl.find db file with
-    | exception Not_found ->
-      raise (Lint_db_error.Db_error (Lint_db_error.File_not_in_db file))
-    | (hash, old_pres) ->
-      begin
-        match StringMap.find pname old_pres with
-        | exception Not_found ->
-          raise (Lint_db_error.Db_error
-                   (Lint_db_error.Plugin_not_in_db (file, pname)))
-        | old_lres ->
-          begin
-            match StringMap.find lname old_lres with
-            | exception Not_found ->
-              raise (Lint_db_error.Db_error
-                       (Lint_db_error.Linter_not_in_db (file, pname, lname)))
-            | res ->
-              let new_wres = { res with
-                               res_warnings =  warning :: res.res_warnings } in
-              let new_lres =
-                StringMap.add
-                  lname
-                  new_wres
-                  (StringMap.remove lname old_lres) in
-              let new_pres =
-                StringMap.add
-                  pname
-                  new_lres
-                  (StringMap.remove pname old_pres) in
-              Hashtbl.replace db file (hash, new_pres)
-          end
-      end
+    let open Lint_warning_types in
+    let loc_file =
+      warning.loc.Location.loc_start.Lexing.pos_fname in
+    if (Hashtbl.length db) <> 1 then
+      (** This should never happen *)
+      Printf.eprintf
+        "Something unexpected happend, not reporting warning on file %S\n%!"
+        loc_file
+    else
+      Hashtbl.iter (fun file (hash, old_pres) ->
+          (** When reporting warnings from .cmt file, the loc will be relative
+              to how the source was compiled.
+              We update the loc in order to normalize the path in loc of the
+              warnings issued from different sources (.ml, .cmt, ...)*)
+          let warning =
+            if file = loc_file then warning
+            else
+              { warning with loc = update_loc file warning.loc}
+          in
+          match StringMap.find pname old_pres with
+          | exception Not_found ->
+            raise (Lint_db_error.Db_error
+                     (Lint_db_error.Plugin_not_in_db (file, pname)))
+          | old_lres ->
+            begin
+              match StringMap.find lname old_lres with
+              | exception Not_found ->
+                raise (Lint_db_error.Db_error
+                         (Lint_db_error.Linter_not_in_db (file, pname, lname)))
+              | res ->
+                let new_wres = { res with
+                                 res_warnings = warning :: res.res_warnings } in
+                let new_lres =
+                  StringMap.add
+                    lname
+                    new_wres
+                    (StringMap.remove lname old_lres) in
+                let new_pres =
+                  StringMap.add
+                    pname
+                    new_lres
+                    (StringMap.remove pname old_pres) in
+                Hashtbl.replace db file (hash, new_pres)
+            end
+        ) db
 
   let already_run ~file_struct ~pname ~lname ~version =
-    let file = file_struct.Lint_utils.norm in
+    let file = file_struct.Lint_utils.name in
     let new_hash = file_struct.Lint_utils.hash in
     try
       let (hash, old_fres) = Hashtbl.find db file in
