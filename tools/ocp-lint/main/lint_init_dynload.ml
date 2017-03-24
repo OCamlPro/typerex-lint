@@ -18,35 +18,33 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-plugin-parsetree"
-  install_META = true
-  install_subdir = "ocp-lint-plugins"
-  files = [
-    "plugin_parsetree.ml"
 
-    (* All linters attached to Parsetree plugin. *)
-    "identifier_length.ml"
-    "list_function_on_singleton.ml"
-    "physical_comp_on_alloc_lit.ml"
+let init () =
+  (* Core modules *)
+  Findlib.record_package Findlib.Record_core "findlib";
+  Findlib.record_package Findlib.Record_core "dynlink";
+  Findlib.record_package Findlib.Record_core "findlib.dynload";
+  Findlib.record_package Findlib.Record_core "compiler-libs.common";
+  Findlib.record_package Findlib.Record_core "unix";
+  Findlib.record_package Findlib.Record_core "str";
+  Findlib.record_package Findlib.Record_core "ocplib-unix";
+  Findlib.record_package Findlib.Record_core "ocp-lint-output";
+  Findlib.record_package Findlib.Record_core "ocp-lint-config";
+  Findlib.record_package Findlib.Record_core "ocp-lint-db";
+  Findlib.record_package Findlib.Record_core "ocp-lint-init";
+  Findlib.record_package Findlib.Record_core "ocp-lint-utils";
 
-    "checkGoodPractices.ml";
-    "checkConstructorArgs.ml";
-
-    "redefine_std_lib.ml"
-
-  ]
-  pp = ["ocp-pp"]
-  requires = [
-    "ocp-lint-stdlib-helper"
-    "ocp-lint-config"
-    "ocp-lint-api"
-    "ocplib-compiler"
-  ]
-end
-
-(* Helper for linter running checks on stdlib *)
-begin library "ocp-lint-stdlib-helper"
-  files = [
-    "std_lib.ml"
-  ]
-end
+#if OCAML_VERSION >= "4.04.0"
+  (match Sys.backend_type with
+   | Sys.Native ->
+     Findlib.record_package_predicates
+       ["pkg_findlib";"pkg_dynlink";"pkg_findlib.dynload";"autolink";"native"]
+   | Sys.Bytecode ->
+     Dynlink.allow_unsafe_modules true;
+     Findlib.record_package_predicates
+       ["pkg_findlib";"pkg_dynlink";"pkg_findlib.dynload";"autolink";"byte"]
+   | Sys.Other str -> ())
+#else
+  Findlib.record_package_predicates
+    ["pkg_findlib";"pkg_dynlink";"pkg_findlib.dynload";"autolink";"native"]
+#endif

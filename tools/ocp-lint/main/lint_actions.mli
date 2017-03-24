@@ -18,6 +18,10 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+(* [load_plugins ()] load dynamically plugins installed
+   in lib/ocp-lint-plugins directory. *)
+val load_installed_plugins : unit -> string list
+
 (* [load_plugins files] load dynamically files or files in a specific
     directory given in the command line with '--load' option. *)
 val load_plugins : string list -> string list
@@ -60,6 +64,7 @@ val lint_file :
    pwarning: print warnings
    perror: print errors
    gd_plugins: list of plugins that where successfully dynlinked
+   ins_plugins: list of installed  plugins that where successfully dynlinked
    master_config: path to a saved master config
    path: starting point of the search for files to analyze
    Iter on files in the path and start ocp-lint process for each file. *)
@@ -71,6 +76,7 @@ val lint_sequential :
   pwarning:bool ->
   perror:bool ->
   gd_plugins:string list ->
+  ins_plugins:string list ->
   master_config:string ->
   path:string ->
   unit
