@@ -48,13 +48,13 @@ module type CONFIG = sig
      default value for the linter  pname:lname. *)
   val get_linter_options_details :
     pname:string ->
-    lname:string -> (string list * string list* string) list
+    lname:string -> (string * string * string) list
 
   (* [get_linter_options pname lname] get all options for the linter
      pname:lname. *)
   val get_linter_options :
     pname:string ->
-    lname:string -> (string list * string) list
+    lname:string -> (string * string) list
 
   (* [save ()] save the current options value in the config file. *)
   val save : unit -> unit

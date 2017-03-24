@@ -19,10 +19,10 @@
 (**************************************************************************)
 
 let details =
-  "A plugin with linters on file system like interface missing, etc."
+  "A plugin with linters on file system like interface missing, etc"
 
 module PluginFileSystem = Lint_plugin_api.MakePlugin (struct
-    let name = "File System plugin."
+    let name = "File System plugin"
     let short_name = "plugin_file_system"
     let details = details
     let enable = true

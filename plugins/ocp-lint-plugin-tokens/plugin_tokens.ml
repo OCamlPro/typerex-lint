@@ -19,7 +19,7 @@
 (**************************************************************************)
 
 let details =
-  "A plugin with linters on lexer tokens."
+  "A plugin with linters on lexer tokens"
 
 module Plugin = Lint_plugin_api.MakePlugin (struct
     let name = "Tokens plugin"

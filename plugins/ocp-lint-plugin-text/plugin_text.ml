@@ -19,10 +19,10 @@
 (**************************************************************************)
 
 let details =
-  "A plugin with linters on the source."
+  "A plugin with linters on the source"
 
 module Plugin = Lint_plugin_api.MakePlugin (struct
-    let name = "Source code plugin."
+    let name = "Source code plugin"
     let short_name = "plugin_text"
     let details = details
     let enable = true

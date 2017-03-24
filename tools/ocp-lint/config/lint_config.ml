@@ -39,11 +39,12 @@ module DefaultConfig = struct
       ~names ~shelp ~lhelp ~level ~ty ~default =
     let short_help = Some shelp in
     let level = Some level in
+    let lhelp = if lhelp = "" then [] else [ lhelp ] in
     SimpleConfig.create_option
       config_file
       names
       ?short_help:short_help
-      [lhelp]
+      lhelp
       ?level:level
       ty
       default
@@ -63,23 +64,65 @@ module DefaultConfig = struct
     list_starts_with oi.SimpleConfig.LowLevel.option_name name
 
   let get_linter_options_details ~pname ~lname =
-    let name = [ pname; lname ] in
-    let options = SimpleConfig.LowLevel.simple_options "" config_file in
-    let plugin_options = List.filter (fun oi -> is_option_of name oi) options in
-    List.map (fun oi ->
-        oi.SimpleConfig.LowLevel.option_name,
-        oi.SimpleConfig.LowLevel.option_long_help,
-        oi.SimpleConfig.LowLevel.option_default)
-      plugin_options
+    let open SimpleConfig.LowLevel in
+    let opts = ref [] in
+    List.iter (fun sec ->
+        iter_section (fun opt ->
+            let name = shortname opt in
+            let prefix = Printf.sprintf "%s.%s" pname lname in
+            let re = Str.regexp_string prefix in
+            let found =
+              try (Str.search_forward re (shortname opt) 0) = 0
+              with Not_found -> false in
+            if found then begin
+              let help = get_help opt in
+              let o = SimpleConfig.(!!) opt in
+              let cl = get_class opt in
+              let value = to_value cl o in
+              let str_value =
+                try value_to_string value
+                with Failure _ ->
+                  begin
+                    match value with
+                    | DelayedValue f ->
+                      let buf = Buffer.create 64 in
+                      f buf "";
+                      Str.global_replace
+                        (Str.regexp_string "\n")
+                        ""
+                        (Buffer.contents buf)
+                    | _ -> ""
+                  end in
+              opts := (name, help, str_value)::!opts
+            end)
+          sec)
+      (sections config_file);
+    !opts
 
   let get_linter_options ~pname ~lname =
-    let name = [ pname; lname ] in
-    let options = SimpleConfig.LowLevel.simple_options "" config_file in
-    let plugin_options = List.filter (fun oi -> is_option_of name oi) options in
-    List.map (fun oi ->
-        oi.SimpleConfig.LowLevel.option_name,
-        oi.SimpleConfig.LowLevel.option_value)
-      plugin_options
+    let open SimpleConfig.LowLevel in
+    let opts = ref [] in
+    List.iter (fun sec ->
+        iter_section (fun opt ->
+            let name = shortname opt in
+            let prefix = Printf.sprintf "%s.%s" pname lname in
+            let re = Str.regexp_string prefix in
+            let found =
+              try (Str.search_forward re (shortname opt) 0) = 0
+              with Not_found -> false in
+            let ignore_opt =  Printf.sprintf "%s.%s.ignore" pname lname in
+            if found && name <> ignore_opt then begin
+              let o = SimpleConfig.(!!) opt in
+              let cl = get_class opt in
+              let value = to_value cl o in
+              (* We marshal with Closures flag the values of options so complex
+                 options can be stored in db *)
+              let str_value = Marshal.to_string value [ Marshal.Closures ] in
+              opts := (name, str_value)::!opts
+            end)
+          sec)
+      (sections config_file);
+    !opts
 
   let save () =
     SimpleConfig.set_config_file config_file (File.of_string config_file_name);

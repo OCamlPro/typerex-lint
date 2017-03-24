@@ -18,12 +18,22 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-let details =
-  "A plugin with linters on parsetree"
-
-module Plugin = Lint_plugin_api.MakePlugin (struct
-    let name = "Parsetree plugin"
-    let short_name = "plugin_parsetree"
-    let details = details
-    let enable = true
-  end)
+begin program "ocp-lint-doc"
+  files = [
+    "make_doc.ml"
+  ]
+  requires = [
+    "ocp-lint-api"
+    "ocp-lint-plugin-files"
+    "ocp-lint-plugin-text"
+    "ocp-lint-plugin-typedtree"
+    "ocp-lint-plugin-parsetree"
+    "ocp-lint-plugin-complex"
+    "ocp-lint-plugin-indent"
+    "ocp-lint-plugin-parsing"
+    "ocp-lint-plugin-sempatch"
+    "tyxml"
+    "omd"
+  ]
+  link = [ "-linkall" ]
+end

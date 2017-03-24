@@ -155,7 +155,18 @@ module MakeDB (DB : DATABASE_IO) = struct
       | old_pres ->
         (* if linter already register, nothing to do *)
         (* this can happen when a linter as several mains *)
-        if not (StringMap.mem lname old_pres) then
+        try
+          let old_lres = StringMap.find lname old_pres in
+          if res_version <> old_lres.res_version ||
+             res_options <> old_lres.res_options then
+            let new_pres = StringMap.add lname
+                { res_version; res_source; res_options;
+                  res_warnings = [] }
+                (StringMap.remove lname old_pres) in
+            let new_fres =
+              StringMap.add pname new_pres (StringMap.remove pname old_fres) in
+            Hashtbl.replace db file (hash, new_fres)
+        with Not_found ->
           let new_pres =
             StringMap.add
               lname { res_version; res_source; res_options;
@@ -163,7 +174,6 @@ module MakeDB (DB : DATABASE_IO) = struct
           let new_fres = StringMap.add
               pname new_pres (StringMap.remove pname old_fres) in
           Hashtbl.replace db file (hash, new_fres)
-        else ()
 
   let add_error file error =
     let file = Lint_utils.normalize_path !root file in
@@ -220,11 +230,11 @@ module MakeDB (DB : DATABASE_IO) = struct
       let (hash, old_fres) = Hashtbl.find db file in
       if hash = new_hash then
         let old_pres = StringMap.find pname old_fres in
-          let { res_version;
-                res_options } = StringMap.find lname old_pres in
-          let options =
-            Lint_config.DefaultConfig.get_linter_options pname lname in
-          options = res_options && version = res_version
+        let { res_version;
+              res_options } = StringMap.find lname old_pres in
+        let options =
+          Lint_config.DefaultConfig.get_linter_options pname lname in
+        options = res_options && version = res_version
       else false
     with Not_found -> false
 

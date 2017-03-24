@@ -35,7 +35,7 @@ type source = Cache | Analyse
 type linter_result = {
   res_version : string;
   res_source : source;
-  res_options : (string list * string) list;
+  res_options : (string * string) list;
   res_warnings: Lint_warning_types.warning list;
 }
 type linter_map = linter_result StringMap.t
