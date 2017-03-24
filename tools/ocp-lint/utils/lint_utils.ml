@@ -22,6 +22,7 @@ type file_struct = {
   name : string;
   norm : string;
   hash : string;
+  cmt : string option;
   ignored : string list;
 }
 
@@ -135,13 +136,43 @@ let rec mk_temp_dir prefix =
   else
     s
 
-let mk_file_struct root file ignored =
+let split_sources sources =
+  let open Cmt_format in
+  let cmts =
+    List.filter (fun file -> Filename.check_suffix file ".cmt") sources in
+  List.fold_left (fun acc cmt ->
+      try
+        let cmt_infos = read_cmt cmt in
+        match cmt_infos.cmt_sourcefile, cmt_infos.cmt_source_digest with
+        | Some src_file, Some src_digest -> (src_file, src_digest, cmt) :: acc
+        | _ -> acc
+      with exn -> acc)
+    [] cmts,
+  List.filter (fun file -> not (Filename.check_suffix file ".cmt")) sources
+
+let find_cmt cmts_infos file =
+  let hash = Digest.file file in
+  let matching_file =
+    List.filter (fun (sourcefile, digest, cmt) ->
+        digest = hash &&
+        (Filename.basename sourcefile) = (Filename.basename file))
+      cmts_infos in
+  match matching_file with
+  | (_cmt_src_file, _cmt_digest, cmt):: tl -> Some cmt
+  | [] -> None
+
+let mk_file_struct root file ignored cmts_infos =
   let file_norm =
     if root <> "." then
       normalize_path root file
     else file in
   let hash = db_hash file in
-  { name = file; norm = file_norm; hash; ignored = [] }
+  let cmt =
+    if cmts_infos = [] then
+      None
+    else
+      find_cmt cmts_infos file in
+  { name = file; norm = file_norm; hash; ignored = []; cmt = cmt }
 
 let save_file_struct dir fstruct =
   let file =  temp_basename "ocp-lint-file" in

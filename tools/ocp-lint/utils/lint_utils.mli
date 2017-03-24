@@ -22,6 +22,7 @@ type file_struct = {
   name : string;
   norm : string;
   hash : string;
+  cmt : string option;
   ignored : string list;
 }
 
@@ -64,7 +65,18 @@ val mk_temp_dir : string -> string
 
 val db_hash : string -> string
 
-val mk_file_struct : string -> string -> string list -> file_struct
+(** [split_sources sources] will match the .cmt files to their .ml files.
+    This return 2 lists : - the association list (file.ml, file.cmt)
+                          - the sources without the .cmt *)
+val split_sources :
+  string list -> ((string * string * string) list * string list)
+
+val mk_file_struct :
+  string ->
+  string ->
+  string list ->
+  (string * string * string) list ->
+  file_struct
 
 val save_file_struct : string -> file_struct -> string
 
