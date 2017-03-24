@@ -29,8 +29,7 @@ type error =
 
 let to_string = function
   | No_db_found ->
-    Printf.sprintf
-      "No DB file found, you should use --init option to use DB features."
+    "No DB file found, you should use --init option to use DB features."
   | File_not_found filename ->
     Printf.sprintf
       "Ignoring warnings on %S. This file may be generated." filename

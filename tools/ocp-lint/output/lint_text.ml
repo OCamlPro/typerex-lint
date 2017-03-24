@@ -79,20 +79,26 @@ let update_breakdown tbl pname lname version wid =
         Hashtbl.replace old_p_htbl lname old_l_htbl;
         Hashtbl.replace tbl pname old_p_htbl
       else
-        (Hashtbl.add old_l_htbl wid 1;
-         Hashtbl.replace old_p_htbl lname old_l_htbl;
-         Hashtbl.replace tbl pname old_p_htbl)
+        begin
+          Hashtbl.add old_l_htbl wid 1;
+          Hashtbl.replace old_p_htbl lname old_l_htbl;
+          Hashtbl.replace tbl pname old_p_htbl
+        end
     else
-      (let new_l_htbl = Hashtbl.create 10 in
-       Hashtbl.add new_l_htbl wid 1;
-       Hashtbl.add old_p_htbl lname new_l_htbl;
-       Hashtbl.replace tbl pname old_p_htbl)
+      begin
+        let new_l_htbl = Hashtbl.create 10 in
+        Hashtbl.add new_l_htbl wid 1;
+        Hashtbl.add old_p_htbl lname new_l_htbl;
+        Hashtbl.replace tbl pname old_p_htbl
+      end
   else
-    (let new_l_htbl = Hashtbl.create 10 in
-     let new_p_htbl = Hashtbl.create 10 in
-     Hashtbl.add new_l_htbl wid 1;
-     Hashtbl.add new_p_htbl lname new_l_htbl;
-     Hashtbl.add tbl pname new_p_htbl)
+    begin
+      let new_l_htbl = Hashtbl.create 10 in
+      let new_p_htbl = Hashtbl.create 10 in
+      Hashtbl.add new_l_htbl wid 1;
+      Hashtbl.add new_p_htbl lname new_l_htbl;
+      Hashtbl.add tbl pname new_p_htbl
+    end
 
 let summary ~master_config ~file_config ~severity ~path
     ~pdetails ~no_db ~db ~db_errors =
@@ -113,52 +119,75 @@ let summary ~master_config ~file_config ~severity ~path
             StringMap.iter  (fun lname { res_version;
                                          res_source;
                                          res_warnings } ->
-                let flag = check_flag [pname; lname; "enabled"] in
-                let flag_error =
-                  if Hashtbl.mem db_errors file then
-                    let err_set = Hashtbl.find db_errors file in
-                    not (ErrorSet.is_empty err_set)
-                  else false
-                in
-                if flag && res_source = Analyse then
-                  begin
-                    if flag_error then
-                      files_linted_errors :=
-                        StringCompat.StringSet.add file !files_linted_errors;
-                    let filters =
-                      Lint_globals.Config.get_option_value
-                        [pname; lname; "warnings"] in
-                    let arr = Lint_parse_args.parse_options filters in
-                    List.iter
-                      (fun warning ->
-                         let wid = warning.decl.id in
-                         if arr.(wid - 1) &&
-                            warning.decl.severity >= severity then
-                           (update_files_linted files_linted file configs;
-                            update_breakdown
-                              breakdown_linted pname lname res_version wid))
-                      res_warnings
-                  end
-                else
-                if flag && res_source = Cache then
-                  begin
-                    if flag_error then
-                      files_cached_errors :=
-                        StringCompat.StringSet.add file !files_cached_errors;
-                    let filters =
-                      Lint_globals.Config.get_option_value
-                        [pname; lname; "warnings"] in
-                    let arr = Lint_parse_args.parse_options filters in
-                    List.iter
-                      (fun warning ->
-                         let wid = warning.decl.id in
-                         if arr.(wid - 1) &&
-                            warning.decl.severity >= severity then
-                           (files_cached :=
-                              StringCompat.StringSet.add file !files_cached;
-                            update_breakdown
-                              breakdown_cached pname lname res_version wid))
-                      res_warnings end)
+                              let flag = check_flag [pname; lname; "enabled"] in
+                              let flag_error =
+                                if Hashtbl.mem db_errors file then
+                                  let err_set = Hashtbl.find db_errors file in
+                                  not (ErrorSet.is_empty err_set)
+                                else false
+                              in
+                              if flag && res_source = Analyse then
+                                begin
+                                  if flag_error then
+                                    files_linted_errors :=
+                                      StringCompat.StringSet.add
+                                        file
+                                        !files_linted_errors;
+                                  let filters =
+                                    Lint_globals.Config.get_option_value
+                                      [pname; lname; "warnings"] in
+                                  let arr =
+                                    Lint_parse_args.parse_options filters in
+                                  List.iter
+                                    (fun warning ->
+                                       let wid = warning.decl.id in
+                                       if arr.(wid - 1) &&
+                                          warning.decl.severity >= severity then
+                                         begin
+                                           update_files_linted
+                                             files_linted
+                                             file
+                                             configs;
+                                           update_breakdown
+                                             breakdown_linted
+                                             pname
+                                             lname
+                                             res_version
+                                             wid
+                                         end)
+                                    res_warnings
+                                end
+                              else
+                              if flag && res_source = Cache then
+                                begin
+                                  if flag_error then
+                                    files_cached_errors :=
+                                      StringCompat.StringSet.add
+                                        file
+                                        !files_cached_errors;
+                                  let filters =
+                                    Lint_globals.Config.get_option_value
+                                      [pname; lname; "warnings"] in
+                                  let arr =
+                                    Lint_parse_args.parse_options filters in
+                                  List.iter
+                                    (fun warning ->
+                                       let wid = warning.decl.id in
+                                       if arr.(wid - 1) &&
+                                          warning.decl.severity >= severity then
+                                         begin
+                                           files_cached :=
+                                             StringCompat.StringSet.add
+                                               file
+                                               !files_cached;
+                                           update_breakdown
+                                             breakdown_cached
+                                             pname
+                                             lname
+                                             res_version
+                                             wid
+                                         end)
+                                    res_warnings end)
               lres)
         pres)
     db;
@@ -191,7 +220,9 @@ let summary ~master_config ~file_config ~severity ~path
 
     Printf.printf "== Cache Infos ==\n%!";
     if pdetails then begin
-      Printf.printf "  * %d file(s) were found in cache:\n%!" files_cached_total;
+      Printf.printf
+        "  * %d file(s) were found in cache:\n%!"
+        files_cached_total;
       StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_cached;
     end
     else
@@ -200,44 +231,51 @@ let summary ~master_config ~file_config ~severity ~path
       warnings_cached_total;
     Hashtbl.iter (fun pname ptbl ->
         let total =
-        Hashtbl.fold (fun lname wtbl acc -> acc + 1)
-          ptbl 0 in
+          Hashtbl.fold (fun lname wtbl acc -> acc + 1)
+            ptbl 0 in
         let total_w =
           Hashtbl.fold (fun lname wtbl acc ->
               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl acc)
             ptbl 0 in
         if total > 1 then
-          (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
-           Hashtbl.iter (fun lname wtbl ->
-               let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
-               let total_l_w =
-                 Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
-               if total_l > 1 then
-                 (Printf.printf "      * %d warning(s) raised by %S\n%!"
-                    total_l_w lname;
+          begin
+            Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
+            Hashtbl.iter (fun lname wtbl ->
+                let total_l =
+                  Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
+                let total_l_w =
+                  Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
+                if total_l > 1 then
+                  begin
+                    Printf.printf "      * %d warning(s) raised by %S\n%!"
+                      total_l_w lname;
+                    Hashtbl.iter (fun wid cpt ->
+                        Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                      wtbl
+                  end
+                else
                   Hashtbl.iter (fun wid cpt ->
-                      Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                      Printf.printf
+                        "      * %d warning(s) raised by %S/warning #%i\n%!"
+                        cpt
+                        lname
+                        wid)
                     wtbl)
-               else
-                 Hashtbl.iter (fun wid cpt ->
-                     Printf.printf
-                       "      * %d warning(s) raised by %S/warning #%i\n%!"
-                       cpt
-                       lname
-                       wid)
-                   wtbl)
-             ptbl)
+              ptbl
+          end
         else
           Hashtbl.iter (fun lname wtbl ->
               let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
               let total_l_w =
                 Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
               if total_l > 1 then
-                (Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
-                   total_l_w pname lname;
-                 Hashtbl.iter (fun wid cpt ->
-                     Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
-                   wtbl)
+                begin
+                  Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
+                    total_l_w pname lname;
+                  Hashtbl.iter (fun wid cpt ->
+                      Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                    wtbl
+                end
               else
                 Hashtbl.iter (fun wid cpt ->
                     Printf.printf
@@ -246,7 +284,7 @@ let summary ~master_config ~file_config ~severity ~path
                       pname
                       lname
                       wid)
-                wtbl)
+                  wtbl)
             ptbl)
       breakdown_cached;
     if pdetails then begin
@@ -283,37 +321,43 @@ let summary ~master_config ~file_config ~severity ~path
             Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl acc)
           ptbl 0 in
       if total > 1 then
-        (Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
-         Hashtbl.iter (fun lname wtbl ->
-             let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
-             let total_l_w =
-               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
-             if total_l > 1 then
-               (Printf.printf "      * %d warning(s) raised by %S\n%!"
-                  total_l_w lname;
+        begin
+          Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
+          Hashtbl.iter (fun lname wtbl ->
+              let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
+              let total_l_w =
+                Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
+              if total_l > 1 then
+                begin
+                  Printf.printf "      * %d warning(s) raised by %S\n%!"
+                    total_l_w lname;
+                  Hashtbl.iter (fun wid cpt ->
+                      Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                    wtbl
+                end
+              else
                 Hashtbl.iter (fun wid cpt ->
-                    Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                    Printf.printf
+                      "      * %d warning(s) raised by %S/warning #%i\n%!"
+                      cpt
+                      lname
+                      wid)
                   wtbl)
-             else
-               Hashtbl.iter (fun wid cpt ->
-                   Printf.printf
-                     "      * %d warning(s) raised by %S/warning #%i\n%!"
-                     cpt
-                     lname
-                     wid)
-                 wtbl)
-           ptbl)
+            ptbl
+        end
       else
         Hashtbl.iter (fun lname wtbl ->
             let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
             let total_l_w =
               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
             if total_l > 1 then
-              (Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
-                 total_l_w pname lname;
-               Hashtbl.iter (fun wid cpt ->
-                   Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
-                 wtbl)
+              begin
+                Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
+                  total_l_w pname lname;
+                Hashtbl.iter (fun wid cpt ->
+                    Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                  wtbl
+              end
             else
               Hashtbl.iter (fun wid cpt ->
                   Printf.printf

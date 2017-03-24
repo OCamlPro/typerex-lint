@@ -31,13 +31,14 @@ let iter_files ?(recdir=true) apply dirname =
     Array.iter (fun file ->
         try
           let file_p = Filename.concat dir file in
-          if Sys.is_directory (Filename.concat dirname file_p) then begin
-            if not (String.get file 0 = '.') &&
-               not (String.get file 0 = '_') &&
-               recdir then
-              iter dirname file_p
-          end else
-            apply file_p
+          if Sys.file_exists (Filename.concat dirname file_p) then
+            if Sys.is_directory (Filename.concat dirname file_p) then begin
+              if not (String.get file 0 = '.') &&
+                 not (String.get file 0 = '_') &&
+                 recdir then
+                iter dirname file_p
+            end else
+              apply file_p
         with Sys_error err ->
           Printf.eprintf "Scanning Error: %s\n%!" err)
       files

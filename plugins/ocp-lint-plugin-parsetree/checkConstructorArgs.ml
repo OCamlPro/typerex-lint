@@ -88,7 +88,7 @@ let iter_structure ast =
 #if OCAML_VERSION < "4.03.0"
                   | [ { ptyp_desc = Ptyp_tuple _ }] ->
 #else
-                  | Pcstr_tuple _ ->
+                  | Pcstr_tuple [ { ptyp_desc = Ptyp_tuple _ }] ->
 #endif
                     Warnings.report pcd.pcd_loc
                       (TupleArgWithParen pcd.pcd_name.txt)
