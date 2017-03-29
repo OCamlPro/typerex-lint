@@ -8,8 +8,9 @@ homepage: "https://github.com/ocamlpro/typerex-lint"
 bug-reports: "https://github.com/ocamlpro/typerex-lint/issues"
 depends: [
   "ocp-build" {>= "1.99.17-beta" }
-  "menhir" 
-  "ocp-indent" 
+  "menhir"
+  "ocp-indent"
+  "ppx_tools"
 ]
 available: ocaml-version >= "4.02"
 build: [
