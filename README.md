@@ -15,7 +15,7 @@ rules. `ocp-lint` is highly configurable and easily extensible.
 
 `ocp-lint` is currently written for OCaml 4.02 and superior versions.
 
-OPAM dependencies: ocp-build, menhir, yojson
+OPAM dependencies: ocp-build, menhir, yojson, ppx_tools
 
 You can use `make opam-deps` to install dependencies in the current switch.
 
@@ -65,7 +65,7 @@ some warning and/or errors. To do that, create a file
 
 LINT=ocp-lint # or the exact path to ocp-lint
 
-$LINT --warn-error --path <absolute/path/to/your/project>
+$LINT --warn-error --path <absolute/path/to/your/project_source>
 
 if [ "$?" = 0 ]; then
     exit 0
@@ -75,13 +75,79 @@ else
 fi
 ```
 
-## Configuration File
+## Options
 
-TODO: give some more details
+ocp-lint comes will a large set of options. With those options, you can tweek
+the behavior of ocp-lint or configure the plugins that offers options.
+In order to use those options, you either use the command-line or the
+configuration file.
+One thing to note is that the command-line have the priority over the
+configuration file.
+
+### Command-line options
+
+#### Kernel arguments
+
+ocp-lint offers a lot of options to change the way it runs. Here some examples:
+
+* --path DIR: Give a project dir path
+
+* --list: List of every plugins and linters
+
+#### Plugin arguments
+
+Each plugin comes with a set of options:
+
+* --plugin-name.linter-name.warnings:
+   Enable/Disable warnings from "Checks on module type name."
+
+* --{enable,disable}-plugin-name.linter-name:
+   Enable/Disable linter "Checks on module type name."
+
+To those options the author of the plugins can add his own options. Eg:
+
+* --plugin-text.code-length.max-line-length:
+   allows to choose the maximum line length (default value: 80)
+
+* --plugin-parsetree.code-identifier-length.min-identifier-length:
+   allows to choose the minimum identifier length (default value:2)
+
+### Configuration file
+
+#### General use
+
+ocp-lint allows you to manage the options in a configuration file.
+This file is .ocplint.
+You can generate it with the --save-config argument.
+
+This file has the following format :
+```
+option_name = value
+plugin1_name = {
+  linter1_name = {
+    option1_name = value
+    option2_name = value
+  }
+  linter2_name = { .. }
+}
+plugin2_name = { .. }
+```
+ocp-lint will look for a .ocplint where you run it.
+
+### Multi config files
+
+You can use several configuration files in your source in order to manage
+the options more accurely.
+If you use an .ocplint in the subdir, the configuration will be use only for the
+sources in this dir.
+If you use 2 .ocplint files, one at the root of your project and one in a deep
+subdir, then ocp-lint will use the root .ocplint for all sources except for the
+source in the subdir. The sources in the subdir will options that result after
+merging the 2 .ocplint.
 
 ## Available Analyses
 
-TODO: give some more details
+You can check the generated documentation [here](https://www.typerex.org/ocp-lint).
 
 ## Contributing
 
