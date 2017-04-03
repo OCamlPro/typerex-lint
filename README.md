@@ -34,7 +34,7 @@ to compile and install `ocp-lint` on your system.
 
 #### Easiest Way
 
-You can just run `ocp-int` in the home directory of your project, and
+You can just run `ocp-lint` in the home directory of your project, and
 the tool will recursively scan sub-directories, analyze your source
 files and report warning and/or errors. If you are using emacs, it's
 better to run the command inside the editor to be able to quickly jump
