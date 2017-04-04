@@ -133,9 +133,27 @@ AC_CHECK_OCAML_PKG(ocp-indent.lib)
 if test "$OCAML_PKG_ocp_indent.lib" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'ocp-indent.lib'.])
 fi
-OPAM_REPO=/home/lefessan/WindowsSharedFolder/opam-repository-with-archives
-OPAM_REPO_OFFICIAL_REMOTE=ocaml
-OPAM_REPO_FORK_REMOTE=origin
+AC_CHECK_OCAML_PKG([tyxml])
+AC_ARG_ENABLE(lwt,  [  --disable-tyxml           to disable tyxml],
+                    [OCAML_PKG_tyxml=no],[])
+if test "$OCAML_PKG_tyxml" = "no"; then
+   tyxml_ENABLED=false
+else
+   tyxml_ENABLED=true
+fi
+AC_SUBST(tyxml_ENABLED)
+AC_CHECK_OCAML_PKG([omd])
+AC_ARG_ENABLE(lwt,  [  --disable-omd           to disable omd],
+                    [OCAML_PKG_omd=no],[])
+if test "$OCAML_PKG_omd" = "no"; then
+   omd_ENABLED=false
+else
+   omd_ENABLED=true
+fi
+AC_SUBST(omd_ENABLED)
+OPAM_REPO=
+OPAM_REPO_OFFICIAL_REMOTE=
+OPAM_REPO_FORK_REMOTE=
 DOWNLOAD_URL_PREFIX=http://github.com//archive/
 
 ###############################################################
@@ -184,7 +202,9 @@ AC_SUBST(OCAMLDOC)
 AC_SUBST(OCAMLLIB)
 AC_SUBST(OCAMLBIN)
 AC_SUBST(OCAML_USE_BINANNOT)
-AC_CONFIG_FILES(Makefile.config config.ocpgen ocaml-config.h)
+AC_SUBST(tyxml_ENABLED)
+AC_SUBST(omd_ENABLED)
+AC_CONFIG_FILES(Makefile.config config.ocpgen config.ocp2gen ocaml-config.h)
 AC_OUTPUT
 
 echo

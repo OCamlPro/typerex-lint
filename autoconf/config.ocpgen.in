@@ -25,6 +25,8 @@ conf_ocamldoc="@OCAMLDOC@"
 conf_ocamllib="@OCAMLLIB@"
 conf_ocamlbin="@OCAMLBIN@"
 ocaml_use_binannot = @OCAML_USE_BINANNOT@
+tyxml_enabled = @tyxml_ENABLED@
+omd_enabled = @omd_ENABLED@
 autoconf_dir = "@PACKAGE_NAME@-autoconf-dir"
 
 
