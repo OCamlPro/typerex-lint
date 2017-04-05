@@ -19,6 +19,7 @@
 (**************************************************************************)
 
 begin program "ocp-lint-doc"
+  install_META = false
   files = [
     "make_doc.ml"
   ]
