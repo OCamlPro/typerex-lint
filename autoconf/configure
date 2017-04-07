@@ -592,10 +592,6 @@ OPAM_REPO_FORK_REMOTE
 OPAM_REPO_OFFICIAL_REMOTE
 OPAM_REPO
 ROOTDIR
-omd_ENABLED
-OCAML_PKG_omd
-tyxml_ENABLED
-OCAML_PKG_tyxml
 OCAML_PKG_ocp_indent_lib
 OCAML_PKG_ocplib_config
 OCAML_PKG_menhirLib
@@ -675,7 +671,6 @@ enable_version_check
 enable_bin_annot
 with_ocamldir
 with_metadir
-enable_lwt
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1296,8 +1291,6 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-version-check            do not check OCaml version
   --disable-bin-annot            do not use -bin-annot
-  --disable-tyxml           to disable tyxml
-  --disable-omd           to disable omd
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4292,82 +4285,6 @@ $as_echo "not found" >&6; }
 if test "$OCAML_PKG_ocp_indent.lib" = "no"; then
    as_fn_error $? "Please install OCaml package 'ocp-indent.lib'." "$LINENO" 5
 fi
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package tyxml" >&5
-$as_echo_n "checking for OCaml findlib package tyxml... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in tyxml  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      OCAML_PKG_tyxml=$pkg
-      ocaml_pkg_version=$($OCAMLFIND query -l $pkg|grep version: | awk '{ print $2}')
-      OCAML_PKG_tyxml_VERSION=$ocaml_pkg_version
-
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ocaml_pkg_version" >&5
-$as_echo "$ocaml_pkg_version" >&6; }
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-    OCAML_PKG_tyxml=no
-  fi
-
-
-
-# Check whether --enable-lwt was given.
-if test "${enable_lwt+set}" = set; then :
-  enableval=$enable_lwt; OCAML_PKG_tyxml=no
-fi
-
-if test "$OCAML_PKG_tyxml" = "no"; then
-   tyxml_ENABLED=false
-else
-   tyxml_ENABLED=true
-fi
-
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package omd" >&5
-$as_echo_n "checking for OCaml findlib package omd... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in omd  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      OCAML_PKG_omd=$pkg
-      ocaml_pkg_version=$($OCAMLFIND query -l $pkg|grep version: | awk '{ print $2}')
-      OCAML_PKG_omd_VERSION=$ocaml_pkg_version
-
-      { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ocaml_pkg_version" >&5
-$as_echo "$ocaml_pkg_version" >&6; }
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-    OCAML_PKG_omd=no
-  fi
-
-
-
-# Check whether --enable-lwt was given.
-if test "${enable_lwt+set}" = set; then :
-  enableval=$enable_lwt; OCAML_PKG_omd=no
-fi
-
-if test "$OCAML_PKG_omd" = "no"; then
-   omd_ENABLED=false
-else
-   omd_ENABLED=true
-fi
-
 OPAM_REPO=
 OPAM_REPO_OFFICIAL_REMOTE=
 OPAM_REPO_FORK_REMOTE=
@@ -4390,8 +4307,6 @@ DOWNLOAD_URL_PREFIX=http://github.com//archive/
 ## END of autoconf.ac                                         #
 ##                                                            #
 ###############################################################
-
-
 
 
 

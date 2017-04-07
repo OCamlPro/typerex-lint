@@ -11,11 +11,6 @@ depends: [
   "menhir"
   "ocp-indent"
   "ppx_tools"
-  "omd"
-]
-depopts: [
-  "tyxml"
-  "omd"
 ]
 available: ocaml-version >= "4.02"
 build: [
