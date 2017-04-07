@@ -69,7 +69,100 @@ let make_option_tab pname lname =
       let td_def = td [pcdata default] in
       tr [td_name; td_help; td_def]
     ) opt in
-  table ~a:[a_class ["table-striped table-bordered"]] ~thead rows
+  table ~a:[a_class ["table-striped table-bordered"];] ~thead rows
+
+let make_warning_tab pname lname warn =
+  let open Lint_warning_decl in
+  let open Lint_warning_types in
+  let thead =
+    thead [tr [th [pcdata "ID"];
+               th [pcdata "Name"];
+               th [pcdata "Message"];
+               th [pcdata "Severity"]]] in
+  let rows =
+    WarningDeclaration.fold (fun wdecl acc ->
+      let id = string_of_int wdecl.id in
+      let name = wdecl.short_name in
+      let msg = wdecl.message in
+      let severity = string_of_int wdecl.severity in
+      let td_id = td [pcdata id] in
+      let td_name = td [pcdata name] in
+      let td_msg = td [pcdata msg] in
+      let td_severity = td [pcdata severity] in
+      let handler_warn_str =
+        Printf.sprintf "handler_warn(\"%s__%s__%i__warn\")" pname lname wdecl.id in
+      (tr
+         ~a:[a_onclick handler_warn_str;
+             a_onmouseover "this.style.backgroundColor=\'#A9A9A9\';";
+             a_onmouseout "this.style.backgroundColor=\'\';"]
+         [td_id; td_name; td_msg; td_severity])::acc
+    ) warn [] in
+  let rows = List.rev rows in
+  if rows <> [] then
+    Some (table ~a:[a_class ["table-striped table-bordered warntab"];] ~thead rows)
+  else None
+
+let make_search_tab_rows pname lname warn =
+  let open Lint_warning_decl in
+  let open Lint_warning_types in
+  WarningDeclaration.fold (fun wdecl acc ->
+      let name = wdecl.short_name in
+      let msg = wdecl.message in
+      let severity = string_of_int wdecl.severity in
+      let td_pname = td [pcdata pname] in
+      let td_lname = td [pcdata lname] in
+      let td_name = td [pcdata name] in
+      let td_msg = td [pcdata msg] in
+      let td_severity = td [pcdata severity] in
+      let handler_warn_str =
+        Printf.sprintf "handler_search(\"%s__%s__%i__warn\")" pname lname wdecl.id in
+      (tr
+         ~a:[a_onclick handler_warn_str;
+             a_onmouseover "this.style.backgroundColor=\'#A9A9A9\';";
+             a_onmouseout "this.style.backgroundColor=\'\';"]
+         [td_pname; td_lname; td_name; td_msg; td_severity])::acc
+    ) warn []
+
+let make_search_box =
+  input ~a:[a_id "search_box"; a_onkeyup "searching()"; a_placeholder "Search warning..."]
+
+let make_home_li () =
+  let handler_str = Printf.sprintf "handler(\"home\")" in
+  let li_id = "home_li" in
+  li
+    ~a:[a_onclick handler_str; a_id li_id]
+    [a [pcdata "ocp-lint"]]
+
+let make_home_div plugins =
+  let open Lint_warning_decl in
+  let open Lint_warning_types in
+  let rows =
+    Hashtbl.fold (fun plugin linters acc ->
+        let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
+        let pname = Plugin.short_name in
+        let lint_tr =
+          Lint_map.fold (fun lname lint acc ->
+              let module Linter = (val lint : Lint_types.LINT) in
+              let lname = Linter.short_name in
+              (make_search_tab_rows pname lname Linter.wdecls) @ acc)
+            linters [] in
+        (List.rev lint_tr) @ acc)
+      Lint_globals.plugins [] in
+  let thead =
+    thead [tr [th [pcdata "Plugin"];
+               th [pcdata "Linter"];
+               th [pcdata "Warning name"];
+               th [pcdata "Warning message"];
+               th [pcdata "Warning severity"]]] in
+  let search_box = make_search_box () in
+  let table =
+    table
+      ~a:[
+        a_class ["table-striped table-bordered searchtab"]; a_id "search_tab"]
+      ~thead rows in
+  div
+    ~a:[a_class ["content"]; a_id ("home_div")]
+    [ search_box; table ]
 
 let linter_page_div pname lname linter =
   let open Lint_warning_decl in
@@ -87,6 +180,7 @@ let linter_page_div pname lname linter =
   let version_p = p [b [pcdata "Version"]; pcdata version] in
   let opt_h2 = h2 [pcdata "Options"] in
   let opt_tab = make_option_tab pname lname in
+  let warn_tab = make_warning_tab pname lname Linter.wdecls in
   let warn =
     WarningDeclaration.fold (fun wdecl acc ->
         let title_str = Printf.sprintf "Warning %i" wdecl.id in
@@ -100,23 +194,56 @@ let linter_page_div pname lname linter =
         let example_txt = "Code example that triggers this warnings : " in
         let example_p = p [pcdata example_txt] in
         let example_code = read_example pname lname wdecl.id in
+        let anchor_id = Printf.sprintf "%s__%s__%i__warn" pname lname wdecl.id in
         let div = match example_code with
           | Some c ->
             let warning_code = read_warning pname lname wdecl.id in
             begin
               match warning_code with
-              | None -> div [ name_h3; name_p; severity_p; message_p; example_p ; pre [c] ]
-              | Some c2 -> div [ name_h3; name_p; severity_p; message_p; example_p ; pre [c]; pre [c2] ]
+              | None ->
+                div
+                  ~a:[a_id anchor_id]
+                  [ name_h3;
+                    name_p;
+                    severity_p;
+                    message_p;
+                    example_p ;
+                    pre [c] ]
+              | Some c2 ->
+                div
+                  ~a:[a_id anchor_id]
+                  [ name_h3;
+                    name_p;
+                    severity_p;
+                    message_p;
+                    example_p ;
+                    pre [c];
+                    pre [c2] ]
             end
           | None ->
-            div [ name_h3; name_p; severity_p; message_p; ] in
+            div
+              ~a:[a_id anchor_id]
+              [ name_h3; name_p; severity_p; message_p; ] in
         div::acc)
       Linter.wdecls [] in
   let warn_div = div (List.rev warn) in
   let warn_h2 = h2 [pcdata "Warnings"] in
+  let content =
+    match warn_tab with
+    | None -> [ name_h1; name_p; details_p; version_p; opt_h2; opt_tab; ]
+    | Some tab ->
+      [ name_h1;
+        name_p;
+        details_p;
+        version_p;
+        opt_h2;
+        opt_tab;
+        warn_h2;
+        tab;
+        warn_div ] in
   div
     ~a:[a_class ["content"]; a_id (Linter.short_name ^ "_div")]
-    [name_h1; name_p; details_p; version_p; opt_h2; opt_tab; warn_h2; warn_div]
+    content
 
 let emit_plugin_page plugin linters =
   let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
@@ -173,19 +300,23 @@ let _ =
   let sidebar_li =
     List.fold_left (fun acc (pli, llis) -> (pli::llis) @ acc) [] sidebar in
   let plugins_div = List.flatten (List.rev plugins_div) in
-  let plugins_div = div ~a:[a_id "page-content-wrapper"] plugins_div in
+  let home_div = make_home_div Lint_globals.plugins in
+  let home_li = make_home_li () in
+  let content = home_div::plugins_div in
+  let sidebar = home_li :: sidebar_li in
+  let plugins_div = div ~a:[a_id "page-content-wrapper"] content in
   let title = title (pcdata "ocp-lint: plugins") in
-  let sidebar_ul = ul ~a:[a_class ["sidebar-nav"]] sidebar_li in
+  let sidebar_ul = ul ~a:[a_class ["sidebar-nav"]] sidebar in
   let sidebar_list_div = div ~a:[a_id "sidebar-wrapper"] [sidebar_ul] in
   let dom = div ~a:[a_id "wrapper"] [sidebar_list_div; plugins_div] in
   let page =
     html (head title
             [link
                ~rel:[`Stylesheet]
-               ~href:"css/bootstrap.min.css" ();
+               ~href:"css/ocplint.css" ();
              link
                ~rel:[`Stylesheet]
-               ~href:"css/ocplint.css" ();
+               ~href:"css/bootstrap.min.css" ();
              link
                ~rel:[`Stylesheet]
                ~href:"css/simple-sidebar.css" ();])
