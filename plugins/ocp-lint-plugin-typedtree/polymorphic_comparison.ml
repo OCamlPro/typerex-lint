@@ -167,10 +167,7 @@ let iter =
      | Texp_apply ({ exp_desc = Texp_ident (path, lid, vdesc);
                      exp_loc = loc } as f, args) ->
        let name = Path.name path in
-       let modname =
-         match Longident.flatten lid.txt with
-         | modname :: _ -> modname
-         | _ -> "" in
+       let modname = Ident.name (Path.head path) in
        if List.mem name usual_suspects || not (List.mem modname stdlib) then
          new_occurrence name f.exp_type loc
      | _ -> ()
