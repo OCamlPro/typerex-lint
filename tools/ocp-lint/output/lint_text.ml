@@ -56,7 +56,7 @@ let print_error ppf error =
 let check_flag options =
   try
     bool_of_string
-      (Lint_globals.Config.get_option_value options)
+      (Lint_globals.LintConfig.get_option_value options)
   with Not_found -> true
 
 let update_files_linted tbl file cfgs =
@@ -112,7 +112,7 @@ let summary ~master_config ~file_config ~severity ~path
       let configs, cfg_opt = find_cfg_tmp file file_config in
       (match cfg_opt with
        | None -> ()
-       | Some cfg -> Lint_globals.Config.load_config_tmp master_config cfg);
+       | Some cfg -> Lint_globals.LintConfig.load_config_tmp master_config cfg);
       StringMap.iter (fun pname lres ->
           let flag = check_flag [pname; "enabled"] in
           if flag then
@@ -134,7 +134,7 @@ let summary ~master_config ~file_config ~severity ~path
                                         file
                                         !files_linted_errors;
                                   let filters =
-                                    Lint_globals.Config.get_option_value
+                                    Lint_globals.LintConfig.get_option_value
                                       [pname; lname; "warnings"] in
                                   let arr =
                                     Lint_parse_args.parse_options filters in
@@ -166,7 +166,7 @@ let summary ~master_config ~file_config ~severity ~path
                                         file
                                         !files_cached_errors;
                                   let filters =
-                                    Lint_globals.Config.get_option_value
+                                    Lint_globals.LintConfig.get_option_value
                                       [pname; lname; "warnings"] in
                                   let arr =
                                     Lint_parse_args.parse_options filters in
@@ -385,7 +385,8 @@ let print fmt master_config file_config severity path db =
         let configs ,cfg_opt = find_cfg_tmp file file_config in
         (match cfg_opt with
          | None -> ()
-         | Some cfg -> Lint_globals.Config.load_config_tmp master_config cfg);
+         | Some cfg ->
+           Lint_globals.LintConfig.load_config_tmp master_config cfg);
         let ws =
           StringMap.fold (fun pname lres acc ->
               let flag = check_flag [pname; "enabled"] in
@@ -394,7 +395,7 @@ let print fmt master_config file_config severity path db =
                     let flag = check_flag [pname; lname; "enabled"] in
                     if flag then
                       let filters =
-                        Lint_globals.Config.get_option_value
+                        Lint_globals.LintConfig.get_option_value
                           [pname; lname; "warnings"] in
                       let arr = Lint_parse_args.parse_options filters in
                       List.fold_left
@@ -454,7 +455,7 @@ let verbose_info fmt db =
                 let plugin_flag = check_flag [pname; "enabled"] in
                 let linter_flag = check_flag [pname; lname; "enabled"] in
                 let filters =
-                  Lint_globals.Config.get_option_value
+                  Lint_globals.LintConfig.get_option_value
                     [pname; lname; "warnings"] in
                 let arr = Lint_parse_args.parse_options filters in
                 let warnings_activated =

@@ -18,7 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module Config = Lint_config.DefaultConfig
+module LintConfig = Lint_config.DefaultConfig
 
 let plugins = Hashtbl.create 42
 
