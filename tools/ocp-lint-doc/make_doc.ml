@@ -49,7 +49,7 @@ let read_warning plugin linter id =
 
 let make_option_tab pname lname =
   let opt =
-    Lint_globals.Config.get_linter_options_details pname lname in
+    Lint_globals.LintConfig.get_linter_options_details pname lname in
   let thead =
     thead [tr [th [pcdata "Command line arg"];
                th [pcdata "Details"];
