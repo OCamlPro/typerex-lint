@@ -7,7 +7,7 @@ include autoconf/Makefile.config
 
 OPAMDEPS=yojson menhir ocp-indent ocp-build ppx_tools
 
-OCPBUILD=ocp-build
+OCPBUILD=ocp-build -v 3
 OCAMLOPT=ocamlopt.opt
 OCAMLC=ocamlc
 SRC=src
