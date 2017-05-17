@@ -29,3 +29,16 @@ begin library "ocp-lint-output"
     "ocp-lint-utils"
   ]
 end
+
+begin library "ocp-lint-output-json"
+  files = [
+    "lint_warning_json.ml"
+    "lint_web.ml"
+  ]
+  requires = [
+    "ocp-lint-db"
+    "tyxml"
+    "unix"
+    "yojson"
+  ]
+end

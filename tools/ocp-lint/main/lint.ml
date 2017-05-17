@@ -44,7 +44,8 @@ let installed_plugins = ref []
 let pwarning = ref false
 let perror = ref false
 let pall = ref false
-
+let pjson = ref false
+	       
 module ArgAlign = struct
   open Arg
 
@@ -255,6 +256,9 @@ let () =
     "--perror", Arg.Set perror,
     " Show errors";
 
+    "--pjson", Arg.Set pjson,
+    " Show json output";
+
     "", Arg.Unit (fun () -> ()),
     " \n\nPlugins arguments:\n";
   ]
@@ -274,6 +278,7 @@ let start_lint dir =
     !pall
     !pwarning
     !perror
+    !pjson
     !good_plugins
     ins_plugins
     master_config

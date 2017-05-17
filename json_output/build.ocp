@@ -1,0 +1,100 @@
+optcomp_opt = %string(strings = [
+  "-let ocaml_full_version=("
+    ocaml_major_version ","
+    ocaml_minor_version ","
+    ocaml_point_version
+  ")"
+])
+
+camlp4_optcomp_js = [
+  "camlp4o"
+  "%{optcomp_SRC_DIR}%/optcomp.cma" optcomp_opt
+  "%{js_of_ocaml_SRC_DIR}%/pa_js.cmo"
+]
+
+camlp4_js = [
+  "camlp4o"
+  "%{js_of_ocaml_SRC_DIR}%/pa_js.cmo"
+]
+
+camlp4_optcomp = [
+  "camlp4o"
+  "%{optcomp_SRC_DIR}%/optcomp.cma" optcomp_opt
+]
+
+begin program "test-js-client"
+
+   has_asm = false
+   pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
+   files = [
+     "js_design/simple_table.ml"
+   ]
+
+   requires = [
+     "c3"
+     "compiler-libs"
+     "js_of_ocaml"
+     "yojson"
+   ]
+
+   (* Also compile bytecode into javascript *)
+
+   build_targets = [ "static/js/json_output.js" ]
+   client_byte = [ %string
+     ( strings = [ "%{test-js-client_FULL_DST_DIR}%/"
+                   "test-js-client.byte"
+            ] ) ]
+   build_rules = [
+      "static/js/json_output.js" (
+       sources = [ client_byte ]
+       commands = [
+         { "js_of_ocaml"
+            (* Use these options to debug Javascript:
+               "-sourcemap" "-pretty" "-noinline" *)
+             "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
+             "-o" "static/js/json_output.js"
+              client_byte }
+       ]
+       build_target = true
+     )
+   ]
+end
+
+begin program "test-js-ace"
+
+   has_asm = false
+   pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
+   files = [
+     "js_design/ace_file_viewer.ml"
+   ]
+
+   requires = [
+     "ace"
+     "c3"
+     "compiler-libs"
+     "js_of_ocaml"
+     "yojson"
+   ]
+
+   (* Also compile bytecode into javascript *)
+
+   build_targets = [ "static/js/ace_file_viewer.js" ]
+   client_byte = [ %string
+     ( strings = [ "%{test-js-ace_FULL_DST_DIR}%/"
+                   "test-js-ace.byte"
+            ] ) ]
+   build_rules = [
+      "static/js/ace_file_viewer.js" (
+       sources = [ client_byte ]
+       commands = [
+         { "js_of_ocaml"
+            (* Use these options to debug Javascript:
+               "-sourcemap" "-pretty" "-noinline" *)
+             "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
+             "-o" "static/js/ace_file_viewer.js"
+              client_byte }
+       ]
+       build_target = true
+     )
+   ]
+end

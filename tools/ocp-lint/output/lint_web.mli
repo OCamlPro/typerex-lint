@@ -18,56 +18,12 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-lib"
-  files = [
-    "lint_init_dynload.ml"
-    "lint_parallel_engine.ml"
-    "lint_actions.ml"
-    "lint.ml"
-  ]
-  pp = [ "ocp-pp" ]
-  requires = [
-    "findlib.dynload"
-    "ocp-lint-output"
-    "ocp-lint-output-json"
-    "ocp-lint-api-types"
-    "ocp-lint-api"
-  ]
-end
+val javascript_file_name : string
 
-begin program "ocp-lint"
-  files = [
-        "main.ml"
-  ]
-  if ocaml_version < "4.04.0" then {
-    has_byte = false
-  }
-  requires = [
-    "findlib.dynload"
-    "ocp-lint-lib"
-    "ocp-lint-plugin-files"
-    "ocp-lint-plugin-sempatch"
-    "ocp-lint-plugin-text"
-    "ocp-lint-plugin-typedtree"
-    "ocp-lint-plugin-parsetree"
-    "ocp-lint-plugin-complex"
-    (* "ocp-lint-plugin-indent" *)
-    "ocp-lint-plugin-parsing"
-  ]
-  link = [ "-linkall" ]
-end
-(*
-begin program "ocp-lint-minimal"
-  files = [
-     "main.ml"
-  ]
-  if ocaml_version < "4.04.0" then {
-    has_byte = false
-  }
-  requires = [
-        "ocp-lint-lib"
-         "compiler-libs.common"
-  ]
-  link = [ "-linkall" ]
-end
-*)
+val json_var_name : string
+
+val print :
+  Format.formatter ->
+  string ->
+  Lint_db_types.t ->
+  unit

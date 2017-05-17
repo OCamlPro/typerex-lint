@@ -18,56 +18,52 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-lib"
-  files = [
-    "lint_init_dynload.ml"
-    "lint_parallel_engine.ml"
-    "lint_actions.ml"
-    "lint.ml"
-  ]
-  pp = [ "ocp-pp" ]
-  requires = [
-    "findlib.dynload"
-    "ocp-lint-output"
-    "ocp-lint-output-json"
-    "ocp-lint-api-types"
-    "ocp-lint-api"
-  ]
-end
+type database_warning_entry = {
+  file_name : string;
+  hash : Digest.t;
+  plugin_name : string;
+  linter_name : string;
+  linter_version : string;
+  (* option / source *)
+  warning_result : Lint_warning_types.warning;
+}
+				
+(** 
+todo
+ **)	
+val json_of_warning :
+  warn:Lint_warning_types.warning ->
+  Yojson.Basic.json
+				
+				
+(** 
+ Convert a database to his JSON representation
+ db : the database to convert
+ **)	
+val json_of_db :
+  db:Lint_db_types.t ->
+  Yojson.Basic.json
 
-begin program "ocp-lint"
-  files = [
-        "main.ml"
-  ]
-  if ocaml_version < "4.04.0" then {
-    has_byte = false
-  }
-  requires = [
-    "findlib.dynload"
-    "ocp-lint-lib"
-    "ocp-lint-plugin-files"
-    "ocp-lint-plugin-sempatch"
-    "ocp-lint-plugin-text"
-    "ocp-lint-plugin-typedtree"
-    "ocp-lint-plugin-parsetree"
-    "ocp-lint-plugin-complex"
-    (* "ocp-lint-plugin-indent" *)
-    "ocp-lint-plugin-parsing"
-  ]
-  link = [ "-linkall" ]
-end
-(*
-begin program "ocp-lint-minimal"
-  files = [
-     "main.ml"
-  ]
-  if ocaml_version < "4.04.0" then {
-    has_byte = false
-  }
-  requires = [
-        "ocp-lint-lib"
-         "compiler-libs.common"
-  ]
-  link = [ "-linkall" ]
-end
-*)
+(** 
+ Convert a JSON reprensentation of the database to concrete type
+ json : the JSON to convert
+ **)
+val db_of_json :
+  json:Yojson.Basic.json ->
+  Lint_db_types.t option
+
+(** 
+ Convert unsafely a JSON reprensentation of the database to concrete type
+ json : the JSON to convert
+ raise Type_error or Undefined if the json is not a valid representation of a database
+ **)
+val unsafe_db_of_json :
+  json:Yojson.Basic.json ->
+  Lint_db_types.t
+
+(** 
+todo
+ **)
+val raw_entries :
+  db:Lint_db_types.t ->
+  database_warning_entry list
