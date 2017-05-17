@@ -76,7 +76,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
   let plugin = (module Plugin : Lint_plugin_types.PLUGIN)
 
   let create_option options short_help lhelp ty default =
-    Lint_globals.Config.create_option options short_help lhelp 0 ty default
+    Lint_globals.LintConfig.create_option options short_help lhelp 0 ty default
 
   let create_default_lint_option lint_short_name lint_long_name enable =
     let details = Printf.sprintf "Enable/Disable linter %S." lint_long_name in
@@ -120,7 +120,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
 
     let create_option option short_help lhelp ty default =
       let option = [P.short_name; C.short_name; option] in
-      Lint_globals.Config.create_option option short_help lhelp 0 ty default
+      Lint_globals.LintConfig.create_option option short_help lhelp 0 ty default
 
     let new_warning ~id ~short_name ~msg ~severity  =
       let open Lint_warning_types in

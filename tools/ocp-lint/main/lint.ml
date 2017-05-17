@@ -171,7 +171,7 @@ let add_simple_args () =
   List.iter (function (key,_,_) as new_arg ->
       if not ( StringMap.mem key !args_map ) then
         args_map := StringMap.add key new_arg !args_map
-    ) (Lint_globals.Config.simple_args ());
+    ) (Lint_globals.LintConfig.simple_args ());
   dynamic_args := List.map snd (StringMap.to_list !args_map);
   set_spec ()
 
@@ -266,7 +266,7 @@ let start_lint_file file =
 let start_lint dir =
   let ins_plugins = Lint_actions.load_installed_plugins () in
   let master_config = Filename.temp_file ".ocplint" "" in
-  Lint_globals.Config.save_master master_config;
+  Lint_globals.LintConfig.save_master master_config;
   Lint_actions.lint_sequential
     !no_db
     !db_dir
@@ -306,10 +306,10 @@ let main () =
   | ActionPrint dir ->
     Lint_actions.print_db dir
   | ActionInit ->
-    Lint_globals.Config.save ();
+    Lint_globals.LintConfig.save ();
     Lint_actions.init_olint_dir ()
   | ActionSave ->
-    Lint_globals.Config.save ();
+    Lint_globals.LintConfig.save ();
     exit 0
   | ActionNone ->
     start_lint default_dir;

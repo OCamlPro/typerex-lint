@@ -18,9 +18,9 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** [Config] is a module which allow to create options for the configuration
+(** [LintConfig] is a module which allow to create options for the configuration
     file and command-line arguments. *)
-module Config : Lint_config_types.CONFIG
+module LintConfig : Lint_config_types.CONFIG
 
 (** [plugins] is a global data structure where all plugins are registered.
     The keys of the structure are a [Lint_plugin_types.PLUGIN] and the value are
