@@ -1,0 +1,3 @@
+File filename, line 1, characters 0-11:
+  Warning 2: plugin_typedtree/module_utilization/use_open_directive SEVERITY 1
+  Avoid to use the open directive.

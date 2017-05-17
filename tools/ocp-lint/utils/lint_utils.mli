@@ -41,6 +41,16 @@ val iter_files : ?recdir:bool -> (string -> unit) -> string -> unit
     long lists of arguments. *)
 val substitute : string -> (string * string) list -> string
 
+(** [group_by fct lst] groups the elements of the list [lst] by their
+    result of the grouping function [fct].
+    The returned list will be ascending sort by Pervasives.compare on the result
+    of the grouping function. *)
+val group_by: ('a -> 'b) -> 'a list -> ('b * 'a list) list
+
+(** [concat sep arr] Same as String.concat
+    but on string array. *)
+val array_concat : string -> string array -> string
+
 (** [absolute_path root filename] give the absolute path of a file. *)
 val absolute_path : string -> string -> string
 
@@ -58,6 +68,9 @@ val is_in_path : string -> string -> string -> bool
 
 (** [read_file file] get the content of the file as a string. *)
 val read_file : string -> string
+
+(** [lines_count_of_file file] get the number of lines of the file. *)
+val lines_count_of_file : string -> int
 
 (** [normalize_path root file] normalize a path given the root dir. *)
 val normalize_path : root:string -> file:string -> string

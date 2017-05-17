@@ -38,6 +38,7 @@ begin library "ocp-lint-plugin-parsing";
 
 	"lintParsingGetFeatures.ml";
         "lintParsingLinter.ml";
+        "lintParsingLinterCheckTuple.ml";
   ];
   requires = [
         "ocp-lint-api";

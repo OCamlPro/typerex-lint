@@ -189,3 +189,36 @@ let read_file_struct file =
   let fstruct = input_value ic in
   close_in ic;
   fstruct
+
+let lines_count_of_file f =
+  let n = ref 0 in
+  let file = open_in f in
+  begin try
+    while true do
+      ignore (input_line file);
+      incr n
+    done
+    with
+    | End_of_file ->
+       close_in file
+  end;
+  !n
+
+let group_by fct lst =
+  let rec aux acc = function
+    | [] -> acc
+    | (cx, x) :: y ->
+       begin match acc with
+       | (cx', x') :: y' when cx = cx' ->
+          aux ((cx, x :: x') :: y') y
+       | _ ->
+          aux ((cx, [x]) :: acc) y
+       end
+  in
+  lst
+  |> List.map (fun x -> fct x, x)
+  |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
+  |> aux []
+
+let array_concat sep arr =
+  String.concat sep (Array.to_list arr)

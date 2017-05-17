@@ -1,0 +1,1 @@
+Random.init 0
