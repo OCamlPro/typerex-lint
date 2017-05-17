@@ -366,6 +366,9 @@ module E = struct
     | Pexp_letmodule (s, me, e) ->
         iter_loc sub s; sub.module_expr sub me;
         sub.expr sub e
+    | Pexp_letexception (cd, e) ->
+        sub.extension_constructor sub cd;
+        sub.expr sub e 
     | Pexp_assert e -> sub.expr sub e
     | Pexp_lazy e -> sub.expr sub e
     | Pexp_poly (e, t) ->
@@ -406,6 +409,8 @@ module P = struct
     | Ppat_unpack s -> iter_loc sub s
     | Ppat_exception p -> sub.pat sub p
     | Ppat_extension x -> sub.extension sub x
+    | Ppat_open (lid, p) ->
+       iter_loc sub lid; sub.pat sub p
 end
 
 module CE = struct
