@@ -210,7 +210,7 @@ let clean_db_in_tmp db_dir = match db_dir with
   | Some dir ->
     let root = dir in
     let olint_dir = Filename.concat root Lint_globals.olint_dirname in
-    Dir.remove_all (File.of_string olint_dir);
+    FileDir.remove_all (File.of_string olint_dir);
     Unix.rmdir dir
 
 let init_db no_db db_dir path = match db_dir with
@@ -541,7 +541,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
         file_struct
     with Not_found -> ()
   done;
-  Dir.remove_all (File.of_string tmp_file_dir);
+  FileDir.remove_all (File.of_string tmp_file_dir);
   Printf.eprintf "\rRunning analyses... %d / %d" len len;
   Printf.eprintf "\nMergin database...%!";
   let sources =

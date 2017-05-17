@@ -7,7 +7,7 @@ license: "GPL 3.0"
 homepage: "https://github.com/ocamlpro/typerex-lint"
 bug-reports: "https://github.com/ocamlpro/typerex-lint/issues"
 depends: [
-  "ocp-build" {>= "1.99.17-beta" }
+  "ocp-build" {>= "1.99.19-beta" }
   "menhir"
   "ocp-indent"
   "ppx_tools"
