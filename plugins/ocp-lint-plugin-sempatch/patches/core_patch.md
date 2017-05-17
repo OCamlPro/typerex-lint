@@ -198,4 +198,18 @@ severity: 8
 ```
 Dynlink.loadfile_private
 ```
+@ String_Create
+message: "Do not use String.create"
+severity: 1
+```
+- String.create
++ String.make
+```
 
+@ Catch_Wildcard
+message: "Do not try to catch the exceptions with '_'"
+expressions: e1, e2
+severity: 1
+```
+try e1 with _ -> e2
+```
