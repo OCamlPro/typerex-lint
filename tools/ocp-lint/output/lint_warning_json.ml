@@ -89,7 +89,7 @@ let warning_declaration_of_json json =
   let severity = json |> member "severity" |> to_int in
   {short_name = short_name; message = message; id = id; severity = severity}
    
-let json_of_warning ~warn =
+let json_of_warning warn =
   `Assoc [
      ("loc", json_of_location warn.loc);
      ("decl", json_of_warning_declaration warn.decl);
@@ -106,142 +106,44 @@ let warning_of_json json  =
     output = output
   }
 
-let json_of_source = function
-  | Cache -> `String "Cache"
-  | Analyse -> `String "Analyse"
-
-let source_of_json json =
-  let str = to_string json in
-  match str with
-  | "Cache" -> Cache
-  | "Analyse" -> Analyse
-  | _ -> raise (Type_error ("'" ^ str ^ "' is not a valid source", json))
-		
-let json_of_option (k,v) =
-  `Assoc [
-     ("opt_key", `String k);
-     ("opt_value", `String v)
-   ]
-
-let option_of_json json =
-  let key = json |> member "opt_key" |> to_string in
-  let value = json |> member "opt_value" |> to_string in
-  (key,value)
-   
-let json_of_linter_result linter_res =
-  `Assoc [
-     ("res_version", `String linter_res.res_version);
-     ("res_source", json_of_source linter_res.res_source);
-     ("res_options", `List (List.map json_of_option linter_res.res_options));
-     ("res_warnings", `List (List.map begin fun warn ->
-         json_of_warning ~warn:warn
-       end linter_res.res_warnings))
-   ]
-
-let linter_result_of_json json =
-  let res_version =
-    json |> member "res_version" |> to_string
-  in
-  let res_source =
-    json |> member "res_source" |> source_of_json
-  in
-  let res_options =
-    json |> member "res_options" |> to_list |> List.map option_of_json
-  in
-  let res_warnings =
-    json |> member "res_warnings" |> to_list |> List.map warning_of_json
-  in
-  {
-    res_version = res_version;
-    res_source = res_source;
-    res_options = res_options;
-    res_warnings = res_warnings
-  }
-
-let json_of_linter_map linter_map =
-  `List (StringMap.fold begin fun linter_name linter_result acc ->
-    `Assoc [
-       ("linter_name", `String linter_name);
-       ("linter_result", json_of_linter_result linter_result)
-    ] :: acc
-  end linter_map [])
-
-let linter_map_of_json json =
-  json |> to_list |> List.fold_left begin fun acc json_entry ->
-    let linter_name =
-      json_entry |> member "linter_name" |> to_string in
-    let linter_result =
-      json_entry |> member "linter_result" |> linter_result_of_json
-    in
-    StringMap.add linter_name linter_result acc
-  end StringMap.empty
-
-let json_of_plugin_map plugin_map =
-  `List (StringMap.fold begin fun plugin_name linter_map acc ->
-    `Assoc [
-       ("plugin_name", `String plugin_name);
-       ("linter_map", json_of_linter_map linter_map)
-    ] :: acc
-  end plugin_map [])
-
-let plugin_map_of_json json =
-  json |> to_list |> List.fold_left begin fun acc json_entry ->
-    let plugin_name =
-      json_entry |> member "plugin_name" |> to_string in
-    let linter_map =
-      json_entry |> member "linter_map" |> linter_map_of_json
-    in
-    StringMap.add plugin_name linter_map acc
-  end StringMap.empty
-
 let json_of_digest digest =
   `String (Digest.to_hex digest)
 
 let digest_of_json json =
-  json |> to_string |> Digest.from_hex
-				    
-let json_of_file_map (digest, plugin_map) =
+  json |> to_string |> Digest.from_hex    
+
+let json_of_database_warning_entry entry =
   `Assoc [
-    ("digest", json_of_digest digest);
-    ("plugin_map", json_of_plugin_map plugin_map) 
-  ]
+     ("file_name", `String entry.file_name);
+     ("hash", json_of_digest entry.hash);
+     ("plugin_name", `String entry.plugin_name);
+     ("linter_name", `String entry.linter_name);
+     ("linter_version", `String entry.linter_version);
+     ("warning_result", json_of_warning entry.warning_result)
+   ]
 
-let file_map_of_json json =
-  let digest =
-    json |> member "digest" |> digest_of_json
-  in
-  let plugin_map =
-    json |> member "plugin_map" |> plugin_map_of_json
-  in
-  (digest, plugin_map)
+let database_warning_entry_of_json json  =
+  let file_name = json |> member "file_name" |> to_string in
+  let hash = json |> member "hash" |> digest_of_json in
+  let plugin_name = json |> member "plugin_name" |> to_string in
+  let linter_name = json |> member "linter_name" |> to_string in
+  let linter_version = json |> member "linter_version" |> to_string in
+  let warning_result = json |> member "warning_result" |> warning_of_json in
+  {
+    file_name = file_name;
+    hash = hash;
+    plugin_name = plugin_name;
+    linter_name = linter_name;
+    linter_version = linter_version;
+    warning_result = warning_result
+  }
 
-let json_of_db ~db =
-  `List (Hashtbl.fold begin fun file_name file_map acc ->
-    `Assoc [
-       ("file_name", `String file_name);
-       ("file_map", json_of_file_map file_map)
-    ] :: acc
-  end db [])
+let json_of_database_warning_entries entries =
+  `List (List.map json_of_database_warning_entry entries)
 
-let unsafe_db_of_json ~json =
-  let db = Hashtbl.create 1024 in
-  json |> to_list |> List.iter begin fun json_entry ->
-    let file_name =
-      json_entry |> member "file_name" |> to_string
-    in
-    let file_map =
-      json_entry |> member "file_map" |> file_map_of_json
-    in
-    Hashtbl.add db file_name file_map 
-  end;
-  db
-    
-let db_of_json ~json =
-  try
-    Some (unsafe_db_of_json json)
-  with
-  | Type_error _ | Undefined _ -> None 
-
+let database_warning_entries_of_json json  =
+  json |> to_list |> List.map database_warning_entry_of_json
+  
 let raw_entries ~db =
   Hashtbl.fold begin fun file_name (hash, plugin_map) acc ->
     StringMap.fold begin fun plugin_name linter_map acc ->

@@ -100,7 +100,7 @@ let set_mode {editor} name =
 
 type mark_type = Error | Warning | Message
 
-let string_of_make_type = function
+let string_of_mark_type = function
   | Error -> "error"
   | Warning -> "warning"
   | Message -> "message"
@@ -123,7 +123,7 @@ type loc = {
 
 let set_mark editor ?loc ?(type_ = Message) msg =
   let session = editor.editor##getSession() in
-  let type_ = string_of_make_type type_ in
+  let type_ = string_of_mark_type type_ in
   let sr, sc, range =
     match loc with
     | None -> 0, 0, None
@@ -145,7 +145,7 @@ let set_mark editor ?loc ?(type_ = Message) msg =
     editor.marks <-
       session##addMarker (range, Js.string type_, Js.string "text", Js._false) ::
       editor.marks
-
+	
 let set_background_color editor color =
   editor.editor_div##style##backgroundColor <- Js.string color
 
@@ -290,3 +290,6 @@ let remove { editor } dir =
 
 let set_read_only { editor } rd =
   editor##setReadOnly (Js.bool rd)
+
+let set_theme { editor } thm =
+  editor##setTheme (Js.string thm)

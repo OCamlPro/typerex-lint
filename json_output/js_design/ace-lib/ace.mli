@@ -73,7 +73,10 @@ val set_read_only:
   'a editor ->
   bool ->
   unit
-(* set theme *)
+val set_theme:
+  'a editor ->
+  string ->
+  unit
 (************)
 val get_state: 'a editor -> int -> < .. > Js.t
 

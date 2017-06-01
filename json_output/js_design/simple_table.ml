@@ -11,13 +11,15 @@ type tmp_warning = {
   loc : Location.t
 }
 
-type tmp_db_flat_entry = {
-  f_file_name : string;
-  f_plugin_name : string;
-  f_linter_name : string;
-  f_hash : Digest.t;
-  f_warning : tmp_warning
-}		      
+type database_warning_entry = {
+  file_name : string;
+  hash : Digest.t;
+  plugin_name : string;
+  linter_name : string;
+  linter_version : string;
+  (* option / source *)
+  warning_result : tmp_warning;
+}
 
 let position_of_json json =
   let open Lexing in
@@ -48,54 +50,29 @@ let tmp_warning_of_json json =
     output = json |> member "output" |> to_string;
     loc = json |> member "loc" |> location_of_json  
   }
-    
-let tmp_json_db_raw_entries json =
-  json
-  |> to_list
-  |> List.fold_left begin fun acc json_file_map ->
-       let file_name =
-	 json_file_map |> member "file_name" |> to_string
-       in
-       let file_map =
-	 json_file_map |>  member "file_map"
-       in
-       let hash =
-	 file_map |> member "digest" |> to_string |> Digest.from_hex
-       in
-       file_map
-       |> member "plugin_map"
-       |> to_list
-       |> List.fold_left begin fun acc json_plugin ->
-	  let plugin_name =
-	    json_plugin |> member "plugin_name" |> to_string
-	  in
-	  json_plugin
-	  |> member "linter_map"
-	  |> to_list
-	  |> List.fold_left begin fun acc json_linter ->
-	     let linter_name =
-	       json_linter |> member "linter_name" |> to_string
-	     in
-	     let linter_result =
-	       json_linter |> member "linter_result"
-	     in
-	     linter_result
-	     |> member "res_warnings"
-	     |> to_list
-	     |> List.fold_left begin fun acc json_warning ->
-		  let warning = tmp_warning_of_json json_warning in
-		  {
-		    f_file_name = file_name;
-		    f_plugin_name = plugin_name;
-		    f_linter_name = linter_name;
-		    f_hash = hash;
-		    f_warning = warning;	       
-		  } :: acc
-	        end acc
-	     end acc
-          end acc 
-     end []
 
+let digest_of_json json =
+  json |> to_string |> Digest.from_hex    
+
+let database_warning_entry_of_json json  =
+  let file_name = json |> member "file_name" |> to_string in
+  let hash = json |> member "hash" |> digest_of_json in
+  let plugin_name = json |> member "plugin_name" |> to_string in
+  let linter_name = json |> member "linter_name" |> to_string in
+  let linter_version = json |> member "linter_version" |> to_string in
+  let warning_result = json |> member "warning_result" |> tmp_warning_of_json in
+  {
+    file_name = file_name;
+    hash = hash;
+    plugin_name = plugin_name;
+    linter_name = linter_name;
+    linter_version = linter_version;
+    warning_result = warning_result
+  }
+
+let database_warning_entries_of_json json  =
+  json |> to_list |> List.map database_warning_entry_of_json
+    
 let id_of_loc loc =
   (string_of_int loc.Location.loc_start.Lexing.pos_lnum)
   ^ "-" ^
@@ -106,9 +83,11 @@ let id_of_loc loc =
 let summary_entry_file_name_col entry =
   let p = Dom_html.createP doc in
   let a = Dom_html.createA doc in
-  let href = (Digest.to_hex entry.f_hash) ^ ".html#code." ^ (id_of_loc entry.f_warning.loc)  in
-  a##innerHTML <- Js.string entry.f_file_name;
-  if not entry.f_warning.loc.Location.loc_ghost then begin
+  let href =
+    (Digest.to_hex entry.hash) ^ ".html#code." ^ (id_of_loc entry.warning_result.loc)
+  in
+  a##innerHTML <- Js.string entry.file_name;
+  if not entry.warning_result.loc.Location.loc_ghost then begin
     a##setAttribute(Js.string "href", Js.string href);
     a##setAttribute(Js.string "target", Js.string "_blank");
   end;
@@ -117,19 +96,19 @@ let summary_entry_file_name_col entry =
 
 let summary_entry_plugin_name_col entry =
   let p = Dom_html.createP doc in
-  p##innerHTML <- Js.string entry.f_plugin_name;
+  p##innerHTML <- Js.string entry.plugin_name;
   p
 
 let summary_entry_linter_name_col entry =
   let p = Dom_html.createP doc in
-  p##innerHTML <- Js.string entry.f_linter_name;
+  p##innerHTML <- Js.string entry.linter_name;
   p
 
 let summary_entry_warning_output_col entry =
   let p = Dom_html.createP doc in
   let a = Dom_html.createA doc in
   let href = "DOC.html" in
-  a##innerHTML <- Js.string entry.f_warning.output;
+  a##innerHTML <- Js.string entry.warning_result.output;
   a##setAttribute(Js.string "href", Js.string href);
   a##setAttribute(Js.string "target", Js.string "_blank");
   Dom.appendChild p a;
@@ -193,14 +172,14 @@ let create_summary_page db =
 let onload _ =
   let (str_js: Js.js_string Js.t) = Js.Unsafe.variable "json" (* lint_web.var_json_name *) in
   let json = Yojson.Basic.from_string (Js.to_string str_js) in
-  let entries = tmp_json_db_raw_entries json in
+  let entries = database_warning_entries_of_json json in
   let div = Dom_html.createDiv doc in
   Dom.appendChild div (summary_table entries);
   Dom.appendChild doc##body div;
   ignore (
       (******* tool bar ici *******)
       Js.Unsafe.eval_string
-  	"$(document).ready(function() {$('#summary-table').DataTable({paging: false, info:false}); $(\"div.toolbar\").html('<b>FORMULAIRE</b>')});");
+  	"$(document).ready(function() {$('#summary-table').DataTable({paging: false, info:false});});");
   Js._false
 
 let () =

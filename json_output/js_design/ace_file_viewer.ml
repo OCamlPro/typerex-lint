@@ -10,19 +10,21 @@ let find_component id =
 (*********************** A SUPPRIMER ***************************************)
 
 open Yojson.Basic.Util
-		     
+
 type tmp_warning = {
   output : string;
   loc : Location.t
 }
 
-type tmp_db_flat_entry = {
-  f_file_name : string;
-  f_plugin_name : string;
-  f_linter_name : string;
-  f_hash : Digest.t;
-  f_warning : tmp_warning
-}		      
+type database_warning_entry = {
+  file_name : string;
+  hash : Digest.t;
+  plugin_name : string;
+  linter_name : string;
+  linter_version : string;
+  (* option / source *)
+  warning_result : tmp_warning;
+}
 
 let position_of_json json =
   let open Lexing in
@@ -53,82 +55,64 @@ let tmp_warning_of_json json =
     output = json |> member "output" |> to_string;
     loc = json |> member "loc" |> location_of_json  
   }
-    
-let tmp_json_db_raw_entries json =
-  json
-  |> to_list
-  |> List.fold_left begin fun acc json_file_map ->
-       let file_name =
-	 json_file_map |> member "file_name" |> to_string
-       in
-       let file_map =
-	 json_file_map |>  member "file_map"
-       in
-       let hash =
-	 file_map |> member "digest" |> to_string |> Digest.from_hex
-       in
-       file_map
-       |> member "plugin_map"
-       |> to_list
-       |> List.fold_left begin fun acc json_plugin ->
-	  let plugin_name =
-	    json_plugin |> member "plugin_name" |> to_string
-	  in
-	  json_plugin
-	  |> member "linter_map"
-	  |> to_list
-	  |> List.fold_left begin fun acc json_linter ->
-	     let linter_name =
-	       json_linter |> member "linter_name" |> to_string
-	     in
-	     let linter_result =
-	       json_linter |> member "linter_result"
-	     in
-	     linter_result
-	     |> member "res_warnings"
-	     |> to_list
-	     |> List.fold_left begin fun acc json_warning ->
-		  let warning = tmp_warning_of_json json_warning in
-		  {
-		    f_file_name = file_name;
-		    f_plugin_name = plugin_name;
-		    f_linter_name = linter_name;
-		    f_hash = hash;
-		    f_warning = warning;	       
-		  } :: acc
-	        end acc
-	     end acc
-          end acc 
-     end []
 
-let id_of_loc loc =
-  (string_of_int loc.Location.loc_start.Lexing.pos_lnum)
-  ^ "-" ^
-  (string_of_int loc.Location.loc_end.Lexing.pos_lnum)
+let digest_of_json json =
+  json |> to_string |> Digest.from_hex    
+
+let database_warning_entry_of_json json  =
+  let file_name = json |> member "file_name" |> to_string in
+  let hash = json |> member "hash" |> digest_of_json in
+  let plugin_name = json |> member "plugin_name" |> to_string in
+  let linter_name = json |> member "linter_name" |> to_string in
+  let linter_version = json |> member "linter_version" |> to_string in
+  let warning_result = json |> member "warning_result" |> tmp_warning_of_json in
+  {
+    file_name = file_name;
+    hash = hash;
+    plugin_name = plugin_name;
+    linter_name = linter_name;
+    linter_version = linter_version;
+    warning_result = warning_result
+  }
+
+let database_warning_entries_of_json json  =
+  json |> to_list |> List.map database_warning_entry_of_json
+    
 		
 (************************************************************************)
 		     
 let doc = Dom_html.document
 
-let create_ocaml_code_viewer div warnings =
-  let loc = {
-    loc_start = (0,0);
-    loc_end = (3,3);
-  } in
+let theme =
+  "monokai"
+
+let font_size =
+  14
+    
+let ace_loc_of_warning_loc warning_loc =
+  let aux pos =
+    pos.Lexing.pos_lnum,
+    pos.Lexing.pos_cnum - pos.Lexing.pos_bol
+  in {
+    loc_start = aux warning_loc.Location.loc_start;
+    loc_end = aux warning_loc.Location.loc_end;
+  }
+
+let code_viewer_register_warnings ace warnings =
+  List.iter begin fun warning ->
+    Ace.set_mark ace
+      ~loc:(ace_loc_of_warning_loc warning.loc)
+      ~type_:Ace.Warning
+      warning.output
+  end warnings
   
+let create_ocaml_code_viewer div warnings =
   let ace = Ace.create_editor div in
   Ace.set_mode ace "ace/mode/ocaml";
-  Ace.set_tab_size ace 80;
-  (* let editor = { ace; current_error = None; current_warnings = [] } in *)
-  (* Ace.set_custom_data editor.ace editor; *)
-  (* Ace.record_event_handler editor.ace "change" *)
-  (*   (fun () -> Lwt.async (fun () -> reset_error editor)); *)
-  (* Ace.add_keybinding editor.ace "backspace" "Shift-Backspace|Backspace" *)
-  (*   do_delete; *)
-  (* Ace.add_keybinding editor.ace "indent" "Tab" do_indent; *)
-  Ace.set_font_size ace 14;
+  Ace.set_theme ace ("ace/theme/" ^ theme);
+  Ace.set_font_size ace font_size;
   Ace.set_read_only ace true;
-  Ace.set_mark ace ~loc:loc ~type_:Ace.Warning "test"
+  code_viewer_register_warnings ace warnings
 
 let set_div_ocaml_code_view warnings =
   let code_div = find_component "code" (***** code id dans lint_web ****) in
@@ -142,12 +126,8 @@ let onload _ =
     Yojson.Basic.from_string (Js.to_string str_js)
   in
   let warnings =
-    json
-    |> tmp_json_db_raw_entries
-    |> List.filter (fun entry -> true)
-    |> List.map (fun entry -> entry.f_warning)
+    List.map (fun entry -> entry.warning_result) (database_warning_entries_of_json json)
   in
-  
   set_div_ocaml_code_view warnings;
   Js._true
 

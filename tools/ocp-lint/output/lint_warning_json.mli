@@ -30,40 +30,15 @@ type database_warning_entry = {
 				
 (** 
 todo
- **)	
-val json_of_warning :
-  warn:Lint_warning_types.warning ->
-  Yojson.Basic.json
-				
-				
-(** 
- Convert a database to his JSON representation
- db : the database to convert
- **)	
-val json_of_db :
-  db:Lint_db_types.t ->
-  Yojson.Basic.json
-
-(** 
- Convert a JSON reprensentation of the database to concrete type
- json : the JSON to convert
- **)
-val db_of_json :
-  json:Yojson.Basic.json ->
-  Lint_db_types.t option
-
-(** 
- Convert unsafely a JSON reprensentation of the database to concrete type
- json : the JSON to convert
- raise Type_error or Undefined if the json is not a valid representation of a database
- **)
-val unsafe_db_of_json :
-  json:Yojson.Basic.json ->
-  Lint_db_types.t
-
-(** 
-todo
  **)
 val raw_entries :
   db:Lint_db_types.t ->
+  database_warning_entry list
+
+val json_of_database_warning_entries :
+  database_warning_entry list ->
+  Yojson.Basic.json
+
+val database_warning_entries_of_json :
+  Yojson.Basic.json ->
   database_warning_entry list

@@ -155,7 +155,12 @@ let html_of_ocaml_src fname hash src =
     end
     
 let print fmt path db = (* renommer *)
-  let json = Yojson.Basic.pretty_to_string (json_of_db db) in
+  let entries =
+    raw_entries db
+  in
+  let json =
+    Yojson.Basic.pretty_to_string (json_of_database_warning_entries entries)
+  in
   let fd =
     Unix.(openfile javascript_file_name [O_WRONLY;O_CREAT;O_TRUNC] 0o777)
   in
@@ -164,7 +169,23 @@ let print fmt path db = (* renommer *)
   Hashtbl.iter begin fun file_name (hash,plugin_map) ->
 
     let hash = Digest.to_hex hash in
+    let filterjson =
+      entries
+      |> List.filter begin fun entry ->
+	   entry.file_name = file_name && not entry.warning_result.loc.Location.loc_ghost
+	 end
+      |> json_of_database_warning_entries	     
+      |> Yojson.Basic.pretty_to_string
+    in
 
+    
+    let fd =
+      Unix.(openfile ("json_output/static/js/" ^ hash ^ ".js") [O_WRONLY;O_CREAT;O_TRUNC] 0o777)
+    in
+    dump_js_var fd json_var_name filterjson;
+    Unix.close fd;
+    
+    
     emit_page
       (output_path ^ hash  ^ ".html")
       (html_of_ocaml_src file_name hash (Lint_utils.read_file file_name))
