@@ -49,7 +49,7 @@ val relative_path : string -> string -> string
 
 (** [find_root root_dir basenames] recurcively looks for the basenames in the
      path which marks the root of a project and contains the db file. *)
-val find_root : File.t -> string list -> File.t
+val find_root : FileGen.t -> string list -> FileGen.t
 
 (** [is_in_path root file path] checks if the file is in the path. *)
 val is_in_path : string -> string -> string -> bool

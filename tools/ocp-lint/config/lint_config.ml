@@ -26,7 +26,7 @@ module DefaultConfig = struct
 
   let config_file_name = ".ocplint"
 
-  let config_file = SimpleConfig.create_config_file (File.of_string "")
+  let config_file = SimpleConfig.create_config_file (FileGen.of_string "")
 
   let init_config file =
     SimpleConfig.set_config_file config_file file;
@@ -125,11 +125,11 @@ module DefaultConfig = struct
     !opts
 
   let save () =
-    SimpleConfig.set_config_file config_file (File.of_string config_file_name);
+    SimpleConfig.set_config_file config_file (FileGen.of_string config_file_name);
     SimpleConfig.save_with_help config_file
 
   let save_master filename =
-    let filename = File.of_string filename in
+    let filename = FileGen.of_string filename in
     let old_filename = SimpleConfig.config_file config_file in
     SimpleConfig.set_config_file config_file filename;
     SimpleConfig.save config_file;
@@ -142,25 +142,25 @@ module DefaultConfig = struct
     SimpleConfig.load config_file;
     List.iter (fun cfg_dir ->
         let cfg = Filename.concat cfg_dir config_file_name in
-        let cfg = File.of_string cfg in
+        let cfg = FileGen.of_string cfg in
         SimpleConfig.set_config_file config_file cfg;
         SimpleConfig.load config_file)
       configs
 
   let load_and_save master configs =
-    let master_t = File.of_string master in
+    let master_t = FileGen.of_string master in
     let filename = Filename.temp_file config_file_name "" in
-    let filename_t = File.of_string filename in
+    let filename_t = FileGen.of_string filename in
     load_configs master_t configs;
     SimpleConfig.set_config_file config_file filename_t;
     SimpleConfig.save config_file;
     SimpleConfig.set_config_file config_file master_t;
     SimpleConfig.load config_file;
-    File.to_string filename_t
+    FileGen.to_string filename_t
 
   let load_config_tmp ~master ~config =
-    let master = File.of_string master in
-    let config = File.of_string config in
+    let master = FileGen.of_string master in
+    let config = FileGen.of_string config in
     SimpleConfig.set_config_file config_file master;
     SimpleConfig.load config_file;
     SimpleConfig.set_config_file config_file config;

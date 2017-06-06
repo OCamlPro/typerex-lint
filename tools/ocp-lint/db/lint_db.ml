@@ -71,7 +71,7 @@ module MakeDB (DB : DATABASE_IO) = struct
         Format.eprintf "Can't read DB file for %S, skipping it\n%!" file
 
   let init path =
-    let path = File.to_string path in
+    let path = FileGen.to_string path in
     root := Filename.dirname path
 
   let cache ()=

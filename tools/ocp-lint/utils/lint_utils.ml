@@ -68,14 +68,14 @@ let relative_path =
    direct hierarchy of [root]. *)
 let find_root root_dir basenames =
   let rec find dirname (basenames : string list) =
-    let file = File.add_basenames dirname basenames in
-    if File.exists file then dirname else
-      let new_dirname = File.dirname dirname in
+    let file = FileGen.add_basenames dirname basenames in
+    if FileGen.exists file then dirname else
+      let new_dirname = FileGen.dirname dirname in
       if new_dirname == dirname then raise Not_found;
       find new_dirname basenames
   in
-  let root_dir = if File.is_absolute root_dir then root_dir else
-      File.concat (File.getcwd ()) root_dir
+  let root_dir = if FileGen.is_absolute root_dir then root_dir else
+      FileGen.concat (FileGen.getcwd ()) root_dir
   in
   find root_dir basenames
 
@@ -91,11 +91,11 @@ let diff to_root path =
   loop to_root path
 
 let absolute_path file =
-  let file_t = File.of_string file in
-  if File.is_absolute file_t then (File.to_string file_t)
+  let file_t = FileGen.of_string file in
+  if FileGen.is_absolute file_t then (FileGen.to_string file_t)
   else
-    let file = File.concat (File.getcwd ()) file_t in
-    File.to_string file
+    let file = FileGen.concat (FileGen.getcwd ()) file_t in
+    FileGen.to_string file
 
 let absolute_path root path =
   let path_to_root = relative_path root (Sys.getcwd()) in
