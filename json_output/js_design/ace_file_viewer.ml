@@ -17,6 +17,7 @@ type tmp_warning = {
 }
 
 type database_warning_entry = {
+  id : int;
   file_name : string;
   hash : Digest.t;
   plugin_name : string;
@@ -60,6 +61,7 @@ let digest_of_json json =
   json |> to_string |> Digest.from_hex    
 
 let database_warning_entry_of_json json  =
+  let id = json |> member "id" |> to_int in
   let file_name = json |> member "file_name" |> to_string in
   let hash = json |> member "hash" |> digest_of_json in
   let plugin_name = json |> member "plugin_name" |> to_string in
@@ -67,6 +69,7 @@ let database_warning_entry_of_json json  =
   let linter_version = json |> member "linter_version" |> to_string in
   let warning_result = json |> member "warning_result" |> tmp_warning_of_json in
   {
+    id = id;
     file_name = file_name;
     hash = hash;
     plugin_name = plugin_name;
@@ -138,9 +141,6 @@ let code_viewer_register_warnings ace warning =
   let content =
     array_joining "\n" (Ace.get_lines ace (blcntxt-1) (elcntxt-1))
   in
-  Firebug.console##log (Js.string content);
-  Firebug.console##log (blcntxt);
-  Firebug.console##log (elcntxt);
   Ace.set_value ace content;
   Ace.clear_selection ace;
   Ace.set_option ace "firstLineNumber" (blcntxt);
@@ -166,13 +166,16 @@ let onload _ =
   let json =
     Yojson.Basic.from_string (Js.to_string str_js)
   in
-  let warnings =
-    List.map (fun entry -> entry.warning_result) (database_warning_entries_of_json json)
+  let id = Url.Current.get_fragment () in
+  let entry =
+    try
+      json
+      |> database_warning_entries_of_json
+      |> List.find (fun entry -> string_of_int entry.id = id)
+    with
+    | Not_found -> failwith "invalid id"
   in
-  (*** ***)
-  let warning = List.hd warnings in
-  (*** ***)
-  set_div_ocaml_code_view warning;
+  set_div_ocaml_code_view entry.warning_result;
   Js._true
 
 let () =

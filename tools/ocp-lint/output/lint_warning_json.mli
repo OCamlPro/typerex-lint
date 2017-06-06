@@ -19,6 +19,7 @@
 (**************************************************************************)
 
 type database_warning_entry = {
+  id : int;
   file_name : string;
   hash : Digest.t;
   plugin_name : string;

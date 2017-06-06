@@ -12,6 +12,7 @@ type tmp_warning = {
 }
 
 type database_warning_entry = {
+  id : int;
   file_name : string;
   hash : Digest.t;
   plugin_name : string;
@@ -55,6 +56,7 @@ let digest_of_json json =
   json |> to_string |> Digest.from_hex    
 
 let database_warning_entry_of_json json  =
+  let id = json |> member "id" |> to_int in
   let file_name = json |> member "file_name" |> to_string in
   let hash = json |> member "hash" |> digest_of_json in
   let plugin_name = json |> member "plugin_name" |> to_string in
@@ -62,6 +64,7 @@ let database_warning_entry_of_json json  =
   let linter_version = json |> member "linter_version" |> to_string in
   let warning_result = json |> member "warning_result" |> tmp_warning_of_json in
   {
+    id = id;
     file_name = file_name;
     hash = hash;
     plugin_name = plugin_name;
@@ -84,7 +87,7 @@ let summary_entry_file_name_col entry =
   let p = Dom_html.createP doc in
   let a = Dom_html.createA doc in
   let href =
-    (Digest.to_hex entry.hash) ^ ".html#code." ^ (id_of_loc entry.warning_result.loc)
+    (Digest.to_hex entry.hash) ^ ".html#" ^ (string_of_int entry.id)
   in
   a##innerHTML <- Js.string entry.file_name;
   if not entry.warning_result.loc.Location.loc_ghost then begin

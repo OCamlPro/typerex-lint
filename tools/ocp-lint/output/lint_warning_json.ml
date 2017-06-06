@@ -24,6 +24,7 @@ open Lint_warning_types
 open Lint_db_types
 
 type database_warning_entry = {
+  id : int;
   file_name : string;
   hash : Digest.t;
   plugin_name : string;
@@ -114,6 +115,7 @@ let digest_of_json json =
 
 let json_of_database_warning_entry entry =
   `Assoc [
+     ("id", `Int entry.id);
      ("file_name", `String entry.file_name);
      ("hash", json_of_digest entry.hash);
      ("plugin_name", `String entry.plugin_name);
@@ -123,6 +125,7 @@ let json_of_database_warning_entry entry =
    ]
 
 let database_warning_entry_of_json json  =
+  let id = json |> member "id" |> to_int in
   let file_name = json |> member "file_name" |> to_string in
   let hash = json |> member "hash" |> digest_of_json in
   let plugin_name = json |> member "plugin_name" |> to_string in
@@ -130,6 +133,7 @@ let database_warning_entry_of_json json  =
   let linter_version = json |> member "linter_version" |> to_string in
   let warning_result = json |> member "warning_result" |> warning_of_json in
   {
+    id = id;
     file_name = file_name;
     hash = hash;
     plugin_name = plugin_name;
@@ -145,19 +149,22 @@ let database_warning_entries_of_json json  =
   json |> to_list |> List.map database_warning_entry_of_json
   
 let raw_entries ~db =
-  Hashtbl.fold begin fun file_name (hash, plugin_map) acc ->
-    StringMap.fold begin fun plugin_name linter_map acc ->
-      StringMap.fold begin fun linter_name linter_result acc ->
-        List.fold_left begin fun acc warning_result ->
-	  {
-	    file_name = file_name;
-	    hash = hash;
-	    plugin_name = plugin_name;
-	    linter_name = linter_name;
-	    linter_version = linter_result.res_version;
-	    warning_result = warning_result;
-	  } :: acc		       
-	end acc linter_result.res_warnings	
-      end linter_map acc					      
-    end plugin_map acc 
-  end db []
+  let _,entries = 
+    Hashtbl.fold begin fun file_name (hash, plugin_map) acc ->
+      StringMap.fold begin fun plugin_name linter_map acc ->
+        StringMap.fold begin fun linter_name linter_result acc ->
+	  List.fold_left begin fun (id,acc) warning_result ->
+	    id + 1, {
+	      id = id;
+	      file_name = file_name;
+	      hash = hash;
+	      plugin_name = plugin_name;
+	      linter_name = linter_name;
+	      linter_version = linter_result.res_version;
+	      warning_result = warning_result;
+	    } :: acc	       
+	  end acc linter_result.res_warnings	
+        end linter_map acc					      
+      end plugin_map acc 
+    end db (0,[])
+  in entries
