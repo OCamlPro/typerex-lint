@@ -77,7 +77,23 @@ let database_warning_entry_of_json json  =
 
 let database_warning_entries_of_json json  =
   json |> to_list |> List.map database_warning_entry_of_json
-    
+
+			      
+let group_by clss lst =
+  let rec aux acc = function
+    | [] -> acc
+    | (cx, x) :: y -> (*** ptt changer ***)
+       begin match acc with
+       | (cx', x') :: y' when cx = cx' ->
+          aux ((cx, x :: x') :: y') y
+       | _ ->
+	  aux ((cx, [x]) :: acc) y
+       end
+  in
+  lst
+  |> List.map (fun x -> clss x, x) (*** ***)
+  |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
+  |> aux []
 		
 (************************************************************************)
 		     
@@ -88,35 +104,60 @@ let theme =
 
 let font_size =
   14
+
+let context_line_number =
+  3
+
+let array_joining join arr =
+  let hd = arr.(0) in
+  let tl = Array.sub arr 1 ((Array.length arr)-1) in
+  (Array.fold_left begin fun acc line ->
+    acc ^ join ^ line 
+  end hd tl)
     
-let ace_loc_of_warning_loc warning_loc =
+let ace_loc_of_warning_loc warning_loc context =
   let aux pos =
     pos.Lexing.pos_lnum,
     pos.Lexing.pos_cnum - pos.Lexing.pos_bol
-  in {
-    loc_start = aux warning_loc.Location.loc_start;
-    loc_end = aux warning_loc.Location.loc_end;
+  in
+  let bl,bc = aux warning_loc.Location.loc_start in
+  let el,ec = aux warning_loc.Location.loc_end in
+  {
+    loc_start = context + 1, bc;
+    loc_end = context + el - bl + 1, ec;
   }
 
-let code_viewer_register_warnings ace warnings =
-  List.iter begin fun warning ->
-    Ace.set_mark ace
-      ~loc:(ace_loc_of_warning_loc warning.loc)
-      ~type_:Ace.Warning
-      warning.output
-  end warnings
+let code_viewer_register_warnings ace warning =
+  let blcntxt =
+    warning.loc.Location.loc_start.Lexing.pos_lnum - context_line_number
+  in
+  let elcntxt =
+    warning.loc.Location.loc_end.Lexing.pos_lnum + context_line_number
+  in
+  let loc = ace_loc_of_warning_loc warning.loc context_line_number in
+  let content =
+    array_joining "\n" (Ace.get_lines ace (blcntxt-1) (elcntxt-1))
+  in
+  Firebug.console##log (Js.string content);
+  Firebug.console##log (blcntxt);
+  Firebug.console##log (elcntxt);
+  Ace.set_value ace content;
+  Ace.clear_selection ace;
+  Ace.set_option ace "firstLineNumber" (blcntxt);
+  Ace.add_marker ace Ace.Warning loc;
+  Ace.set_annotation ace Ace.Warning warning.output loc
   
-let create_ocaml_code_viewer div warnings =
+let create_ocaml_code_viewer div warning =
   let ace = Ace.create_editor div in
   Ace.set_mode ace "ace/mode/ocaml";
   Ace.set_theme ace ("ace/theme/" ^ theme);
   Ace.set_font_size ace font_size;
   Ace.set_read_only ace true;
-  code_viewer_register_warnings ace warnings
+  code_viewer_register_warnings ace warning
 
-let set_div_ocaml_code_view warnings =
+let set_div_ocaml_code_view warning =
   let code_div = find_component "code" (***** code id dans lint_web ****) in
-  create_ocaml_code_viewer (Tyxml_js.To_dom.of_div code_div) warnings
+  create_ocaml_code_viewer (Tyxml_js.To_dom.of_div code_div) warning
     
 let onload _ =
   let (str_js: Js.js_string Js.t) =
@@ -128,7 +169,10 @@ let onload _ =
   let warnings =
     List.map (fun entry -> entry.warning_result) (database_warning_entries_of_json json)
   in
-  set_div_ocaml_code_view warnings;
+  (*** ***)
+  let warning = List.hd warnings in
+  (*** ***)
+  set_div_ocaml_code_view warning;
   Js._true
 
 let () =

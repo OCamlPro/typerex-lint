@@ -145,7 +145,26 @@ let set_mark editor ?loc ?(type_ = Message) msg =
     editor.marks <-
       session##addMarker (range, Js.string type_, Js.string "text", Js._false) ::
       editor.marks
-	
+
+let add_marker editor type_ { loc_start = (sr, sc) ; loc_end = (er, ec) } =
+  let range = range (sr - 1) sc (er - 1) ec in
+  let session = editor.editor##getSession() in
+  let type_ = string_of_mark_type type_ in (**** classe plutot ****)
+  editor.marks <-
+    session##addMarker (range, Js.string type_, Js.string "text", Js._false) ::
+    editor.marks
+
+let set_annotation editor type_ msg { loc_start = (sr, sc) } =
+  let session = editor.editor##getSession() in
+  let annot : annotation Js.t = Js.Unsafe.obj [||] in
+  annot##row <- (sr - 1);
+  annot##column <- sc;
+  annot##text <- Js.string msg;
+  annot##type_ <- Js.string (string_of_mark_type type_);
+  let annotations =
+    Array.concat [[| annot |]; Js.to_array (session##getAnnotations ())] in
+  session##setAnnotations(Js.array @@ annotations)
+  
 let set_background_color editor color =
   editor.editor_div##style##backgroundColor <- Js.string color
 
@@ -293,3 +312,19 @@ let set_read_only { editor } rd =
 
 let set_theme { editor } thm =
   editor##setTheme (Js.string thm)
+
+let get_lines {editor} begin_line end_line =
+  let document = editor##getSession()##getDocument() in
+  document##getLines (begin_line, end_line)
+  |> Js.str_array
+  |> Js.to_array
+  |> Array.map (fun s -> Js.to_string s)
+
+let set_value { editor } value =
+  editor##setValue (Js.string value)
+
+let clear_selection { editor } =
+  editor##clearSelection ()
+
+let set_option { editor } option value =
+  editor##setOption (Js.string option, value)

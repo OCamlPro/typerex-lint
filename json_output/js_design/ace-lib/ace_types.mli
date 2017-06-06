@@ -103,6 +103,8 @@ class type ['a] editor = object
   method focus : unit Js.meth
   method setFontSize : int -> unit Js.meth
   method customData : 'a Js.prop
+  method clearSelection : unit Js.meth
+  method setOption : Js.js_string Js.t -> int -> unit Js.meth (* ***** *)
 end
 
 and ['a] command = object
