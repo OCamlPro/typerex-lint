@@ -23,7 +23,7 @@ module type CONFIG = sig
 
   val config_file : SimpleConfig.config_file
 
-  val init_config : File.t -> unit
+  val init_config : FileGen.t -> unit
 
   val simple_args : unit -> (string * Arg.spec * string) list
 

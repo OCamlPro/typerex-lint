@@ -65,7 +65,7 @@ module type DATABASE = sig
   val db : t
   val db_errors : errors
   val root : string ref
-  val init : File.t -> unit
+  val init : FileGen.t -> unit
 
   val load : string -> t
   val load_file : Lint_utils.file_struct -> unit

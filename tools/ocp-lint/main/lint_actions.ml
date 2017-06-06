@@ -196,13 +196,13 @@ let rec load_plugins list =
       [] list
 
 let init_olint_dir () =
-  File.safe_mkdir (File.of_string Lint_globals.olint_dirname)
+  FileGen.safe_mkdir (FileGen.of_string Lint_globals.olint_dirname)
 
 let init_db_in_tmp () =
   let tmp_dir = Lint_utils.mk_temp_dir "olint" in
   let olint_dir = Filename.concat tmp_dir Lint_globals.olint_dirname in
-  File.safe_mkdir (File.of_string olint_dir);
-  Lint_db.DefaultDB.init (File.of_string olint_dir);
+  FileGen.safe_mkdir (FileGen.of_string olint_dir);
+  Lint_db.DefaultDB.init (FileGen.of_string olint_dir);
   Some tmp_dir
 
 let clean_db_in_tmp db_dir = match db_dir with
@@ -210,26 +210,26 @@ let clean_db_in_tmp db_dir = match db_dir with
   | Some dir ->
     let root = dir in
     let olint_dir = Filename.concat root Lint_globals.olint_dirname in
-    FileDir.remove_all (File.of_string olint_dir);
+    FileDir.remove_all (FileGen.of_string olint_dir);
     Unix.rmdir dir
 
 let init_db no_db db_dir path = match db_dir with
   | Some dir ->
     let olint_dirname = Lint_globals.olint_dirname in
     let root_t =
-      File.concat (File.of_string dir) (File.of_string olint_dirname) in
+      FileGen.concat (FileGen.of_string dir) (FileGen.of_string olint_dirname) in
     Lint_db.DefaultDB.init root_t;
     db_dir, no_db
   | None ->
-    let path_t = File.of_string path in
+    let path_t = FileGen.of_string path in
     let olint_dirname = Lint_globals.olint_dirname in
     try
       if not no_db then
         (let root_path_dir_t = Lint_utils.find_root path_t [olint_dirname] in
          let root_t =
-           File.concat root_path_dir_t (File.of_string olint_dirname) in
+           FileGen.concat root_path_dir_t (FileGen.of_string olint_dirname) in
          Lint_db.DefaultDB.init root_t;
-         Some (File.to_string root_path_dir_t), no_db)
+         Some (FileGen.to_string root_path_dir_t), no_db)
       else
         let db_dir = init_db_in_tmp () in
         db_dir, true
@@ -238,16 +238,16 @@ let init_db no_db db_dir path = match db_dir with
       db_dir, true
 
 let init_config path =
-  let path_t = File.of_string path in
+  let path_t = FileGen.of_string path in
   let config_file = Lint_globals.Config.config_file_name in
   try
     let root_path_t = Lint_utils.find_root path_t [config_file] in
-    let file_t = File.concat root_path_t (File.of_string config_file) in
+    let file_t = FileGen.concat root_path_t (FileGen.of_string config_file) in
     Lint_globals.Config.init_config file_t;
   with Not_found -> ()
 
 let init_config_file file =
-  let file_t = File.of_string file in
+  let file_t = FileGen.of_string file in
   Lint_globals.Config.init_config file_t
 
 let list_plugins fmt =
@@ -506,7 +506,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
   let cmts_infos, sources = Lint_utils.split_sources sources in
   let len = List.length sources in
   let tmp_file_dir = Lint_utils.mk_temp_dir "olintfile" in
-  File.safe_mkdir (File.of_string tmp_file_dir);
+  FileGen.safe_mkdir (FileGen.of_string tmp_file_dir);
   mark_waiting sources;
   let start_list = get_start_list (!!jobs - 1) sources in
   List.iter (fun file ->
@@ -541,7 +541,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
         file_struct
     with Not_found -> ()
   done;
-  FileDir.remove_all (File.of_string tmp_file_dir);
+  FileDir.remove_all (FileGen.of_string tmp_file_dir);
   Printf.eprintf "\rRunning analyses... %d / %d" len len;
   Printf.eprintf "\nMergin database...%!";
   let sources =

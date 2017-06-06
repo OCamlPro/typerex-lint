@@ -102,7 +102,7 @@ module type DATABASE = sig
   val db : t
   val db_errors : errors
   val root : string ref
-  val init : File.t -> unit
+  val init : FileGen.t -> unit
   (* [load dir] : load the entire database composed of files from [dir]. *)
   val load : string -> t
   (* [load_file file] Load the file _olint/XXX containing the db for
