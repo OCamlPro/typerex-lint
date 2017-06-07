@@ -1,5 +1,6 @@
 open Ace
 open Lint_warning_types
+open Lint_warning_json
 
 (*******)
 let find_component id =
@@ -7,99 +8,6 @@ let find_component id =
   | Some div -> div
   | None -> failwith ("Cannot find id " ^ id)
 (*******)
-
-(*********************** A SUPPRIMER ***************************************)
-
-open Yojson.Basic.Util
-
-type tmp_warning = {
-  output : string;
-  loc : Location.t
-}
-
-type database_warning_entry = {
-  id : int;
-  file_name : string;
-  hash : Digest.t;
-  plugin_name : string;
-  linter_name : string;
-  linter_version : string;
-  (* option / source *)
-  warning_result : tmp_warning;
-}
-
-let position_of_json json =
-  let open Lexing in
-  let pos_fname = json |> member "pos_fname" |> to_string in
-  let pos_lnum = json |> member "pos_lnum" |> to_int in
-  let pos_bol = json |> member "pos_bol" |> to_int in
-  let pos_cnum = json |> member "pos_cnum" |> to_int in
-  {
-    pos_fname = pos_fname;
-    pos_lnum = pos_lnum;
-    pos_bol = pos_bol;
-    pos_cnum = pos_cnum
-  }
-
-let location_of_json json =
-  let open Location in
-  let loc_start = json |> member "loc_start" |> position_of_json in
-  let loc_end = json |> member "loc_end" |> position_of_json in
-  let loc_ghost = json |> member "loc_ghost" |> to_bool in
-  {
-    loc_start = loc_start;
-    loc_end = loc_end;
-    loc_ghost = loc_ghost
-  }
-		      
-let tmp_warning_of_json json =
-  {
-    output = json |> member "output" |> to_string;
-    loc = json |> member "loc" |> location_of_json  
-  }
-
-let digest_of_json json =
-  json |> to_string |> Digest.from_hex    
-
-let database_warning_entry_of_json json  =
-  let id = json |> member "id" |> to_int in
-  let file_name = json |> member "file_name" |> to_string in
-  let hash = json |> member "hash" |> digest_of_json in
-  let plugin_name = json |> member "plugin_name" |> to_string in
-  let linter_name = json |> member "linter_name" |> to_string in
-  let linter_version = json |> member "linter_version" |> to_string in
-  let warning_result = json |> member "warning_result" |> tmp_warning_of_json in
-  {
-    id = id;
-    file_name = file_name;
-    hash = hash;
-    plugin_name = plugin_name;
-    linter_name = linter_name;
-    linter_version = linter_version;
-    warning_result = warning_result
-  }
-
-let database_warning_entries_of_json json  =
-  json |> to_list |> List.map database_warning_entry_of_json
-
-			      
-let group_by clss lst =
-  let rec aux acc = function
-    | [] -> acc
-    | (cx, x) :: y -> (*** ptt changer ***)
-       begin match acc with
-       | (cx', x') :: y' when cx = cx' ->
-          aux ((cx, x :: x') :: y') y
-       | _ ->
-	  aux ((cx, [x]) :: acc) y
-       end
-  in
-  lst
-  |> List.map (fun x -> clss x, x) (*** ***)
-  |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
-  |> aux []
-		
-(************************************************************************)
 		     
 let doc = Dom_html.document
 

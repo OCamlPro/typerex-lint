@@ -34,6 +34,8 @@ begin program "test-js-client"
      "c3"
      "compiler-libs"
      "js_of_ocaml"
+     "ocp-lint-api-types"
+     "ocp-lint-output-json"
      "yojson"
    ]
 

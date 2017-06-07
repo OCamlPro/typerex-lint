@@ -168,3 +168,19 @@ let raw_entries ~db =
       end plugin_map acc 
     end db (0,[])
   in entries
+
+let group_by ~clss ~lst = (*** ptt changer implantation ***)
+  let rec aux acc = function
+    | [] -> acc
+    | (cx, x) :: y -> (*** ptt changer ***)
+       begin match acc with
+	     | (cx', x') :: y' when cx = cx' ->
+		aux ((cx, x :: x') :: y') y
+	     | _ ->
+		aux ((cx, [x]) :: acc) y
+       end
+  in
+  lst
+  |> List.map (fun x -> clss x, x) (*** ***)
+  |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
+  |> aux []
