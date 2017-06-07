@@ -313,7 +313,7 @@ let set_read_only { editor } rd =
 let set_theme { editor } thm =
   editor##setTheme (Js.string thm)
 
-let get_lines {editor} begin_line end_line =
+let get_lines { editor } begin_line end_line =
   let document = editor##getSession()##getDocument() in
   document##getLines (begin_line, end_line)
   |> Js.str_array
@@ -328,3 +328,7 @@ let clear_selection { editor } =
 
 let set_option { editor } option value =
   editor##setOption (Js.string option, value)
+
+let get_length { editor } =
+  let document = editor##getSession()##getDocument() in
+  document##getLength ()

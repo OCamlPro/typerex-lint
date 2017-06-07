@@ -1,4 +1,5 @@
 open Ace
+open Lint_warning_types
 
 (*******)
 let find_component id =
@@ -114,36 +115,36 @@ let context_line_number =
 let array_joining join arr =
   let hd = arr.(0) in
   let tl = Array.sub arr 1 ((Array.length arr)-1) in
-  (Array.fold_left begin fun acc line ->
+  Array.fold_left begin fun acc line ->
     acc ^ join ^ line 
-  end hd tl)
-    
-let ace_loc_of_warning_loc warning_loc context =
-  let aux pos =
-    pos.Lexing.pos_lnum,
-    pos.Lexing.pos_cnum - pos.Lexing.pos_bol
-  in
-  let bl,bc = aux warning_loc.Location.loc_start in
-  let el,ec = aux warning_loc.Location.loc_end in
-  {
-    loc_start = context + 1, bc;
-    loc_end = context + el - bl + 1, ec;
-  }
-
+  end hd tl  
+  
 let code_viewer_register_warnings ace warning =
-  let blcntxt =
-    warning.loc.Location.loc_start.Lexing.pos_lnum - context_line_number
-  in
-  let elcntxt =
-    warning.loc.Location.loc_end.Lexing.pos_lnum + context_line_number
-  in
-  let loc = ace_loc_of_warning_loc warning.loc context_line_number in
+  let char_column pos = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
+  let begin_line = warning.loc.Location.loc_start.Lexing.pos_lnum in
+  let end_line = warning.loc.Location.loc_end.Lexing.pos_lnum in
+  let begin_context = min (begin_line - 1) context_line_number in
+  let end_context = min ((Ace.get_length ace) - end_line) context_line_number in
+  let begin_with_context = begin_line - begin_context in
+  let end_with_context = end_line + end_context in
+  let begin_char_column = char_column warning.loc.Location.loc_start in
+  let end_char_column = char_column warning.loc.Location.loc_end in
+  (***** verifier si warning au limite *****)
+  let loc = {
+    loc_start = begin_context + 1,
+		begin_char_column;
+    loc_end = begin_context + end_line - begin_line + 1,
+	      end_char_column
+  } in
+  (*****************************************)
   let content =
-    array_joining "\n" (Ace.get_lines ace (blcntxt-1) (elcntxt-1))
+    array_joining
+      "\n"
+      (Ace.get_lines ace (begin_with_context - 1) (end_with_context - 1))
   in
   Ace.set_value ace content;
   Ace.clear_selection ace;
-  Ace.set_option ace "firstLineNumber" (blcntxt);
+  Ace.set_option ace "firstLineNumber" begin_with_context;
   Ace.add_marker ace Ace.Warning loc;
   Ace.set_annotation ace Ace.Warning warning.output loc
   

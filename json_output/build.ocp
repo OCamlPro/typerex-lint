@@ -73,6 +73,8 @@ begin program "test-js-ace"
      "c3"
      "compiler-libs"
      "js_of_ocaml"
+     "ocp-lint-api-types"
+     "ocp-lint-output-json"
      "yojson"
    ]
 
@@ -91,6 +93,7 @@ begin program "test-js-ace"
             (* Use these options to debug Javascript:
                "-sourcemap" "-pretty" "-noinline" *)
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
+	     "js_design/ocplib_unix.js"
              "-o" "static/js/ace_file_viewer.js"
               client_byte }
        ]

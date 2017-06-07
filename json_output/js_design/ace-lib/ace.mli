@@ -111,6 +111,10 @@ val set_option:
   string ->
   int ->
   unit
+
+val get_length:
+  'a editor ->
+  int
 (************)
 val get_state: 'a editor -> int -> < .. > Js.t
 
