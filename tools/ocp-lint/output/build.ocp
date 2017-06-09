@@ -32,10 +32,12 @@ end
 
 begin library "ocp-lint-output-json"
   files = [
+    "lint_plugin_json.ml"
     "lint_warning_json.ml"
     "lint_web.ml"
   ]
   requires = [
+    "ocp-lint-api"
     "ocp-lint-db"
     "tyxml"
     "unix"

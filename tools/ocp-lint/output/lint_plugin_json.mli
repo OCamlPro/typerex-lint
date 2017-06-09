@@ -18,16 +18,21 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-val warnings_database_file : string
+type plugins_database_entry = {
+  plugin_entry_plugin_name : string;
+  plugin_entry_plugin_description : string;
+  plugin_entry_linter_name : string;
+  plugin_entry_linter_description : string;
+}
+				
+val json_of_plugins_database_entries :
+  plugins_database_entry list ->
+  Yojson.Basic.json
+    
+val plugins_database_entries_of_json :
+  Yojson.Basic.json ->
+  plugins_database_entry list
 
-val warnings_database_var : string
-
-val plugins_database_file : string
-
-val plugins_database_var : string
-			      
-val print :
-  Format.formatter ->
-  string ->
-  Lint_db_types.t ->
-  unit
+val plugins_database_raw_entries :
+  unit ->
+  plugins_database_entry list

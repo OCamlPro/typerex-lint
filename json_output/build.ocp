@@ -52,6 +52,7 @@ begin program "test-js-client"
             (* Use these options to debug Javascript:
                "-sourcemap" "-pretty" "-noinline" *)
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
+	     "js_design/ocplib_unix.js"
              "-o" "static/js/json_output.js"
               client_byte }
        ]

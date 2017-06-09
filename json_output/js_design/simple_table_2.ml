@@ -1,5 +1,6 @@
 open Lint_warning_types
-open Lint_warning_json
+open Lint_warning_json (****)
+open Lint_plugin_json
 
 let doc = Dom_html.document
 
@@ -237,11 +238,11 @@ let summary_table tabs entries =
   Dom.appendChild table tbody;
   table
 
-let summary_page tabs entries =
+let summary_page tabs warnings_entries =
   let div = Dom_html.createDiv doc in
   div##setAttribute(Js.string "id", Js.string navigation_home_content_id);
   div##setAttribute(Js.string "class", Js.string "tab-pane fade in active");
-  Dom.appendChild div (summary_table tabs entries);
+  Dom.appendChild div (summary_table tabs warnings_entries);
   div
 
 let warning_description_header_code_view entry =
@@ -303,38 +304,67 @@ let warning_description_code_view entry =
   Dom.appendChild div (warning_description_content_code_view entry);
   div
   
-let warning_description_page entry =
+let warning_description_page warning_entry plugin_entry =
   let div = Dom_html.createDiv doc in
   let h3 = Dom_html.createH3 doc in
-  let id = navigation_warning_content_id entry in
+  let h3' = Dom_html.createH3 doc in
+  let id = navigation_warning_content_id warning_entry in
   div##setAttribute(Js.string "id", Js.string id);
   div##setAttribute(Js.string "class", Js.string "tab-pane fade");
-  h3##innerHTML <- Js.string ("Warning " ^ (string_of_int entry.warning_result.decl.id) ^ " :" );
+  h3##innerHTML <- Js.string ("Warning " ^ (string_of_int warning_entry.warning_result.decl.id) ^ " :" );
   h3##setAttribute (Js.string "style", Js.string "margin-left:16px");
+
+
+  h3'##innerHTML <- Js.string (plugin_entry.plugin_entry_linter_name ^ " : " ^ plugin_entry.plugin_entry_linter_description);
+  h3'##setAttribute (Js.string "style", Js.string "margin-left:16px");
+
+
   Dom.appendChild div h3;
+  Dom.appendChild div h3';
   Dom.appendChild div (Dom_html.createBr doc);
-  Dom.appendChild div (warning_description_code_view entry);
+  Dom.appendChild div (warning_description_code_view warning_entry);
   div
     
-let main_page entries = 
+let main_page warnings_entries plugins_entries =  
   let page = Dom_html.createDiv doc in
-  let tabs = navigation_tabs entries in
+  let tabs = navigation_tabs warnings_entries in
   let content = Dom_html.createDiv doc in
   content##setAttribute(Js.string "class", Js.string "tab-content");
-  Dom.appendChild content (summary_page tabs entries);
-  List.iter begin fun entry ->
-    Dom.appendChild content (warning_description_page entry)
-  end entries;
+  Dom.appendChild content (summary_page tabs warnings_entries);
+  List.iter begin fun warning_entry ->
+    let plugin_entry = List.find begin fun plugin_entry ->
+      warning_entry.plugin_name = plugin_entry.plugin_entry_plugin_name
+      && warning_entry.linter_name = plugin_entry.plugin_entry_linter_name
+    end plugins_entries
+    in
+    Dom.appendChild
+      content
+      (warning_description_page warning_entry plugin_entry)
+  end warnings_entries;
   Dom.appendChild page tabs;
   Dom.appendChild page (Dom_html.createBr doc);
   Dom.appendChild page content;
   page
+
+let json_from_js_var var =
+  let (str : Js.js_string Js.t) = Js.Unsafe.variable var in
+  Yojson.Basic.from_string (Js.to_string str)
     
 let onload _ =
-  let (str_js: Js.js_string Js.t) = Js.Unsafe.variable "json" (* lint_web.var_json_name *) in
-  let json = Yojson.Basic.from_string (Js.to_string str_js) in
-  let entries = database_warning_entries_of_json json in
-  Dom.appendChild (doc##body) (main_page entries);
+  let warnings_entries =
+    database_warning_entries_of_json
+      (json_from_js_var Lint_web.warnings_database_var)
+  in
+  let plugins_entries =
+    plugins_database_entries_of_json
+      (json_from_js_var Lint_web.plugins_database_var)
+  in
+  (***)
+  List.iter begin fun pe ->
+		  Firebug.console##log (Js.string pe.plugin_entry_linter_name)
+	    end plugins_entries;
+  (***)
+  Dom.appendChild (doc##body) (main_page warnings_entries plugins_entries);
   Js._false
 
 let () =
