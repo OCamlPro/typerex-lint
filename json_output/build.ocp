@@ -27,16 +27,14 @@ begin program "test-js-client"
    has_asm = false
    pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
    files = [
-     "js_design/simple_table.ml"
+     "js_design/simple_table_2.ml"
    ]
 
    requires = [
-     "c3"
      "compiler-libs"
      "js_of_ocaml"
      "ocp-lint-api-types"
      "ocp-lint-output-json"
-     "yojson"
    ]
 
    (* Also compile bytecode into javascript *)

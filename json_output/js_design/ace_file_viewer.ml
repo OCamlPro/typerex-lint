@@ -69,10 +69,10 @@ let set_div_ocaml_code_view warning =
   create_ocaml_code_viewer (Tyxml_js.To_dom.of_div code_div) warning
     
 let onload _ =
-  let (str_js: Js.js_string Js.t) =
-    Js.Unsafe.variable "json" (* lint_web.var_json_name *)
-  in
   let json =
+    let (str_js: Js.js_string Js.t) =
+      Js.Unsafe.variable "json" (* lint_web.var_json_name *)
+    in
     Yojson.Basic.from_string (Js.to_string str_js)
   in
   let id = Url.Current.get_fragment () in
@@ -89,5 +89,3 @@ let onload _ =
 
 let () =
   Dom_html.window##onload <- Dom_html.handler onload
-
-					      

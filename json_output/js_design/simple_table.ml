@@ -99,11 +99,8 @@ let onload _ =
   let div = Dom_html.createDiv doc in
   Dom.appendChild div (summary_table entries);
   Dom.appendChild doc##body div;
-  ignore (
-      (******* tool bar ici *******)
-      Js.Unsafe.eval_string
-  	"$(document).ready(function() {$('#summary-table').DataTable({paging: false, info:false});});");
   Js._false
 
 let () =
-  Dom_html.window##onload <- Dom_html.handler onload			      
+  Dom_html.window##onload <- Dom_html.handler onload;
+
