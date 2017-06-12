@@ -214,7 +214,7 @@ let print fmt path db = (* renommer *)
     let filterjson =
       w_entries
       |> List.filter begin fun entry ->
-	   entry.file_name = file_name && not entry.warning_result.loc.Location.loc_ghost
+	   entry.file_name = file_name
 	 end
       |> json_of_database_warning_entries	     
       |> Yojson.Basic.pretty_to_string

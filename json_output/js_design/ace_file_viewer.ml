@@ -27,22 +27,24 @@ let array_joining join arr =
     acc ^ join ^ line 
   end hd tl  
   
-let code_viewer_register_warnings ace warning =
-  let char_column pos = pos.Lexing.pos_cnum - pos.Lexing.pos_bol in
-  let begin_line = warning.loc.Location.loc_start.Lexing.pos_lnum in
-  let end_line = warning.loc.Location.loc_end.Lexing.pos_lnum in
+let code_viewer_register_warning ace warning =
+  let begin_line, begin_col, end_line, end_col =
+    match file_loc_of_loc warning.loc with
+    | Some (Floc_line line) ->
+       line, 0, line, String.length (Ace.get_line ace (line - 1)) 
+    | Some (Floc_lines_cols (bline, bcol, eline, ecol)) ->
+       bline, bcol, eline, ecol
+    | None ->
+       failwith "no location for this warning"
+  in
   let begin_context = min (begin_line - 1) context_line_number in
   let end_context = min ((Ace.get_length ace) - end_line) context_line_number in
   let begin_with_context = begin_line - begin_context in
   let end_with_context = end_line + end_context in
-  let begin_char_column = char_column warning.loc.Location.loc_start in
-  let end_char_column = char_column warning.loc.Location.loc_end in
   (***** verifier si warning au limite *****)
   let loc = {
-    loc_start = begin_context + 1,
-		begin_char_column;
-    loc_end = begin_context + end_line - begin_line + 1,
-	      end_char_column
+    loc_start = begin_context + 1, begin_col;
+    loc_end = begin_context + end_line - begin_line + 1, end_col
   } in
   (*****************************************)
   let content =
@@ -62,25 +64,29 @@ let create_ocaml_code_viewer div warning =
   Ace.set_theme ace ("ace/theme/" ^ theme);
   Ace.set_font_size ace font_size;
   Ace.set_read_only ace true;
-  code_viewer_register_warnings ace warning
+  code_viewer_register_warning ace warning
 
 let set_div_ocaml_code_view warning =
   let code_div = find_component "code" (***** code id dans lint_web ****) in
   create_ocaml_code_viewer (Tyxml_js.To_dom.of_div code_div) warning
-    
+
+(*** utils function ***)
+let json_from_js_var var =
+  let (str : Js.js_string Js.t) = Js.Unsafe.variable var in
+  Yojson.Basic.from_string (Js.to_string str)
+(**********************)
+			   
 let onload _ =
-  let json =
-    let (str_js: Js.js_string Js.t) =
-      Js.Unsafe.variable "json" (* lint_web.var_json_name *)
-    in
-    Yojson.Basic.from_string (Js.to_string str_js)
+  let json = json_from_js_var "json" in
+  let id =
+    try int_of_string (Url.Current.get_fragment ()) with
+    | Failure _ -> failwith "invalid id"
   in
-  let id = Url.Current.get_fragment () in
   let entry =
     try
       json
       |> database_warning_entries_of_json
-      |> List.find (fun entry -> string_of_int entry.id = id)
+      |> List.find (fun entry -> entry.id = id)
     with
     | Not_found -> failwith "invalid id"
   in

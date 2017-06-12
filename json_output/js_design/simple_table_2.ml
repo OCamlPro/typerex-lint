@@ -136,12 +136,12 @@ let summary_entry_file_name_col entry =
   in
   a##innerHTML <- Js.string entry.file_name;
   Dom.appendChild p a;
-  if not entry.warning_result.loc.Location.loc_ghost then begin
+  (* if not entry.warning_result.loc.Location.loc_ghost then begin *)
     a##setAttribute(Js.string "href", Js.string href);
     a##setAttribute(Js.string "target", Js.string "_blank");
     Dom.appendChild p (Dom_html.createBr doc);
-    Dom.appendChild p (summary_file_view href)
-  end;
+    Dom.appendChild p (summary_file_view href);
+  (* end; *)
   p
 
 let summary_entry_plugin_name_col entry =
@@ -267,7 +267,7 @@ let warning_description_content_code_view entry =
   div##setAttribute(Js.string "class", Js.string "panel-body");
   div##setAttribute(Js.string "style", Js.string "padding:0; height:170px");
   iframe##setAttribute(Js.string "src", Js.string href);
-  iframe##setAttribute(Js.string "style", Js.string "width:100%; height:100%; border:none;");
+  iframe##setAttribute(Js.string "style", Js.string "width:100%; height:100%; border:none; border-radius:0 0 4px 4px;");
   
   (* (\***\) *)
   (* div##setAttribute(Js.string "style", Js.string "margin:0 5% 0 5%;"); *)
