@@ -31,6 +31,7 @@ begin program "test-js-client"
    ]
 
    requires = [
+     "ace"
      "compiler-libs"
      "js_of_ocaml"
      "ocp-lint-api-types"
@@ -96,6 +97,46 @@ begin program "test-js-ace"
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
 	     "js_design/ocplib_unix.js"
              "-o" "static/js/ace_file_viewer.js"
+              client_byte }
+       ]
+       build_target = true
+     )
+   ]
+end
+
+begin program "test-js-web-navigation-bar"
+
+   has_asm = false
+   pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
+   files = [
+     "js_design/web_navigation_bar.ml"
+   ]
+
+   requires = [
+     "ace"
+     "compiler-libs"
+     "js_of_ocaml"
+     "ocp-lint-api-types"
+     "ocp-lint-output-json"
+   ]
+
+   (* Also compile bytecode into javascript *)
+
+   build_targets = [ "static/js/json_output.js" ]
+   client_byte = [ %string
+     ( strings = [ "%{test-js-web-navigation-bar_FULL_DST_DIR}%/"
+                   "test-js-web-navigation-bar.byte"
+            ] ) ]
+   build_rules = [
+      "static/js/web_navigation_bar.js" (
+       sources = [ client_byte ]
+       commands = [
+         { "js_of_ocaml"
+            (* Use these options to debug Javascript:
+               "-sourcemap" "-pretty" "-noinline" *)
+             "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
+	     "js_design/ocplib_unix.js"
+             "-o" "static/js/web_navigation_bar.js"
               client_byte }
        ]
        build_target = true

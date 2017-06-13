@@ -132,6 +132,7 @@ let html_of_index =
   let js_files = [
     warnings_database_file;
     plugins_database_file;
+    "ace"; (*** tmp ***)
     "json_output"; (******)
     "jquery.min"; (*** 11 ***)
     "bootstrap.min";

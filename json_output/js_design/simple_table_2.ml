@@ -2,6 +2,13 @@ open Lint_warning_types
 open Lint_warning_json (****)
 open Lint_plugin_json
 
+(*******)
+let find_component id =
+  match Js_utils.Manip.by_id id with
+  | Some div -> div
+  | None -> failwith ("Cannot find id " ^ id)
+(*******)
+       
 let doc = Dom_html.document
 
 let close_button () =
@@ -14,6 +21,9 @@ let close_button () =
   span##innerHTML <- Js.string "&times;";
   Dom.appendChild button span;
   button
+
+let navigation_is_active_tab tab =
+  Js.to_bool (tab##classList##contains (Js.string "active"))
 	    
 let navigation_plugin_tab_menu plugins =
   let ul = Dom_html.createUl doc in
@@ -30,11 +40,16 @@ let navigation_plugin_tab_menu plugins =
 
 let navigation_home_content_id =
   "home-content"
+
+let navigation_home_tab_id =
+  "home-tab"
     
 let navigation_home_tab =
   let li = Dom_html.createLi doc in
   let a = Dom_html.createA doc in
   let href = "#" ^ (navigation_home_content_id) in
+  li##setAttribute(Js.string "id", Js.string navigation_home_tab_id);
+  (* todo set_active_tab *)
   li##setAttribute(Js.string "class", Js.string "active");
   a##setAttribute(Js.string "href", Js.string href);
   a##setAttribute(Js.string "data-toggle", Js.string "tab");
@@ -154,8 +169,64 @@ let summary_entry_linter_name_col entry =
   p##innerHTML <- Js.string entry.linter_name;
   p
     
-let summary_entry_warning_output_col tabs entry =
+let summary_entry_warning_output_col tabs (***) content (***) entry =
+  (* deplacer systeme gestion onglet *)
+  let get_tab_list () =
+    tabs##childNodes
+    |> Dom.list_of_nodeList
+    |> List.map begin fun child ->
+         Js.Opt.get
+	   (Dom_html.CoerceTo.element child)
+	   (fun () -> failwith "coerce error")
+       end
+  in
+  let default_tab =
+    List.find begin fun child ->
+      Js.to_string child##id = navigation_home_tab_id
+    end (get_tab_list ())
+  in
+  let get_default_content () =
+    let tmp =
+      content##childNodes
+      |> Dom.list_of_nodeList
+      |> List.map begin fun child ->
+         Js.Opt.get
+	   (Dom_html.CoerceTo.element child)
+	   (fun () -> failwith "coerce error")
+		  end
+    in
+    List.find begin fun child ->
+      Js.to_string child##id = navigation_home_content_id
+    end tmp
+  in
+  let get_entry_content () =
+    let tmp =
+      content##childNodes
+      |> Dom.list_of_nodeList
+      |> List.map begin fun child ->
+         Js.Opt.get
+	   (Dom_html.CoerceTo.element child)
+	   (fun () -> failwith "coerce error")
+		  end
+    in
+    List.find begin fun child ->
+      Js.to_string child##id = navigation_warning_content_id entry
+    end tmp
+  in
   let close_tab tab =
+    if navigation_is_active_tab tab then begin
+      (* set active *)
+      default_tab##classList##add (Js.string "active")
+      (*****)
+				      ; let tmp = get_default_content () in
+					let tmpp = get_entry_content () in
+
+      tmpp##classList##remove (Js.string "in");
+      tmpp##classList##remove (Js.string "active");
+      tmp##classList##add (Js.string "active");
+      tmp##classList##add (Js.string "in");
+      (*****)
+    end;
     Dom.removeChild tabs tab
   in
   let warning_id = navigation_warning_tab_id entry in
@@ -164,18 +235,11 @@ let summary_entry_warning_output_col tabs entry =
   a##innerHTML <- Js.string entry.warning_result.output;
   a##setAttribute(Js.string "href", Js.string "#");
   a##onclick <- Dom_html.handler begin fun _ ->
-    let childs =
-      tabs##childNodes
-      |> Dom.list_of_nodeList
-      |> List.map begin fun child ->
-	   Js.Opt.get
-	     (Dom_html.CoerceTo.element child)
-	     (fun () -> failwith "coerce error")
-         end
-    in
     let tab =
       try
-	List.find (fun child -> Js.to_string child##id = warning_id) childs
+	List.find begin fun child ->
+          Js.to_string child##id = warning_id
+	end (get_tab_list ())
       with	  
       | Not_found ->
 	 let new_tab = navigation_warning_tab close_tab entry in
@@ -188,7 +252,7 @@ let summary_entry_warning_output_col tabs entry =
   Dom.appendChild p a;
   p
 
-let summary_warning_entry tabs entry =
+let summary_warning_entry tabs content entry =
   let tr = Dom_html.createTr doc in
   let td_file_name = Dom_html.createTd doc in
   let td_plugin_name = Dom_html.createTd doc in
@@ -200,7 +264,7 @@ let summary_warning_entry tabs entry =
   Dom.appendChild tr td_plugin_name;
   Dom.appendChild td_linter_name (summary_entry_linter_name_col entry);
   Dom.appendChild tr td_linter_name;
-  Dom.appendChild td_warning_output (summary_entry_warning_output_col tabs entry);
+  Dom.appendChild td_warning_output (summary_entry_warning_output_col tabs content entry);
   Dom.appendChild tr td_warning_output;
   tr
 
@@ -222,7 +286,7 @@ let summary_head_description =
   Dom.appendChild thead tr;
   thead
   
-let summary_table tabs entries =
+let summary_table tabs content entries =
   let table = Dom_html.createTable doc in
   let tbody = Dom_html.createTbody doc in
   (*******)
@@ -233,16 +297,16 @@ let summary_table tabs entries =
   (*******)
   Dom.appendChild table (summary_head_description);
   List.iter begin fun entry ->
-    Dom.appendChild tbody (summary_warning_entry tabs entry);
+    Dom.appendChild tbody (summary_warning_entry tabs content entry);
   end entries;
   Dom.appendChild table tbody;
   table
 
-let summary_page tabs warnings_entries =
+let summary_page tabs content warnings_entries =
   let div = Dom_html.createDiv doc in
   div##setAttribute(Js.string "id", Js.string navigation_home_content_id);
   div##setAttribute(Js.string "class", Js.string "tab-pane fade in active");
-  Dom.appendChild div (summary_table tabs warnings_entries);
+  Dom.appendChild div (summary_table tabs content warnings_entries);
   div
 
 let warning_description_header_code_view entry =
@@ -330,7 +394,7 @@ let main_page warnings_entries plugins_entries =
   let tabs = navigation_tabs warnings_entries in
   let content = Dom_html.createDiv doc in
   content##setAttribute(Js.string "class", Js.string "tab-content");
-  Dom.appendChild content (summary_page tabs warnings_entries);
+  Dom.appendChild content (summary_page tabs content warnings_entries);
   List.iter begin fun warning_entry ->
     let plugin_entry = List.find begin fun plugin_entry ->
       warning_entry.plugin_name = plugin_entry.plugin_entry_plugin_name

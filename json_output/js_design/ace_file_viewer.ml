@@ -79,7 +79,9 @@ let json_from_js_var var =
 let onload _ =
   let json = json_from_js_var "json" in
   let id =
-    try int_of_string (Url.Current.get_fragment ()) with
+    try
+      int_of_string (Url.Current.get_fragment ())
+    with
     | Failure _ -> failwith "invalid id"
   in
   let entry =
