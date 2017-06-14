@@ -27,7 +27,10 @@ begin program "test-js-client"
    has_asm = false
    pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
    files = [
-     "js_design/web_navigation_bar.ml"
+     "js_design/web_navigation_system.ml"
+     "js_design/web_home_content.ml"
+     "js_design/web_linter_content.ml"
+     "js_design/web_warning_content.ml"
      "js_design/simple_table_2.ml"
    ]
 
