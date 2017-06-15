@@ -127,7 +127,8 @@ let src_viewer_id =
 let html_of_index =
   let css_files = [
     "dataTables.min";
-    "bootstrap.min"
+    "bootstrap.min";
+    "adjustment";
   ] in
   let js_files = [
     warnings_database_file;
@@ -138,7 +139,7 @@ let html_of_index =
     "bootstrap.min";
     "jquery-1.12.4"; (*** 11 ***)
     "jquery.dataTables.min";
-    "dt" (****)
+    "dt"; (****)
   ] in
   html
     begin head
@@ -166,7 +167,7 @@ let html_of_src_viewer src =
 	  
 let html_of_ocaml_src fname hash src =
   let css_files = [
-    "tmp_warning"
+    "tmp_warning";
   ] in
   let js_files = [
     "ace_binding";

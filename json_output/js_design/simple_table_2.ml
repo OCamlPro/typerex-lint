@@ -12,18 +12,17 @@ let find_plugin_entry warning_entry plugins_entries =
   end plugins_entries
 	    
 let main_page warnings_entries plugins_entries =
-  let warnings_and_contents =
-    List.map begin fun we ->
-		   we, 
-		   Web_warning_content.warning_content
-		     we
-		     (find_plugin_entry we plugins_entries)
-	     end warnings_entries
+  let warning_content_creator warning =
+    Tyxml_js.To_dom.of_element (
+	Web_warning_content.warning_content
+	  warning
+	  (find_plugin_entry warning plugins_entries)
+      )
   in
   Web_navigation_system.init
     (Web_home_content.content warnings_entries)
     Web_linter_content.content
-    warnings_and_contents;
+    warning_content_creator;
   div
     [
       Web_navigation_system.tabs;
@@ -48,11 +47,6 @@ let onload _ =
     plugins_database_entries_of_json
       (json_from_js_var Lint_web.plugins_database_var)
   in
-  (***)
-  List.iter begin fun pe ->
-		  Firebug.console##log (Js.string pe.plugin_entry_linter_name)
-	    end plugins_entries;
-  (***)
   load_main_page warnings_entries plugins_entries;
   Js._false
 
