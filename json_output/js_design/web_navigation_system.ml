@@ -49,21 +49,24 @@ let navigation_set_unactive_content content =
   content##classList##remove (Js.string "in");
   content##classList##remove (Js.string "active")
 
-let model_simple_tab name content_id =
+let model_simple_tab name tab_id content_id =
   let tab = 
     li
+      ~a:[
+	a_id tab_id
+      ]
       [
 	a
           ~a:[
 	    a_href ("#" ^ content_id);
-	  a_user_data "toggle" "tab";
+	    a_user_data "toggle" "tab";
 	  ]
 	  [pcdata name]
       ]
   in
   Tyxml_js.To_dom.of_element tab
 
-let model_closable_tab name content_id on_click =
+let model_closable_tab name tab_id content_id on_click =
   let close_button =
     button
       ~a:[
@@ -83,6 +86,9 @@ let model_closable_tab name content_id on_click =
   in
   let tab = 
     li
+       ~a:[
+	a_id tab_id
+      ]
       [
 	a_tab
       ]
@@ -90,12 +96,12 @@ let model_closable_tab name content_id on_click =
   let dom_tab = Tyxml_js.To_dom.of_element tab in
   (Tyxml_js.To_dom.of_element a_tab)##onclick <-Dom_html.handler begin
     fun evt ->
-    Dom.preventDefault evt;
+      Dom.preventDefault evt;
       Js._true
   end;
   (Tyxml_js.To_dom.of_element close_button)##onclick <-Dom_html.handler begin
     fun evt ->
-    Dom_html.stopPropagation evt;							   
+      Dom_html.stopPropagation evt;	   
       on_click dom_tab;
       Js._true
   end;
@@ -111,7 +117,7 @@ let model_simple_content data content_id =
       [data]
   in
   Tyxml_js.To_dom.of_element content
-	 
+			     
 let tabs =
   ul
     ~a:[
@@ -122,22 +128,70 @@ let tabs =
 let dom_tabs =
   Tyxml_js.To_dom.of_element tabs
 
- let contents =
-   div
-     ~a:[
-       a_class ["tab-content"];
-     ]
-     []
-			     
+let contents =
+  div
+    ~a:[
+      a_class ["tab-content"];
+    ]
+    []
+    
 let dom_contents = 
   Tyxml_js.To_dom.of_element contents
-  
+
+let get_tab_list () =
+  dom_tabs##childNodes
+  |> Dom.list_of_nodeList
+  |> List.map begin fun child ->
+       Js.Opt.get
+	 (Dom_html.CoerceTo.element child)
+	 (fun () -> failwith "coerce error")
+     end
+
+let get_content_list () =
+  dom_contents##childNodes
+  |> Dom.list_of_nodeList
+  |> List.map begin fun child ->
+       Js.Opt.get
+	 (Dom_html.CoerceTo.element child)
+	 (fun () -> failwith "coerce error")
+     end
+
+let default_tab : Dom_html.element Js.t option ref = ref None
+
+let get_default_tab () =
+  match !default_tab with
+  | Some tab -> tab
+  | None -> failwith "navigation system is not init : no default tab"
+
+let default_content : Dom_html.element Js.t option ref = ref None
+
+let get_default_content () =
+  match !default_content with
+  | Some content -> content
+  | None -> failwith "navigation system is not init : no default content"
+	      
+let home_tab_id =
+  "home-tab"
+	      
 let home_content_id =
   "home-content"
+
+let linter_tab_id =
+  "linters-tab"
+    
+let linter_content_id =
+  "linters-content"
+
+let warning_tab_id warning_entry =
+  "warning-" ^ (string_of_int warning_entry.id) ^ "-tab"
+    
+let warning_content_id warning_entry =
+  "warning-" ^ (string_of_int warning_entry.id) ^ "-content"
     
 let navigation_home_tab () =
   model_simple_tab
     "home"
+    home_tab_id
     home_content_id
 
 let navigation_home_content home_content =
@@ -148,33 +202,35 @@ let navigation_home_content home_content =
   in
   navigation_set_active_content content;
   content
-    
-let linter_content_id =
-  "linters-content"
   
 let navigation_linter_tab () =
   model_simple_tab
     "linters"
+    linter_tab_id
     linter_content_id
     
 let navigation_linter_content linter_content =
   model_simple_content
     linter_content
     linter_content_id
-    
-let warning_content_id warning_entry =
-  "warning-" ^ (string_of_int warning_entry.id) ^ "-content"
 
 let navigation_warning_tab warning_entry =
   let close_tab tab =
     if navigation_is_active_tab tab then begin
-      navigation_set_active_tab tab
+      let content_id = Js.string (warning_content_id warning_entry) in
+      let content =
+	List.find (fun content -> content##id = content_id) (get_content_list ())
+      in
+      navigation_set_active_tab (get_default_tab ());
+      navigation_set_active_content (get_default_content ());
+      navigation_set_unactive_content content
     end;
     dynamic_navigation_tab_remove warning_entry;
     Dom.removeChild dom_tabs tab
   in 
   model_closable_tab
     (string_of_int warning_entry.id)
+    (warning_tab_id warning_entry)
     (warning_content_id warning_entry)
     close_tab
 						    
@@ -193,6 +249,8 @@ let init home_content linter_content warnings_and_contents =
   let nav_home_content = navigation_home_content home_content in
   navigation_set_active_tab nav_home_tab;
   navigation_set_active_content nav_home_content;
+  default_tab := Some nav_home_tab;
+  default_content := Some nav_home_content;
   Dom.appendChild dom_tabs nav_home_tab;
   Dom.appendChild dom_tabs (navigation_linter_tab ());
   Dom.appendChild dom_contents nav_home_content;
@@ -202,7 +260,7 @@ let init home_content linter_content warnings_and_contents =
 		  Dom.appendChild dom_contents wcontent
 	    end wcontents
 (* *)
-    
+	    
 let navigation_open_warning_tab_content warning =
   if not (dynamic_navigation_tab_is_open warning) then begin
     let tab = navigation_warning_tab warning in
