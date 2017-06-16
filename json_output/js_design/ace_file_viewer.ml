@@ -67,7 +67,9 @@ let create_ocaml_code_viewer div warning =
   code_viewer_register_warning ace warning
 
 let set_div_ocaml_code_view warning =
-  let code_div = find_component "code" (***** code id dans lint_web ****) in
+  let code_div =
+    find_component "ocp-code-viewer" (***** code id dans lint_web ****)
+  in
   create_ocaml_code_viewer (Tyxml_js.To_dom.of_div code_div) warning
 
 (*** utils function ***)

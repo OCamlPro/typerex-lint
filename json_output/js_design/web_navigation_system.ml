@@ -76,12 +76,12 @@ let navigation_set_active_content content =
 let navigation_set_unactive_content content =
   content##classList##remove (Js.string "in");
   content##classList##remove (Js.string "active")
-
+	 
 let model_simple_tab name tab_id content_id =
   let tab = 
     li
       ~a:[
-	a_id tab_id
+	a_id tab_id;
       ]
       [
 	a
@@ -115,7 +115,7 @@ let model_closable_tab name tab_id content_id on_click =
   let tab = 
     li
        ~a:[
-	a_id tab_id
+	a_id tab_id;
       ]
       [
 	a_tab

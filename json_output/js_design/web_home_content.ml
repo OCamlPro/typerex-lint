@@ -62,18 +62,21 @@ let warnings_table_head =
 	  th [pcdata "Warning"];
 	]
     ]
-  
+    
 let warnings_table warnings_entries =
-  tablex
-    ~a:[
-      a_id "summary-table";
-      a_class ["display"];
-      (* setAttribute(Js.string "cellspacing", Js.string "0"); *)
-      (* setAttribute(Js.string "width", Js.string "100%"); *)
-    ]
-    ~thead:warnings_table_head
-    [(tbody (List.map warnings_table_entry warnings_entries))]
-
+  let table =
+    tablex
+      ~a:[
+	a_id "summary-table";
+	(* setAttribute(Js.string "cellspacing", Js.string "0"); *)
+	(* setAttribute(Js.string "width", Js.string "100%"); *)
+      ]
+      ~thead:warnings_table_head
+      [(tbody (List.map warnings_table_entry warnings_entries))]
+  in
+  Web_data_table.set table;
+  table
+    
 let content warnings_entries =
   div
     [

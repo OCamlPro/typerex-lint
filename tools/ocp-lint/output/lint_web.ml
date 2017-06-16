@@ -67,8 +67,8 @@ let escaped_copy reader out_fd =
        ignore (Unix.write out_fd write_buf 0 !write_pos : int);
        copy_loop ()
      end in
-   copy_loop ()
-	     
+  copy_loop ()
+
 let dump_js_string out_fd s =
    let i = ref 0 in
    let len = String.length s in
@@ -99,14 +99,14 @@ let emit_page name page =
   let fmt = Format.formatter_of_out_channel file in
   pp () fmt page; (* pretty print *)
   close_out file
-	     
+
 let output_path =
   "json_output/static/"
 
-let full_path_of_js fname =     
+let full_path_of_js fname =
   "js/" ^ fname ^ ".js"
-    
-let full_path_of_css fname =     
+
+let full_path_of_css fname =
   "css/" ^ fname ^ ".css"
 
 let warnings_database_file =
@@ -120,15 +120,12 @@ let plugins_database_file =
 
 let plugins_database_var =
   "plugins_json"
-    
-let src_viewer_id =
-  "code"
 
 let html_of_index =
   let css_files = [
     "dataTables.min";
     "bootstrap.min";
-    "adjustment";
+    "adjustment_bootstrap";
   ] in
   let js_files = [
     warnings_database_file;
@@ -139,7 +136,7 @@ let html_of_index =
     "bootstrap.min";
     "jquery-1.12.4"; (*** 11 ***)
     "jquery.dataTables.min";
-    "dt"; (****)
+    "data_table";
   ] in
   html
     begin head
@@ -153,21 +150,24 @@ let html_of_index =
          script ~a:[a_src (Xml.uri_of_string (full_path_of_js src))] (pcdata "")
        end js_files)
     end
-    
+
 let html_of_src_viewer src =
+  let src_viewer_id = (* todo global pour etre utiliser dans js of ocaml *)
+    "ocp-code-viewer"
+  in
   let style =
     "position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
   in
   div
     ~a:[
       a_id src_viewer_id;
-      a_style style
+      a_style style;
     ]
     [pcdata src]
-	  
+
 let html_of_ocaml_src fname hash src =
   let css_files = [
-    "tmp_warning";
+    "adjustment_ace";
   ] in
   let js_files = [
     "ace_binding";
@@ -209,7 +209,7 @@ let print fmt path db = (* renommer *)
     (output_path ^ "js/" ^ plugins_database_file ^ ".js") (****)
     plugins_database_var
     json_plugins;
-  
+
   Hashtbl.iter begin fun file_name (hash,plugin_map) ->
 
     let hash = Digest.to_hex hash in
@@ -218,7 +218,7 @@ let print fmt path db = (* renommer *)
       |> List.filter begin fun entry ->
 	   entry.file_name = file_name
 	 end
-      |> json_of_database_warning_entries	     
+      |> json_of_database_warning_entries
       |> Yojson.Basic.pretty_to_string
     in
 
@@ -228,11 +228,11 @@ let print fmt path db = (* renommer *)
       "json"
       filterjson;
     (****)
-    
+
     emit_page
       (output_path ^ hash  ^ ".html")
-      (html_of_ocaml_src file_name hash (Lint_utils.read_file file_name))  
+      (html_of_ocaml_src file_name hash (Lint_utils.read_file file_name))
   end db;
   emit_page
     (output_path ^ "index.html")
-    html_of_index	     
+    html_of_index
