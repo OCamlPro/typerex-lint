@@ -29,19 +29,14 @@ let warning_content_code_view_body warning_entry =
     ^ ".html#"
     ^ (string_of_int warning_entry.id)
   in
-  let code_style =
-    "width:100%; height:100%; border:none; border-radius:0 0 4px 4px;"
-  in
   div
     ~a:[
       a_class ["panel-body"];
-      a_style "padding:0; height:170px";
     ]
     [
       iframe
 	~a:[
 	  a_src href;
-	  a_style code_style;
 	]
 	[]
     ]
@@ -50,7 +45,6 @@ let warning_content_code_view warning_entry =
   div
     ~a:[
       a_class ["panel"; "panel-default"];
-      a_style "margin:0 50px 20px 50px";
     ]
     [
       warning_content_code_view_header warning_entry;
@@ -68,8 +62,8 @@ let warning_content warning_entry plugin_entry =
   in
   div
     [
-      h3 ~a:[a_style "margin-left:16px"] [pcdata warning_desc];
-      h3 ~a:[a_style "margin-left:16px"] [pcdata linter_desc];
+      h3 [pcdata warning_desc];
+      h3 [pcdata linter_desc];
       br ();
       warning_content_code_view warning_entry;
     ]

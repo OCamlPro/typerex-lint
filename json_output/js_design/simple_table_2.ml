@@ -26,7 +26,6 @@ let main_page warnings_entries plugins_entries =
   div
     [
       Web_navigation_system.tabs;
-      br ();
       Web_navigation_system.contents;
     ]
 

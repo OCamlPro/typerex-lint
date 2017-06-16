@@ -110,12 +110,16 @@ let model_closable_tab name tab_id content_id on_click =
 	a_href ("#" ^ content_id);
 	a_user_data "toggle" "tab";
       ]
-      [close_button; pcdata name]
+      [
+	close_button;
+	span [pcdata name];
+      ]
   in
   let tab = 
     li
        ~a:[
-	a_id tab_id;
+	 a_id tab_id;
+	 a_class ["closableTab"];
       ]
       [
 	a_tab

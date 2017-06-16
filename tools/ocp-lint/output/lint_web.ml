@@ -125,6 +125,7 @@ let html_of_index =
   let css_files = [
     "dataTables.min";
     "bootstrap.min";
+    "adjustment_dataTables";
     "adjustment_bootstrap";
   ] in
   let js_files = [
