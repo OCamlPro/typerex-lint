@@ -14,7 +14,7 @@ let warnings_table_col_linter warning_entry =
 let warnings_table_col_warning warning_entry =
   p [pcdata warning_entry.warning_result.output]
 
-let warnings_table_entry warning_entry =
+let warnings_table_entry warning_entry plugin_entry =
   let tr = 
     tr
       [
@@ -26,7 +26,9 @@ let warnings_table_entry warning_entry =
   in
   (* todo in datatable.ml *)
   (Tyxml_js.To_dom.of_element tr)##onclick <-Dom_html.handler begin fun _ ->
-    Web_navigation_system.navigation_open_warning_tab_content warning_entry;
+    Web_navigation_system.navigation_open_warning_tab_content
+      warning_entry
+      (Web_warning_content.warning_content warning_entry plugin_entry);
     Js._true
   end;
   (* *)
@@ -44,7 +46,7 @@ let warnings_table_head =
 	]
     ]
     
-let warnings_table warnings_entries =
+let warnings_table warnings_entries plugins_entries =
   let table =
     tablex
       ~a:[
@@ -52,13 +54,17 @@ let warnings_table warnings_entries =
 	(* setAttribute(Js.string "width", Js.string "100%"); *)
       ]
       ~thead:warnings_table_head
-      [(tbody (List.map warnings_table_entry warnings_entries))]
+      [(tbody (List.map begin fun warning ->
+	          warnings_table_entry
+		    warning
+		    (Web_utils.find_plugin_entry warning plugins_entries)
+	       end warnings_entries))]
   in
   Web_data_table.set table;
   table
     
-let content warnings_entries =
+let content warnings_entries plugins_entries =
   div
     [
-      warnings_table warnings_entries;
+      warnings_table warnings_entries plugins_entries;
     ]

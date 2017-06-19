@@ -3,98 +3,149 @@ open Lint_warning_types
 open Lint_warning_json (****)
 open Lint_plugin_json
 
-type dynamic_navigation_element =
-    database_warning_entry
+type navigation_element =
+  | HomeElement
+  | LinterElement
+  | WarningElement of database_warning_entry
 
-type dynamic_navigation_value = {
-  tab_is_open : bool;
-  content_is_created : bool;
+type navigation_value = {
+  dom_tab : Dom_html.element Js.t;
+  dom_content : Dom_html.element Js.t;
+  mutable tab_is_created : bool;
+  mutable content_is_created : bool;
 }
       
-module DynamicNavigationElement =
+module NavigationElement =
   struct
-    type t = dynamic_navigation_element
-    let equal = (* *) (=) (* *)
+    type t = navigation_element
+    let equal x y =
+      match x,y with
+      | HomeElement, HomeElement -> true
+      | LinterElement, LinterElement -> true
+      | WarningElement x, WarningElement y -> x = y
+      | _ -> false
     let hash e = 0
   end
-
-let default_dynamic_navigation_value =
-  {tab_is_open = false; content_is_created = false;}
     
-module DynamicNavigationElementHashtbl = Hashtbl.Make(DynamicNavigationElement)
+module NavigationElementHashtbl = Hashtbl.Make(NavigationElement)
 
-let opened_dynamic_elements = DynamicNavigationElementHashtbl.create 32
+let navigation_elements = NavigationElementHashtbl.create 32
 
-let dynamic_navigation_get_value dne =
-  try 
-    (DynamicNavigationElementHashtbl.find opened_dynamic_elements dne)
-  with
-  | Not_found -> default_dynamic_navigation_value
-								     
-let dynamic_navigation_tab_is_open dne =
-  let value = dynamic_navigation_get_value dne in
-  value.tab_is_open
+let tabs =
+  ul
+    ~a:[
+      a_class ["nav"; "nav-tabs"];
+    ]
+    []
+    
+let dom_tabs =
+  Tyxml_js.To_dom.of_element tabs
+			     
+let contents =
+  div
+    ~a:[
+      a_class ["tab-content"];
+    ]
+    []
+    
+let dom_contents = 
+  Tyxml_js.To_dom.of_element contents
 
-let dynamic_navigation_content_is_created dne =
-  let value = dynamic_navigation_get_value dne in
-  value.content_is_created
-		       
-let dynamic_navigation_tab_open dne =
-  let value = dynamic_navigation_get_value dne in
-  DynamicNavigationElementHashtbl.add
-    opened_dynamic_elements
-    dne
-    {value with tab_is_open = true;}
+let navigation_value_is_active nav_val =
+  Js.to_bool (nav_val.dom_tab##classList##contains (Js.string "active"))
+			     
+let navigation_value_set_active nav_val =
+  nav_val.dom_tab##classList##add (Js.string "active");
+  nav_val.dom_content##classList##add (Js.string "in");
+  nav_val.dom_content##classList##add (Js.string "active")
 
-let dynamic_navigation_content_create dne =
-  let value = dynamic_navigation_get_value dne in
-  DynamicNavigationElementHashtbl.add
-    opened_dynamic_elements
-    dne
-    {value with content_is_created = true;}
+let navigation_value_set_unactive nav_val =
+  nav_val.dom_tab##classList##remove (Js.string "active");
+  nav_val.dom_content##classList##remove (Js.string "in");
+  nav_val.dom_content##classList##remove (Js.string "active")
 
-let dynamic_navigation_tab_close dne =
-  let value = dynamic_navigation_get_value dne in
-  DynamicNavigationElementHashtbl.add
-    opened_dynamic_elements
-    dne
-    {value with tab_is_open = false;}
-		       
-let navigation_is_active_tab tab =
-  Js.to_bool (tab##classList##contains (Js.string "active"))
+let navigation_element_static_create ne tab content =
+  let tab = Tyxml_js.To_dom.of_element tab in
+  let content = Tyxml_js.To_dom.of_element content in
+  NavigationElementHashtbl.add navigation_elements ne {
+    dom_tab = tab;
+    dom_content = content;
+    tab_is_created = true;
+    content_is_created = true;
+  };
+  Dom.appendChild dom_tabs tab;
+  Dom.appendChild dom_contents content
 
-let navigation_set_active_tab tab =
-  tab##classList##add (Js.string "active")
-
-let navigation_set_unactive_tab tab =
-  tab##classList##remove (Js.string "active")
-
-let navigation_set_active_content content =
-  content##classList##add (Js.string "in");
-  content##classList##add (Js.string "active")
-
-let navigation_set_unactive_content content =
-  content##classList##remove (Js.string "in");
-  content##classList##remove (Js.string "active")
-	 
-let model_simple_tab name tab_id content_id =
-  let tab = 
-    li
-      ~a:[
-	a_id tab_id;
-      ]
-      [
-	a
-          ~a:[
-	    a_href ("#" ^ content_id);
-	    a_user_data "toggle" "tab";
-	  ]
-	  [pcdata name]
-      ]
+let navigation_element_dynamic_create ne tab_creator content_creator =
+  let nav_val =
+    try
+      NavigationElementHashtbl.find navigation_elements ne
+    with
+    | Not_found ->
+       let default_nav_val = {
+         dom_tab = Tyxml_js.To_dom.of_element (tab_creator ());
+         dom_content = Tyxml_js.To_dom.of_element (content_creator ());
+         tab_is_created = false;
+	 content_is_created = false;
+       }
+       in
+       NavigationElementHashtbl.add navigation_elements ne default_nav_val;
+       default_nav_val
   in
-  Tyxml_js.To_dom.of_element tab
+  if not nav_val.tab_is_created then begin
+    Dom.appendChild dom_tabs nav_val.dom_tab;
+    nav_val.tab_is_created <- true;
+    if not nav_val.content_is_created then begin
+      Dom.appendChild dom_contents nav_val.dom_content;
+      nav_val.content_is_created <- true;
+    end
+  end
 
-let model_closable_tab name tab_id content_id on_click =
+let navigation_element_close ne =
+  let nav_val = NavigationElementHashtbl.find navigation_elements ne in
+  let default = NavigationElementHashtbl.find navigation_elements HomeElement in
+  if navigation_value_is_active nav_val then begin
+    navigation_value_set_active default
+  end;
+  nav_val.tab_is_created <- false;
+  navigation_value_set_unactive nav_val;
+  Dom.removeChild dom_tabs nav_val.dom_tab
+
+let navigation_element_set_active ne =
+  let nav_val = NavigationElementHashtbl.find navigation_elements ne in
+  navigation_value_set_active nav_val
+		  
+let navigation_element_tab_id = function
+  | HomeElement ->
+     "home-tab"
+  | LinterElement ->
+     "linters-tab"
+  | WarningElement warning_entry ->
+     "warning-" ^ (string_of_int warning_entry.id) ^ "-tab"
+
+let navigation_element_content_id = function
+  | HomeElement ->
+     "home-content"
+  | LinterElement ->
+     "linters-content"
+  | WarningElement warning_entry ->
+     "warning-" ^ (string_of_int warning_entry.id) ^ "-content"
+						    
+let model_simple_tab name ne =
+  li
+    ~a:[
+      a_id (navigation_element_tab_id ne);
+    ]
+    [
+      a
+        ~a:[
+	  a_href ("#" ^ (navigation_element_content_id ne));
+	  a_user_data "toggle" "tab";
+	  ]
+	[pcdata name]
+    ]
+    
+let model_closable_tab name ne =
   let close_button =
     button
       ~a:[
@@ -107,7 +158,7 @@ let model_closable_tab name tab_id content_id on_click =
   let a_tab =
     a
       ~a:[
-	a_href ("#" ^ content_id);
+        a_href ("#" ^ (navigation_element_content_id ne));
 	a_user_data "toggle" "tab";
       ]
       [
@@ -118,14 +169,13 @@ let model_closable_tab name tab_id content_id on_click =
   let tab = 
     li
        ~a:[
-	 a_id tab_id;
+	 a_id (navigation_element_tab_id ne);
 	 a_class ["closableTab"];
       ]
       [
 	a_tab
       ]
   in
-  let dom_tab = Tyxml_js.To_dom.of_element tab in
   (Tyxml_js.To_dom.of_element a_tab)##onclick <-Dom_html.handler begin
     fun evt ->
       Dom.preventDefault evt;
@@ -134,184 +184,41 @@ let model_closable_tab name tab_id content_id on_click =
   (Tyxml_js.To_dom.of_element close_button)##onclick <-Dom_html.handler begin
     fun evt ->
       Dom_html.stopPropagation evt;	   
-      on_click dom_tab;
+      navigation_element_close ne;
       Js._true
   end;
-  dom_tab
+  tab
 
-let model_simple_content data content_id =
-  let content =
-    div
-      ~a:[
-	a_id content_id;
-	a_class ["tab-pane"; "fade"];
-      ]
-      [data]
-  in
-  Tyxml_js.To_dom.of_element content
-			     
-let tabs =
-  ul
-    ~a:[
-      a_class ["nav"; "nav-tabs"];
-    ]
-    []
-    
-let dom_tabs =
-  Tyxml_js.To_dom.of_element tabs
-
-let contents =
+let model_simple_content data ne =
   div
     ~a:[
-      a_class ["tab-content"];
+      a_id (navigation_element_content_id ne);
+      a_class ["tab-pane"; "fade"];
     ]
-    []
+    [data]
     
-let dom_contents = 
-  Tyxml_js.To_dom.of_element contents
+let create home_content linter_content =
+  navigation_element_static_create
+    HomeElement
+    (model_simple_tab "home" HomeElement)
+    (model_simple_content home_content HomeElement);
+  navigation_element_set_active HomeElement; 
+  navigation_element_static_create
+    LinterElement
+    (model_simple_tab "linters" LinterElement)
+    (model_simple_content linter_content LinterElement);
+  tabs, contents
 
-let get_tab_list () =
-  dom_tabs##childNodes
-  |> Dom.list_of_nodeList
-  |> List.map begin fun child ->
-       Js.Opt.get
-	 (Dom_html.CoerceTo.element child)
-	 (fun () -> failwith "coerce error")
-     end
-
-let get_content_list () =
-  dom_contents##childNodes
-  |> Dom.list_of_nodeList
-  |> List.map begin fun child ->
-       Js.Opt.get
-	 (Dom_html.CoerceTo.element child)
-	 (fun () -> failwith "coerce error")
-     end
-
-let default_tab : Dom_html.element Js.t option ref = ref None
-
-let get_default_tab () =
-  match !default_tab with
-  | Some tab -> tab
-  | None -> failwith "navigation system is not init : no default tab"
-
-let default_content : Dom_html.element Js.t option ref = ref None
-
-let get_default_content () =
-  match !default_content with
-  | Some content -> content
-  | None -> failwith "navigation system is not init : no default content"
-
-let warning_content_creator_ref :
-      (Lint_warning_json.database_warning_entry ->
-       Dom_html.element Js.t) option ref =
-  ref None
-		     
-let get_warning_content_creator () =
-  match !warning_content_creator_ref with
-  | Some content -> content
-  | None -> failwith "navigation system is not init : no warning content creator"
-  
-let home_tab_id =
-  "home-tab"
-	      
-let home_content_id =
-  "home-content"
-
-let linter_tab_id =
-  "linters-tab"
-    
-let linter_content_id =
-  "linters-content"
-
-let warning_tab_id warning_entry =
-  "warning-" ^ (string_of_int warning_entry.id) ^ "-tab"
-    
-let warning_content_id warning_entry =
-  "warning-" ^ (string_of_int warning_entry.id) ^ "-content"
-
-let navigation_home_content home_content =
-  let content =
-    model_simple_content
-      home_content
-      home_content_id
+let navigation_open_warning_tab_content warning warning_content =
+  (* todo rename *)
+  let warning_element = WarningElement warning in
+  let tab_creator () =
+    model_closable_tab (string_of_int warning.id) warning_element
   in
-  navigation_set_active_content content;
-  content
-						    
-let navigation_home_tab () =
-  model_simple_tab
-    "home"
-    home_tab_id
-    home_content_id
-
-let navigation_linter_content linter_content =
-  model_simple_content
-    linter_content
-    linter_content_id
-    
-let navigation_linter_tab () =
-  model_simple_tab
-    "linters"
-    linter_tab_id
-    linter_content_id
-
-let navigation_warning_content warning_entry warning_content =
-  model_simple_content
-    warning_content
-    (warning_content_id warning_entry)
-
-let navigation_warning_tab warning_entry =
-  let close_tab tab =
-    if navigation_is_active_tab tab then begin
-      let content_id = Js.string (warning_content_id warning_entry) in
-      let content =
-	List.find (fun content -> content##id = content_id) (get_content_list ())
-      in
-      navigation_set_active_tab (get_default_tab ());
-      navigation_set_active_content (get_default_content ());
-      navigation_set_unactive_content content
-    end;
-    dynamic_navigation_tab_close warning_entry;
-    Dom.removeChild dom_tabs tab
+  let content_creator () =
+    model_simple_content warning_content warning_element
   in
-  let tab =
-    model_closable_tab
-      (string_of_int warning_entry.id)
-      (warning_tab_id warning_entry)
-      (warning_content_id warning_entry)
-      close_tab
-  in
-  tab
-    
-let init home_content linter_content warning_content_creator =
-  let nav_home_tab = navigation_home_tab () in
-  let nav_home_content = navigation_home_content home_content in
-  navigation_set_active_tab nav_home_tab;
-  navigation_set_active_content nav_home_content;
-  default_tab := Some nav_home_tab;
-  default_content := Some nav_home_content;
-  warning_content_creator_ref := Some warning_content_creator;
-  Dom.appendChild dom_tabs nav_home_tab;
-  Dom.appendChild dom_tabs (navigation_linter_tab ());
-  Dom.appendChild dom_contents nav_home_content;
-  Dom.appendChild dom_contents (navigation_linter_content linter_content)
-	    
-let navigation_open_warning_tab_content warning =
-  if not (dynamic_navigation_tab_is_open warning) then begin
-    let tab = navigation_warning_tab warning in
-    Dom.appendChild dom_tabs tab;
-    dynamic_navigation_tab_open warning
-  end;
-  if not (dynamic_navigation_content_is_created warning) then begin
-    let creator = get_warning_content_creator () in
-    let warning_content =
-      navigation_warning_content
-	warning
-	(Tyxml_js.Of_dom.of_element (creator warning))
-    in
-    Dom.appendChild dom_contents warning_content;
-    dynamic_navigation_content_create warning
-  end
-							 
-
+  navigation_element_dynamic_create
+    (WarningElement warning)
+    tab_creator
+    content_creator

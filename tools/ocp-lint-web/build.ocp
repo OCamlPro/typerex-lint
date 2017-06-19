@@ -27,11 +27,12 @@ begin program "ocp-lint-web-main"
    has_asm = false
    pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
    files = [
+     "web_utils"
      "web_data_table.ml"
+     "web_warning_content.ml"
      "web_navigation_system.ml"
      "web_home_content.ml"
      "web_linter_content.ml"
-     "web_warning_content.ml"
      "web_main.ml"
    ]
 

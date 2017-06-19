@@ -6,21 +6,15 @@ open Lint_plugin_json
 let doc = Dom_html.document
 
 let main_page warnings_entries plugins_entries =
-  let warning_content_creator warning =
-    Tyxml_js.To_dom.of_element (
-	Web_warning_content.warning_content
-	  warning
-	  (Web_utils.find_plugin_entry warning plugins_entries)
-      )
+  let tabs, contents =
+    Web_navigation_system.create
+      (Web_home_content.content warnings_entries plugins_entries)
+      Web_linter_content.content
   in
-  Web_navigation_system.init
-    (Web_home_content.content warnings_entries)
-    Web_linter_content.content
-    warning_content_creator;
   div
     [
-      Web_navigation_system.tabs;
-      Web_navigation_system.contents;
+      tabs;
+      contents;
     ]
 
 let load_main_page warnings_entries plugins_entries =
