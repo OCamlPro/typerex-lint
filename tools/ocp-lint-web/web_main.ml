@@ -5,18 +5,12 @@ open Lint_plugin_json
        
 let doc = Dom_html.document
 
-let find_plugin_entry warning_entry plugins_entries =
-  List.find begin fun plugin_entry ->
-    warning_entry.plugin_name = plugin_entry.plugin_entry_plugin_name
-    && warning_entry.linter_name = plugin_entry.plugin_entry_linter_name
-  end plugins_entries
-	    
 let main_page warnings_entries plugins_entries =
   let warning_content_creator warning =
     Tyxml_js.To_dom.of_element (
 	Web_warning_content.warning_content
 	  warning
-	  (find_plugin_entry warning plugins_entries)
+	  (Web_utils.find_plugin_entry warning plugins_entries)
       )
   in
   Web_navigation_system.init

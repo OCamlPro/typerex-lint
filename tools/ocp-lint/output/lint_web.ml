@@ -101,7 +101,7 @@ let emit_page name page =
   close_out file
 
 let output_path =
-  "json_output/static/"
+  "tools/ocp-lint-web/static/"
 
 let full_path_of_js fname =
   "js/" ^ fname ^ ".js"
@@ -120,6 +120,9 @@ let plugins_database_file =
 
 let plugins_database_var =
   "plugins_json"
+
+let web_static_gen_file file_hash =
+  "ocp_lint_web_generated_" ^ (Digest.to_hex file_hash)
 
 let html_of_index =
   let css_files = [
@@ -175,7 +178,7 @@ let html_of_ocaml_src fname hash src =
     "ace";
     (* -- *)
     "ace_file_viewer";
-    hash
+    (web_static_gen_file hash);
     (* --  *)
   ] in
   html
@@ -213,7 +216,6 @@ let print fmt path db = (* renommer *)
 
   Hashtbl.iter begin fun file_name (hash,plugin_map) ->
 
-    let hash = Digest.to_hex hash in
     let filterjson =
       w_entries
       |> List.filter begin fun entry ->
@@ -225,13 +227,13 @@ let print fmt path db = (* renommer *)
 
     (****)
     dump_js_var_file
-      ("json_output/static/js/" ^ hash ^ ".js")
+      (output_path ^ "js/" ^ (web_static_gen_file hash) ^ ".js")
       "json"
       filterjson;
     (****)
 
     emit_page
-      (output_path ^ hash  ^ ".html")
+      (output_path ^ (web_static_gen_file hash) ^ ".html")
       (html_of_ocaml_src file_name hash (Lint_utils.read_file file_name))
   end db;
   emit_page

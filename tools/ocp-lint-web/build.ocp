@@ -22,17 +22,17 @@ camlp4_optcomp = [
   "%{optcomp_SRC_DIR}%/optcomp.cma" optcomp_opt
 ]
 
-begin program "test-js-client"
+begin program "ocp-lint-web-main"
 
    has_asm = false
    pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
    files = [
-     "js_design/web_data_table.ml"
-     "js_design/web_navigation_system.ml"
-     "js_design/web_home_content.ml"
-     "js_design/web_linter_content.ml"
-     "js_design/web_warning_content.ml"
-     "js_design/simple_table_2.ml"
+     "web_data_table.ml"
+     "web_navigation_system.ml"
+     "web_home_content.ml"
+     "web_linter_content.ml"
+     "web_warning_content.ml"
+     "web_main.ml"
    ]
 
    requires = [
@@ -47,8 +47,8 @@ begin program "test-js-client"
 
    build_targets = [ "static/js/json_output.js" ]
    client_byte = [ %string
-     ( strings = [ "%{test-js-client_FULL_DST_DIR}%/"
-                   "test-js-client.byte"
+     ( strings = [ "%{ocp-lint-web-main_FULL_DST_DIR}%/"
+                   "ocp-lint-web-main.byte"
             ] ) ]
    build_rules = [
       "static/js/json_output.js" (
@@ -58,7 +58,7 @@ begin program "test-js-client"
             (* Use these options to debug Javascript:
                "-sourcemap" "-pretty" "-noinline" *)
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
-	     "js_design/ocplib_unix.js"
+	     "ocplib_unix.js"
              "-o" "static/js/json_output.js"
               client_byte }
        ]
@@ -67,12 +67,12 @@ begin program "test-js-client"
    ]
 end
 
-begin program "test-js-ace"
+begin program "ocp-lint-web-fileviewer"
 
    has_asm = false
    pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
    files = [
-     "js_design/ace_file_viewer.ml"
+     "ace_file_viewer.ml"
    ]
 
    requires = [
@@ -89,8 +89,8 @@ begin program "test-js-ace"
 
    build_targets = [ "static/js/ace_file_viewer.js" ]
    client_byte = [ %string
-     ( strings = [ "%{test-js-ace_FULL_DST_DIR}%/"
-                   "test-js-ace.byte"
+     ( strings = [ "%{ocp-lint-web-fileviewer_FULL_DST_DIR}%/"
+                   "ocp-lint-web-fileviewer.byte"
             ] ) ]
    build_rules = [
       "static/js/ace_file_viewer.js" (
@@ -100,7 +100,7 @@ begin program "test-js-ace"
             (* Use these options to debug Javascript:
                "-sourcemap" "-pretty" "-noinline" *)
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
-	     "js_design/ocplib_unix.js"
+	     "ocplib_unix.js"
              "-o" "static/js/ace_file_viewer.js"
               client_byte }
        ]

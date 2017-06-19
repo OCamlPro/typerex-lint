@@ -18,14 +18,22 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-val warnings_database_file : string
+val warnings_database_file:
+  string
 
-val warnings_database_var : string
+val warnings_database_var:
+  string
 
-val plugins_database_file : string
+val plugins_database_file:
+  string
 
-val plugins_database_var : string
-			      
+val plugins_database_var:
+  string
+
+val web_static_gen_file:
+  Digest.t ->
+  string
+  
 val print :
   Format.formatter ->
   string ->
