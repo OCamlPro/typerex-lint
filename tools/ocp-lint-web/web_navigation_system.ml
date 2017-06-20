@@ -153,18 +153,6 @@ let model_closable_tab name ne =
 	a_class ["close"; "closeTab"];	      
       ]
       [pcdata "×"]
-      
-  in
-  let a_tab =
-    a
-      ~a:[
-        a_href ("#" ^ (navigation_element_content_id ne));
-	a_user_data "toggle" "tab";
-      ]
-      [
-	close_button;
-	span [pcdata name];
-      ]
   in
   let tab = 
     li
@@ -173,16 +161,20 @@ let model_closable_tab name ne =
 	 a_class ["closableTab"];
       ]
       [
-	a_tab
+        a
+	  ~a:[
+            a_href ("#" ^ (navigation_element_content_id ne));
+	    a_user_data "toggle" "tab";
+	  ]
+	  [
+	    close_button;
+	    span [pcdata name];
+	  ]
       ]
   in
-  (Tyxml_js.To_dom.of_element a_tab)##onclick <-Dom_html.handler begin
-    fun evt ->
-      Dom.preventDefault evt;
-      Js._true
-  end;
   (Tyxml_js.To_dom.of_element close_button)##onclick <-Dom_html.handler begin
     fun evt ->
+      Dom.preventDefault evt;
       Dom_html.stopPropagation evt;	   
       navigation_element_close ne;
       Js._true
