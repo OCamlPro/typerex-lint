@@ -34,6 +34,7 @@ type database_warning_entry = {
   id : int;
   file_name : string;
   hash : Digest.t;
+  lines_count : int;
   plugin_name : string;
   linter_name : string;
   linter_version : string;

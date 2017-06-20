@@ -25,11 +25,7 @@ let warning_content_code_view_body warning_entry =
       a_class ["panel-body"];
     ]
     [
-      iframe
-	~a:[
-	  a_src (Web_utils.warning_href warning_entry);
-	]
-	[]
+      Web_code_viewer.warning_code_viewer warning_entry;
     ]
     
 let warning_content_code_view warning_entry =

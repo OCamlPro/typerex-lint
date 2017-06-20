@@ -47,8 +47,11 @@ let file_loc_of_loc loc =
        
 type database_warning_entry = {
   id : int;
+  
   file_name : string;
   hash : Digest.t;
+  lines_count : int;
+  
   plugin_name : string;
   linter_name : string;
   linter_version : string;
@@ -140,6 +143,7 @@ let json_of_database_warning_entry entry =
      ("id", `Int entry.id);
      ("file_name", `String entry.file_name);
      ("hash", json_of_digest entry.hash);
+     ("lines_count", `Int entry.lines_count);
      ("plugin_name", `String entry.plugin_name);
      ("linter_name", `String entry.linter_name);
      ("linter_version", `String entry.linter_version);
@@ -150,6 +154,7 @@ let database_warning_entry_of_json json  =
   let id = json |> member "id" |> to_int in
   let file_name = json |> member "file_name" |> to_string in
   let hash = json |> member "hash" |> digest_of_json in
+  let lines_count = json |> member "lines_count" |> to_int in
   let plugin_name = json |> member "plugin_name" |> to_string in
   let linter_name = json |> member "linter_name" |> to_string in
   let linter_version = json |> member "linter_version" |> to_string in
@@ -158,6 +163,7 @@ let database_warning_entry_of_json json  =
     id = id;
     file_name = file_name;
     hash = hash;
+    lines_count = lines_count;
     plugin_name = plugin_name;
     linter_name = linter_name;
     linter_version = linter_version;
@@ -169,7 +175,22 @@ let json_of_database_warning_entries entries =
 
 let database_warning_entries_of_json json  =
   json |> to_list |> List.map database_warning_entry_of_json
-  
+
+(* todo mv in utils *)
+let lines_count_of_file file_name =
+  let n = ref 0 in
+  let file = open_in file_name in
+  begin try
+    while true do
+      incr n
+    done
+  with
+  | End_of_file ->
+     close_in file
+  end;
+  !n
+(* *)
+			      
 let raw_entries ~db =
   let _,entries = 
     Hashtbl.fold begin fun file_name (hash, plugin_map) acc ->
@@ -180,6 +201,7 @@ let raw_entries ~db =
 	      id = id;
 	      file_name = file_name;
 	      hash = hash;
+	      lines_count = lines_count_of_file file_name;
 	      plugin_name = plugin_name;
 	      linter_name = linter_name;
 	      linter_version = linter_result.res_version;

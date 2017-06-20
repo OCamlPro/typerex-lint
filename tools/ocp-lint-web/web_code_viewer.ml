@@ -1,7 +1,10 @@
+open Tyxml_js.Html
 open Ace
 open Lint_warning_types
 open Lint_warning_json
 
+(* todo ajouter fonction pour voir tout le fichier avec les warnings *)
+       
 (*******)
 let find_component id =
   match Js_utils.Manip.by_id id with
@@ -17,6 +20,9 @@ let theme =
 let font_size =
   14
 
+let line_size =
+  17
+    
 let context_line_number =
   3
   
@@ -30,8 +36,9 @@ let code_viewer_register_warning ace warning =
     | None ->
        failwith "no location for this warning"
   in
+  let length = Ace.get_length ace in (* todo change *)
   let begin_context = min (begin_line - 1) context_line_number in
-  let end_context = min ((Ace.get_length ace) - end_line) context_line_number in
+  let end_context = min (length - end_line) context_line_number in
   let begin_with_context = begin_line - begin_context in
   let end_with_context = end_line + end_context in
   (***** verifier si warning au limite *****)
@@ -86,3 +93,36 @@ let onload _ =
 
 let () =
   Dom_html.window##onload <- Dom_html.handler onload
+
+let file_code_viewer = (* todo *)
+  ()
+					      
+let warning_code_viewer warning_entry =
+  let warning = warning_entry.warning_result in
+  (* todo fun *)
+  let begin_line, end_line =
+    match file_loc_of_loc warning.loc with
+    | Some (Floc_line line) ->
+       line, line
+    | Some (Floc_lines_cols (bline, _, eline, _)) ->
+       bline, eline
+    | None ->
+       failwith "no location for this warning"
+  in
+  let length = warning_entry.lines_count in
+  let begin_context = min (begin_line - 1) context_line_number in
+  let end_context = min (length - end_line) context_line_number in
+  let begin_with_context = begin_line - begin_context in
+  let end_with_context = end_line + end_context in
+  (*          *)
+
+  Firebug.console##log (end_with_context - begin_with_context);
+  let height =
+    line_size * (end_with_context - begin_with_context + 2)
+  in
+  iframe
+    ~a:[
+      a_src (Web_utils.warning_href warning_entry);
+      a_style ("height: " ^ (string_of_int height) ^ "px");
+    ]
+    []
