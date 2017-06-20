@@ -20,19 +20,15 @@ let main_page warnings_entries plugins_entries =
 let load_main_page warnings_entries plugins_entries =
   let body = main_page warnings_entries plugins_entries in
   Dom.appendChild (doc##body) (Tyxml_js.To_dom.of_element body)
-		  
-let json_from_js_var var =
-  let (str : Js.js_string Js.t) = Js.Unsafe.variable var in
-  Yojson.Basic.from_string (Js.to_string str)
-			   
+		  			   
 let onload _ =
   let warnings_entries =
     database_warning_entries_of_json
-      (json_from_js_var Lint_web.warnings_database_var)
+      (Web_utils.json_from_js_var Lint_web.warnings_database_var)
   in
   let plugins_entries =
     plugins_database_entries_of_json
-      (json_from_js_var Lint_web.plugins_database_var)
+      (Web_utils.json_from_js_var Lint_web.plugins_database_var)
   in
   load_main_page warnings_entries plugins_entries;
   Js._false

@@ -68,12 +68,13 @@ begin program "ocp-lint-web-main"
    ]
 end
 
-begin program "ocp-lint-web-fileviewer"
+begin program "ocp-lint-web-codeviewer"
 
    has_asm = false
    pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
    files = [
-     "ace_file_viewer.ml"
+     "web_utils"
+     "web_code_viewer.ml"
    ]
 
    requires = [
@@ -90,8 +91,8 @@ begin program "ocp-lint-web-fileviewer"
 
    build_targets = [ "static/js/ace_file_viewer.js" ]
    client_byte = [ %string
-     ( strings = [ "%{ocp-lint-web-fileviewer_FULL_DST_DIR}%/"
-                   "ocp-lint-web-fileviewer.byte"
+     ( strings = [ "%{ocp-lint-web-codeviewer_FULL_DST_DIR}%/"
+                   "ocp-lint-web-codeviewer.byte"
             ] ) ]
    build_rules = [
       "static/js/ace_file_viewer.js" (
