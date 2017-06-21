@@ -18,18 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(******* deplacer ******)
-type file_loc =
-  (* line number *)
-  | Floc_line of int
-  (* begin line, begin col, end line, end col *)
-  | Floc_lines_cols of int * int * int * int
-
-val file_loc_of_loc :
-  Location.t ->
-  file_loc option    
-(***********************)
-
 type database_warning_entry = {
   id : int;
   file_name : string;

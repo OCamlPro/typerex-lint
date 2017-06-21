@@ -22,28 +22,6 @@ open Yojson.Basic
 open Yojson.Basic.Util
 open Lint_warning_types
 open Lint_db_types
-
-(******* deplacer ******)
-type file_loc =
-  | Floc_line of int
-  | Floc_lines_cols of int * int * int * int
-
-let file_loc_of_loc loc =
-  let open Location in
-  let open Lexing in
-  let col_of_pos pos = pos.pos_cnum - pos.pos_bol in
-  if not loc.loc_ghost then
-    Some (Floc_lines_cols (
-	loc.loc_start.pos_lnum,
-	col_of_pos loc.loc_start,
-	loc.loc_end.pos_lnum,
-	col_of_pos loc.loc_end
-      ))
-  else if loc.loc_start.pos_lnum != 0 then
-    Some (Floc_line loc.loc_start.pos_lnum)
-  else
-    None
-(***********************)
        
 type database_warning_entry = {
   id : int;
@@ -182,6 +160,7 @@ let lines_count_of_file file_name =
   let file = open_in file_name in
   begin try
     while true do
+      ignore (input_line file);
       incr n
     done
   with
@@ -189,6 +168,7 @@ let lines_count_of_file file_name =
      close_in file
   end;
   !n
+  (* 1000 *)
 (* *)
 			      
 let raw_entries ~db =

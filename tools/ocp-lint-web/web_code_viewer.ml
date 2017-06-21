@@ -28,6 +28,7 @@ let context_line_number =
   
 let code_viewer_register_warning ace warning =
   let begin_line, begin_col, end_line, end_col =
+    let open Web_utils in
     match file_loc_of_loc warning.loc with
     | Some (Floc_line line) ->
        line, 0, line, String.length (Ace.get_line ace (line - 1)) 
@@ -101,6 +102,7 @@ let warning_code_viewer warning_entry =
   let warning = warning_entry.warning_result in
   (* todo fun *)
   let begin_line, end_line =
+    let open Web_utils in
     match file_loc_of_loc warning.loc with
     | Some (Floc_line line) ->
        line, line
@@ -116,13 +118,12 @@ let warning_code_viewer warning_entry =
   let end_with_context = end_line + end_context in
   (*          *)
 
-  Firebug.console##log (end_with_context - begin_with_context);
   let height =
     line_size * (end_with_context - begin_with_context + 2)
   in
   iframe
     ~a:[
-      a_src (Web_utils.warning_href warning_entry);
-      a_style ("height: " ^ (string_of_int height) ^ "px");
+	a_src (Web_utils.warning_href warning_entry);
+	a_style ("height: " ^ (string_of_int height) ^ "px");
     ]
     []
