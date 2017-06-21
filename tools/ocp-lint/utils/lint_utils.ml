@@ -187,3 +187,17 @@ let read_file_struct file =
   let fstruct = input_value ic in
   close_in ic;
   fstruct
+
+let lines_count_of_file f =
+  let n = ref 0 in
+  let file = open_in f in
+  begin try
+    while true do
+      ignore (input_line file);
+      incr n
+    done
+    with
+    | End_of_file ->
+       close_in file
+  end;
+  !n

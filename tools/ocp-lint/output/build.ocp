@@ -30,10 +30,10 @@ begin library "ocp-lint-output"
   ]
 end
 
-begin library "ocp-lint-output-json"
+begin library "ocp-lint-output-web"
   files = [
-    "lint_plugin_json.ml"
-    "lint_warning_json.ml"
+    "lint_web_warning.ml"
+    "lint_web_plugin.ml"
     "lint_web.ml"
   ]
   requires = [

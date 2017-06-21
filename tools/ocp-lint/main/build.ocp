@@ -29,7 +29,7 @@ begin library "ocp-lint-lib"
   requires = [
     "findlib.dynload"
     "ocp-lint-output"
-    "ocp-lint-output-json"
+    "ocp-lint-output-web"
     "ocp-lint-api-types"
     "ocp-lint-api"
   ]

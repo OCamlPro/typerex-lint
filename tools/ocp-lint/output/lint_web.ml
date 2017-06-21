@@ -20,9 +20,9 @@
 
 open Tyxml.Html
 open Lint_db_types
-open Lint_warning_json
-open Lint_plugin_json
 open Lint_warning_types
+open Lint_web_warning
+open Lint_web_plugin
 
 let write_string fd str =
    let str = Bytes.of_string str in
@@ -62,7 +62,7 @@ let escaped_copy reader out_fd =
              write_pos := !write_pos + 4
          | c ->
              Bytes.set write_buf (!write_pos) c;
-             write_pos := !write_pos + 1
+             incr write_pos
        done;
        ignore (Unix.write out_fd write_buf 0 !write_pos : int);
        copy_loop ()
@@ -110,13 +110,13 @@ let full_path_of_css fname =
   "css/" ^ fname ^ ".css"
 
 let warnings_database_file =
-  "json_warnings_database"
+  "ocp_lint_web_json_warnings_database"
 
 let warnings_database_var =
   "warnings_json"
 
 let plugins_database_file =
-  "json_plugins_database"
+  "ocp_lint_web_json_plugins_database"
 
 let plugins_database_var =
   "plugins_json"
@@ -135,7 +135,7 @@ let html_of_index =
     warnings_database_file;
     plugins_database_file;
     "ace"; (*** tmp ***)
-    "json_output"; (******)
+    "ocp_lint_web";
     "jquery.min"; (*** 11 ***)
     "bootstrap.min";
     "jquery-1.12.4"; (*** 11 ***)
@@ -174,10 +174,9 @@ let html_of_ocaml_src fname hash src =
     "adjustment_ace";
   ] in
   let js_files = [
-    "ace_binding";
     "ace";
+    "ocp_lint_web_codeviewer";
     (* -- *)
-    "ace_file_viewer";
     (web_static_gen_file hash);
     (* --  *)
   ] in
@@ -219,8 +218,8 @@ let print fmt path db = (* renommer *)
     let filterjson =
       w_entries
       |> List.filter begin fun entry ->
-	   entry.file_name = file_name
-	 end
+           entry.file_name = file_name
+         end
       |> json_of_database_warning_entries
       |> Yojson.Basic.pretty_to_string
     in

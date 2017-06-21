@@ -1,3 +1,23 @@
+(**************************************************************************)
+(*                                                                        *)
+(*                        OCamlPro Typerex                                *)
+(*                                                                        *)
+(*   Copyright OCamlPro 2011-2016. All rights reserved.                   *)
+(*   This file is distributed under the terms of the GPL v3.0             *)
+(*   (GNU General Public Licence version 3.0).                            *)
+(*                                                                        *)
+(*     Contact: <typerex@ocamlpro.com> (http://www.ocamlpro.com/)         *)
+(*                                                                        *)
+(*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       *)
+(*  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES       *)
+(*  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND              *)
+(*  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS   *)
+(*  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN    *)
+(*  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN     *)
+(*  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE      *)
+(*  SOFTWARE.                                                             *)
+(**************************************************************************)
+
 optcomp_opt = %string(strings = [
   "-let ocaml_full_version=("
     ocaml_major_version ","
@@ -41,27 +61,28 @@ begin program "ocp-lint-web-main"
      "ace"
      "compiler-libs"
      "js_of_ocaml"
+     "jsutils"
      "ocp-lint-api-types"
-     "ocp-lint-output-json"
+     "ocp-lint-output-web"
    ]
 
    (* Also compile bytecode into javascript *)
 
-   build_targets = [ "static/js/json_output.js" ]
+   build_targets = [ "static/js/ocp_lint_web.js" ]
    client_byte = [ %string
      ( strings = [ "%{ocp-lint-web-main_FULL_DST_DIR}%/"
                    "ocp-lint-web-main.byte"
             ] ) ]
    build_rules = [
-      "static/js/json_output.js" (
+      "static/js/ocp_lint_web.js" (
        sources = [ client_byte ]
        commands = [
          { "js_of_ocaml"
             (* Use these options to debug Javascript:
                "-sourcemap" "-pretty" "-noinline" *)
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
-	     "ocplib_unix.js"
-             "-o" "static/js/json_output.js"
+	     "static/js/ocplib_unix.js"
+             "-o" "static/js/ocp_lint_web.js"
               client_byte }
        ]
        build_target = true
@@ -83,8 +104,9 @@ begin program "ocp-lint-web-codeviewer"
      "c3"
      "compiler-libs"
      "js_of_ocaml"
+     "jsutils"
      "ocp-lint-api-types"
-     "ocp-lint-output-json"
+     "ocp-lint-output-web"
      "yojson"
    ]
 
@@ -96,15 +118,15 @@ begin program "ocp-lint-web-codeviewer"
                    "ocp-lint-web-codeviewer.byte"
             ] ) ]
    build_rules = [
-      "static/js/ace_file_viewer.js" (
+      "static/js/ocp_lint_web_codeviewer.js" (
        sources = [ client_byte ]
        commands = [
          { "js_of_ocaml"
             (* Use these options to debug Javascript:
                "-sourcemap" "-pretty" "-noinline" *)
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
-	     "ocplib_unix.js"
-             "-o" "static/js/ace_file_viewer.js"
+	     "static/js/ocplib_unix.js"
+             "-o" "static/js/ocp_lint_web_codeviewer.js"
               client_byte }
        ]
        build_target = true

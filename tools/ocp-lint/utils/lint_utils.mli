@@ -57,6 +57,9 @@ val is_in_path : string -> string -> string -> bool
 (** [read_file file] get the content of the file as a string. *)
 val read_file : string -> string
 
+(** [lines_count_of_file file] get the number of lines of the file. *)
+val lines_count_of_file : string -> int
+
 (** [normalize_path root file] normalize a path given the root dir. *)
 val normalize_path : root:string -> file:string -> string
 

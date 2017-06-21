@@ -44,8 +44,3 @@ val json_of_database_warning_entries :
 val database_warning_entries_of_json :
   Yojson.Basic.json ->
   database_warning_entry list
-
-val group_by :
-  clss:(database_warning_entry -> 'a) ->
-  lst:database_warning_entry list ->
-  ('a * database_warning_entry list) list

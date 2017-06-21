@@ -153,23 +153,6 @@ let json_of_database_warning_entries entries =
 
 let database_warning_entries_of_json json  =
   json |> to_list |> List.map database_warning_entry_of_json
-
-(* todo mv in utils *)
-let lines_count_of_file file_name =
-  let n = ref 0 in
-  let file = open_in file_name in
-  begin try
-    while true do
-      ignore (input_line file);
-      incr n
-    done
-  with
-  | End_of_file ->
-     close_in file
-  end;
-  !n
-  (* 1000 *)
-(* *)
 			      
 let raw_entries ~db =
   let _,entries = 
@@ -181,7 +164,7 @@ let raw_entries ~db =
 	      id = id;
 	      file_name = file_name;
 	      hash = hash;
-	      lines_count = lines_count_of_file file_name;
+	      lines_count = Lint_utils.lines_count_of_file file_name;
 	      plugin_name = plugin_name;
 	      linter_name = linter_name;
 	      linter_version = linter_result.res_version;
@@ -192,19 +175,3 @@ let raw_entries ~db =
       end plugin_map acc 
     end db (0,[])
   in entries
-
-let group_by ~clss ~lst = (*** ptt changer implantation ***)
-  let rec aux acc = function
-    | [] -> acc
-    | (cx, x) :: y -> (*** ptt changer ***)
-       begin match acc with
-	     | (cx', x') :: y' when cx = cx' ->
-		aux ((cx, x :: x') :: y') y
-	     | _ ->
-		aux ((cx, [x]) :: acc) y
-       end
-  in
-  lst
-  |> List.map (fun x -> clss x, x) (*** ***)
-  |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
-  |> aux []
