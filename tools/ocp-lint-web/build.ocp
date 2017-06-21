@@ -82,6 +82,7 @@ begin program "ocp-lint-web-main"
                "-sourcemap" "-pretty" "-noinline" *)
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
 	     "static/js/ocplib_unix.js"
+	     "static/js/ocplib_re.js"
              "-o" "static/js/ocp_lint_web.js"
               client_byte }
        ]
@@ -126,6 +127,7 @@ begin program "ocp-lint-web-codeviewer"
                "-sourcemap" "-pretty" "-noinline" *)
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
 	     "static/js/ocplib_unix.js"
+	     "static/js/ocplib_re.js"
              "-o" "static/js/ocp_lint_web_codeviewer.js"
               client_byte }
        ]
