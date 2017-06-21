@@ -200,7 +200,7 @@ let get_keybinding_menu e =
 let show_keybindings e =
   match get_keybinding_menu e with
   | None ->
-      Firebug.console##log
+      Js_utils.js_log
         (Js.string "You should load: 'ext-keybinding_menu.js'")
   | Some o ->
       o##showKeyboardShortcuts()

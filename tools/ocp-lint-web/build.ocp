@@ -58,10 +58,10 @@ begin program "ocp-lint-web-main"
    ]
 
    requires = [
-     "ace"
      "compiler-libs"
      "js_of_ocaml"
-     "jsutils"
+     "ocplib-ace"
+     "ocplib-jsutils"
      "ocp-lint-api-types"
      "ocp-lint-output-web"
    ]
@@ -101,11 +101,11 @@ begin program "ocp-lint-web-codeviewer"
    ]
 
    requires = [
-     "ace"
      "c3"
      "compiler-libs"
      "js_of_ocaml"
-     "jsutils"
+     "ocplib-jsutils"
+     "ocplib-ace"
      "ocp-lint-api-types"
      "ocp-lint-output-web"
      "yojson"
@@ -113,7 +113,7 @@ begin program "ocp-lint-web-codeviewer"
 
    (* Also compile bytecode into javascript *)
 
-   build_targets = [ "static/js/ace_file_viewer.js" ]
+   build_targets = [ "static/js/ocp_lint_web_codeviewer.js" ]
    client_byte = [ %string
      ( strings = [ "%{ocp-lint-web-codeviewer_FULL_DST_DIR}%/"
                    "ocp-lint-web-codeviewer.byte"

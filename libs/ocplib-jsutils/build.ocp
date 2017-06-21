@@ -1,0 +1,54 @@
+(**************************************************************************)
+(*                                                                        *)
+(*                        OCamlPro Typerex                                *)
+(*                                                                        *)
+(*   Copyright OCamlPro 2011-2016. All rights reserved.                   *)
+(*   This file is distributed under the terms of the GPL v3.0             *)
+(*   (GNU General Public Licence version 3.0).                            *)
+(*                                                                        *)
+(*     Contact: <typerex@ocamlpro.com> (http://www.ocamlpro.com/)         *)
+(*                                                                        *)
+(*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       *)
+(*  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES       *)
+(*  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND              *)
+(*  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS   *)
+(*  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN    *)
+(*  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN     *)
+(*  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE      *)
+(*  SOFTWARE.                                                             *)
+(**************************************************************************)
+
+optcomp_opt = %string(strings = [
+  "-let ocaml_full_version=("
+    ocaml_major_version ","
+    ocaml_minor_version ","
+    ocaml_point_version
+  ")"
+])
+
+camlp4_optcomp_js = [
+  "camlp4o"
+  "%{optcomp_SRC_DIR}%/optcomp.cma" optcomp_opt
+  "%{js_of_ocaml_SRC_DIR}%/pa_js.cmo"
+]
+
+camlp4_js = [
+  "camlp4o"
+  "%{js_of_ocaml_SRC_DIR}%/pa_js.cmo"
+]
+
+camlp4_optcomp = [
+  "camlp4o"
+  "%{optcomp_SRC_DIR}%/optcomp.cma" optcomp_opt
+]
+
+begin library "ocplib-jsutils"
+  has_asm = false
+  files = [
+    "js_utils.ml"    ( pp = camlp4_optcomp_js )
+  ]
+  requires = [
+    "js_of_ocaml"
+    "js_of_ocaml.tyxml"
+  ]
+end
