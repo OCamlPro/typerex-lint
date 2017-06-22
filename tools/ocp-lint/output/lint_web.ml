@@ -100,16 +100,27 @@ let emit_page name page =
   pp () fmt page; (* pretty print *)
   close_out file
 
+let path_of_dir_list dirs =
+  List.fold_left begin fun acc dir ->
+    Filename.concat acc dir
+  end (List.hd dirs) (List.tl dirs) 
+	    
 let clear_dir dir =
   Lint_utils.iter_files begin fun filename ->
     let fullname = Filename.concat dir filename in
     FileGen.remove (FileGen.of_string fullname)
   end dir ~recdir:false
-
+			
+let check_flag options =
+  try
+    bool_of_string (Lint_globals.Config.get_option_value options)
+  with
+    Not_found -> true
+			
 let warnings_database_raw_entries db =
   let _,entries =
     Hashtbl.fold begin fun file_name (hash, plugin_map) acc ->
-      StringMap.fold begin fun plugin_name linter_map acc ->
+      StringMap.fold begin fun plugin_name linter_map acc ->		    
         StringMap.fold begin fun linter_name linter_result acc ->
           List.fold_left begin fun (id,acc) warning_result ->
             id + 1, {
@@ -161,15 +172,18 @@ let group_by clss lst = (*** todo changer implantation ***)
   |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
   |> aux []
 (*                             *)
-
+	    
 let output_path =
-  "tools/ocp-lint-web/static/"
+  path_of_dir_list ["tools"; "ocp-lint-web"; "static"]
 
-let full_path_of_js fname =
-  "js/" ^ fname ^ ".js"
+let path_of_js fname =
+  Filename.concat "js" (fname ^ ".js")
 
-let full_path_of_css fname =
-  "css/" ^ fname ^ ".css"
+let path_of_css fname =
+  Filename.concat "css" (fname ^ ".css")
+
+let path_of_html fname =
+  fname ^ ".html"
 
 let warnings_database_file =
   "ocp_lint_web_json_warnings_database"
@@ -208,12 +222,12 @@ let html_of_index =
     begin head
       (title (pcdata "index"))
       (List.map begin fun src ->
-        link ~rel:[`Stylesheet] ~href:(full_path_of_css src) ()
+        link ~rel:[`Stylesheet] ~href:(path_of_css src) ()
        end css_files)
     end
     begin body
       (List.map begin fun src ->
-         script ~a:[a_src (Xml.uri_of_string (full_path_of_js src))] (pcdata "")
+         script ~a:[a_src (Xml.uri_of_string (path_of_js src))] (pcdata "")
        end js_files)
     end
 
@@ -246,14 +260,14 @@ let html_of_ocaml_src fname hash src =
     begin head
       (title (pcdata fname))
       (List.map begin fun src ->
-        link ~rel:[`Stylesheet] ~href:(full_path_of_css src) ()
+        link ~rel:[`Stylesheet] ~href:(path_of_css src) ()
        end css_files)
     end
     begin body
       (html_of_src_viewer src
          ::
        List.map begin fun src ->
-         script ~a:[a_src (Xml.uri_of_string (full_path_of_js src))] (pcdata "")
+         script ~a:[a_src (Xml.uri_of_string (path_of_js src))] (pcdata "")
        end js_files)
     end
 
@@ -270,34 +284,34 @@ let print fmt path db = (* renommer *)
   in
   clear_dir output_path;
   dump_js_var_file
-    (output_path ^ "/js/" ^ warnings_database_file ^ ".js") (****)
+    (Filename.concat output_path (path_of_js warnings_database_file))
     warnings_database_var
     json_warnings;
   dump_js_var_file
-    (output_path ^ "/js/" ^ plugins_database_file ^ ".js") (****)
+    (Filename.concat output_path (path_of_js plugins_database_file))
     plugins_database_var
     json_plugins;
-  let warnings_entries_filename =
+  let warnings_entries_file =
     group_by begin fun warning_entry ->
       (warning_entry.file_name, warning_entry.hash)
     end warnings_entries
   in
   List.iter begin fun ((filename, hash), entries) ->
-    let json_warnings_filename =
+    let json_warnings_file =
       entries
       |> json_of_database_warning_entries
       |> Yojson.Basic.pretty_to_string
     in
     (****)
     dump_js_var_file
-      (output_path ^ "/js/" ^ (web_static_gen_file hash) ^ ".js")
+      (Filename.concat output_path (path_of_js (web_static_gen_file hash)))
       "json"
-      json_warnings_filename;
+      json_warnings_file;
     (****)
     emit_page
-      (output_path ^ "/" ^ (web_static_gen_file hash) ^ ".html")
+      (Filename.concat output_path (path_of_html (web_static_gen_file hash)))
       (html_of_ocaml_src filename hash (Lint_utils.read_file filename))
-  end warnings_entries_filename;
+  end warnings_entries_file;
   emit_page
-    (output_path ^ "/index.html")
+    (Filename.concat output_path (path_of_html "index"))
     html_of_index
