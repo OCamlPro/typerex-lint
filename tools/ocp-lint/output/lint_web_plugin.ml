@@ -73,19 +73,3 @@ let json_of_plugins_database_entries entries =
 
 let plugins_database_entries_of_json json  =
   json |> to_list |> List.map plugins_database_entry_of_json
-    
-let plugins_database_raw_entries () =
-  Hashtbl.fold begin fun plugin linters acc ->
-    let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
-    let plugin_name = Plugin.short_name in
-    Lint_map.fold begin fun lname lint acc ->
-      let module Linter = (val lint : Lint_types.LINT) in
-      let linter_name = Linter.short_name in
-      {
-        plugin_entry_plugin_name = plugin_name;
-	plugin_entry_plugin_description = "";
-  	plugin_entry_linter_name = linter_name;
-	plugin_entry_linter_description = "";
-      } :: acc
-    end linters acc
-  end Lint_globals.plugins []

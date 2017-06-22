@@ -153,25 +153,3 @@ let json_of_database_warning_entries entries =
 
 let database_warning_entries_of_json json  =
   json |> to_list |> List.map database_warning_entry_of_json
-			      
-let raw_entries ~db =
-  let _,entries = 
-    Hashtbl.fold begin fun file_name (hash, plugin_map) acc ->
-      StringMap.fold begin fun plugin_name linter_map acc ->
-        StringMap.fold begin fun linter_name linter_result acc ->
-	  List.fold_left begin fun (id,acc) warning_result ->
-	    id + 1, {
-	      id = id;
-	      file_name = file_name;
-	      hash = hash;
-	      lines_count = Lint_utils.lines_count_of_file file_name;
-	      plugin_name = plugin_name;
-	      linter_name = linter_name;
-	      linter_version = linter_result.res_version;
-	      warning_result = warning_result;
-	    } :: acc	       
-	  end acc linter_result.res_warnings	
-        end linter_map acc					      
-      end plugin_map acc 
-    end db (0,[])
-  in entries

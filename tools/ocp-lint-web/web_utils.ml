@@ -42,22 +42,6 @@ let file_loc_of_loc loc =
   else
     None
       
-let group_by clss lst = (*** todo changer implantation ***)
-  let rec aux acc = function
-    | [] -> acc
-    | (cx, x) :: y -> (*** todo changer ***)
-       begin match acc with
-	     | (cx', x') :: y' when cx = cx' ->
-		aux ((cx, x :: x') :: y') y
-	     | _ ->
-		aux ((cx, [x]) :: acc) y
-       end
-  in
-  lst
-  |> List.map (fun x -> clss x, x) (*** ***)
-  |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
-  |> aux []
-       
 let array_joining join arr =
   let hd = arr.(0) in
   let tl = Array.sub arr 1 ((Array.length arr) - 1) in

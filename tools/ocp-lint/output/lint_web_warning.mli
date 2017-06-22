@@ -29,13 +29,6 @@ type database_warning_entry = {
   (* option / source *)
   warning_result : Lint_warning_types.warning;
 }
-				
-(** 
-todo
- **)
-val raw_entries :
-  db:Lint_db_types.t ->
-  database_warning_entry list
 
 val json_of_database_warning_entries :
   database_warning_entry list ->

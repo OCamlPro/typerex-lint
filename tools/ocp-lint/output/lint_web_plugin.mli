@@ -32,7 +32,3 @@ val json_of_plugins_database_entries :
 val plugins_database_entries_of_json :
   Yojson.Basic.json ->
   plugins_database_entry list
-
-val plugins_database_raw_entries :
-  unit ->
-  plugins_database_entry list
