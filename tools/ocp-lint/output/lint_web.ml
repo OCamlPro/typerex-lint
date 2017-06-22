@@ -100,28 +100,34 @@ let emit_page name page =
   pp () fmt page; (* pretty print *)
   close_out file
 
+let clear_dir dir =
+  Lint_utils.iter_files begin fun filename ->
+    let fullname = Filename.concat dir filename in
+    FileGen.remove (FileGen.of_string fullname)
+  end dir ~recdir:false
+
 let warnings_database_raw_entries db =
   let _,entries =
     Hashtbl.fold begin fun file_name (hash, plugin_map) acc ->
       StringMap.fold begin fun plugin_name linter_map acc ->
         StringMap.fold begin fun linter_name linter_result acc ->
-	  List.fold_left begin fun (id,acc) warning_result ->
-	    id + 1, {
-	      id = id;
-	      file_name = file_name;
-	      hash = hash;
-	      lines_count = Lint_utils.lines_count_of_file file_name;
-	      plugin_name = plugin_name;
-	      linter_name = linter_name;
-	      linter_version = linter_result.res_version;
-	      warning_result = warning_result;
-	    } :: acc	       
-	  end acc linter_result.res_warnings	
-        end linter_map acc					      
-      end plugin_map acc 
+          List.fold_left begin fun (id,acc) warning_result ->
+            id + 1, {
+              id = id;
+              file_name = file_name;
+              hash = hash;
+              lines_count = Lint_utils.lines_count_of_file file_name;
+              plugin_name = plugin_name;
+              linter_name = linter_name;
+              linter_version = linter_result.res_version;
+              warning_result = warning_result;
+            } :: acc
+          end acc linter_result.res_warnings
+        end linter_map acc
+      end plugin_map acc
     end db (0,[])
   in entries
-	    
+
 let plugins_database_raw_entries db =
   Hashtbl.fold begin fun plugin linters acc ->
     let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
@@ -131,23 +137,23 @@ let plugins_database_raw_entries db =
       let linter_name = Linter.short_name in
       {
         plugin_entry_plugin_name = plugin_name;
-	plugin_entry_plugin_description = "";
-  	plugin_entry_linter_name = linter_name;
-	plugin_entry_linter_description = "";
+        plugin_entry_plugin_description = "";
+        plugin_entry_linter_name = linter_name;
+        plugin_entry_linter_description = "";
       } :: acc
     end linters acc
   end db []
-	       
+
 (* todo move in lint_web_warning *)
 let group_by clss lst = (*** todo changer implantation ***)
   let rec aux acc = function
     | [] -> acc
     | (cx, x) :: y -> (*** todo changer ***)
        begin match acc with
-	     | (cx', x') :: y' when cx = cx' ->
-		aux ((cx, x :: x') :: y') y
-	     | _ ->
-		aux ((cx, [x]) :: acc) y
+             | (cx', x') :: y' when cx = cx' ->
+               aux ((cx, x :: x') :: y') y
+             | _ ->
+               aux ((cx, [x]) :: acc) y
        end
   in
   lst
@@ -155,7 +161,7 @@ let group_by clss lst = (*** todo changer implantation ***)
   |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
   |> aux []
 (*                             *)
-	    
+
 let output_path =
   "tools/ocp-lint-web/static/"
 
@@ -250,7 +256,7 @@ let html_of_ocaml_src fname hash src =
          script ~a:[a_src (Xml.uri_of_string (full_path_of_js src))] (pcdata "")
        end js_files)
     end
-       
+
 let print fmt path db = (* renommer *)
   let warnings_entries = warnings_database_raw_entries db in
   let json_warnings =
@@ -262,12 +268,13 @@ let print fmt path db = (* renommer *)
     Yojson.Basic.pretty_to_string
       (json_of_plugins_database_entries plugins_entries)
   in
+  clear_dir output_path;
   dump_js_var_file
-    (output_path ^ "js/" ^ warnings_database_file ^ ".js") (****)
+    (output_path ^ "/js/" ^ warnings_database_file ^ ".js") (****)
     warnings_database_var
     json_warnings;
   dump_js_var_file
-    (output_path ^ "js/" ^ plugins_database_file ^ ".js") (****)
+    (output_path ^ "/js/" ^ plugins_database_file ^ ".js") (****)
     plugins_database_var
     json_plugins;
   let warnings_entries_filename =
@@ -283,14 +290,14 @@ let print fmt path db = (* renommer *)
     in
     (****)
     dump_js_var_file
-      (output_path ^ "js/" ^ (web_static_gen_file hash) ^ ".js")
+      (output_path ^ "/js/" ^ (web_static_gen_file hash) ^ ".js")
       "json"
       json_warnings_filename;
     (****)
     emit_page
-      (output_path ^ (web_static_gen_file hash) ^ ".html")
+      (output_path ^ "/" ^ (web_static_gen_file hash) ^ ".html")
       (html_of_ocaml_src filename hash (Lint_utils.read_file filename))
   end warnings_entries_filename;
   emit_page
-    (output_path ^ "index.html")
+    (output_path ^ "/index.html")
     html_of_index
