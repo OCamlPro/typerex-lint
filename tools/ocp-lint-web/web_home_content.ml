@@ -21,7 +21,7 @@
 open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_warning
-       
+
 let warnings_table_col_file warning_entry =
   p [pcdata warning_entry.file_name]
 
@@ -30,7 +30,7 @@ let warnings_table_col_plugin warning_entry =
 
 let warnings_table_col_linter warning_entry =
   p [pcdata warning_entry.linter_name]
-    
+
 let warnings_table_col_warning warning_entry =
   p [pcdata warning_entry.warning_result.output]
 
@@ -53,7 +53,7 @@ let warnings_table_entry warning_entry plugin_entry =
   end;
   (* *)
   tr
-    
+
 let warnings_table_head =
   thead
     [
@@ -65,7 +65,7 @@ let warnings_table_head =
 	  th [pcdata "Warning"];
 	]
     ]
-    
+
 let warnings_table warnings_entries plugins_entries =
   let table =
     tablex
@@ -82,9 +82,13 @@ let warnings_table warnings_entries plugins_entries =
   in
   Web_data_table.set table;
   table
-    
+
 let content warnings_entries plugins_entries =
+  let title =
+    (string_of_int (List.length warnings_entries)) ^ " warning(s)"
+  in
   div
     [
+      h3 [pcdata title];
       warnings_table warnings_entries plugins_entries;
     ]
