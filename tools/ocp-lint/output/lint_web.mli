@@ -34,8 +34,10 @@ val web_static_gen_file:
   Digest.t ->
   string
   
-val print :
+val print:
   Format.formatter ->
+  string ->
+  (Lint_utils.file_struct * ((string list) * string)) list ->
   string ->
   Lint_db_types.t ->
   unit

@@ -103,38 +103,75 @@ let emit_page name page =
 let path_of_dir_list dirs =
   List.fold_left begin fun acc dir ->
     Filename.concat acc dir
-  end (List.hd dirs) (List.tl dirs) 
-	    
+  end (List.hd dirs) (List.tl dirs)
+
 let clear_dir dir =
   Lint_utils.iter_files begin fun filename ->
     let fullname = Filename.concat dir filename in
     FileGen.remove (FileGen.of_string fullname)
   end dir ~recdir:false
+
+let find_cfg_tmp file config_dep =
+  let open Lint_utils in
+  try
+    let (_, (configs, cfg_tmp)) =
+      List.find begin fun (file_struct, (_, tmp_cfg)) ->
+        file = file_struct.name
+      end config_dep
+    in
+    configs, Some cfg_tmp
+  with
+    Not_found -> [], None
 			
 let check_flag options =
   try
     bool_of_string (Lint_globals.Config.get_option_value options)
   with
     Not_found -> true
-			
-let warnings_database_raw_entries db =
+
+let plugin_is_enabled plugin_name =
+  check_flag [plugin_name; "enabled"]
+
+let linter_is_enabled plugin_name linter_name =
+  check_flag [plugin_name; linter_name; "enabled"]
+
+let warnings_activations plugin_name linter_name =
+  let opt = [plugin_name; linter_name; "warnings"] in
+  Lint_parse_args.parse_options (Lint_globals.Config.get_option_value opt)
+
+let warnings_database_raw_entries db master_config file_config =
   let _,entries =
     Hashtbl.fold begin fun file_name (hash, plugin_map) acc ->
-      StringMap.fold begin fun plugin_name linter_map acc ->		    
-        StringMap.fold begin fun linter_name linter_result acc ->
-          List.fold_left begin fun (id,acc) warning_result ->
-            id + 1, {
-              id = id;
-              file_name = file_name;
-              hash = hash;
-              lines_count = Lint_utils.lines_count_of_file file_name;
-              plugin_name = plugin_name;
-              linter_name = linter_name;
-              linter_version = linter_result.res_version;
-              warning_result = warning_result;
-            } :: acc
-          end acc linter_result.res_warnings
-        end linter_map acc
+      let configs ,cfg_opt = find_cfg_tmp file_name file_config in
+      begin match cfg_opt with
+         | None -> ()
+         | Some cfg -> Lint_globals.Config.load_config_tmp master_config cfg
+      end;
+      StringMap.fold begin fun plugin_name linter_map acc ->
+        if plugin_is_enabled plugin_name then
+          StringMap.fold begin fun linter_name linter_result acc ->
+            if linter_is_enabled plugin_name linter_name then
+              let arr = warnings_activations plugin_name linter_name in
+              List.fold_left begin fun (id,acc) warning_result ->
+                if arr.(warning_result.decl.id - 1) then
+                  id + 1, {
+                    id = id;
+                    file_name = file_name;
+                    hash = hash;
+                    lines_count = Lint_utils.lines_count_of_file file_name;
+                    plugin_name = plugin_name;
+                    linter_name = linter_name;
+                    linter_version = linter_result.res_version;
+                    warning_result = warning_result;
+                  } :: acc
+                else
+                  id, acc
+              end acc linter_result.res_warnings
+            else
+              acc
+          end linter_map acc
+        else
+          acc
       end plugin_map acc
     end db (0,[])
   in entries
@@ -172,7 +209,7 @@ let group_by clss lst = (*** todo changer implantation ***)
   |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
   |> aux []
 (*                             *)
-	    
+
 let output_path =
   path_of_dir_list ["tools"; "ocp-lint-web"; "static"]
 
@@ -271,13 +308,17 @@ let html_of_ocaml_src fname hash src =
        end js_files)
     end
 
-let print fmt path db = (* renommer *)
-  let warnings_entries = warnings_database_raw_entries db in
+let print fmt master_config file_config path db = (* renommer *)
+  let warnings_entries =
+    warnings_database_raw_entries db master_config file_config
+  in
   let json_warnings =
     Yojson.Basic.pretty_to_string
       (json_of_database_warning_entries warnings_entries)
   in
-  let plugins_entries = plugins_database_raw_entries Lint_globals.plugins in
+  let plugins_entries =
+    plugins_database_raw_entries Lint_globals.plugins
+  in
   let json_plugins =
     Yojson.Basic.pretty_to_string
       (json_of_plugins_database_entries plugins_entries)

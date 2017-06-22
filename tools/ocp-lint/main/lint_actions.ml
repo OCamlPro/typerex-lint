@@ -566,6 +566,8 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
   if pjson then
     Lint_web.print
       Format.err_formatter
+      master_config
+      !file_config_dep
       path
       Lint_db.DefaultDB.db;
   Lint_text.summary
