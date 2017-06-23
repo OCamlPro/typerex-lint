@@ -154,14 +154,15 @@ let warnings_database_raw_entries db master_config file_config =
               let arr = warnings_activations plugin_name linter_name in
               List.fold_left begin fun (id,acc) warning_result ->
                 if arr.(warning_result.decl.id - 1) then
+                  let lines_count = Lint_utils.lines_count_of_file file_name in
                   id + 1, {
-                    id = id;
-                    file_name = file_name;
-                    hash = hash;
-                    lines_count = Lint_utils.lines_count_of_file file_name;
-                    plugin_name = plugin_name;
-                    linter_name = linter_name;
-                    linter_version = linter_result.res_version;
+                    warning_id = id;
+                    warning_file_name = file_name;
+                    warning_hash = hash;
+                    warning_file_lines_count = lines_count;
+                    warning_plugin_name = plugin_name;
+                    warning_linter_name = linter_name;
+                    warning_linter_version = linter_result.res_version;
                     warning_result = warning_result;
                   } :: acc
                 else
@@ -316,7 +317,7 @@ let print fmt master_config file_config path db = (* renommer *)
     json_plugins;
   let warnings_entries_file =
     warning_entries_group_by begin fun warning_entry ->
-      (warning_entry.file_name, warning_entry.hash)
+      (warning_entry.warning_file_name, warning_entry.warning_hash)
     end warnings_entries
   in
   List.iter begin fun ((filename, hash), entries) ->

@@ -103,7 +103,7 @@ let onload _ =
     try
       json
       |> database_warning_entries_of_json
-      |> List.find (fun entry -> entry.id = id)
+      |> List.find (fun entry -> entry.warning_id = id)
     with
     | Not_found -> failwith "invalid id"
   in
@@ -129,7 +129,7 @@ let warning_code_viewer warning_entry =
     | None ->
        failwith "no location for this warning"
   in
-  let length = warning_entry.lines_count in
+  let length = warning_entry.warning_file_lines_count in
   let begin_context = min (begin_line - 1) context_line_number in
   let end_context = min (length - end_line) context_line_number in
   let begin_with_context = begin_line - begin_context in

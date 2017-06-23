@@ -23,13 +23,13 @@ open Lint_warning_types
 open Lint_web_warning
 
 let warnings_table_col_file warning_entry =
-  p [pcdata warning_entry.file_name]
+  p [pcdata warning_entry.warning_file_name]
 
 let warnings_table_col_plugin warning_entry =
-  p [pcdata warning_entry.plugin_name]
+  p [pcdata warning_entry.warning_plugin_name]
 
 let warnings_table_col_linter warning_entry =
-  p [pcdata warning_entry.linter_name]
+  p [pcdata warning_entry.warning_linter_name]
 
 let warnings_table_col_warning warning_entry =
   p [pcdata warning_entry.warning_result.output]

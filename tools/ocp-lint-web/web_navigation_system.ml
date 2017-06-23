@@ -144,7 +144,7 @@ let navigation_element_tab_id = function
   | LinterElement ->
      "linters-tab"
   | WarningElement warning_entry ->
-     "warning-" ^ (string_of_int warning_entry.id) ^ "-tab"
+     "warning-" ^ (string_of_int warning_entry.warning_id) ^ "-tab"
 
 let navigation_element_content_id = function
   | HomeElement ->
@@ -154,7 +154,7 @@ let navigation_element_content_id = function
   | LinterElement ->
      "linters-content"
   | WarningElement warning_entry ->
-     "warning-" ^ (string_of_int warning_entry.id) ^ "-content"
+     "warning-" ^ (string_of_int warning_entry.warning_id) ^ "-content"
 						    
 let model_simple_tab name ne =
   li
@@ -236,7 +236,7 @@ let create home_content plugins_content linter_content =
 let open_warning_tab warning warning_content =
   let warning_element = WarningElement warning in
   let tab_creator () =
-    model_closable_tab (string_of_int warning.id) warning_element
+    model_closable_tab (string_of_int warning.warning_id) warning_element
   in
   let content_creator () =
     model_simple_content warning_content warning_element

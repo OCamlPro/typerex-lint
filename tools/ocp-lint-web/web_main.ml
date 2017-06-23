@@ -25,7 +25,9 @@ open Lint_web_plugin
 
 let main_page warnings_entries plugins_entries =
   let warnings_plugins =
-    warning_entries_group_by (fun e -> e.plugin_name) warnings_entries
+    warning_entries_group_by begin fun warning_entry ->
+      warning_entry.warning_plugin_name
+    end warnings_entries
   in
   let tabs, contents =
     Web_navigation_system.create

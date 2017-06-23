@@ -19,13 +19,13 @@
 (**************************************************************************)
 
 type database_warning_entry = {
-  id : int;
-  file_name : string;
-  hash : Digest.t;
-  lines_count : int;
-  plugin_name : string;
-  linter_name : string;
-  linter_version : string;
+  warning_id : int;
+  warning_file_name : string;
+  warning_hash : Digest.t;
+  warning_file_lines_count : int;
+  warning_plugin_name : string;
+  warning_linter_name : string;
+  warning_linter_version : string;
   (* option / source *)
   warning_result : Lint_warning_types.warning;
 }

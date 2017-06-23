@@ -50,9 +50,9 @@ let array_joining join arr =
   end hd tl 
        
 let warning_href warning_entry =
-    (Lint_web.web_static_gen_file warning_entry.hash)
+    (Lint_web.web_static_gen_file warning_entry.warning_hash)
     ^ ".html#"
-    ^ (string_of_int warning_entry.id)
+    ^ (string_of_int warning_entry.warning_id)
 
 let json_from_js_var var =
   let (str : Js.js_string Js.t) = Js.Unsafe.variable var in
@@ -60,6 +60,6 @@ let json_from_js_var var =
        
 let find_plugin_entry warning_entry plugins_entries =
   List.find begin fun plugin_entry ->
-    warning_entry.plugin_name = plugin_entry.plugin_entry_plugin_name
-    && warning_entry.linter_name = plugin_entry.plugin_entry_linter_name
+    warning_entry.warning_plugin_name = plugin_entry.plugin_entry_plugin_name
+    && warning_entry.warning_linter_name = plugin_entry.plugin_entry_linter_name
   end plugins_entries

@@ -22,17 +22,17 @@ open Yojson.Basic
 open Yojson.Basic.Util
 open Lint_warning_types
 open Lint_db_types
-       
+
 type database_warning_entry = {
-  id : int;
-  
-  file_name : string;
-  hash : Digest.t;
-  lines_count : int;
-  
-  plugin_name : string;
-  linter_name : string;
-  linter_version : string;
+  warning_id : int;
+
+  warning_file_name : string;
+  warning_hash : Digest.t;
+  warning_file_lines_count : int;
+
+  warning_plugin_name : string;
+  warning_linter_name : string;
+  warning_linter_version : string;
   (* option / source *)
   warning_result : Lint_warning_types.warning;
 }
@@ -43,16 +43,16 @@ let warning_entries_group_by clss lst = (*** todo changer implantation ***)
     | (cx, x) :: y -> (*** todo changer ***)
        begin match acc with
              | (cx', x') :: y' when cx = cx' ->
-		aux ((cx, x :: x') :: y') y
+                aux ((cx, x :: x') :: y') y
              | _ ->
-		aux ((cx, [x]) :: acc) y
+                aux ((cx, [x]) :: acc) y
        end
   in
   lst
   |> List.map (fun x -> clss x, x) (*** ***)
   |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
   |> aux []
-         
+
 let json_of_position pos =
   let open Lexing in
   `Assoc [
@@ -74,7 +74,7 @@ let position_of_json json =
     pos_bol = pos_bol;
     pos_cnum = pos_cnum
   }
-   
+
 let json_of_location loc =
   let open Location in
   `Assoc [
@@ -93,7 +93,7 @@ let location_of_json json =
     loc_end = loc_end;
     loc_ghost = loc_ghost
   }
-						  
+
 let json_of_warning_declaration decl =
   `Assoc [
      ("short_name", `String decl.short_name);
@@ -107,8 +107,13 @@ let warning_declaration_of_json json =
   let message = json |> member "message" |> to_string in
   let id = json |> member "id" |> to_int in
   let severity = json |> member "severity" |> to_int in
-  {short_name = short_name; message = message; id = id; severity = severity}
-   
+  {
+    short_name = short_name;
+    message = message;
+    id = id;
+    severity = severity;
+  }
+
 let json_of_warning warn =
   `Assoc [
      ("loc", json_of_location warn.loc);
@@ -130,37 +135,53 @@ let json_of_digest digest =
   `String (Digest.to_hex digest)
 
 let digest_of_json json =
-  json |> to_string |> Digest.from_hex    
+  json |> to_string |> Digest.from_hex
 
 let json_of_database_warning_entry entry =
   `Assoc [
-     ("id", `Int entry.id);
-     ("file_name", `String entry.file_name);
-     ("hash", json_of_digest entry.hash);
-     ("lines_count", `Int entry.lines_count);
-     ("plugin_name", `String entry.plugin_name);
-     ("linter_name", `String entry.linter_name);
-     ("linter_version", `String entry.linter_version);
+     ("warning_id", `Int entry.warning_id);
+     ("warning_file_name", `String entry.warning_file_name);
+     ("warning_hash", json_of_digest entry.warning_hash);
+     ("warning_file_lines_count", `Int entry.warning_file_lines_count);
+     ("warning_plugin_name", `String entry.warning_plugin_name);
+     ("warning_linter_name", `String entry.warning_linter_name);
+     ("warning_linter_version", `String entry.warning_linter_version);
      ("warning_result", json_of_warning entry.warning_result)
    ]
 
 let database_warning_entry_of_json json  =
-  let id = json |> member "id" |> to_int in
-  let file_name = json |> member "file_name" |> to_string in
-  let hash = json |> member "hash" |> digest_of_json in
-  let lines_count = json |> member "lines_count" |> to_int in
-  let plugin_name = json |> member "plugin_name" |> to_string in
-  let linter_name = json |> member "linter_name" |> to_string in
-  let linter_version = json |> member "linter_version" |> to_string in
-  let warning_result = json |> member "warning_result" |> warning_of_json in
+  let warning_id =
+    json |> member "warning_id" |> to_int
+  in
+  let warning_file_name =
+    json |> member "warning_file_name" |> to_string
+  in
+  let warning_hash =
+    json |> member "warning_hash" |> digest_of_json
+  in
+  let warning_file_lines_count =
+    json |> member "warning_file_lines_count" |> to_int
+  in
+  let warning_plugin_name =
+    json |> member "warning_plugin_name" |> to_string
+  in
+  let warning_linter_name =
+    json |> member "warning_linter_name" |> to_string
+  in
+  let warning_linter_version =
+    json |> member "warning_linter_version" |> to_string
+  in
+  let warning_result =
+    json |> member "warning_result" |> warning_of_json
+  in
   {
-    id = id;
-    file_name = file_name;
-    hash = hash;
-    lines_count = lines_count;
-    plugin_name = plugin_name;
-    linter_name = linter_name;
-    linter_version = linter_version;
+    warning_id = warning_id;
+    warning_file_name = warning_file_name;
+    warning_hash = warning_hash;
+    warning_file_lines_count = warning_file_lines_count;
+    warning_plugin_name = warning_plugin_name;
+    warning_linter_name = warning_linter_name;
+    warning_linter_version = warning_linter_version;
     warning_result = warning_result
   }
 

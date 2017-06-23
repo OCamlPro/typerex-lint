@@ -34,7 +34,7 @@ let warning_content_code_view_header warning_entry =
 	~a:[
 	  a_href (Web_utils.warning_href warning_entry);
 	]
-	[pcdata warning_entry.file_name]
+	[pcdata warning_entry.warning_file_name]
     ]
 
 let warning_content_code_view_body warning_entry =
