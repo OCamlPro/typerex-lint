@@ -59,6 +59,7 @@ begin program "ocp-lint-web-main"
    ]
 
    requires = [
+     "c3"
      "compiler-libs"
      "js_of_ocaml"
      "ocplib-ace"
@@ -102,7 +103,6 @@ begin program "ocp-lint-web-codeviewer"
    ]
 
    requires = [
-     "c3"
      "compiler-libs"
      "js_of_ocaml"
      "ocplib-jsutils"

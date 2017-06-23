@@ -224,6 +224,7 @@ let html_of_index =
   let css_files = [
     "dataTables.min";
     "bootstrap.min";
+    "c3";
     "adjustment_dataTables";
     "adjustment_bootstrap";
   ] in
@@ -236,6 +237,8 @@ let html_of_index =
     "bootstrap.min";
     "jquery-1.12.4"; (*** 11 ***)
     "jquery.dataTables.min";
+    "d3.min";
+    "c3.min";
     "data_table";
   ] in
   html
@@ -268,7 +271,8 @@ let html_of_src_viewer src =
 let html_of_ocaml_src fname hash src =
   let css_files = [
     "adjustment_ace";
-  ] in
+  ]
+  in
   let js_files = [
     "ace";
     "ocp_lint_web_codeviewer";
