@@ -122,7 +122,7 @@ let find_cfg_tmp file config_dep =
     configs, Some cfg_tmp
   with
     Not_found -> [], None
-			
+
 let check_flag options =
   try
     bool_of_string (Lint_globals.Config.get_option_value options)
@@ -191,24 +191,6 @@ let plugins_database_raw_entries db =
       } :: acc
     end linters acc
   end db []
-
-(* todo move in lint_web_warning *)
-let group_by clss lst = (*** todo changer implantation ***)
-  let rec aux acc = function
-    | [] -> acc
-    | (cx, x) :: y -> (*** todo changer ***)
-       begin match acc with
-             | (cx', x') :: y' when cx = cx' ->
-               aux ((cx, x :: x') :: y') y
-             | _ ->
-               aux ((cx, [x]) :: acc) y
-       end
-  in
-  lst
-  |> List.map (fun x -> clss x, x) (*** ***)
-  |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
-  |> aux []
-(*                             *)
 
 let output_path =
   path_of_dir_list ["tools"; "ocp-lint-web"; "static"]
@@ -333,7 +315,7 @@ let print fmt master_config file_config path db = (* renommer *)
     plugins_database_var
     json_plugins;
   let warnings_entries_file =
-    group_by begin fun warning_entry ->
+    warning_entries_group_by begin fun warning_entry ->
       (warning_entry.file_name, warning_entry.hash)
     end warnings_entries
   in

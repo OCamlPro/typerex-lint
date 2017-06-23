@@ -46,7 +46,7 @@ let warnings_table_entry warning_entry plugin_entry =
   in
   (* todo in datatable.ml *)
   (Tyxml_js.To_dom.of_element tr)##onclick <-Dom_html.handler begin fun _ ->
-    Web_navigation_system.navigation_open_warning_tab_content
+    Web_navigation_system.open_warning_tab
       warning_entry
       (Web_warning_content.warning_content warning_entry plugin_entry);
     Js._true

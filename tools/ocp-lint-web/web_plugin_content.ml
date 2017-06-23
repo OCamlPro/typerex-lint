@@ -18,27 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-type database_warning_entry = {
-  id : int;
-  file_name : string;
-  hash : Digest.t;
-  lines_count : int;
-  plugin_name : string;
-  linter_name : string;
-  linter_version : string;
-  (* option / source *)
-  warning_result : Lint_warning_types.warning;
-}
-
-val warning_entries_group_by:
-  (database_warning_entry -> 'a) ->
-  database_warning_entry list ->
-  ('a * database_warning_entry list) list
-				
-val json_of_database_warning_entries :
-  database_warning_entry list ->
-  Yojson.Basic.json
-
-val database_warning_entries_of_json :
-  Yojson.Basic.json ->
-  database_warning_entry list
+open Tyxml_js.Html
+       
+let content plugins =
+  div
+    (List.map (fun (p,_) -> h3 [pcdata p]) plugins)

@@ -25,6 +25,7 @@ open Lint_web_plugin
 
 type navigation_element =
   | HomeElement
+  | PluginsElement
   | LinterElement
   | WarningElement of database_warning_entry
 
@@ -138,6 +139,8 @@ let navigation_element_set_active ne =
 let navigation_element_tab_id = function
   | HomeElement ->
      "home-tab"
+  | PluginsElement ->
+     "plugins-tab"
   | LinterElement ->
      "linters-tab"
   | WarningElement warning_entry ->
@@ -146,6 +149,8 @@ let navigation_element_tab_id = function
 let navigation_element_content_id = function
   | HomeElement ->
      "home-content"
+  | PluginsElement ->
+     "plugins-content"
   | LinterElement ->
      "linters-content"
   | WarningElement warning_entry ->
@@ -208,21 +213,27 @@ let model_simple_content data ne =
       a_class ["tab-pane"; "fade"];
     ]
     [data]
+
+let create_static_element ne tab_creator content_creator =
+  navigation_element_static_create ne (tab_creator ne) (content_creator ne)
     
-let create home_content linter_content =
-  navigation_element_static_create
+let create home_content plugins_content linter_content =
+  create_static_element
     HomeElement
-    (model_simple_tab "home" HomeElement)
-    (model_simple_content home_content HomeElement);
-  navigation_element_set_active HomeElement; 
-  navigation_element_static_create
+    (model_simple_tab "home")
+    (model_simple_content home_content);
+  navigation_element_set_active HomeElement;
+  create_static_element
+    PluginsElement
+    (model_simple_tab "plugins")
+    (model_simple_content plugins_content);
+  create_static_element
     LinterElement
-    (model_simple_tab "linters" LinterElement)
-    (model_simple_content linter_content LinterElement);
+    (model_simple_tab "linters")
+    (model_simple_content linter_content);
   tabs, contents
 
-let navigation_open_warning_tab_content warning warning_content =
-  (* todo rename *)
+let open_warning_tab warning warning_content =
   let warning_element = WarningElement warning in
   let tab_creator () =
     model_closable_tab (string_of_int warning.id) warning_element
