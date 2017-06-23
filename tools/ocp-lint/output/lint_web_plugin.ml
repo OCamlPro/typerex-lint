@@ -22,50 +22,50 @@ open Yojson.Basic
 open Yojson.Basic.Util
 
 type plugins_database_entry = {
-  plugin_entry_plugin_name : string;
-  plugin_entry_plugin_description : string;
-  plugin_entry_linter_name : string;
-  plugin_entry_linter_description : string;
+  plugin_name : string;
+  plugin_description : string;
+  plugin_linter_name : string;
+  plugin_linter_description : string;
 }
 
 let json_of_plugins_database_entry entry =
   `Assoc [
-     ("plugin_entry_plugin_name",
-      `String entry.plugin_entry_plugin_name);
-     ("plugin_entry_plugin_description",
-      `String entry.plugin_entry_plugin_description);
-     ("plugin_entry_linter_name",
-      `String entry.plugin_entry_linter_name);
-     ("plugin_entry_linter_description",
-      `String entry.plugin_entry_linter_description)
+     ("plugin_name",
+      `String entry.plugin_name);
+     ("plugin_description",
+      `String entry.plugin_description);
+     ("plugin_linter_name",
+      `String entry.plugin_linter_name);
+     ("plugin_linter_description",
+      `String entry.plugin_linter_description)
    ]
 
 let plugins_database_entry_of_json json  =
-  let plugin_entry_plugin_name =
+  let plugin_name =
     json
-    |> member "plugin_entry_plugin_name"
+    |> member "plugin_name"
     |> to_string
   in
-  let plugin_entry_plugin_description =
+  let plugin_description =
     json
-    |> member "plugin_entry_linter_description"
+    |> member "plugin_description"
     |> to_string
   in
-  let plugin_entry_linter_name =
+  let plugin_linter_name =
     json
-    |> member "plugin_entry_linter_name"
+    |> member "plugin_linter_name"
     |> to_string
   in
-  let plugin_entry_linter_description =
+  let plugin_linter_description =
     json
-    |> member "plugin_entry_linter_description"
+    |> member "plugin_linter_description"
     |> to_string
   in
   {
-    plugin_entry_plugin_name = plugin_entry_plugin_name;
-    plugin_entry_plugin_description = plugin_entry_plugin_description;
-    plugin_entry_linter_name = plugin_entry_linter_name;
-    plugin_entry_linter_description = plugin_entry_linter_description
+    plugin_name = plugin_name;
+    plugin_description = plugin_description;
+    plugin_linter_name = plugin_linter_name;
+    plugin_linter_description = plugin_linter_description
   }
 
 let json_of_plugins_database_entries entries =

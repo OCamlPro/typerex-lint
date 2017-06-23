@@ -185,10 +185,10 @@ let plugins_database_raw_entries db =
       let module Linter = (val lint : Lint_types.LINT) in
       let linter_name = Linter.short_name in
       {
-        plugin_entry_plugin_name = plugin_name;
-        plugin_entry_plugin_description = "";
-        plugin_entry_linter_name = linter_name;
-        plugin_entry_linter_description = "";
+        plugin_name = plugin_name;
+        plugin_description = "";
+        plugin_linter_name = linter_name;
+        plugin_linter_description = "";
       } :: acc
     end linters acc
   end db []

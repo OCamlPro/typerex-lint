@@ -60,6 +60,6 @@ let json_from_js_var var =
        
 let find_plugin_entry warning_entry plugins_entries =
   List.find begin fun plugin_entry ->
-    warning_entry.warning_plugin_name = plugin_entry.plugin_entry_plugin_name
-    && warning_entry.warning_linter_name = plugin_entry.plugin_entry_linter_name
+    warning_entry.warning_plugin_name = plugin_entry.plugin_name
+    && warning_entry.warning_linter_name = plugin_entry.plugin_linter_name
   end plugins_entries

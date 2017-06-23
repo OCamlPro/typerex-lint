@@ -19,10 +19,10 @@
 (**************************************************************************)
 
 type plugins_database_entry = {
-  plugin_entry_plugin_name : string;
-  plugin_entry_plugin_description : string;
-  plugin_entry_linter_name : string;
-  plugin_entry_linter_description : string;
+  plugin_name : string;
+  plugin_description : string;
+  plugin_linter_name : string;
+  plugin_linter_description : string;
 }
 				
 val json_of_plugins_database_entries :

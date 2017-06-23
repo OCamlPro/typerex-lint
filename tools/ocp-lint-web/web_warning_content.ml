@@ -61,9 +61,9 @@ let warning_content warning_entry plugin_entry =
     "Warning " ^ (string_of_int warning_entry.warning_result.decl.id) ^ " :"
   in
   let linter_desc =
-    plugin_entry.plugin_entry_linter_name
+    plugin_entry.plugin_linter_name
     ^ " : "
-    ^ plugin_entry.plugin_entry_linter_description
+    ^ plugin_entry.plugin_linter_description
   in
   div
     [
