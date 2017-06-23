@@ -94,6 +94,17 @@ let dump_js_var_file fname var v =
   dump_js_var fd var v;
   Unix.close fd
 
+let js_string_of_json_var var v =
+  (* todo changer implantation *)
+  let tmp_file_name = "tmp_js_var" in
+  let fd =
+    Unix.(openfile tmp_file_name [O_WRONLY;O_CREAT;O_TRUNC] 0o777)
+  in
+  dump_js_var fd var (Yojson.Basic.to_string v);
+  Unix.close fd;
+  let js_var = Lint_utils.read_file tmp_file_name in
+  js_var
+	     
 let emit_page name page =
   let file = open_out name in
   let fmt = Format.formatter_of_out_channel file in
@@ -268,7 +279,7 @@ let html_of_src_viewer src =
     ]
     [pcdata src]
 
-let html_of_ocaml_src fname hash src =
+let html_of_ocaml_src fname hash warnings_entries src =
   let css_files = [
     "adjustment_ace";
   ]
@@ -276,10 +287,13 @@ let html_of_ocaml_src fname hash src =
   let js_files = [
     "ace";
     "ocp_lint_web_codeviewer";
-    (* -- *)
-    (web_static_gen_file hash);
-    (* --  *)
-  ] in
+  ]
+  in
+  let js_var =
+    js_string_of_json_var
+      "json"
+      (json_of_database_warning_entries warnings_entries)
+  in
   html
     begin head
       (title (pcdata fname))
@@ -289,10 +303,10 @@ let html_of_ocaml_src fname hash src =
     end
     begin body
       (html_of_src_viewer src
-         ::
-       List.map begin fun src ->
-         script ~a:[a_src (Xml.uri_of_string (path_of_js src))] (pcdata "")
-       end js_files)
+         :: script (cdata_script js_var)
+         :: List.map begin fun src ->
+              script ~a:[a_src (Xml.uri_of_string (path_of_js src))] (pcdata "")
+            end js_files)
     end
 
 let print fmt master_config file_config path db = (* renommer *)
@@ -325,20 +339,16 @@ let print fmt master_config file_config path db = (* renommer *)
     end warnings_entries
   in
   List.iter begin fun ((filename, hash), entries) ->
-    let json_warnings_file =
-      entries
-      |> json_of_database_warning_entries
-      |> Yojson.Basic.pretty_to_string
+    let html_src =
+      html_of_ocaml_src
+	filename
+	hash
+	entries
+	(Lint_utils.read_file filename)
     in
-    (****)
-    dump_js_var_file
-      (Filename.concat output_path (path_of_js (web_static_gen_file hash)))
-      "json"
-      json_warnings_file;
-    (****)
     emit_page
       (Filename.concat output_path (path_of_html (web_static_gen_file hash)))
-      (html_of_ocaml_src filename hash (Lint_utils.read_file filename))
+      html_src
   end warnings_entries_file;
   emit_page
     (Filename.concat output_path (path_of_html "index"))
