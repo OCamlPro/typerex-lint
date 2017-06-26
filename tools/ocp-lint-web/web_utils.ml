@@ -46,7 +46,14 @@ let find_component id =
   match Js_utils.Manip.by_id id with
   | Some div -> div
   | None -> failwith ("Cannot find id " ^ id)
-      
+
+let list_joining join lst =
+  let hd = List.hd lst in
+  let tl = List.tl lst in
+  List.fold_left begin fun acc line ->
+    acc ^ join ^ line 
+  end hd tl 
+		     
 let array_joining join arr =
   let hd = arr.(0) in
   let tl = Array.sub arr 1 ((Array.length arr) - 1) in

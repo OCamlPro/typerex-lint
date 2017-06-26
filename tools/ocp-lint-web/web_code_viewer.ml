@@ -70,8 +70,51 @@ let warning_code_viewer ace warning =
   Ace.add_marker ace Ace.Warning loc;
   Ace.set_annotation ace Ace.Warning warning.output loc
 
-let file_code_viewer ace warnings =
-  ()
+let file_code_viewer ace warnings_entries =
+  let warnings =
+    warning_entries_group_by begin fun entry ->
+      let open Web_utils in
+      match file_loc_of_loc entry.warning_result.loc with
+      | Some (Floc_line line) ->
+         line
+      | Some (Floc_lines_cols (line, _, _, _)) ->
+	 line
+      | None ->
+	 failwith "no location for this warning"
+    end warnings_entries
+  in
+  List.iter begin fun (line, entries) ->
+    let loc = {
+      loc_start = line, 0;
+      loc_end = line, 0;
+    }
+    in
+    let tooltip =
+      (string_of_int (List.length entries))
+      ^ " warning(s) : \n - "
+      ^ Web_utils.list_joining
+	  "\n - "
+	  (List.map (fun entry -> entry.warning_result.output) entries)
+    in
+    Ace.set_annotation ace Ace.Warning tooltip loc;
+    List.iter begin fun entry ->
+      let begin_line, begin_col, end_line, end_col =
+	let open Web_utils in
+	match file_loc_of_loc entry.warning_result.loc with
+	| Some (Floc_line line) ->
+	   line, 0, line, String.length (Ace.get_line ace (line - 1)) 
+	| Some (Floc_lines_cols (bline, bcol, eline, ecol)) ->
+	   bline, bcol, eline, ecol
+	| None ->
+	   failwith "no location for this warning"
+      in
+      let loc = {
+	loc_start = begin_line, begin_col;
+	loc_end = end_line, end_col
+      } in
+      Ace.add_marker ace Ace.Warning loc
+    end entries
+  end warnings
 		     
 let init_code_viewer warnings_entries id =
   let code_div = Web_utils.find_component Lint_web.web_code_viewer_id in
