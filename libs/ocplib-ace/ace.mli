@@ -47,20 +47,12 @@ type mark_type = Error | Warning | Message
 
 val set_mark:
   'a editor -> ?loc:loc -> ?type_:mark_type -> string -> unit
-(***)
-val add_marker :
-  'a editor ->
-  mark_type ->
-  loc ->
-  unit
-val set_annotation : (***** A CHANGER LISTE ANNOTATION & plus prendre loc mais numero ligne****)
-  'a editor ->
-  mark_type ->
-  string ->
-  loc ->
-  unit
-(***)
+val add_marker: 'a editor -> mark_type -> loc -> unit
 val clear_marks: 'a editor -> unit
+
+(***** A CHANGER LISTE ANNOTATION & plus prendre loc mais numero ligne****)
+val set_annotation: 'a editor -> mark_type -> string -> loc -> unit
+
 val record_event_handler: 'a editor -> string -> (unit -> unit) -> unit
 val set_background_color: 'a editor -> string -> unit
 val add_class: 'a editor -> string -> unit
@@ -81,41 +73,25 @@ val add_keybinding:
 
 val set_font_size: 'a editor -> int -> unit
 val set_tab_size: 'a editor -> int -> unit
-(************)
-val set_read_only:
-  'a editor ->
-  bool ->
-  unit
-val set_theme:
-  'a editor ->
-  string ->
-  unit
 
-val get_lines:
-  'a editor ->
-  int ->
-  int ->
-  string array
+val set_highlight_active_line: 'a editor -> bool -> unit
+val set_highlight_gutter_line: 'a editor -> bool -> unit
 
-val set_value:
-  'a editor ->
-  string ->
-  unit
+val set_show_print_margin: 'a editor -> bool -> unit
+					
+val set_read_only: 'a editor -> bool -> unit
+					  
+val set_theme: 'a editor -> string -> unit
+					
+val set_value: 'a editor -> string -> unit
+					
+val set_option: 'a editor -> string -> (* alpha *) int -> unit
 
-val clear_selection:
-  'a editor ->
-  unit
+val get_length: 'a editor -> int
+val get_lines: 'a editor -> int -> int -> string array
 
-val set_option:
-  'a editor ->
-  string ->
-  int ->
-  unit
+val clear_selection: 'a editor -> unit
 
-val get_length:
-  'a editor ->
-  int
-(************)
 val get_state: 'a editor -> int -> < .. > Js.t
 
 val get_last: 'a editor -> Ace_types.position Js.t

@@ -72,6 +72,7 @@ class type editSession = object
     bool Js.t -> int Js.js_array Js.t Js.meth
   method removeMarker : int -> unit Js.meth
   method getState : 'a. int -> (< .. > as 'a) Js.t Js.meth
+  method setUseWorker : bool Js.t -> unit Js.meth
 end
 
 class type selection = object
@@ -105,6 +106,9 @@ class type ['a] editor = object
   method customData : 'a Js.prop
   method clearSelection : unit Js.meth
   method setOption : Js.js_string Js.t -> int -> unit Js.meth (* ***** *)
+  method setHighlightActiveLine : bool Js.t -> unit Js.meth
+  method setHighlightGutterLine : bool Js.t -> unit Js.meth
+  method setShowPrintMargin : bool Js.t -> unit Js.meth
 end
 
 and ['a] command = object

@@ -332,3 +332,12 @@ let set_option { editor } option value =
 let get_length { editor } =
   let document = editor##getSession()##getDocument() in
   document##getLength ()
+
+let set_highlight_active_line { editor } actived =
+  editor##setHighlightActiveLine (Js.bool actived)
+
+let set_highlight_gutter_line { editor } actived =
+  editor##setHighlightGutterLine (Js.bool actived)
+
+let set_show_print_margin { editor } actived =
+  editor##setShowPrintMargin (Js.bool actived)
