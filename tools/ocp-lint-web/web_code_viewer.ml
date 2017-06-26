@@ -22,6 +22,7 @@ open Tyxml_js.Html
 open Ace
 open Lint_warning_types
 open Lint_web_warning
+open Web_errors
        
 (* todo ajouter fonction pour voir tout le fichier avec les warnings *)
 
@@ -132,29 +133,37 @@ let init_code_viewer warnings_entries id =
        try
 	 List.find (fun entry -> entry.warning_id = x) warnings_entries
        with
-	 Not_found -> failwith "invalid id"		       
+	 Not_found ->
+	   raise (Web_exception (Web_unknow_warning_id (string_of_int x)))
      in
      warning_code_viewer ace entry.warning_result
   | None ->
      file_code_viewer ace warnings_entries
 			   
 let onload _ =
-  let warnings_entries =
-    database_warning_entries_of_json
-      (Web_utils.json_from_js_var Lint_web.warnings_database_var)
-  in
-  let fragment = Url.Current.get_fragment () in
-  let id =
-    if fragment = "" then
-      None
-    else
-      try
-	Some (int_of_string fragment)
-      with
-	Failure _ -> (* Web_error....*) failwith "invalid id"
-  in
-  init_code_viewer warnings_entries id;
-  Js._true
+  try
+    let warnings_entries =
+      database_warning_entries_of_json
+	(Web_utils.json_from_js_var Lint_web.warnings_database_var)
+    in
+    let fragment = Url.Current.get_fragment () in
+    let id =
+      if fragment = "" then
+	None
+      else
+	try
+	  Some (int_of_string fragment)
+	with
+	  Failure _ -> raise (Web_exception (Web_unknow_warning_id fragment))
+    in
+    init_code_viewer warnings_entries id;
+    Js._true
+  with
+  | Web_exception e ->
+     process_error e;
+     Js._false
+  | e ->
+     failwith ("uncatched exception " ^ (Printexc.to_string e))
 
 let () =
   Dom_html.window##onload <- Dom_html.handler onload

@@ -47,6 +47,7 @@ begin program "ocp-lint-web-main"
    has_asm = false
    pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
    files = [
+     "web_errors.ml"
      "web_utils.ml"
      "web_data_table.ml"
      "web_code_viewer.ml"
@@ -98,6 +99,7 @@ begin program "ocp-lint-web-codeviewer"
    has_asm = false
    pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
    files = [
+     "web_errors.ml"
      "web_utils.ml"
      "web_code_viewer.ml"
    ]
