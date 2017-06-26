@@ -32,7 +32,7 @@ let warning_content_code_view_header warning_entry =
     [
       a
 	~a:[
-	  a_href (Web_utils.warning_href warning_entry);
+	  a_href (Web_utils.file_href warning_entry);
 	]
 	[pcdata warning_entry.warning_file_name]
     ]

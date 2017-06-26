@@ -41,6 +41,11 @@ let file_loc_of_loc loc =
     Some (Floc_line loc.loc_start.pos_lnum)
   else
     None
+
+let find_component id =
+  match Js_utils.Manip.by_id id with
+  | Some div -> div
+  | None -> failwith ("Cannot find id " ^ id)
       
 let array_joining join arr =
   let hd = arr.(0) in
@@ -48,7 +53,11 @@ let array_joining join arr =
   Array.fold_left begin fun acc line ->
     acc ^ join ^ line 
   end hd tl 
-       
+
+let file_href warning_entry =
+    (Lint_web.web_static_gen_file warning_entry.warning_hash)
+    ^ ".html"
+		  
 let warning_href warning_entry =
     (Lint_web.web_static_gen_file warning_entry.warning_hash)
     ^ ".html#"

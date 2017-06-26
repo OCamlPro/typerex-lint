@@ -30,6 +30,9 @@ val plugins_database_file:
 val plugins_database_var:
   string
 
+val web_code_viewer_id:
+  string
+    
 val web_static_gen_file:
   Digest.t ->
   string

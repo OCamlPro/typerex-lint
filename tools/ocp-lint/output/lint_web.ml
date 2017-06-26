@@ -102,9 +102,8 @@ let js_string_of_json_var var v =
   in
   dump_js_var fd var (Yojson.Basic.to_string v);
   Unix.close fd;
-  let js_var = Lint_utils.read_file tmp_file_name in
-  js_var
-	     
+  Lint_utils.read_file tmp_file_name
+
 let emit_page name page =
   let file = open_out name in
   let fmt = Format.formatter_of_out_channel file in
@@ -228,6 +227,9 @@ let plugins_database_file =
 let plugins_database_var =
   "plugins_json"
 
+let web_code_viewer_id =
+  "ocp-code-viewer"
+
 let web_static_gen_file file_hash =
   "ocp_lint_web_generated_" ^ (Digest.to_hex file_hash)
 
@@ -266,16 +268,9 @@ let html_of_index =
     end
 
 let html_of_src_viewer src =
-  let src_viewer_id = (* todo global pour etre utiliser dans js of ocaml *)
-    "ocp-code-viewer"
-  in
-  let style =
-    "position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
-  in
   div
     ~a:[
-      a_id src_viewer_id;
-      a_style style;
+      a_id web_code_viewer_id;
     ]
     [pcdata src]
 
@@ -291,7 +286,7 @@ let html_of_ocaml_src fname hash warnings_entries src =
   in
   let js_var =
     js_string_of_json_var
-      "json"
+      warnings_database_var
       (json_of_database_warning_entries warnings_entries)
   in
   html
@@ -341,10 +336,10 @@ let print fmt master_config file_config path db = (* renommer *)
   List.iter begin fun ((filename, hash), entries) ->
     let html_src =
       html_of_ocaml_src
-	filename
-	hash
-	entries
-	(Lint_utils.read_file filename)
+        filename
+        hash
+        entries
+        (Lint_utils.read_file filename)
     in
     emit_page
       (Filename.concat output_path (path_of_html (web_static_gen_file hash)))

@@ -24,13 +24,6 @@ open Lint_warning_types
 open Lint_web_warning
        
 (* todo ajouter fonction pour voir tout le fichier avec les warnings *)
-       
-(*******)
-let find_component id =
-  match Js_utils.Manip.by_id id with
-  | Some div -> div
-  | None -> failwith ("Cannot find id " ^ id)
-(*******)		     
 
 let theme =
   "monokai"
@@ -44,7 +37,7 @@ let line_size =
 let context_line_number =
   3
   
-let code_viewer_register_warning ace warning =
+let warning_code_viewer ace warning =
   let begin_line, begin_col, end_line, end_col =
     let open Web_utils in
     match file_loc_of_loc warning.loc with
@@ -76,45 +69,52 @@ let code_viewer_register_warning ace warning =
   Ace.set_option ace "firstLineNumber" begin_with_context;
   Ace.add_marker ace Ace.Warning loc;
   Ace.set_annotation ace Ace.Warning warning.output loc
-  
-let create_ocaml_code_viewer div warning =
-  let ace = Ace.create_editor div in
+
+let file_code_viewer ace warnings =
+  ()
+		     
+let init_code_viewer warnings_entries id =
+  let code_div = Web_utils.find_component Lint_web.web_code_viewer_id in
+  let ace = Ace.create_editor (Tyxml_js.To_dom.of_div code_div) in
   Ace.set_mode ace "ace/mode/ocaml";
   Ace.set_theme ace ("ace/theme/" ^ theme);
   Ace.set_font_size ace font_size;
   Ace.set_read_only ace true;
-  code_viewer_register_warning ace warning
-
-let set_div_ocaml_code_view warning =
-  let code_div =
-    find_component "ocp-code-viewer" (***** code id dans lint_web ****)
-  in
-  create_ocaml_code_viewer (Tyxml_js.To_dom.of_div code_div) warning
+  Ace.set_show_print_margin ace false;
+  Ace.set_highlight_active_line ace false;
+  Ace.set_highlight_gutter_line ace false;
+  match id with
+  | Some x ->
+     let entry =
+       try
+	 List.find (fun entry -> entry.warning_id = x) warnings_entries
+       with
+	 Not_found -> failwith "invalid id"		       
+     in
+     warning_code_viewer ace entry.warning_result
+  | None ->
+     file_code_viewer ace warnings_entries
 			   
 let onload _ =
-  let json = Web_utils.json_from_js_var "json" in
+  let warnings_entries =
+    database_warning_entries_of_json
+      (Web_utils.json_from_js_var Lint_web.warnings_database_var)
+  in
+  let fragment = Url.Current.get_fragment () in
   let id =
-    try
-      int_of_string (Url.Current.get_fragment ())
-    with
-    | Failure _ -> failwith "invalid id"
+    if fragment = "" then
+      None
+    else
+      try
+	Some (int_of_string fragment)
+      with
+	Failure _ -> (* Web_error....*) failwith "invalid id"
   in
-  let entry =
-    try
-      json
-      |> database_warning_entries_of_json
-      |> List.find (fun entry -> entry.warning_id = id)
-    with
-    | Not_found -> failwith "invalid id"
-  in
-  set_div_ocaml_code_view entry.warning_result;
+  init_code_viewer warnings_entries id;
   Js._true
 
 let () =
   Dom_html.window##onload <- Dom_html.handler onload
-
-let file_code_viewer = (* todo *)
-  ()
 					      
 let warning_code_viewer warning_entry =
   let warning = warning_entry.warning_result in
