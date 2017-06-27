@@ -87,6 +87,8 @@ val set_value: 'a editor -> string -> unit
 					
 val set_option: 'a editor -> string -> (* alpha *) int -> unit
 
+val set_first_line_number: 'a editor -> int -> unit
+							    
 val get_length: 'a editor -> int
 val get_lines: 'a editor -> int -> int -> string array
 

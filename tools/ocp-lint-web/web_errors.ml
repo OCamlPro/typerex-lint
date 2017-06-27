@@ -19,11 +19,11 @@
 (**************************************************************************)
 
 type error =
-  | Web_unknow_warning_id of string (* todo file *)
+  | Unknow_warning_id of string (* todo file *)
 
 exception Web_exception of error				     
 
 let process_error exn =
   match exn with
-  | Web_unknow_warning_id id ->
+  | Unknow_warning_id id ->
      Js_utils.js_error (Js.string ("unknow warning entry with id '" ^ id ^ "'"))

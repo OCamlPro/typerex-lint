@@ -108,9 +108,9 @@ let string_of_mark_type = function
 let require s = (Js.Unsafe.variable "ace")##require(Js.string s)
 
 type range = Ace_types.range Js.t
-			     
+
 let range_cstr = (require  "ace/range")##_Range
-				       
+
 let range sr sc er ec : range =
   Js.Unsafe.new_obj range_cstr
     [| Js.Unsafe.inject sr ; Js.Unsafe.inject sc ;
@@ -143,13 +143,13 @@ let set_mark editor ?loc ?(type_ = Message) msg =
   | None -> ()
   | Some range ->
     editor.marks <-
-      session##addMarker (range, Js.string type_, Js.string "text", Js._false) ::
-      editor.marks
+      session##addMarker (range, Js.string type_, Js.string "text", Js._false)
+      :: editor.marks
 
 let add_marker editor type_ { loc_start = (sr, sc) ; loc_end = (er, ec) } =
   let range = range (sr - 1) sc (er - 1) ec in
   let session = editor.editor##getSession() in
-  let type_ = string_of_mark_type type_ in (**** classe plutot ****)
+  let type_ = string_of_mark_type type_ in
   editor.marks <-
     session##addMarker (range, Js.string type_, Js.string "text", Js._false) ::
     editor.marks
@@ -164,12 +164,13 @@ let set_annotation editor type_ msg { loc_start = (sr, sc) } =
   let annotations =
     Array.concat [[| annot |]; Js.to_array (session##getAnnotations ())] in
   session##setAnnotations(Js.array @@ annotations)
-  
+
 let set_background_color editor color =
   editor.editor_div##style##backgroundColor <- Js.string color
 
 let add_class { editor_div } name =
   editor_div##classList##add(Js.string name)
+
 let remove_class { editor_div } name =
   editor_div##classList##remove(Js.string name)
 
@@ -227,7 +228,7 @@ let add_keybinding { editor }
 (** Mode *)
 
 type token = Ace_types.token Js.t
-			     
+
 let token ~type_ value =
   let obj : Ace_types.token Js.t = Js.Unsafe.obj [||] in
   obj##value <- Js.string value;
@@ -282,7 +283,7 @@ let define_mode name helpers =
 
 let set_font_size { editor } sz =
   editor##setFontSize (sz)
-	
+
 let set_tab_size { editor } sz =
   editor##getSession()##setTabSize (sz)
 
@@ -329,6 +330,9 @@ let clear_selection { editor } =
 let set_option { editor } option value =
   editor##setOption (Js.string option, value)
 
+let set_first_line_number editor n =
+  set_option editor "firstLineNumber" n
+	
 let get_length { editor } =
   let document = editor##getSession()##getDocument() in
   document##getLength ()

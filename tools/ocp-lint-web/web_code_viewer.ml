@@ -23,7 +23,7 @@ open Ace
 open Lint_warning_types
 open Lint_web_warning
 open Web_errors
-       
+
 (* todo ajouter fonction pour voir tout le fichier avec les warnings *)
 
 let theme =
@@ -34,32 +34,41 @@ let font_size =
 
 let line_size =
   17
-    
+
 let context_line_number =
   3
-  
-let warning_code_viewer ace warning =
+
+let ace_loc begin_line begin_col end_line end_col =
+  {
+    loc_start = begin_line, begin_col;
+    loc_end = end_line, end_col;
+  }
+
+let set_warning_code_viewer ace warning =
   let begin_line, begin_col, end_line, end_col =
     let open Web_utils in
-    match file_loc_of_loc warning.loc with
+    match file_loc_of_loc warning.warning_result.loc with
     | Some (Floc_line line) ->
-       line, 0, line, String.length (Ace.get_line ace (line - 1)) 
+       line, 0, line, String.length (Ace.get_line ace (line - 1))
     | Some (Floc_lines_cols (bline, bcol, eline, ecol)) ->
        bline, bcol, eline, ecol
     | None ->
        failwith "no location for this warning"
   in
-  let length = Ace.get_length ace in (* todo change *)
+  let length = warning.warning_file_lines_count in
+  (* todo fun *)
   let begin_context = min (begin_line - 1) context_line_number in
   let end_context = min (length - end_line) context_line_number in
   let begin_with_context = begin_line - begin_context in
   let end_with_context = end_line + end_context in
-  (***** verifier si warning au limite *****)
-  let loc = {
-    loc_start = begin_context + 1, begin_col;
-    loc_end = begin_context + end_line - begin_line + 1, end_col
-  } in
-  (*****************************************)
+  (* *)
+  let loc =
+    ace_loc
+      (begin_context + 1)
+      begin_col
+      (begin_context + end_line - begin_line + 1)
+      end_col
+  in
   let content =
     Web_utils.array_joining
       "\n"
@@ -67,11 +76,11 @@ let warning_code_viewer ace warning =
   in
   Ace.set_value ace content;
   Ace.clear_selection ace;
-  Ace.set_option ace "firstLineNumber" begin_with_context;
+  Ace.set_first_line_number ace begin_with_context;
   Ace.add_marker ace Ace.Warning loc;
-  Ace.set_annotation ace Ace.Warning warning.output loc
+  Ace.set_annotation ace Ace.Warning warning.warning_result.output loc
 
-let file_code_viewer ace warnings_entries =
+let set_file_code_viewer ace warnings_entries =
   let warnings =
     warning_entries_group_by begin fun entry ->
       let open Web_utils in
@@ -79,9 +88,9 @@ let file_code_viewer ace warnings_entries =
       | Some (Floc_line line) ->
          line
       | Some (Floc_lines_cols (line, _, _, _)) ->
-	 line
+         line
       | None ->
-	 failwith "no location for this warning"
+         failwith "no location for this warning"
     end warnings_entries
   in
   List.iter begin fun (line, entries) ->
@@ -94,7 +103,7 @@ let file_code_viewer ace warnings_entries =
       (string_of_int (List.length entries))
       ^ " warning(s) : \n - "
       ^ Web_utils.list_joining
-	  "\n - "
+          "\n - "
 	  (List.map (fun entry -> entry.warning_result.output) entries)
     in
     Ace.set_annotation ace Ace.Warning tooltip loc;
@@ -103,20 +112,17 @@ let file_code_viewer ace warnings_entries =
 	let open Web_utils in
 	match file_loc_of_loc entry.warning_result.loc with
 	| Some (Floc_line line) ->
-	   line, 0, line, String.length (Ace.get_line ace (line - 1)) 
+	   line, 0, line, String.length (Ace.get_line ace (line - 1))
 	| Some (Floc_lines_cols (bline, bcol, eline, ecol)) ->
 	   bline, bcol, eline, ecol
 	| None ->
 	   failwith "no location for this warning"
       in
-      let loc = {
-	loc_start = begin_line, begin_col;
-	loc_end = end_line, end_col
-      } in
+      let loc = ace_loc begin_line begin_col end_line end_col in
       Ace.add_marker ace Ace.Warning loc
     end entries
   end warnings
-		     
+
 let init_code_viewer warnings_entries id =
   let code_div = Web_utils.find_component Lint_web.web_code_viewer_id in
   let ace = Ace.create_editor (Tyxml_js.To_dom.of_div code_div) in
@@ -134,12 +140,12 @@ let init_code_viewer warnings_entries id =
 	 List.find (fun entry -> entry.warning_id = x) warnings_entries
        with
 	 Not_found ->
-	   raise (Web_exception (Web_unknow_warning_id (string_of_int x)))
+	   raise (Web_exception (Unknow_warning_id (string_of_int x)))
      in
-     warning_code_viewer ace entry.warning_result
+     set_warning_code_viewer ace entry
   | None ->
-     file_code_viewer ace warnings_entries
-			   
+     set_file_code_viewer ace warnings_entries
+
 let onload _ =
   try
     let warnings_entries =
@@ -154,7 +160,7 @@ let onload _ =
 	try
 	  Some (int_of_string fragment)
 	with
-	  Failure _ -> raise (Web_exception (Web_unknow_warning_id fragment))
+          Failure _ -> raise (Web_exception (Unknow_warning_id fragment))
     in
     init_code_viewer warnings_entries id;
     Js._true
@@ -167,7 +173,7 @@ let onload _ =
 
 let () =
   Dom_html.window##onload <- Dom_html.handler onload
-					      
+
 let warning_code_viewer warning_entry =
   let warning = warning_entry.warning_result in
   (* todo fun *)
@@ -182,18 +188,18 @@ let warning_code_viewer warning_entry =
        failwith "no location for this warning"
   in
   let length = warning_entry.warning_file_lines_count in
+  (* todo fun *)
   let begin_context = min (begin_line - 1) context_line_number in
   let end_context = min (length - end_line) context_line_number in
   let begin_with_context = begin_line - begin_context in
   let end_with_context = end_line + end_context in
   (*          *)
-
   let height =
     line_size * (end_with_context - begin_with_context + 2)
   in
   iframe
     ~a:[
-	a_src (Web_utils.warning_href warning_entry);
-	a_style ("height: " ^ (string_of_int height) ^ "px");
+        a_src (Web_utils.warning_href warning_entry);
+        a_style ("height: " ^ (string_of_int height) ^ "px");
     ]
     []
