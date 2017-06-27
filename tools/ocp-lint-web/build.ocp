@@ -60,10 +60,11 @@ begin program "ocp-lint-web-main"
    ]
 
    requires = [
-     "c3"
+     "c3" (* todo remove *)
      "compiler-libs"
      "js_of_ocaml"
      "ocplib-ace"
+     "ocplib-d3pie"
      "ocplib-jsutils"
      "ocp-lint-api-types"
      "ocp-lint-output-web"

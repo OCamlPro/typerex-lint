@@ -83,31 +83,18 @@ let warnings_table warnings_entries plugins_entries =
   Web_data_table.set table;
   table
 
-let piechart id values =
-  C3.Pie.make ~sectors:values ()
-  |> C3.Pie.render ~bindto:("#" ^ id)
-  |> ignore
-
 let warnings_pie warnings_entries =
-  let id_piechart = "piechart" in
   let values =
     warnings_entries
     |> warning_entries_group_by (fun entry -> entry.warning_plugin_name)
     |> List.map begin fun (plugin, entries) ->
-         plugin, float_of_int (List.length entries)
+         plugin, List.length entries
        end
   in
   let div_pie =
-    div
-      ~a:[
-	a_id id_piechart;
-      ]
-      []
+    div []
   in
-  (* todo changer ca *)
-  Dom.appendChild (Dom_html.document##body) (Tyxml_js.To_dom.of_element div_pie);
-  (* *)
-  piechart id_piechart values;
+  D3pie.create_pie (Tyxml_js.To_dom.of_element div_pie) values;
   div_pie
 		     
 let content warnings_entries plugins_entries =

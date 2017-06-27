@@ -239,7 +239,6 @@ let html_of_index =
   let css_files = [
     "dataTables.min";
     "bootstrap.min";
-    "c3";
     "adjustment_dataTables";
     "adjustment_bootstrap";
   ] in
@@ -252,8 +251,8 @@ let html_of_index =
     "bootstrap.min";
     "jquery-1.12.4"; (*** 11 ***)
     "jquery.dataTables.min";
-    "d3.min";
-    "c3.min";
+    "d3";
+    "d3pie.min";
     "data_table";
   ] in
   html
