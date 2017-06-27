@@ -96,7 +96,9 @@ let dump_js_var_file fname var v =
 
 let js_string_of_json_var var v =
   (* todo changer implantation *)
-  let tmp_file_name = "tmp_js_var" in
+  let tmp_file_name =
+    "tools/ocp-lint-web/tmp_js_var"
+  in
   let fd =
     Unix.(openfile tmp_file_name [O_WRONLY;O_CREAT;O_TRUNC] 0o777)
   in
