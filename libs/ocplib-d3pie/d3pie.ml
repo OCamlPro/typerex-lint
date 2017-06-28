@@ -47,3 +47,4 @@ let create_pie div data =
   Js.Unsafe.new_obj d3pie_cstr [|
     Js.Unsafe.inject div;
     Js.Unsafe.inject settings;
+  |]
