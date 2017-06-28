@@ -147,7 +147,12 @@ let init_code_viewer warnings_entries id =
      in
      set_warning_code_viewer ace entry
   | None ->
-     set_file_code_viewer ace warnings_entries
+     let printable_warnings =
+       List.filter begin fun entry ->
+         not (Web_utils.warning_location_is_ghost entry)
+       end warnings_entries
+     in
+     set_file_code_viewer ace printable_warnings
 
 let onload _ =
   try

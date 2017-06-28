@@ -65,11 +65,18 @@ let warning_content warning_entry plugin_entry =
     ^ " : "
     ^ plugin_entry.plugin_linter_description
   in
-  div
-    [
-      h3 [pcdata warning_desc];
-      h3 [pcdata linter_desc];
-      br ();
-      warning_content_code_view warning_entry;
-    ]
+  if Web_utils.warning_location_is_ghost warning_entry then
+    div
+      [
+	h3 [pcdata warning_desc];
+	h3 [pcdata linter_desc];
+      ]
+  else
+    div
+      [
+	h3 [pcdata warning_desc];
+	h3 [pcdata linter_desc];
+	br ();
+	warning_content_code_view warning_entry;
+      ]
 
