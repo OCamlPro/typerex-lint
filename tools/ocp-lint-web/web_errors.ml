@@ -23,7 +23,7 @@ type error =
   | No_such_element_with_id of string
   | Ghost_location of Location.t
 
-exception Web_exception of error				     
+exception Web_exception of error
 
 let log msg =
   Js_utils.js_error (Js.string msg)

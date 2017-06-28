@@ -35,7 +35,7 @@ type navigation_value = {
   mutable tab_is_created : bool;
   mutable content_is_created : bool;
 }
-      
+
 module NavigationElement =
   struct
     type t = navigation_element
@@ -47,7 +47,7 @@ module NavigationElement =
       | _ -> false
     let hash e = 0
   end
-    
+ 
 module NavigationElementHashtbl = Hashtbl.Make(NavigationElement)
 
 let navigation_elements = NavigationElementHashtbl.create 32
@@ -58,23 +58,23 @@ let tabs =
       a_class ["nav"; "nav-tabs"];
     ]
     []
-    
+
 let dom_tabs =
   Tyxml_js.To_dom.of_element tabs
-			     
+
 let contents =
   div
     ~a:[
       a_class ["tab-content"];
     ]
     []
-    
+
 let dom_contents = 
   Tyxml_js.To_dom.of_element contents
 
 let navigation_value_is_active nav_val =
   Js.to_bool (nav_val.dom_tab##classList##contains (Js.string "active"))
-			     
+
 let navigation_value_set_active nav_val =
   nav_val.dom_tab##classList##add (Js.string "active");
   nav_val.dom_content##classList##add (Js.string "in");
@@ -135,7 +135,7 @@ let navigation_element_close ne =
 let navigation_element_set_active ne =
   let nav_val = NavigationElementHashtbl.find navigation_elements ne in
   navigation_value_set_active nav_val
-		  
+
 let navigation_element_tab_id = function
   | HomeElement ->
      "home-tab"
@@ -155,7 +155,7 @@ let navigation_element_content_id = function
      "linters-content"
   | WarningElement warning_entry ->
      "warning-" ^ (string_of_int warning_entry.warning_id) ^ "-content"
-						    
+
 let model_simple_tab name ne =
   li
     ~a:[
@@ -169,15 +169,15 @@ let model_simple_tab name ne =
 	  ]
 	[pcdata name]
     ]
-    
+
 let model_closable_tab name ne =
   let close_button =
     button
       ~a:[
 	a_button_type `Button;
-	a_class ["close"; "closeTab"];	      
+        a_class ["close"; "closeTab"];
       ]
-      [pcdata "×"]
+      [pcdata "\195"]
   in
   let tab = 
     li
@@ -200,7 +200,7 @@ let model_closable_tab name ne =
   (Tyxml_js.To_dom.of_element close_button)##onclick <-Dom_html.handler begin
     fun evt ->
       Dom.preventDefault evt;
-      Dom_html.stopPropagation evt;	   
+      Dom_html.stopPropagation evt;
       navigation_element_close ne;
       Js._true
   end;
