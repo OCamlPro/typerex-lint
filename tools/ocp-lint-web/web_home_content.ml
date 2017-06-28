@@ -83,12 +83,42 @@ let warnings_table warnings_entries plugins_entries =
   Web_data_table.set table;
   table
 
-let warnings_pie warnings_entries =
+let warnings_pie_group_by_file warnings_entries =
+  let values =
+    warnings_entries
+    |> warning_entries_group_by (fun entry -> entry.warning_file_name)
+    |> List.map begin fun (plugin, entries) ->
+         plugin, List.length entries
+       end
+  in
+  let div_pie =
+    div []
+  in
+  D3pie.create_pie (Tyxml_js.To_dom.of_element div_pie) values;
+  div_pie
+    
+let warnings_pie_group_by_plugin warnings_entries =
   let values =
     warnings_entries
     |> warning_entries_group_by (fun entry -> entry.warning_plugin_name)
     |> List.map begin fun (plugin, entries) ->
          plugin, List.length entries
+       end
+  in
+  let div_pie =
+    div []
+  in
+  D3pie.create_pie (Tyxml_js.To_dom.of_element div_pie) values;
+  div_pie
+    
+let warnings_pie_group_by_linter warnings_entries =
+  let values =
+    warnings_entries
+    |> warning_entries_group_by begin fun entry ->
+         (entry.warning_plugin_name, entry.warning_linter_name)
+       end
+    |> List.map begin fun ((plugin,linter), entries) ->
+         plugin ^ "." ^ linter, List.length entries
        end
   in
   let div_pie =
@@ -105,7 +135,11 @@ let content warnings_entries plugins_entries =
     [
       h3 [pcdata title];
       br ();
-      warnings_pie warnings_entries;
+      warnings_pie_group_by_file warnings_entries;
+      br ();
+      warnings_pie_group_by_plugin warnings_entries;
+      br ();
+      warnings_pie_group_by_linter warnings_entries;
       br ();
       warnings_table warnings_entries plugins_entries;
     ]
