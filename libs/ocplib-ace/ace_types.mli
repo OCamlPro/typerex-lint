@@ -105,7 +105,7 @@ class type ['a] editor = object
   method setFontSize : int -> unit Js.meth
   method customData : 'a Js.prop
   method clearSelection : unit Js.meth
-  method setOption : Js.js_string Js.t -> int -> unit Js.meth (* ***** *)
+  method setOption : Js.js_string Js.t -> Js.Unsafe.any -> unit Js.meth
   method setHighlightActiveLine : bool Js.t -> unit Js.meth
   method setHighlightGutterLine : bool Js.t -> unit Js.meth
   method setShowPrintMargin : bool Js.t -> unit Js.meth

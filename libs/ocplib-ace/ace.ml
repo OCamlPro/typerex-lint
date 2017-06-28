@@ -327,11 +327,20 @@ let set_value { editor } value =
 let clear_selection { editor } =
   editor##clearSelection ()
 
+type option_value =
+  | Int of int
+  | String of string
+
 let set_option { editor } option value =
-  editor##setOption (Js.string option, value)
+  let v =
+    match value with
+    | Int n -> Js.Unsafe.inject n
+    | String s -> Js.Unsafe.inject (Js.string s)
+  in
+  editor##setOption (Js.string option, v)
 
 let set_first_line_number editor n =
-  set_option editor "firstLineNumber" n
+  set_option editor "firstLineNumber" (Int n)
 	
 let get_length { editor } =
   let document = editor##getSession()##getDocument() in

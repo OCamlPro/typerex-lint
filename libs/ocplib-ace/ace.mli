@@ -22,7 +22,7 @@ type 'a editor
 type loc = {
   loc_start: int * int;
   loc_end: int * int;
-}
+}	     
 
 val create_editor: Dom_html.divElement Js.t -> 'a editor
 
@@ -77,14 +77,18 @@ val set_highlight_active_line: 'a editor -> bool -> unit
 val set_highlight_gutter_line: 'a editor -> bool -> unit
 
 val set_show_print_margin: 'a editor -> bool -> unit
-					
+
 val set_read_only: 'a editor -> bool -> unit
-					  
+
 val set_theme: 'a editor -> string -> unit
-					
+
 val set_value: 'a editor -> string -> unit
+
+type option_value =
+  | Int of int
+  | String of string
 					
-val set_option: 'a editor -> string -> (* alpha *) int -> unit
+val set_option: 'a editor -> string -> option_value -> unit
 
 val set_first_line_number: 'a editor -> int -> unit
 							    
