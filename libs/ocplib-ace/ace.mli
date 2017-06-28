@@ -50,7 +50,6 @@ val set_mark:
 val add_marker: 'a editor -> mark_type -> loc -> unit
 val clear_marks: 'a editor -> unit
 
-(***** A CHANGER LISTE ANNOTATION & plus prendre loc mais numero ligne****)
 val set_annotation: 'a editor -> mark_type -> string -> loc -> unit
 
 val record_event_handler: 'a editor -> string -> (unit -> unit) -> unit

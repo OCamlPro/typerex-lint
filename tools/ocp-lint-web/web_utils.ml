@@ -27,21 +27,22 @@ type file_loc =
   | Floc_line of int
   | Floc_lines_cols of int * int * int * int
 					   
-let file_loc_of_loc loc =
+let file_loc_of_warning_entry warning_entry =
   let open Location in
   let open Lexing in
+  let loc = warning_entry.warning_result.loc in
   let col_of_pos pos = pos.pos_cnum - pos.pos_bol in
   if not loc.loc_ghost then
-    Some (Floc_lines_cols (
+    Floc_lines_cols (
 	loc.loc_start.pos_lnum,
 	col_of_pos loc.loc_start,
 	loc.loc_end.pos_lnum,
 	col_of_pos loc.loc_end
-      ))
+      )
   else if loc.loc_start.pos_lnum != 0 then
-    Some (Floc_line loc.loc_start.pos_lnum)
+    Floc_line loc.loc_start.pos_lnum
   else
-    None
+    raise (Web_exception (Ghost_location loc))
 
 let warning_location_is_ghost warning_entry =
   let open Location in

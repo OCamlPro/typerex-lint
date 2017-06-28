@@ -56,13 +56,11 @@ let set_default_code_viewer ace =
 let set_warning_code_viewer ace warning =
   let begin_line, begin_col, end_line, end_col =
     let open Web_utils in
-    match file_loc_of_loc warning.warning_result.loc with
-    | Some (Floc_line line) ->
+    match file_loc_of_warning_entry warning with
+    | Floc_line line ->
        line, 0, line, String.length (Ace.get_line ace (line - 1))
-    | Some (Floc_lines_cols (bline, bcol, eline, ecol)) ->
+    | Floc_lines_cols (bline, bcol, eline, ecol) ->
        bline, bcol, eline, ecol
-    | None ->
-       failwith "no location for this warning"
   in
   let length = warning.warning_file_lines_count in
   (* todo fun *)
@@ -93,13 +91,11 @@ let set_file_code_viewer ace warnings_entries =
   let warnings =
     warning_entries_group_by begin fun entry ->
       let open Web_utils in
-      match file_loc_of_loc entry.warning_result.loc with
-      | Some (Floc_line line) ->
+      match file_loc_of_warning_entry entry with
+      | Floc_line line ->
          line
-      | Some (Floc_lines_cols (line, _, _, _)) ->
+      | Floc_lines_cols (line, _, _, _) ->
          line
-      | None ->
-         failwith "no location for this warning"
     end warnings_entries
   in
   List.iter begin fun (line, entries) ->
@@ -119,13 +115,11 @@ let set_file_code_viewer ace warnings_entries =
     List.iter begin fun entry ->
       let begin_line, begin_col, end_line, end_col =
 	let open Web_utils in
-	match file_loc_of_loc entry.warning_result.loc with
-	| Some (Floc_line line) ->
+	match file_loc_of_warning_entry entry with
+	| Floc_line line ->
 	   line, 0, line, String.length (Ace.get_line ace (line - 1))
-	| Some (Floc_lines_cols (bline, bcol, eline, ecol)) ->
+	| Floc_lines_cols (bline, bcol, eline, ecol) ->
 	   bline, bcol, eline, ecol
-	| None ->
-	   failwith "no location for this warning"
       in
       let loc = ace_loc begin_line begin_col end_line end_col in
       Ace.add_marker ace Ace.Warning loc
@@ -183,17 +177,14 @@ let () =
   Dom_html.window##onload <- Dom_html.handler onload
 
 let warning_code_viewer warning_entry =
-  let warning = warning_entry.warning_result in
   (* todo fun *)
   let begin_line, end_line =
     let open Web_utils in
-    match file_loc_of_loc warning.loc with
-    | Some (Floc_line line) ->
+    match file_loc_of_warning_entry warning_entry with
+    | Floc_line line ->
        line, line
-    | Some (Floc_lines_cols (bline, _, eline, _)) ->
+    | Floc_lines_cols (bline, _, eline, _) ->
        bline, eline
-    | None ->
-       failwith "no location for this warning"
   in
   let length = warning_entry.warning_file_lines_count in
   (* todo fun *)
