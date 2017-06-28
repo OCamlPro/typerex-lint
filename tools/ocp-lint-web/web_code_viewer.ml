@@ -44,6 +44,15 @@ let ace_loc begin_line begin_col end_line end_col =
     loc_end = end_line, end_col;
   }
 
+let set_default_code_viewer ace =
+  Ace.set_mode ace "ace/mode/ocaml";
+  Ace.set_theme ace ("ace/theme/" ^ theme);
+  Ace.set_font_size ace font_size;
+  Ace.set_read_only ace true;
+  Ace.set_show_print_margin ace false;
+  Ace.set_highlight_active_line ace false;
+  Ace.set_highlight_gutter_line ace false
+
 let set_warning_code_viewer ace warning =
   let begin_line, begin_col, end_line, end_col =
     let open Web_utils in
@@ -122,17 +131,11 @@ let set_file_code_viewer ace warnings_entries =
       Ace.add_marker ace Ace.Warning loc
     end entries
   end warnings
-
+  
 let init_code_viewer warnings_entries id =
-  let code_div = Web_utils.find_component Lint_web.web_code_viewer_id in
+  let code_div = Web_utils.get_element_by_id Lint_web.web_code_viewer_id in
   let ace = Ace.create_editor (Tyxml_js.To_dom.of_div code_div) in
-  Ace.set_mode ace "ace/mode/ocaml";
-  Ace.set_theme ace ("ace/theme/" ^ theme);
-  Ace.set_font_size ace font_size;
-  Ace.set_read_only ace true;
-  Ace.set_show_print_margin ace false;
-  Ace.set_highlight_active_line ace false;
-  Ace.set_highlight_gutter_line ace false;
+  set_default_code_viewer ace;
   match id with
   | Some x ->
      let entry =

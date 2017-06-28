@@ -20,10 +20,16 @@
 
 type error =
   | Unknow_warning_id of string (* todo file *)
-
+  | No_such_element_with_id of string
+			   
 exception Web_exception of error				     
 
+let log msg =
+  Js_utils.js_error (Js.string msg)
+			     
 let process_error exn =
   match exn with
   | Unknow_warning_id id ->
-     Js_utils.js_error (Js.string ("unknow warning entry with id '" ^ id ^ "'"))
+     log ("no warning entry with id '" ^ id ^ "' in this file")
+  | No_such_element_with_id id ->
+     log ("no element element found with id '" ^ id ^ "'")

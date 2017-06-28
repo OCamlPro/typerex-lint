@@ -21,6 +21,7 @@
 open Lint_warning_types
 open Lint_web_warning
 open Lint_web_plugin
+open Web_errors
 
 type file_loc =
   | Floc_line of int
@@ -42,10 +43,10 @@ let file_loc_of_loc loc =
   else
     None
 
-let find_component id =
+let get_element_by_id id =
   match Js_utils.Manip.by_id id with
-  | Some div -> div
-  | None -> failwith ("Cannot find id " ^ id)
+  | Some element -> element
+  | None -> raise (Web_exception (No_such_element_with_id id))
 
 let list_joining join lst =
   let hd = List.hd lst in

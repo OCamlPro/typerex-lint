@@ -22,6 +22,7 @@ open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_warning
 open Lint_web_plugin
+open Web_errors
 
 let main_page warnings_entries plugins_entries =
   let warnings_plugins =
@@ -46,16 +47,23 @@ let load_main_page warnings_entries plugins_entries =
   Dom.appendChild (Dom_html.document##body) (Tyxml_js.To_dom.of_element body)
 		  			   
 let onload _ =
-  let warnings_entries =
-    database_warning_entries_of_json
-      (Web_utils.json_from_js_var Lint_web.warnings_database_var)
-  in
-  let plugins_entries =
-    plugins_database_entries_of_json
-      (Web_utils.json_from_js_var Lint_web.plugins_database_var)
-  in
-  load_main_page warnings_entries plugins_entries;
-  Js._false
+  try
+    let warnings_entries =
+      database_warning_entries_of_json
+	(Web_utils.json_from_js_var Lint_web.warnings_database_var)
+    in
+    let plugins_entries =
+      plugins_database_entries_of_json
+	(Web_utils.json_from_js_var Lint_web.plugins_database_var)
+    in
+    load_main_page warnings_entries plugins_entries;
+    Js._true
+  with
+  | Web_exception e ->
+     process_error e;
+     Js._false
+  | e ->
+     failwith ("uncatched exception " ^ (Printexc.to_string e))
 
 let () =
   Dom_html.window##onload <- Dom_html.handler onload;
