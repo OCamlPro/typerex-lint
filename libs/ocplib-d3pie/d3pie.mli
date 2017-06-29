@@ -18,7 +18,37 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-val create_pie:
+type d3pie_title = {
+  text : string;
+}
+
+type d3pie_header = {
+  title : d3pie_title;
+}
+
+type d3pie_data_content = {
+  label : string;
+  value : int;
+}
+
+type d3pie_data = {
+  content : d3pie_data_content list;
+}
+
+type d3pie_settings = {
+  data : d3pie_data;
+  header : d3pie_header;
+}
+
+val default_settings:
+  d3pie_settings
+
+val update_data_content:
+  d3pie_data_content list ->
+  d3pie_settings ->
+  d3pie_settings
+    
+val d3pie:
   Dom_html.element Js.t ->
-  (string * int) list ->
+  d3pie_settings ->
   unit

@@ -82,51 +82,58 @@ let warnings_table warnings_entries plugins_entries =
   in
   Web_data_table.set table;
   table
-
+    
+let pie_settings content =
+  D3pie.default_settings
+  |> D3pie.update_data_content content
+    
 let warnings_pie_group_by_file warnings_entries =
   let values =
     warnings_entries
     |> warning_entries_group_by (fun entry -> entry.warning_file_name)
-    |> List.map begin fun (plugin, entries) ->
-         plugin, List.length entries
-       end
+    |> List.map begin fun (file, entries) -> {
+         D3pie.label = file;
+         D3pie.value = List.length entries;
+       } end
   in
   let div_pie =
     div []
   in
-  D3pie.create_pie (Tyxml_js.To_dom.of_element div_pie) values;
+  D3pie.d3pie (Tyxml_js.To_dom.of_element div_pie) (pie_settings values);
   div_pie
-    
+
 let warnings_pie_group_by_plugin warnings_entries =
   let values =
     warnings_entries
     |> warning_entries_group_by (fun entry -> entry.warning_plugin_name)
-    |> List.map begin fun (plugin, entries) ->
-         plugin, List.length entries
-       end
+    |> List.map begin fun (plugin, entries) -> {
+         D3pie.label = plugin;
+         D3pie.value = List.length entries;
+       } end
   in
   let div_pie =
     div []
   in
-  D3pie.create_pie (Tyxml_js.To_dom.of_element div_pie) values;
+  D3pie.d3pie (Tyxml_js.To_dom.of_element div_pie) (pie_settings values);
   div_pie
-    
+
 let warnings_pie_group_by_linter warnings_entries =
   let values =
     warnings_entries
     |> warning_entries_group_by begin fun entry ->
          (entry.warning_plugin_name, entry.warning_linter_name)
        end
-    |> List.map begin fun ((plugin,linter), entries) ->
-         plugin ^ "." ^ linter, List.length entries
-       end
+    |> List.map begin fun ((plugin,linter), entries) -> {
+         D3pie.label = plugin ^ "." ^ linter;
+         D3pie.value = List.length entries;
+       } end
   in
   let div_pie =
     div []
   in
-  D3pie.create_pie (Tyxml_js.To_dom.of_element div_pie) values;
+  D3pie.d3pie (Tyxml_js.To_dom.of_element div_pie) (pie_settings values);
   div_pie
-		     
+	     
 let content warnings_entries plugins_entries =
   let title =
     (string_of_int (List.length warnings_entries)) ^ " warning(s)"

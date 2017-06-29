@@ -20,9 +20,10 @@
 
 class type title = object
   method text : Js.js_string Js.t Js.prop
-  method color : Js.js_string Js.t Js.prop
-  method fontSize : int Js.prop
-  method font : Js.js_string Js.t Js.prop
+end
+
+class type header = object
+  method title : title Js.t Js.prop
 end
 
 class type dataContent = object
@@ -35,7 +36,7 @@ class type data = object
 end
 
 class type settings = object
-  (* method header : header Js.t Js.prop *)
+  method header : header Js.t Js.prop
   method data : data Js.t Js.prop
 end
 
