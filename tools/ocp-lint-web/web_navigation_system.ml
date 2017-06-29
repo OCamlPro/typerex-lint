@@ -177,7 +177,7 @@ let model_closable_tab name ne =
 	a_button_type `Button;
         a_class ["close"; "closeTab"];
       ]
-      [pcdata "\195"]
+      [pcdata "×"]
   in
   let tab = 
     li
