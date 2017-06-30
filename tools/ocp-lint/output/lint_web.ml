@@ -198,9 +198,9 @@ let plugins_database_raw_entries db =
       let linter_name = Linter.short_name in
       {
         plugin_name = plugin_name;
-        plugin_description = "";
+        plugin_description = Plugin.details;
         plugin_linter_name = linter_name;
-        plugin_linter_description = "";
+        plugin_linter_description = Linter.details;
       } :: acc
     end linters acc
   end db []
