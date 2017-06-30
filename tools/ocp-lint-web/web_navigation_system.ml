@@ -20,14 +20,13 @@
 
 open Tyxml_js.Html
 open Lint_warning_types
-open Lint_web_warning
-open Lint_web_plugin
-
+open Lint_web_analysis_info
+  
 type navigation_element =
   | HomeElement
   | PluginsElement
   | LinterElement
-  | WarningElement of database_warning_entry
+  | WarningElement of warning_info
 
 type navigation_value = {
   dom_tab : Dom_html.element Js.t;
@@ -45,7 +44,7 @@ module NavigationElement =
       | LinterElement, LinterElement -> true
       | WarningElement x, WarningElement y -> x = y
       | _ -> false
-    let hash e = 0
+    let hash e = 0 (* todo *)
   end
  
 module NavigationElementHashtbl = Hashtbl.Make(NavigationElement)
@@ -143,8 +142,8 @@ let navigation_element_tab_id = function
      "plugins-tab"
   | LinterElement ->
      "linters-tab"
-  | WarningElement warning_entry ->
-     "warning-" ^ (string_of_int warning_entry.warning_id) ^ "-tab"
+  | WarningElement warning_info ->
+     "warning-" ^ (string_of_int warning_info.warning_id) ^ "-tab"
 
 let navigation_element_content_id = function
   | HomeElement ->
@@ -153,8 +152,8 @@ let navigation_element_content_id = function
      "plugins-content"
   | LinterElement ->
      "linters-content"
-  | WarningElement warning_entry ->
-     "warning-" ^ (string_of_int warning_entry.warning_id) ^ "-content"
+  | WarningElement warning_info ->
+     "warning-" ^ (string_of_int warning_info.warning_id) ^ "-content"
 
 let model_simple_tab name ne =
   li
@@ -233,15 +232,15 @@ let create home_content plugins_content linter_content =
     (model_simple_content linter_content);
   tabs, contents
 
-let open_warning_tab warning warning_content =
-  let warning_element = WarningElement warning in
-  let tab_creator () =
-    model_closable_tab (string_of_int warning.warning_id) warning_element
-  in
-  let content_creator () =
-    model_simple_content warning_content warning_element
-  in
+let create_dynamic_element ne tab_creator content_creator =
   navigation_element_dynamic_create
-    (WarningElement warning)
-    tab_creator
-    content_creator
+    ne
+    (fun () -> tab_creator ne)
+    (fun () -> content_creator ne)
+
+let open_warning_tab warning_info warning_content =
+  let warning_element = WarningElement warning_info in
+  create_dynamic_element
+    warning_element
+    (model_closable_tab (string_of_int warning_info.warning_id))
+    (model_simple_content warning_content)

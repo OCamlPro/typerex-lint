@@ -19,18 +19,17 @@
 (**************************************************************************)
 
 open Lint_warning_types
-open Lint_web_warning
-open Lint_web_plugin
+open Lint_web_analysis_info
 open Web_errors
 
 type file_loc =
   | Floc_line of int
   | Floc_lines_cols of int * int * int * int
 					   
-let file_loc_of_warning_entry warning_entry =
+let file_loc_of_warning_info warning_info =
   let open Location in
   let open Lexing in
-  let loc = warning_entry.warning_result.loc in
+  let loc = warning_info.warning_type.loc in
   let col_of_pos pos = pos.pos_cnum - pos.pos_bol in
   if not loc.loc_ghost then
     Floc_lines_cols (
@@ -44,18 +43,18 @@ let file_loc_of_warning_entry warning_entry =
   else
     raise (Web_exception (Ghost_location loc))
 
-let warning_location_is_ghost warning_entry =
+let warning_info_is_ghost warning_info =
   let open Location in
   let open Lexing in
-  let loc = warning_entry.warning_result.loc in
+  let loc = warning_info.warning_type.loc in
   let ghost_warnings = [
     "plugin_file_system", "interface_missing", "missing_interface";
   ]
   in
   (List.exists begin fun (plugin,linter,warning) ->
-    warning_entry.warning_plugin_name = plugin
-    && warning_entry.warning_linter_name = linter
-    && warning_entry.warning_result.decl.short_name = warning
+    warning_info.warning_linter.linter_plugin.plugin_name = plugin
+    && warning_info.warning_linter.linter_name = linter
+    && warning_info.warning_type.decl.short_name = warning
    end ghost_warnings) || (loc.loc_ghost && (loc.loc_start.pos_lnum = 0))
       
 let get_element_by_id id =
@@ -77,21 +76,15 @@ let array_joining join arr =
     acc ^ join ^ line 
   end hd tl 
 
-let file_href warning_entry =
-    (Lint_web.web_static_gen_file warning_entry.warning_hash)
+let file_href file_info =
+    (generated_static_page_of_file file_info)
     ^ ".html"
 		  
-let warning_href warning_entry =
-    (Lint_web.web_static_gen_file warning_entry.warning_hash)
-    ^ ".html#"
-    ^ (string_of_int warning_entry.warning_id)
+let file_warning_href warning_info =
+  (generated_static_page_of_file warning_info.warning_file)
+  ^ ".html#"
+  ^ (string_of_int warning_info.warning_id)
 
 let json_from_js_var var =
   let (str : Js.js_string Js.t) = Js.Unsafe.variable var in
   Yojson.Basic.from_string (Js.to_string str)
-       
-let find_plugin_entry warning_entry plugins_entries =
-  List.find begin fun plugin_entry ->
-    warning_entry.warning_plugin_name = plugin_entry.plugin_name
-    && warning_entry.warning_linter_name = plugin_entry.plugin_linter_name
-  end plugins_entries

@@ -20,19 +20,18 @@
 
 open Tyxml_js.Html
 open Lint_warning_types
-open Lint_web_warning
-open Lint_web_plugin
+open Lint_web_analysis_info
 open Web_errors
 
-let main_page warnings_entries plugins_entries =
+let main_page analysis_info =
   let warnings_plugins =
-    warning_entries_group_by begin fun warning_entry ->
-      warning_entry.warning_plugin_name
-    end warnings_entries
+    Lint_web.group_by begin fun warning_info ->
+      warning_info.warning_linter.linter_plugin.plugin_name
+    end analysis_info.warnings_info
   in
   let tabs, contents =
     Web_navigation_system.create
-      (Web_home_content.content warnings_entries plugins_entries)
+      (Web_home_content.content analysis_info)
       (Web_plugin_content.content warnings_plugins)
       Web_linter_content.content
   in
@@ -42,21 +41,17 @@ let main_page warnings_entries plugins_entries =
       contents;
     ]
 
-let load_main_page warnings_entries plugins_entries =
-  let body = main_page warnings_entries plugins_entries in
+let load_main_page analysis_info =
+  let body = main_page analysis_info in
   Dom.appendChild (Dom_html.document##body) (Tyxml_js.To_dom.of_element body)
 		  			   
 let onload _ =
   try
-    let warnings_entries =
-      database_warning_entries_of_json
-	(Web_utils.json_from_js_var Lint_web.warnings_database_var)
+    let analysis_info =
+      analysis_info_of_json
+	(Web_utils.json_from_js_var Lint_web.analysis_info_var)
     in
-    let plugins_entries =
-      plugins_database_entries_of_json
-	(Web_utils.json_from_js_var Lint_web.plugins_database_var)
-    in
-    load_main_page warnings_entries plugins_entries;
+    load_main_page analysis_info;
     Js._true
   with
   | Web_exception e ->

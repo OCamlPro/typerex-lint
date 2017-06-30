@@ -18,27 +18,59 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-type database_warning_entry = {
-  warning_id : int;
-  warning_file_name : string;
-  warning_hash : Digest.t;
-  warning_file_lines_count : int;
-  warning_plugin_name : string;
-  warning_linter_name : string;
-  warning_linter_version : string;
-  (* option / source *)
-  warning_result : Lint_warning_types.warning;
+type file_info = {
+  file_name : string;
+  file_hash : Digest.t;
+  file_lines_count : int;
 }
 
-val warning_entries_group_by:
-  (database_warning_entry -> 'a) ->
-  database_warning_entry list ->
-  ('a * database_warning_entry list) list
-				
-val json_of_database_warning_entries :
-  database_warning_entry list ->
+type plugin_info = {
+  plugin_name : string;
+  plugin_description : string;
+}
+
+type linter_info = {
+  linter_plugin : plugin_info;
+  linter_name : string;
+  linter_description : string;
+}
+
+type warning_info = {
+  warning_id : int;
+  warning_file : file_info;
+  warning_linter : linter_info;
+  warning_type : Lint_warning_types.warning;
+}
+
+type error_info = {
+  error_file : file_info;
+  error_type : Lint_db_types.error;
+}
+
+type analysis_info = {
+  files_info : file_info list;
+  plugins_info : plugin_info list;
+  linters_info : linter_info list;
+  warnings_info : warning_info list;
+  errors_info : error_info list;
+}
+
+val generated_static_page_of_file :
+  file_info ->
+  string
+
+val json_of_warnings_info :
+  warning_info list ->
   Yojson.Basic.json
 
-val database_warning_entries_of_json :
+val warnings_info_of_json :
   Yojson.Basic.json ->
-  database_warning_entry list
+  warning_info list
+
+val json_of_analysis_info :
+  analysis_info ->
+  Yojson.Basic.json
+    
+val analysis_info_of_json :
+  Yojson.Basic.json ->
+  analysis_info

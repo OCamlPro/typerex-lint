@@ -32,8 +32,7 @@ end
 
 begin library "ocp-lint-output-web"
   files = [
-    "lint_web_warning.ml"
-    "lint_web_plugin.ml"
+    "lint_web_analysis_info.ml"
     "lint_web.ml"
   ]
   requires = [

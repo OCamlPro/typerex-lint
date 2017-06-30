@@ -569,7 +569,8 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
       master_config
       !file_config_dep
       path
-      Lint_db.DefaultDB.db;
+      Lint_db.DefaultDB.db
+      Lint_db.DefaultDB.db_errors;
   Lint_text.summary
     master_config
     !file_config_dep

@@ -21,10 +21,9 @@
 open Tyxml_js.Html
 open Lint_web
 open Lint_warning_types
-open Lint_web_warning
-open Lint_web_plugin
-       
-let warning_content_code_view_header warning_entry =
+open Lint_web_analysis_info
+
+let warning_content_code_view_header warning_info =
   div
     ~a:[
       a_class ["panel-heading"];
@@ -32,40 +31,40 @@ let warning_content_code_view_header warning_entry =
     [
       a
 	~a:[
-	  a_href (Web_utils.file_href warning_entry);
+	  a_href (Web_utils.file_href warning_info.warning_file);
 	]
-	[pcdata warning_entry.warning_file_name]
+	[pcdata warning_info.warning_file.file_name]
     ]
 
-let warning_content_code_view_body warning_entry =
+let warning_content_code_view_body warning_info =
   div
     ~a:[
       a_class ["panel-body"];
     ]
     [
-      Web_code_viewer.warning_code_viewer warning_entry;
+      Web_code_viewer.warning_code_viewer warning_info;
     ]
     
-let warning_content_code_view warning_entry =
+let warning_content_code_view warning_info =
   div
     ~a:[
       a_class ["panel"; "panel-default"];
     ]
     [
-      warning_content_code_view_header warning_entry;
-      warning_content_code_view_body warning_entry;
+      warning_content_code_view_header warning_info;
+      warning_content_code_view_body warning_info;
     ]
   
-let warning_content warning_entry plugin_entry =
+let warning_content warning_info =
   let warning_desc =
-    "Warning " ^ (string_of_int warning_entry.warning_result.decl.id) ^ " :"
+    "Warning " ^ (string_of_int warning_info.warning_type.decl.id) ^ " :"
   in
   let linter_desc =
-    plugin_entry.plugin_linter_name
+    warning_info.warning_linter.linter_name
     ^ " : "
-    ^ plugin_entry.plugin_linter_description
+    ^ warning_info.warning_linter.linter_description
   in
-  if Web_utils.warning_location_is_ghost warning_entry then
+  if Web_utils.warning_info_is_ghost warning_info then
     div
       [
 	h3 [pcdata warning_desc];
@@ -77,6 +76,5 @@ let warning_content warning_entry plugin_entry =
 	h3 [pcdata warning_desc];
 	h3 [pcdata linter_desc];
 	br ();
-	warning_content_code_view warning_entry;
+	warning_content_code_view warning_info;
       ]
-

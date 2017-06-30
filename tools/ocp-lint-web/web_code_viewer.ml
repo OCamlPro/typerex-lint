@@ -21,10 +21,8 @@
 open Tyxml_js.Html
 open Ace
 open Lint_warning_types
-open Lint_web_warning
+open Lint_web_analysis_info
 open Web_errors
-
-(* todo ajouter fonction pour voir tout le fichier avec les warnings *)
 
 let theme =
   "monokai"
@@ -56,13 +54,13 @@ let set_default_code_viewer ace =
 let set_warning_code_viewer ace warning =
   let begin_line, begin_col, end_line, end_col =
     let open Web_utils in
-    match file_loc_of_warning_entry warning with
+    match file_loc_of_warning_info warning with
     | Floc_line line ->
        line, 0, line, String.length (Ace.get_line ace (line - 1))
     | Floc_lines_cols (bline, bcol, eline, ecol) ->
        bline, bcol, eline, ecol
   in
-  let length = warning.warning_file_lines_count in
+  let length = warning.warning_file.file_lines_count in
   (* todo fun *)
   let begin_context = min (begin_line - 1) context_line_number in
   let end_context = min (length - end_line) context_line_number in
@@ -85,37 +83,37 @@ let set_warning_code_viewer ace warning =
   Ace.clear_selection ace;
   Ace.set_first_line_number ace begin_with_context;
   Ace.add_marker ace Ace.Warning loc;
-  Ace.set_annotation ace Ace.Warning warning.warning_result.output loc
+  Ace.set_annotation ace Ace.Warning warning.warning_type.output loc
 
-let set_file_code_viewer ace warnings_entries =
+let set_file_code_viewer ace warnings =
   let warnings =
-    warning_entries_group_by begin fun entry ->
+    Lint_web.group_by begin fun warning_info ->
       let open Web_utils in
-      match file_loc_of_warning_entry entry with
+      match file_loc_of_warning_info warning_info with
       | Floc_line line ->
          line
       | Floc_lines_cols (line, _, _, _) ->
          line
-    end warnings_entries
+    end warnings
   in
-  List.iter begin fun (line, entries) ->
+  List.iter begin fun (line, warnings_info) ->
     let loc = {
       loc_start = line, 0;
       loc_end = line, 0;
     }
     in
     let tooltip =
-      (string_of_int (List.length entries))
+      (string_of_int (List.length warnings_info))
       ^ " warning(s) : \n - "
       ^ Web_utils.list_joining
           "\n - "
-	  (List.map (fun entry -> entry.warning_result.output) entries)
+	  (List.map (fun warning -> warning.warning_type.output) warnings_info)
     in
     Ace.set_annotation ace Ace.Warning tooltip loc;
-    List.iter begin fun entry ->
+    List.iter begin fun warning ->
       let begin_line, begin_col, end_line, end_col =
 	let open Web_utils in
-	match file_loc_of_warning_entry entry with
+	match file_loc_of_warning_info warning with
 	| Floc_line line ->
 	   line, 0, line, String.length (Ace.get_line ace (line - 1))
 	| Floc_lines_cols (bline, bcol, eline, ecol) ->
@@ -123,36 +121,38 @@ let set_file_code_viewer ace warnings_entries =
       in
       let loc = ace_loc begin_line begin_col end_line end_col in
       Ace.add_marker ace Ace.Warning loc
-    end entries
+    end warnings_info
   end warnings
   
-let init_code_viewer warnings_entries id =
+let init_code_viewer warnings_info id =
   let code_div = Web_utils.get_element_by_id Lint_web.web_code_viewer_id in
   let ace = Ace.create_editor (Tyxml_js.To_dom.of_div code_div) in
   set_default_code_viewer ace;
   match id with
   | Some x ->
-     let entry =
+     let warning_info =
        try
-	 List.find (fun entry -> entry.warning_id = x) warnings_entries
+	 List.find begin fun warning ->
+           warning.warning_id = x
+         end warnings_info
        with
 	 Not_found ->
 	   raise (Web_exception (Unknow_warning_id (string_of_int x)))
      in
-     set_warning_code_viewer ace entry
+     set_warning_code_viewer ace warning_info
   | None ->
      let printable_warnings =
-       List.filter begin fun entry ->
-         not (Web_utils.warning_location_is_ghost entry)
-       end warnings_entries
+       List.filter begin fun warning_info ->
+         not (Web_utils.warning_info_is_ghost warning_info)
+       end warnings_info
      in
      set_file_code_viewer ace printable_warnings
 
 let onload _ =
   try
-    let warnings_entries =
-      database_warning_entries_of_json
-	(Web_utils.json_from_js_var Lint_web.warnings_database_var)
+    let warnings_info =
+      warnings_info_of_json
+	(Web_utils.json_from_js_var Lint_web.warnings_info_var)
     in
     let fragment = Url.Current.get_fragment () in
     let id =
@@ -164,7 +164,7 @@ let onload _ =
 	with
           Failure _ -> raise (Web_exception (Unknow_warning_id fragment))
     in
-    init_code_viewer warnings_entries id;
+    init_code_viewer warnings_info id;
     Js._true
   with
   | Web_exception e ->
@@ -176,17 +176,16 @@ let onload _ =
 let () =
   Dom_html.window##onload <- Dom_html.handler onload
 
-let warning_code_viewer warning_entry =
-  (* todo fun *)
+let warning_code_viewer warning_info =
   let begin_line, end_line =
     let open Web_utils in
-    match file_loc_of_warning_entry warning_entry with
+    match file_loc_of_warning_info warning_info with
     | Floc_line line ->
        line, line
     | Floc_lines_cols (bline, _, eline, _) ->
        bline, eline
   in
-  let length = warning_entry.warning_file_lines_count in
+  let length = warning_info.warning_file.file_lines_count in
   (* todo fun *)
   let begin_context = min (begin_line - 1) context_line_number in
   let end_context = min (length - end_line) context_line_number in
@@ -198,7 +197,7 @@ let warning_code_viewer warning_entry =
   in
   iframe
     ~a:[
-        a_src (Web_utils.warning_href warning_entry);
+        a_src (Web_utils.file_warning_href warning_info);
         a_style ("height: " ^ (string_of_int height) ^ "px");
     ]
     []

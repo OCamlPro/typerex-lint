@@ -21,8 +21,7 @@
 open Tyxml.Html
 open Lint_db_types
 open Lint_warning_types
-open Lint_web_warning
-open Lint_web_plugin
+open Lint_web_analysis_info
 
 let write_string fd str =
    let str = Bytes.of_string str in
@@ -68,7 +67,6 @@ let escaped_copy reader out_fd =
        copy_loop ()
      end in
   copy_loop ()
-
 let dump_js_string out_fd s =
    let i = ref 0 in
    let len = String.length s in
@@ -112,6 +110,24 @@ let emit_page name page =
   pp () fmt page; (* pretty print *)
   close_out file
 
+(* todo utils *)
+let group_by clss lst = (*** todo changer implantation ***)
+  let rec aux acc = function
+    | [] -> acc
+    | (cx, x) :: y -> (*** todo changer ***)
+       begin match acc with
+             | (cx', x') :: y' when cx = cx' ->
+                aux ((cx, x :: x') :: y') y
+             | _ ->
+                aux ((cx, [x]) :: acc) y
+       end
+  in
+  lst
+  |> List.map (fun x -> clss x, x) (*** ***)
+  |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
+  |> aux []
+(*           *)
+
 let path_of_dir_list dirs =
   List.fold_left begin fun acc dir ->
     Filename.concat acc dir
@@ -151,59 +167,127 @@ let warnings_activations plugin_name linter_name =
   let opt = [plugin_name; linter_name; "warnings"] in
   Lint_parse_args.parse_options (Lint_globals.Config.get_option_value opt)
 
-let warnings_database_raw_entries db master_config file_config =
-  let _,entries =
-    Hashtbl.fold begin fun file_name (hash, plugin_map) acc ->
+let make_plugins_linters_info plugins_tbl =
+  Hashtbl.fold begin fun plugin linters (plugin_acc,linter_acc) ->
+    let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
+    if Plugin.enable then
+      let plugin_info =
+        {
+          plugin_name = Plugin.short_name;
+          plugin_description = Plugin.details;
+        }
+      in
+      plugin_info :: plugin_acc,
+      Lint_map.fold begin fun lname lint linter_acc ->
+        let module Linter = (val lint : Lint_types.LINT) in
+        if Linter.enable then
+          let linter_info =
+            {
+              linter_plugin = plugin_info;
+              linter_name = Linter.short_name;
+              linter_description = Linter.details;
+            }
+          in
+          linter_info :: linter_acc
+        else
+          linter_acc
+      end linters linter_acc
+    else
+      plugin_acc, linter_acc
+  end plugins_tbl ([],[])
+
+let make_files_warnings_info master_config file_config linters_info db =
+  let _, files_info, warnings_info =
+    Hashtbl.fold begin
+      fun file_name (hash,plugin_map) (id,file_acc,warning_acc) ->
       let configs ,cfg_opt = find_cfg_tmp file_name file_config in
       begin match cfg_opt with
          | None -> ()
          | Some cfg -> Lint_globals.Config.load_config_tmp master_config cfg
       end;
-      StringMap.fold begin fun plugin_name linter_map acc ->
+      let file_info =
+        {
+          file_name = file_name;
+          file_hash = hash;
+          file_lines_count = Lint_utils.lines_count_of_file file_name;
+        }
+      in
+      let id, warnings_info =
+        StringMap.fold begin fun plugin_name linter_map (id,warning_acc) ->
         if plugin_is_enabled plugin_name then
-          StringMap.fold begin fun linter_name linter_result acc ->
+          StringMap.fold begin fun linter_name linter_result (id,warning_acc) ->
             if linter_is_enabled plugin_name linter_name then
               let arr = warnings_activations plugin_name linter_name in
-              List.fold_left begin fun (id,acc) warning_result ->
+              List.fold_left begin fun (id,warning_acc) warning_result ->
                 if arr.(warning_result.decl.id - 1) then
-                  let lines_count = Lint_utils.lines_count_of_file file_name in
-                  id + 1, {
-                    warning_id = id;
-                    warning_file_name = file_name;
-                    warning_hash = hash;
-                    warning_file_lines_count = lines_count;
-                    warning_plugin_name = plugin_name;
-                    warning_linter_name = linter_name;
-                    warning_linter_version = linter_result.res_version;
-                    warning_result = warning_result;
-                  } :: acc
+                  let linter_info =
+                    List.find begin fun linter ->
+                      linter.linter_name = linter_name
+                      && linter.linter_plugin.plugin_name = plugin_name
+                    end linters_info
+                  in
+                  let warning_info =
+                    {
+                      warning_id = id;
+                      warning_file = file_info;
+                      warning_linter = linter_info;
+                      warning_type = warning_result;
+                    }
+                  in
+                  id + 1, warning_info :: warning_acc
                 else
-                  id, acc
-              end acc linter_result.res_warnings
+                  id, warning_acc
+              end (id, warning_acc) linter_result.res_warnings
             else
-              acc
-          end linter_map acc
+              id, warning_acc
+          end linter_map (id, warning_acc)
         else
-          acc
-      end plugin_map acc
-    end db (0,[])
-  in entries
+          id, warning_acc
+        end plugin_map (id, warning_acc)
+      in
+      id, file_info :: file_acc, warnings_info
+    end db (0, [],[])
+  in
+  files_info, warnings_info
 
-let plugins_database_raw_entries db =
-  Hashtbl.fold begin fun plugin linters acc ->
-    let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
-    let plugin_name = Plugin.short_name in
-    Lint_map.fold begin fun lname lint acc ->
-      let module Linter = (val lint : Lint_types.LINT) in
-      let linter_name = Linter.short_name in
-      {
-        plugin_name = plugin_name;
-        plugin_description = Plugin.details;
-        plugin_linter_name = linter_name;
-        plugin_linter_description = Linter.details;
-      } :: acc
-    end linters acc
-  end db []
+let make_errors_info files_info db_error =
+  Hashtbl.fold begin fun file error_set acc ->
+    if not (ErrorSet.is_empty error_set) then
+      let file_info =
+        List.find begin fun file_info ->
+          file_info.file_name = file
+        end files_info
+      in
+      ErrorSet.fold begin fun error acc ->
+        let error_info =
+          {
+            error_file = file_info;
+            error_type = error;
+          }
+        in
+        error_info :: acc
+      end error_set acc
+    else
+      acc
+  end db_error []
+
+let make_analysis_info master_config file_config db db_error plugins_tbl =
+  let plugins_info, linters_info =
+    make_plugins_linters_info plugins_tbl
+  in
+  let files_info, warnings_info =
+    make_files_warnings_info master_config file_config linters_info db
+  in
+  let errors_info =
+    make_errors_info files_info db_error
+  in
+  {
+    files_info = files_info;
+    plugins_info = plugins_info;
+    linters_info = linters_info;
+    warnings_info = warnings_info;
+    errors_info = errors_info;
+  }
 
 let output_path =
   path_of_dir_list ["tools"; "ocp-lint-web"; "static"]
@@ -217,23 +301,17 @@ let path_of_css fname =
 let path_of_html fname =
   fname ^ ".html"
 
-let warnings_database_file =
-  "ocp_lint_web_json_warnings_database"
+let analysis_info_file =
+  "ocp_lint_web_analysis_info"
 
-let warnings_database_var =
-  "warnings_json"
+let analysis_info_var =
+  "analysis_info_json"
 
-let plugins_database_file =
-  "ocp_lint_web_json_plugins_database"
-
-let plugins_database_var =
-  "plugins_json"
+let warnings_info_var =
+  "info_warnings_json"
 
 let web_code_viewer_id =
   "ocp-code-viewer"
-
-let web_static_gen_file file_hash =
-  "ocp_lint_web_generated_" ^ (Digest.to_hex file_hash)
 
 let html_of_index =
   let css_files = [
@@ -243,13 +321,12 @@ let html_of_index =
     "adjustment_bootstrap";
   ] in
   let js_files = [
-    warnings_database_file;
-    plugins_database_file;
-    "ace"; (*** tmp ***)
+    analysis_info_file;
+    "ace"; (*** todo delete ***)
     "ocp_lint_web";
-    "jquery.min"; (*** 11 ***)
+    "jquery.min"; (*** todo ***)
     "bootstrap.min";
-    "jquery-1.12.4"; (*** 11 ***)
+    "jquery-1.12.4"; (*** todo ***)
     "jquery.dataTables.min";
     "d3";
     "d3pie.min";
@@ -275,7 +352,7 @@ let html_of_src_viewer src =
     ]
     [pcdata src]
 
-let html_of_ocaml_src fname hash warnings_entries src =
+let html_of_ocaml_src file_info warnings_info src =
   let css_files = [
     "adjustment_ace";
   ]
@@ -285,67 +362,61 @@ let html_of_ocaml_src fname hash warnings_entries src =
     "ocp_lint_web_codeviewer";
   ]
   in
-  let js_var =
+  let js_warnings_info_var =
     js_string_of_json_var
-      warnings_database_var
-      (json_of_database_warning_entries warnings_entries)
+      warnings_info_var
+      (json_of_warnings_info warnings_info)
   in
   html
     begin head
-      (title (pcdata fname))
+      (title (pcdata file_info.file_name))
       (List.map begin fun src ->
         link ~rel:[`Stylesheet] ~href:(path_of_css src) ()
        end css_files)
     end
     begin body
       (html_of_src_viewer src
-         :: script (cdata_script js_var)
+         :: script (cdata_script js_warnings_info_var)
          :: List.map begin fun src ->
               script ~a:[a_src (Xml.uri_of_string (path_of_js src))] (pcdata "")
             end js_files)
     end
 
-let print fmt master_config file_config path db = (* renommer *)
-  let warnings_entries =
-    warnings_database_raw_entries db master_config file_config
+let print fmt master_config file_config path db db_error = (* renommer *)
+  let analysis_info =
+    make_analysis_info
+      master_config
+      file_config
+      db
+      db_error
+      Lint_globals.plugins
   in
-  let json_warnings =
+  let json_analysis =
     Yojson.Basic.pretty_to_string
-      (json_of_database_warning_entries warnings_entries)
-  in
-  let plugins_entries =
-    plugins_database_raw_entries Lint_globals.plugins
-  in
-  let json_plugins =
-    Yojson.Basic.pretty_to_string
-      (json_of_plugins_database_entries plugins_entries)
+      (json_of_analysis_info analysis_info)
   in
   clear_dir output_path;
   dump_js_var_file
-    (Filename.concat output_path (path_of_js warnings_database_file))
-    warnings_database_var
-    json_warnings;
-  dump_js_var_file
-    (Filename.concat output_path (path_of_js plugins_database_file))
-    plugins_database_var
-    json_plugins;
-  let warnings_entries_file =
-    warning_entries_group_by begin fun warning_entry ->
-      (warning_entry.warning_file_name, warning_entry.warning_hash)
-    end warnings_entries
+    (Filename.concat output_path (path_of_js analysis_info_file))
+    analysis_info_var
+    json_analysis;
+  let warnings_info_file =
+    group_by begin fun warning_info ->
+      warning_info.warning_file
+    end analysis_info.warnings_info
   in
-  List.iter begin fun ((filename, hash), entries) ->
+  List.iter begin fun (file_info, warnings_info) ->
     let html_src =
       html_of_ocaml_src
-        filename
-        hash
-        entries
-        (Lint_utils.read_file filename)
+        file_info
+        warnings_info
+        (Lint_utils.read_file file_info.file_name)
     in
+    let page_name = generated_static_page_of_file file_info in
     emit_page
-      (Filename.concat output_path (path_of_html (web_static_gen_file hash)))
+      (Filename.concat output_path (path_of_html page_name))
       html_src
-  end warnings_entries_file;
+  end warnings_info_file;
   emit_page
     (Filename.concat output_path (path_of_html "index"))
     html_of_index

@@ -18,24 +18,21 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-val warnings_database_file:
+val analysis_info_var:
   string
 
-val warnings_database_var:
-  string
-
-val plugins_database_file:
-  string
-
-val plugins_database_var:
-  string
-
-val web_code_viewer_id:
+val warnings_info_var:
   string
     
-val web_static_gen_file:
-  Digest.t ->
+val web_code_viewer_id:
   string
+
+(* todo utils *)
+val group_by:
+  ('a -> 'b) ->
+  'a list ->
+  ('b * 'a list) list
+(*            *)
   
 val print:
   Format.formatter ->
@@ -43,4 +40,5 @@ val print:
   (Lint_utils.file_struct * ((string list) * string)) list ->
   string ->
   Lint_db_types.t ->
+  Lint_db_types.errors ->
   unit
