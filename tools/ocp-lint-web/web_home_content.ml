@@ -86,7 +86,8 @@ let warnings_table warnings_entries plugins_entries =
 let div_warning_pie values =
   let settings =
     D3pie.default_settings
-    |> D3pie.update_data_content values
+    |> D3pie.set_data_content values
+    |> D3pie.set_data_sort_order D3pie.Sort_by_value_desc
   in
   let div_pie =
     div []

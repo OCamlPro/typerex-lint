@@ -31,8 +31,14 @@ type d3pie_data_content = {
   value : int;
 }
 
+type d3pie_sort_order =
+  | No_sort
+  | Sort_by_value_asc
+  | Sort_by_value_desc
+		      
 type d3pie_data = {
   content : d3pie_data_content list;
+  sort_order : d3pie_sort_order;
 }
 
 type d3pie_settings = {
@@ -43,11 +49,16 @@ type d3pie_settings = {
 val default_settings:
   d3pie_settings
 
-val update_data_content:
+val set_data_content:
   d3pie_data_content list ->
   d3pie_settings ->
   d3pie_settings
-    
+
+val set_data_sort_order:
+  d3pie_sort_order ->
+  d3pie_settings ->
+  d3pie_settings
+
 val d3pie:
   Dom_html.element Js.t ->
   d3pie_settings ->

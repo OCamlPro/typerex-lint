@@ -65,22 +65,41 @@ let create_data_content label value =
 
 let class_of_data_content data_content =
   create_data_content (Js.string data_content.label) data_content.value
-		      
+
+type d3pie_sort_order =
+  | No_sort
+  | Sort_by_value_asc
+  | Sort_by_value_desc
+
+let create_sort_order sort_order =
+  let str =
+    match sort_order with
+    | No_sort -> "none"
+    | Sort_by_value_asc -> "value-asc"
+    | Sort_by_value_desc -> "value-desc"
+  in
+  Js.string str
+
 type d3pie_data = {
   content : d3pie_data_content list;
+  sort_order : d3pie_sort_order;
 }
 
-let create_data content =
+let create_data content sort_order =
   let data : data Js.t = Js.Unsafe.obj [||] in
   data##content <- content;
+  data##sortOrder <- sort_order;
   data
 
 let class_of_data data =
   let content = List.map class_of_data_content data.content in
-  create_data (Js.array (Array.of_list content))
+  create_data
+    (Js.array (Array.of_list content))
+    (create_sort_order data.sort_order)
 
 let default_data = {
   content = [];
+  sort_order = No_sort;
 }
 		     
 type d3pie_settings = {
@@ -104,12 +123,21 @@ let default_settings = {
   header = default_header;
 }
 
-let update_data_content data_content settings =
+let set_data_content data_content settings =
   {
     settings with
     data = {
-      (* settings.data with *)
+      settings.data with
       content = data_content; 
+    };
+  }
+
+let set_data_sort_order sort_order settings =
+  {
+    settings with
+    data = {
+      settings.data with
+      sort_order = sort_order; 
     };
   }
 			 

@@ -32,6 +32,7 @@ class type dataContent = object
 end
 
 class type data = object
+  method sortOrder : Js.js_string Js.t Js.prop
   method content : dataContent Js.t Js.js_array Js.t Js.prop
 end
 
