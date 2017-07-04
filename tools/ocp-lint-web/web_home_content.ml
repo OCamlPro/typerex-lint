@@ -165,43 +165,43 @@ let warnings_pie_group_by_severity warnings_info =
   div_warning_pie values
 
 let dashboard_head analysis_info =
-  let div_stat stat =
+  let div_stat stat msg =
     div
       ~a:[
-        a_class ["col-md-2"];
+        a_class ["col-md-2"; "tile-stats-container"];
       ]
-      [pcdata stat]
-  in
-  let errors_stat =
-    (string_of_int (List.length analysis_info.errors_info))
-    ^ " errors raised"
-  in
-  let warnings_stat =
-    (string_of_int (List.length analysis_info.warnings_info))
-    ^ " warnings raised"
-  in
-  let files_stat =
-    (string_of_int (List.length analysis_info.files_info))
-    ^ " files analyzed"
-  in
-  let plugins_stat =
-    (string_of_int (List.length analysis_info.plugins_info))
-    ^ " plugins activated"
-  in
-  let linters_stat =
-    (string_of_int (List.length analysis_info.linters_info))
-    ^ " linters activated"
+      [
+        div
+	  ~a:[
+	    a_class ["tile-stats"];
+	  ]
+          [
+            span ~a:[a_class ["stat-top"]] [pcdata msg];
+            div ~a:[a_class ["stat-value"]] [pcdata stat];
+            span ~a:[a_class ["stat-bottom"]] [pcdata msg];
+          ]
+      ]
   in
   div
     ~a:[
-      a_class ["row"]
+      a_class ["row"; "dashboard-header"]
     ]
     [
-      div_stat errors_stat;
-      div_stat warnings_stat;
-      div_stat files_stat;
-      div_stat plugins_stat;
-      div_stat linters_stat;
+      div_stat
+        (string_of_int (List.length analysis_info.errors_info))
+        ("errors raised");
+      div_stat
+        (string_of_int (List.length analysis_info.warnings_info))
+        ("warnings raised");
+      div_stat
+        (string_of_int (List.length analysis_info.files_info))
+        ("files analyzed");
+      div_stat
+        (string_of_int (List.length analysis_info.plugins_info))
+        ("plugins activated");
+      div_stat
+        (string_of_int (List.length analysis_info.linters_info))
+        ("linters activated");
     ]
 
 let content analysis_info =

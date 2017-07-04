@@ -319,6 +319,7 @@ let html_of_index =
     "bootstrap.min";
     "adjustment_dataTables";
     "adjustment_bootstrap";
+    "ocp_lint_web"
   ] in
   let js_files = [
     analysis_info_file;
