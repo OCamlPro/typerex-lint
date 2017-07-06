@@ -18,6 +18,10 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+(**
+ Documentation : d3pie.org/#docs
+ **)
+
 class type title = object
   method text : Js.js_string Js.t Js.prop
 end
@@ -29,6 +33,7 @@ end
 class type dataContent = object
   method label : Js.js_string Js.t Js.prop
   method value : int Js.prop
+  method caption : Js.js_string Js.t Js.prop
 end
 
 class type data = object
@@ -36,9 +41,70 @@ class type data = object
   method content : dataContent Js.t Js.js_array Js.t Js.prop
 end
 
+class type size = object
+  method canvasHeight : int Js.prop
+  method canvasWidth : int Js.prop
+  method pieInnerRadius : Js.js_string Js.t Js.prop
+  method pieOuterRadius : Js.js_string Js.t Js.opt Js.prop
+end
+
+class type innerLabelsDescriptor = object
+  method format : Js.js_string Js.t Js.prop
+  method hideWhenLessThanPercentage : int Js.opt Js.prop
+end
+
+class type outerLabelsDescriptor = object
+  method format : Js.js_string Js.t Js.prop
+  method hideWhenLessThanPercentage : int Js.opt Js.prop
+  method pieDistance : int Js.prop
+end
+
+class type labels = object
+  method inner : innerLabelsDescriptor Js.t Js.prop
+  method outer : outerLabelsDescriptor Js.t Js.prop
+end
+
+class type loadEffect = object
+  method effect : Js.js_string Js.t Js.prop
+  method speed : int Js.prop
+end
+
+class type pullOutSegmentOnClickEffect = object
+  method effect : Js.js_string Js.t Js.prop
+  method speed : int Js.prop
+  method size : int Js.prop
+end
+
+class type effects = object
+  method load : loadEffect Js.t Js.prop
+  method pullOutSegmentOnClick : loadEffect Js.t Js.prop
+end
+
+class type tooltips = object
+  method enabled : bool Js.t Js.prop
+  method type_ : Js.js_string Js.t Js.prop
+end
+
+class type callbackArgument = object
+  method segment : Dom_html.element Js.t Js.prop
+  method index : int Js.prop
+  method expanded : bool Js.t Js.prop
+  method data : dataContent Js.t Js.prop
+end
+
+class type callbacks = object
+  method onClickSegment :
+    (callbackArgument Js.t -> unit) Js.callback Js.writeonly_prop
+end
+
 class type settings = object
   method header : header Js.t Js.prop
+  method size : size Js.t Js.prop
   method data : data Js.t Js.prop
+  method labels : labels Js.t Js.prop
+  method effects : effects Js.t Js.prop
+  method tooltips : tooltips Js.t Js.prop
+  method callbacks : callbacks Js.t Js.prop
 end
 
 class type pie = object

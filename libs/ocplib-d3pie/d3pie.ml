@@ -20,6 +20,10 @@
 
 open D3pie_types
 
+let js_option_of_option = function
+  | None -> Js.null
+  | Some x -> Js.some x
+
 type d3pie_title = {
   text : string;
 }
@@ -51,20 +55,88 @@ let class_of_header header =
 let default_header = {
   title = default_title;
 }
-	       
+
+type d3pie_size_radius_value =
+  | Radius_default
+  | Radius_pixels of int
+  | Radius_percentage of int
+
+type d3pie_size = {
+  canvas_height : int;
+  canvas_width : int;
+  pie_inner_radius : d3pie_size_radius_value;
+  pie_outer_radius : d3pie_size_radius_value;
+}
+
+let create_size_inner_radius = function
+  | Radius_default ->
+     Js.string "0%"
+  | Radius_pixels n ->
+     Js.string (string_of_int n)
+  | Radius_percentage n ->
+     Js.string (string_of_int n ^ "%")
+
+let create_size_outer_radius = function
+  | Radius_default ->
+     Js.null
+  | Radius_pixels n ->
+     Js.some (Js.string (string_of_int n))
+  | Radius_percentage n ->
+     Js.some (Js.string (string_of_int n ^ "%"))
+
+let create_size canvas_height canvas_width pie_inner_radius pie_outer_radius =
+  let size : size Js.t = Js.Unsafe.obj [| |] in
+  size##canvasHeight <- canvas_height;
+  size##canvasWidth <- canvas_width;
+  size##pieInnerRadius <- pie_inner_radius;
+  size##pieOuterRadius <- pie_outer_radius;
+  size
+
+let class_of_size size =
+  create_size
+    size.canvas_height
+    size.canvas_width
+    (create_size_inner_radius size.pie_inner_radius)
+    (create_size_outer_radius size.pie_outer_radius)
+
+let default_size = {
+  canvas_height = 500;
+  canvas_width = 500;
+  pie_inner_radius = Radius_default;
+  pie_outer_radius = Radius_default;
+}
+
 type d3pie_data_content = {
   label : string;
   value : int;
+  caption : string;
 }
 
-let create_data_content label value =
-  let data_content : dataContent Js.t = Js.Unsafe.obj [||] in
+let create_data_content label value caption =
+  let data_content : dataContent Js.t = Js.Unsafe.obj [| |] in
   data_content##label <- label;
   data_content##value <- value;
+  data_content##caption <- caption;
   data_content
 
 let class_of_data_content data_content =
-  create_data_content (Js.string data_content.label) data_content.value
+  create_data_content
+    (Js.string data_content.label)
+    data_content.value
+    (Js.string data_content.caption)
+
+let data_content_of_class dataContent =
+  {
+    label = Js.to_string (dataContent##label);
+    value = dataContent##value;
+    caption = Js.to_string (dataContent##caption);
+  }
+
+let default_data_content = {
+  label = "";
+  value = 0;
+  caption = "";
+}
 
 type d3pie_sort_order =
   | No_sort
@@ -86,7 +158,7 @@ type d3pie_data = {
 }
 
 let create_data content sort_order =
-  let data : data Js.t = Js.Unsafe.obj [||] in
+  let data : data Js.t = Js.Unsafe.obj [| |] in
   data##content <- content;
   data##sortOrder <- sort_order;
   data
@@ -101,26 +173,301 @@ let default_data = {
   content = [];
   sort_order = No_sort;
 }
-		     
+
+type d3pie_label_format_value =
+  | Format_none
+  | Format_label
+  | Format_value
+  | Format_percentage
+
+let create_label_format_value format_value =
+  let str =
+    match format_value with
+    | Format_none -> "none"
+    | Format_label -> "label"
+    | Format_value -> "value"
+    | Format_percentage -> "percentage"
+  in
+  Js.string str
+
+type d3pie_inner_labels_descriptor = {
+  format : d3pie_label_format_value;
+  hide_when_less_than_percentage : int option;
+}
+
+let create_inner_labels_descriptor format hide_when_less_than_percentage =
+  let inner_labels_descriptor : innerLabelsDescriptor Js.t =
+    Js.Unsafe.obj [| |]
+  in
+  inner_labels_descriptor##format <-
+    format;
+  inner_labels_descriptor##hideWhenLessThanPercentage <-
+    hide_when_less_than_percentage;
+  inner_labels_descriptor
+
+let class_of_inner_labels_descriptor inner_labels_descriptor =
+  create_inner_labels_descriptor
+    (create_label_format_value inner_labels_descriptor.format)
+    (js_option_of_option inner_labels_descriptor.hide_when_less_than_percentage)
+
+let default_inner_labels_descriptor = {
+  format = Format_percentage;
+  hide_when_less_than_percentage = None;
+}
+
+type d3pie_outer_labels_descriptor = {
+  format : d3pie_label_format_value;
+  hide_when_less_than_percentage : int option;
+  pie_distance : int;
+}
+
+let create_outer_labels_descriptor
+      format hide_when_less_than_percentage pie_distance =
+  let outer_labels_descriptor : outerLabelsDescriptor Js.t =
+    Js.Unsafe.obj [| |]
+  in
+  outer_labels_descriptor##format <-
+    format;
+  outer_labels_descriptor##hideWhenLessThanPercentage <-
+    hide_when_less_than_percentage;
+  outer_labels_descriptor##pieDistance <-
+    pie_distance;
+  outer_labels_descriptor
+
+let class_of_outer_labels_descriptor outer_labels_descriptor =
+  create_outer_labels_descriptor
+    (create_label_format_value outer_labels_descriptor.format)
+    (js_option_of_option outer_labels_descriptor.hide_when_less_than_percentage)
+    outer_labels_descriptor.pie_distance
+
+let default_outer_labels_descriptor = {
+  format = Format_label;
+  hide_when_less_than_percentage = None;
+  pie_distance = 30;
+}
+
+type d3pie_labels = {
+  outer : d3pie_outer_labels_descriptor;
+  inner : d3pie_inner_labels_descriptor;
+}
+
+let create_labels outer inner =
+  let labels : labels Js.t =
+    Js.Unsafe.obj [| |]
+  in
+  labels##outer <- outer;
+  labels##inner <- inner;
+  labels
+
+let class_of_labels labels =
+  create_labels
+    (class_of_outer_labels_descriptor labels.outer)
+    (class_of_inner_labels_descriptor labels.inner)
+
+let default_labels = {
+  inner = default_inner_labels_descriptor;
+  outer = default_outer_labels_descriptor;
+}
+
+type d3pie_load_effect =
+  | Load_effect_none
+  | Load_effect_default of int
+
+let create_load_effect effect speed =
+  let load_effect : loadEffect Js.t =
+    Js.Unsafe.obj [| |]
+  in
+  load_effect##effect <- effect;
+  load_effect##speed <- speed;
+  load_effect
+
+let class_of_load_effect load_effect =
+  let effect, speed =
+    match load_effect with
+    | Load_effect_none ->
+       "none", 0
+    | Load_effect_default speed ->
+       "default", speed
+  in
+  create_load_effect
+    (Js.string effect)
+    speed
+
+let default_load_effect =
+  Load_effect_default 1000
+
+type d3pie_segment_on_click_effect =
+  | Segment_on_click_effect_none
+  | Segment_on_click_effect_linear of int * int
+  | Segment_on_click_effect_bounce of int * int
+  | Segment_on_click_effect_elastic of int * int
+  | Segment_on_click_effect_back of int * int
+
+let create_segment_on_click_effect effect speed size =
+  let segment_on_click_effect : pullOutSegmentOnClickEffect Js.t =
+    Js.Unsafe.obj [| |]
+  in
+  segment_on_click_effect##effect <- effect;
+  segment_on_click_effect##speed <- speed;
+  segment_on_click_effect##size <- size;
+  segment_on_click_effect
+
+let class_of_segment_on_click_effect segment_on_click_effect =
+  let effect, speed, size =
+    match segment_on_click_effect with
+    | Segment_on_click_effect_none ->
+       "none", 0, 0
+    | Segment_on_click_effect_linear (speed, size) ->
+       "linear", speed, size
+    | Segment_on_click_effect_bounce (speed, size) ->
+       "bounce", speed, size
+    | Segment_on_click_effect_elastic (speed, size) ->
+       "elastic", speed, size
+    | Segment_on_click_effect_back (speed, size) ->
+       "back", speed, size
+  in
+  create_segment_on_click_effect
+    (Js.string effect)
+    speed
+    size
+
+let default_segment_on_click_effect =
+  Segment_on_click_effect_linear (1000, 100)
+
+type d3pie_effects = {
+  load : d3pie_load_effect;
+  segment_on_click : d3pie_segment_on_click_effect;
+}
+
+let create_effects load =
+  let effects : effects Js.t =
+    Js.Unsafe.obj [| |]
+  in
+  effects##load <- load;
+  effects
+
+let class_of_effects effects =
+  create_effects
+    (class_of_load_effect effects.load)
+
+let default_effects = {
+  load = default_load_effect;
+  segment_on_click = default_segment_on_click_effect;
+}
+
+type d3pie_tooltip_type =
+  | Tooltip_caption
+  | Tooltip_placeholder
+
+let create_tooltip_type type_ =
+  let str =
+    match type_ with
+    | Tooltip_caption -> "caption"
+    | Tooltip_placeholder -> "placeholder"
+  in
+  Js.string str
+
+type d3pie_tooltips = {
+  enabled : bool;
+  type_ : d3pie_tooltip_type;
+}
+
+let create_tooltips enabled type_ =
+  let tooltips : tooltips Js.t =
+    Js.Unsafe.obj [| |]
+  in
+  tooltips##enabled <- enabled;
+  tooltips##type_ <- type_;
+  tooltips
+
+let class_of_tooltips tooltips =
+  create_tooltips
+    (Js.bool tooltips.enabled)
+    (create_tooltip_type tooltips.type_)
+
+let default_tooltips = {
+  enabled = false;
+  type_ = Tooltip_placeholder;
+}
+
+type d3pie_callback_argument = {
+  segment : Dom_html.element Js.t;
+  index : int;
+  expanded : bool;
+  data : d3pie_data_content;
+}
+
+let callback_argument_of_class callbackArgument =
+  {
+    segment = callbackArgument##segment;
+    index = callbackArgument##index;
+    expanded = Js.to_bool (callbackArgument##expanded);
+    data = data_content_of_class (callbackArgument##data);
+  }
+
+type d3pie_callbacks = {
+  on_click_segment : d3pie_callback_argument -> unit;
+}
+
+let default_callback_value = fun _ -> ()
+
+let create_callbacks on_click_segment =
+  let callbacks : callbacks Js.t =
+    Js.Unsafe.obj [| |]
+  in
+  callbacks##onClickSegment <- on_click_segment;
+  callbacks
+
+let class_of_callbacks callbacks =
+  let on_click_segment arg =
+    callbacks.on_click_segment (callback_argument_of_class arg)
+  in
+  create_callbacks
+    (Js.wrap_callback on_click_segment)
+
+let default_callbacks = {
+  on_click_segment = default_callback_value;
+}
+
 type d3pie_settings = {
   data : d3pie_data;
   header : d3pie_header;
+  size : d3pie_size;
+  labels : d3pie_labels;
+  effects : d3pie_effects;
+  tooltips : d3pie_tooltips;
+  callbacks : d3pie_callbacks;
 }
 
-let create_settings data header =
+let create_settings data header size labels effects tooltips callbacks =
   let settings : settings Js.t = Js.Unsafe.obj [||] in
   settings##data <- data;
   settings##header <- header;
+  settings##size <- size;
+  settings##labels <- labels;
+  settings##effects <- effects;
+  settings##tooltips <- tooltips;
+  settings##callbacks <- callbacks;
   settings
 
 let class_of_settings settings =
   create_settings
     (class_of_data settings.data)
     (class_of_header settings.header)
+    (class_of_size settings.size)
+    (class_of_labels settings.labels)
+    (class_of_effects settings.effects)
+    (class_of_tooltips settings.tooltips)
+    (class_of_callbacks settings.callbacks)
 
 let default_settings = {
   data = default_data;
   header = default_header;
+  size = default_size;
+  labels = default_labels;
+  effects = default_effects;
+  tooltips = default_tooltips;
+  callbacks = default_callbacks;
 }
 
 let set_data_content data_content settings =
@@ -128,7 +475,7 @@ let set_data_content data_content settings =
     settings with
     data = {
       settings.data with
-      content = data_content; 
+      content = data_content;
     };
   }
 
@@ -137,13 +484,111 @@ let set_data_sort_order sort_order settings =
     settings with
     data = {
       settings.data with
-      sort_order = sort_order; 
+      sort_order = sort_order;
     };
   }
-			 
+
+let set_size_canvas_height canvas_height settings =
+  {
+    settings with
+    size = {
+      settings.size with
+      canvas_height = canvas_height;
+    };
+  }
+
+let set_size_canvas_width canvas_width settings =
+  {
+    settings with
+    size = {
+      settings.size with
+      canvas_width = canvas_width;
+    };
+  }
+
+let set_size_pie_inner_radius pie_inner_radius settings =
+  {
+    settings with
+    size = {
+      settings.size with
+      pie_inner_radius = pie_inner_radius;
+    };
+  }
+
+let set_size_pie_outer_radius pie_outer_radius settings =
+  {
+    settings with
+    size = {
+      settings.size with
+      pie_outer_radius = pie_outer_radius;
+    };
+  }
+
+let set_inner_label_format format settings =
+  {
+    settings with
+    labels = {
+      settings.labels with
+      inner = {
+        settings.labels.inner with
+        format = format;
+      };
+    };
+  }
+
+let set_outer_label_format format settings =
+  {
+    settings with
+    labels = {
+      settings.labels with
+      outer = {
+        settings.labels.outer with
+        format = format;
+      };
+    };
+  }
+
+let set_tooltip_caption settings =
+  {
+    settings with
+    tooltips = {
+      enabled = true;
+      type_ = Tooltip_caption;
+    };
+  }
+
+let set_load_effect load_effect settings =
+  {
+    settings with
+    effects = {
+      settings.effects with
+      load = load_effect
+    };
+  }
+
+let set_segment_on_click_effect segment_on_click_effect settings =
+  {
+    settings with
+    effects = {
+      settings.effects with
+      segment_on_click = segment_on_click_effect;
+    };
+  }
+
+let set_callbacks on_click_segment settings =
+  {
+    settings with
+    callbacks = {
+      on_click_segment = on_click_segment
+    };
+  }
+
 let d3pie div settings =
   let d3pie_cstr = Js.Unsafe.global##_d3pie in
-  Js.Unsafe.new_obj d3pie_cstr [|
-    Js.Unsafe.inject div;
-    Js.Unsafe.inject (class_of_settings settings);
-  |]
+  let pie : pie Js.t =
+    Js.Unsafe.new_obj d3pie_cstr [|
+      Js.Unsafe.inject div;
+      Js.Unsafe.inject (class_of_settings settings);
+    |]
+  in
+  pie
