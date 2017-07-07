@@ -22,6 +22,7 @@ open Yojson.Basic
 open Yojson.Basic.Util
 open Lint_warning_types
 open Lint_db_types
+open Unix
 
 type file_info = {
   file_name : string;
@@ -58,6 +59,8 @@ type analysis_info = {
   linters_info : linter_info list;
   warnings_info : warning_info list;
   errors_info : error_info list;
+  analysis_root : string;
+  analysis_date : Unix.tm;
 }
 
 let generated_static_page_of_file file_info =
@@ -518,7 +521,6 @@ let error_info_of_json json  =
     error_type = error_type;
   }
 
-
 let json_of_errors_info errors_info =
   `List (List.map json_of_error_info errors_info)
 
@@ -527,6 +529,86 @@ let errors_info_of_json json =
   |> to_list
   |> List.map error_info_of_json
 
+let json_of_unix_time unix_time =
+  `Assoc [
+     ("tm_sec",
+      `Int unix_time.tm_sec);
+     ("tm_min",
+      `Int unix_time.tm_min);
+     ("tm_hour",
+      `Int unix_time.tm_hour);
+     ("tm_mday",
+      `Int unix_time.tm_mday);
+     ("tm_mon",
+      `Int unix_time.tm_mon);
+     ("tm_year",
+      `Int unix_time.tm_year);
+     ("tm_wday",
+      `Int unix_time.tm_wday);
+     ("tm_yday",
+      `Int unix_time.tm_yday);
+     ("tm_isdst",
+      `Bool unix_time.tm_isdst);
+   ]
+
+let unix_time_of_json json =
+  let tm_sec =
+    json
+    |> member "tm_sec"
+    |> to_int
+  in
+  let tm_min =
+    json
+    |> member "tm_min"
+    |> to_int
+  in
+  let tm_hour =
+    json
+    |> member "tm_hour"
+    |> to_int
+  in
+  let tm_mday =
+    json
+    |> member "tm_mday"
+    |> to_int
+  in
+  let tm_mon =
+    json
+    |> member "tm_mon"
+    |> to_int
+  in
+  let tm_year =
+    json
+    |> member "tm_year"
+    |> to_int
+  in
+  let tm_wday =
+    json
+    |> member "tm_wday"
+    |> to_int
+  in
+  let tm_yday =
+    json
+    |> member "tm_yday"
+    |> to_int
+  in
+  let tm_isdst =
+    json
+    |> member "tm_isdst"
+    |> to_bool
+  in
+  {
+    tm_sec = tm_sec;
+    tm_min = tm_min;
+    tm_hour = tm_hour;
+    tm_mday = tm_mday;
+    tm_mon = tm_mon;
+    tm_year = tm_year;
+    tm_wday = tm_wday;
+    tm_yday = tm_yday;
+    tm_isdst = tm_isdst;
+  }
+    
 let json_of_analysis_info analysis_info =
   `Assoc [
      ("files_info",
@@ -539,6 +621,10 @@ let json_of_analysis_info analysis_info =
       json_of_warnings_info analysis_info.warnings_info);
      ("errors_info",
       json_of_errors_info analysis_info.errors_info);
+     ("analysis_root",
+      `String analysis_info.analysis_root);
+     ("analysis_date",
+      json_of_unix_time analysis_info.analysis_date);
    ]
 
 let analysis_info_of_json json  =
@@ -569,10 +655,22 @@ let analysis_info_of_json json  =
     |> member "errors_info"
     |> errors_info_of_json
   in
+  let analysis_root =
+    json
+    |> member "analysis_root"
+    |> to_string
+  in
+  let analysis_date =
+    json
+    |> member "analysis_date"
+    |> unix_time_of_json
+  in
   {
     files_info = files_info;
     plugins_info = plugins_info;
     linters_info = linters_info;
     warnings_info = warnings_info;
     errors_info = errors_info;
+    analysis_root = analysis_root;
+    analysis_date = analysis_date;
   }

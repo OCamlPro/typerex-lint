@@ -271,7 +271,8 @@ let make_errors_info files_info db_error =
       acc
   end db_error []
 
-let make_analysis_info master_config file_config db db_error plugins_tbl =
+let make_analysis_info
+      time path master_config file_config db db_error plugins_tbl =
   let plugins_info, linters_info =
     make_plugins_linters_info plugins_tbl
   in
@@ -287,6 +288,8 @@ let make_analysis_info master_config file_config db db_error plugins_tbl =
     linters_info = linters_info;
     warnings_info = warnings_info;
     errors_info = errors_info;
+    analysis_root = path;
+    analysis_date = time;
   }
 
 let output_path =
@@ -384,8 +387,11 @@ let html_of_ocaml_src file_info warnings_info src =
     end
 
 let print fmt master_config file_config path db db_error = (* renommer *)
+  let time = Unix.localtime (Unix.time ()) in
   let analysis_info =
     make_analysis_info
+      time
+      path
       master_config
       file_config
       db

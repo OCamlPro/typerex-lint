@@ -23,6 +23,33 @@ open Lint_warning_types
 open Lint_web_analysis_info
 open Web_errors
 
+let header =
+  div
+    ~a:[
+      a_class ["ocp-lint-web-header"]
+    ]
+    [
+      h1 [pcdata "ocp-lint-web"];
+    ]
+
+let footer analysis_info =
+  let open Unix in
+  let time = analysis_info.analysis_date in
+  let msg =
+    Printf.sprintf "generated the %04d-%02d-%02d at %02d:%02d from %s"
+      (1900 + time.tm_year)
+      (time.tm_mon + 1)
+      time.tm_mday
+      time.tm_hour
+      time.tm_min
+      analysis_info.analysis_root
+  in
+  div
+    ~a:[
+      a_class ["ocp-lint-web-footer"]
+    ]
+    [pcdata msg]
+
 let main_page analysis_info =
   let warnings_plugins =
     Lint_web.group_by begin fun warning_info ->
@@ -37,8 +64,12 @@ let main_page analysis_info =
   in
   div
     [
+      header;
+      br ();
       tabs;
       contents;
+      footer analysis_info;
+      br ();
     ]
 
 let load_main_page analysis_info =

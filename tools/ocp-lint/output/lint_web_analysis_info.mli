@@ -53,6 +53,8 @@ type analysis_info = {
   linters_info : linter_info list;
   warnings_info : warning_info list;
   errors_info : error_info list;
+  analysis_root : string;
+  analysis_date : Unix.tm;
 }
 
 val generated_static_page_of_file :
