@@ -202,12 +202,12 @@ let dashboard_head analysis_info =
   let div_stat stat msg =
     div
       ~a:[
-        a_class ["col-md-2"; "tile-stats-container"];
+        a_class ["col-md-2"; "tile-stat-container"];
       ]
       [
         div
           ~a:[
-            a_class ["tile-stats"];
+            a_class ["tile-stat"];
           ]
           [
             span ~a:[a_class ["stat-top"]] [pcdata msg];
@@ -238,11 +238,90 @@ let dashboard_head analysis_info =
         ("linters activated");
     ]
 
-let content analysis_info =
-  div
+let warning_li_dropdown_menu plugin_name linter_name warning_name =
+  let is_checked checkbox =
+    Js.to_bool checkbox##checked
+  in
+  let warn_str = warning_name in
+  let checkbox =
+    input
+      ~a:[
+        a_input_type `Checkbox;
+        a_checked ()
+      ] ();
+  in
+  (Tyxml_js.To_dom.of_element checkbox)##onclick <-
+    Dom_html.handler begin fun evt ->
+      let cb =
+        Js.coerce_opt
+          (evt##target)
+          Dom_html.CoerceTo.input
+          (fun _ -> failwith "get checkbox" (* todo web error *))
+      in
+      if is_checked cb then
+        Js_utils.js_log (Js.string ("active " ^ warn_str))
+      else
+        Js_utils.js_log (Js.string ("unactive " ^ warn_str))
+      ;
+      Js._true
+  end;
+  li
     [
-      dashboard_head analysis_info;
-      br ();
+      a
+        [
+          checkbox;
+          pcdata warn_str;
+        ]
+    ]
+
+let dashboard_filter analysis_info =
+  let warnings =
+    Lint_web.group_by begin fun warning_info ->
+      warning_info.warning_linter.linter_plugin.plugin_name,
+      warning_info.warning_linter.linter_name,
+      warning_info.warning_type.decl.short_name
+    end analysis_info.warnings_info
+  in
+  let dropdown_menu =
+    div
+      ~a:[
+        a_class ["dropdown"];
+      ]
+      [
+        button
+          ~a:[
+            a_class ["btn"; "btn-default"; "dropdown-toggle"];
+            a_button_type `Button;
+            a_user_data "toggle" "dropdown";
+            (* aria-haspopup true; *)
+            (* aria-expanded true *)
+          ]
+          [pcdata "warnings"];
+        span ~a:[a_class ["caret"]] [];
+        ul
+          ~a:[
+            a_class ["dropdown-menu"];
+            (* aria-labelledby "dropdownMenu1" *)
+          ]
+          (List.map begin fun ((pname,lname,wname),_) ->
+             warning_li_dropdown_menu pname lname wname
+           end warnings);
+      ]
+  in
+  div
+    ~a:[
+      a_class ["dashboard-filter"];
+    ]
+    [
+      dropdown_menu;
+    ]
+
+let dashboard_content analysis_info =
+  div
+    ~a:[
+      a_class ["dashboard-content"];
+    ]
+    [
       warnings_pie_group_by_file analysis_info.warnings_info;
       warnings_pie_group_by_plugin analysis_info.warnings_info;
       warnings_pie_group_by_linter analysis_info.warnings_info;
@@ -251,4 +330,14 @@ let content analysis_info =
       br ();
       br ();
       warnings_table analysis_info.warnings_info;
+    ]
+
+let content analysis_info =
+  div
+    [
+      dashboard_head analysis_info;
+      br ();
+      dashboard_filter analysis_info;
+      br ();
+      dashboard_content analysis_info;
     ]
