@@ -21,7 +21,8 @@
 open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
-  
+open Web_errors
+
 type navigation_element =
   | HomeElement
   | PluginsElement
@@ -46,9 +47,9 @@ module NavigationElement =
       | ResultElement, ResultElement -> true
       | WarningElement x, WarningElement y -> x = y
       | _ -> false
-    let hash e = 0 (* todo *)
+    let hash = Hashtbl.hash
   end
- 
+
 module NavigationElementHashtbl = Hashtbl.Make(NavigationElement)
 
 let navigation_elements = NavigationElementHashtbl.create 32
@@ -70,7 +71,7 @@ let contents =
     ]
     []
 
-let dom_contents = 
+let dom_contents =
   Tyxml_js.To_dom.of_element contents
 
 let navigation_value_is_active nav_val =
@@ -85,6 +86,21 @@ let navigation_value_set_unactive nav_val =
   nav_val.dom_tab##classList##remove (Js.string "active");
   nav_val.dom_content##classList##remove (Js.string "in");
   nav_val.dom_content##classList##remove (Js.string "active")
+
+let navigation_element_find_active () =
+  let active_value =
+    NavigationElementHashtbl.fold begin fun _ nav_val acc ->
+    if navigation_value_is_active nav_val then
+      match acc with
+      | Some _ -> raise (Web_exception ActiveNavigationElementIsNotUnique)
+      | None -> Some nav_val
+    else
+      acc
+    end navigation_elements None
+  in
+  match active_value with
+  | Some x -> x
+  | None -> raise (Web_exception NoActiveNavigationElement)
 
 let navigation_element_static_create ne tab content =
   let tab = Tyxml_js.To_dom.of_element tab in
@@ -108,7 +124,7 @@ let navigation_element_dynamic_create ne tab_creator content_creator =
          dom_tab = Tyxml_js.To_dom.of_element (tab_creator ());
          dom_content = Tyxml_js.To_dom.of_element (content_creator ());
          tab_is_created = false;
-	 content_is_created = false;
+         content_is_created = false;
        }
        in
        NavigationElementHashtbl.add navigation_elements ne default_nav_val;
@@ -121,7 +137,10 @@ let navigation_element_dynamic_create ne tab_creator content_creator =
       Dom.appendChild dom_contents nav_val.dom_content;
       nav_val.content_is_created <- true;
     end
-  end
+  end;
+  (* focus *)
+  navigation_value_set_unactive (navigation_element_find_active ());
+  navigation_value_set_active nav_val
 
 let navigation_element_close ne =
   let nav_val = NavigationElementHashtbl.find navigation_elements ne in
@@ -169,37 +188,37 @@ let model_simple_tab name ne =
     [
       a
         ~a:[
-	  a_href ("#" ^ (navigation_element_content_id ne));
-	  a_user_data "toggle" "tab";
-	  ]
-	[pcdata name]
+          a_href ("#" ^ (navigation_element_content_id ne));
+          a_user_data "toggle" "tab";
+        ]
+        [pcdata name]
     ]
 
 let model_closable_tab name ne =
   let close_button =
     button
       ~a:[
-	a_button_type `Button;
+        a_button_type `Button;
         a_class ["close"; "closeTab"];
       ]
       [pcdata "×"]
   in
-  let tab = 
+  let tab =
     li
        ~a:[
-	 a_id (navigation_element_tab_id ne);
-	 a_class ["closableTab"];
+         a_id (navigation_element_tab_id ne);
+         a_class ["closableTab"];
       ]
       [
         a
-	  ~a:[
+          ~a:[
             a_href ("#" ^ (navigation_element_content_id ne));
-	    a_user_data "toggle" "tab";
-	  ]
-	  [
-	    close_button;
-	    span [pcdata name];
-	  ]
+            a_user_data "toggle" "tab";
+          ]
+          [
+            close_button;
+            span [pcdata name];
+          ]
       ]
   in
   (Tyxml_js.To_dom.of_element close_button)##onclick <-Dom_html.handler begin
@@ -221,7 +240,7 @@ let model_simple_content data ne =
 
 let create_static_element ne tab_creator content_creator =
   navigation_element_static_create ne (tab_creator ne) (content_creator ne)
-    
+
 let create home_content plugins_content linter_content result_content =
   create_static_element
     HomeElement

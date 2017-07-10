@@ -22,12 +22,14 @@ type error =
   | Unknow_warning_id of string (* todo file *)
   | No_such_element_with_id of string
   | Ghost_location of Location.t
+  | ActiveNavigationElementIsNotUnique
+  | NoActiveNavigationElement
 
 exception Web_exception of error
 
 let log msg =
   Js_utils.js_error (Js.string msg)
-			     
+
 let process_error exn =
   match exn with
   | Unknow_warning_id id ->
@@ -37,3 +39,7 @@ let process_error exn =
   | Ghost_location loc ->
      let str_loc = "['loc']" in
      log ("location '" ^ str_loc ^ "' is not file-localizable")
+  | ActiveNavigationElementIsNotUnique ->
+     log "the active navigation element is not unique"
+  | NoActiveNavigationElement ->
+     log "there is no active navigation element"
