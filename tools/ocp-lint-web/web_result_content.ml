@@ -22,6 +22,13 @@ open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 
+let error_div_head error_info =
+  h4
+    ~a:[
+      a_class ["alert-heading"];
+    ]
+    [pcdata (Printf.sprintf "Error #%d" error_info.error_id)]
+
 let error_div error_info =
   let file_msg =
     a
@@ -51,20 +58,20 @@ let error_div error_info =
       a_class ["alert"; "alert-danger"];
     ]
     [
-      h4 ~a:[a_class ["alert-heading"]] [pcdata "Error"];
+      error_div_head error_info;
       file_msg;
       br ();
       error_msg;
     ]
 
+let warning_div_head warning_info =
+  h4
+    ~a:[
+      a_class ["alert-heading"];
+    ]
+    [pcdata (Printf.sprintf "Warning #%d" warning_info.warning_id)]
+
 let warning_div warning_info =
-  let head =
-    h4
-      ~a:[
-	a_class ["alert-heading"];
-      ]
-      [pcdata (Printf.sprintf "Warning #%d" warning_info.warning_id)]
-  in
   let file_msg =
     a
       ~a:[
@@ -101,7 +108,7 @@ let warning_div warning_info =
       a_class ["alert"; "alert-warning"];
     ]
     [
-      head;
+      warning_div_head warning_info;
       pcdata "from ";
       file_msg;
       pcdata " ";

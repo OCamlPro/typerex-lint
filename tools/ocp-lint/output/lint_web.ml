@@ -246,30 +246,34 @@ let make_files_warnings_info master_config file_config linters_info db =
         end plugin_map (id, warning_acc)
       in
       id, file_info :: file_acc, warnings_info
-    end db (0, [],[])
+    end db (1, [],[])
   in
   files_info, warnings_info
 
 let make_errors_info files_info db_error =
-  Hashtbl.fold begin fun file error_set acc ->
-    if not (ErrorSet.is_empty error_set) then
-      let file_info =
-        List.find begin fun file_info ->
-          file_info.file_name = file
-        end files_info
-      in
-      ErrorSet.fold begin fun error acc ->
-        let error_info =
-          {
-            error_file = file_info;
-            error_type = error;
-          }
+  let _, errors =
+    Hashtbl.fold begin fun file error_set (id, acc) ->
+      if not (ErrorSet.is_empty error_set) then
+        let file_info =
+          List.find begin fun file_info ->
+            file_info.file_name = file
+          end files_info
         in
-        error_info :: acc
-      end error_set acc
-    else
-      acc
-  end db_error []
+        ErrorSet.fold begin fun error (id, acc) ->
+          let error_info =
+            {
+              error_id = id;
+              error_file = file_info;
+              error_type = error;
+            }
+          in
+          id + 1, error_info :: acc
+        end error_set (id, acc)
+      else
+        id, acc
+  end db_error (1, [])
+  in
+  errors
 
 let make_analysis_info
       time path master_config file_config db db_error plugins_tbl =
@@ -286,8 +290,8 @@ let make_analysis_info
     files_info = files_info;
     plugins_info = plugins_info;
     linters_info = linters_info;
-    warnings_info = warnings_info;
-    errors_info = errors_info;
+    warnings_info = List.rev warnings_info; (* for id sort *)
+    errors_info = List.rev errors_info; (* for id sort *)
     analysis_root = path;
     analysis_date = time;
   }

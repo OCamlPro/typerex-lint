@@ -49,6 +49,7 @@ type warning_info = {
 }
 
 type error_info = {
+  error_id : int;
   error_file : file_info;
   error_type : Lint_db_types.error;
 }
@@ -499,6 +500,8 @@ let error_of_json json =
 
 let json_of_error_info error_info =
   `Assoc [
+     ("error_id",
+      `Int error_info.error_id);
      ("error_file",
       json_of_file_info error_info.error_file);
      ("error_type",
@@ -506,6 +509,11 @@ let json_of_error_info error_info =
    ]
 
 let error_info_of_json json  =
+  let error_id =
+    json
+    |> member "error_id"
+    |> to_int
+  in
   let error_file  =
     json
     |> member "error_file"
@@ -517,6 +525,7 @@ let error_info_of_json json  =
     |> error_of_json
   in
   {
+    error_id = error_id;
     error_file = error_file;
     error_type = error_type;
   }
@@ -608,7 +617,7 @@ let unix_time_of_json json =
     tm_yday = tm_yday;
     tm_isdst = tm_isdst;
   }
-    
+
 let json_of_analysis_info analysis_info =
   `Assoc [
      ("files_info",

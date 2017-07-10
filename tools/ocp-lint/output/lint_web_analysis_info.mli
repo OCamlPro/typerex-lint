@@ -43,6 +43,7 @@ type warning_info = {
 }
 
 type error_info = {
+  error_id : int;
   error_file : file_info;
   error_type : Lint_db_types.error;
 }
