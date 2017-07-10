@@ -78,6 +78,8 @@ val set_highlight_gutter_line: 'a editor -> bool -> unit
 
 val set_show_print_margin: 'a editor -> bool -> unit
 
+val set_display_indent_guides: 'a editor -> bool -> unit
+
 val set_read_only: 'a editor -> bool -> unit
 
 val set_theme: 'a editor -> string -> unit

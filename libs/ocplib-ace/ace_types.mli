@@ -109,6 +109,7 @@ class type ['a] editor = object
   method setHighlightActiveLine : bool Js.t -> unit Js.meth
   method setHighlightGutterLine : bool Js.t -> unit Js.meth
   method setShowPrintMargin : bool Js.t -> unit Js.meth
+  method setDisplayIndentGuides : bool Js.t -> unit Js.meth
 end
 
 and ['a] command = object

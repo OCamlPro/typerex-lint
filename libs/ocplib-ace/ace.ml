@@ -354,3 +354,6 @@ let set_highlight_gutter_line { editor } actived =
 
 let set_show_print_margin { editor } actived =
   editor##setShowPrintMargin (Js.bool actived)
+
+let set_display_indent_guides { editor } actived =
+  editor##setDisplayIndentGuides (Js.bool actived)
