@@ -61,6 +61,9 @@ let main_page analysis_info =
       (Web_home_content.content analysis_info)
       (Web_plugin_content.content warnings_plugins)
       Web_linter_content.content
+      (Web_result_content.content
+	 analysis_info.warnings_info
+	 analysis_info.errors_info)
   in
   div
     [
@@ -75,12 +78,12 @@ let main_page analysis_info =
 let load_main_page analysis_info =
   let body = main_page analysis_info in
   Dom.appendChild (Dom_html.document##body) (Tyxml_js.To_dom.of_element body)
-		  			   
+
 let onload _ =
   try
     let analysis_info =
       analysis_info_of_json
-	(Web_utils.json_from_js_var Lint_web.analysis_info_var)
+        (Web_utils.json_from_js_var Lint_web.analysis_info_var)
     in
     load_main_page analysis_info;
     Js._true

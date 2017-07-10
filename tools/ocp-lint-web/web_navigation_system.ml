@@ -26,6 +26,7 @@ type navigation_element =
   | HomeElement
   | PluginsElement
   | LinterElement
+  | ResultElement
   | WarningElement of warning_info
 
 type navigation_value = {
@@ -42,6 +43,7 @@ module NavigationElement =
       match x,y with
       | HomeElement, HomeElement -> true
       | LinterElement, LinterElement -> true
+      | ResultElement, ResultElement -> true
       | WarningElement x, WarningElement y -> x = y
       | _ -> false
     let hash e = 0 (* todo *)
@@ -142,6 +144,8 @@ let navigation_element_tab_id = function
      "plugins-tab"
   | LinterElement ->
      "linters-tab"
+  | ResultElement ->
+     "results-tab"
   | WarningElement warning_info ->
      "warning-" ^ (string_of_int warning_info.warning_id) ^ "-tab"
 
@@ -152,6 +156,8 @@ let navigation_element_content_id = function
      "plugins-content"
   | LinterElement ->
      "linters-content"
+  | ResultElement ->
+     "results-content"
   | WarningElement warning_info ->
      "warning-" ^ (string_of_int warning_info.warning_id) ^ "-content"
 
@@ -216,7 +222,7 @@ let model_simple_content data ne =
 let create_static_element ne tab_creator content_creator =
   navigation_element_static_create ne (tab_creator ne) (content_creator ne)
     
-let create home_content plugins_content linter_content =
+let create home_content plugins_content linter_content result_content =
   create_static_element
     HomeElement
     (model_simple_tab "home")
@@ -230,6 +236,10 @@ let create home_content plugins_content linter_content =
     LinterElement
     (model_simple_tab "linters")
     (model_simple_content linter_content);
+  create_static_element
+    ResultElement
+    (model_simple_tab "results")
+    (model_simple_content result_content);
   tabs, contents
 
 let create_dynamic_element ne tab_creator content_creator =
