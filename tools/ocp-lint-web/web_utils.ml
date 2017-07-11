@@ -62,6 +62,16 @@ let get_element_by_id id =
   | Some element -> element
   | None -> raise (Web_exception (No_such_element_with_id id))
 
+let rec remove_successive_duplicates equals = function
+  | [] ->
+     []
+  | [x] ->
+     [x]
+  | x :: (y :: tail as l) when equals x y ->
+     remove_successive_duplicates equals l
+  | x :: tail ->
+     x :: remove_successive_duplicates equals tail
+
 let list_joining join lst =
   let hd = List.hd lst in
   let tl = List.tl lst in
@@ -76,6 +86,16 @@ let array_joining join arr =
     acc ^ join ^ line
   end hd tl
 
+let dom_element_display e =
+  (* Firebug.console##log (Js.string "display"); *)
+  (* Firebug.console##log (e) *)
+  e##style##display <- (Js.string "")
+
+let dom_element_undisplay e =
+  (* Firebug.console##log (Js.string "undisplay"); *)
+  (* Firebug.console##log (e) *)
+  e##style##display <- (Js.string "none")
+
 let file_href file_info =
     (generated_static_page_of_file file_info)
     ^ ".html"
@@ -89,10 +109,42 @@ let json_from_js_var var =
   let (str : Js.js_string Js.t) = Js.Unsafe.variable var in
   Yojson.Basic.from_string (Js.to_string str)
 
+let plugin_equals p p' =
+  p.plugin_name = p'.plugin_name
+
+let plugin_compare p p' =
+  String.compare p.plugin_name p'.plugin_name
+
+let linter_equals l l' =
+  l.linter_name = l'.linter_name
+  && plugin_equals l.linter_plugin l'.linter_plugin
+
+let linter_compare l l' =
+  let cmp = String.compare l.linter_name l'.linter_name in
+  if cmp != 0 then
+    cmp
+  else
+    plugin_compare l.linter_plugin l'.linter_plugin
+
 let linter_name linter_info =
   Printf.sprintf "%s.%s"
     linter_info.linter_plugin.plugin_name
     linter_info.linter_name
+
+let warning_equals w w' =
+  w.warning_type.decl.short_name = w'.warning_type.decl.short_name
+  && linter_equals w.warning_linter w'.warning_linter
+
+let warning_compare w w' =
+  let cmp =
+    String.compare
+      w.warning_type.decl.short_name
+      w'.warning_type.decl.short_name
+  in
+  if cmp != 0 then
+    cmp
+  else
+    linter_compare w.warning_linter w'.warning_linter
 
 let warning_name warning_info =
   Printf.sprintf "%s.%s.%s"
