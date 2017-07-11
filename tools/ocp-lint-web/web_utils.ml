@@ -25,7 +25,7 @@ open Web_errors
 type file_loc =
   | Floc_line of int
   | Floc_lines_cols of int * int * int * int
-					   
+
 let file_loc_of_warning_info warning_info =
   let open Location in
   let open Lexing in
@@ -33,10 +33,10 @@ let file_loc_of_warning_info warning_info =
   let col_of_pos pos = pos.pos_cnum - pos.pos_bol in
   if not loc.loc_ghost then
     Floc_lines_cols (
-	loc.loc_start.pos_lnum,
-	col_of_pos loc.loc_start,
-	loc.loc_end.pos_lnum,
-	col_of_pos loc.loc_end
+        loc.loc_start.pos_lnum,
+        col_of_pos loc.loc_start,
+        loc.loc_end.pos_lnum,
+        col_of_pos loc.loc_end
       )
   else if loc.loc_start.pos_lnum != 0 then
     Floc_line loc.loc_start.pos_lnum
@@ -56,7 +56,7 @@ let warning_info_is_ghost warning_info =
     && warning_info.warning_linter.linter_name = linter
     && warning_info.warning_type.decl.short_name = warning
    end ghost_warnings) || (loc.loc_ghost && (loc.loc_start.pos_lnum = 0))
-      
+
 let get_element_by_id id =
   match Js_utils.Manip.by_id id with
   | Some element -> element
@@ -66,20 +66,20 @@ let list_joining join lst =
   let hd = List.hd lst in
   let tl = List.tl lst in
   List.fold_left begin fun acc line ->
-    acc ^ join ^ line 
-  end hd tl 
-		     
+    acc ^ join ^ line
+  end hd tl
+
 let array_joining join arr =
   let hd = arr.(0) in
   let tl = Array.sub arr 1 ((Array.length arr) - 1) in
   Array.fold_left begin fun acc line ->
-    acc ^ join ^ line 
-  end hd tl 
+    acc ^ join ^ line
+  end hd tl
 
 let file_href file_info =
     (generated_static_page_of_file file_info)
     ^ ".html"
-		  
+
 let file_warning_href warning_info =
   (generated_static_page_of_file warning_info.warning_file)
   ^ ".html#"
@@ -88,3 +88,14 @@ let file_warning_href warning_info =
 let json_from_js_var var =
   let (str : Js.js_string Js.t) = Js.Unsafe.variable var in
   Yojson.Basic.from_string (Js.to_string str)
+
+let linter_name linter_info =
+  Printf.sprintf "%s.%s"
+    linter_info.linter_plugin.plugin_name
+    linter_info.linter_name
+
+let warning_name warning_info =
+  Printf.sprintf "%s.%s.%s"
+    warning_info.warning_linter.linter_plugin.plugin_name
+    warning_info.warning_linter.linter_name
+    warning_info.warning_type.decl.short_name

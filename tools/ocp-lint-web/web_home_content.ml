@@ -24,16 +24,16 @@ open Lint_warning_types
 open Lint_web_analysis_info
 
 let warnings_table_col_file warning_info =
-  p [pcdata warning_info.warning_file.file_name]
+  pcdata warning_info.warning_file.file_name
 
 let warnings_table_col_plugin warning_info =
-  p [pcdata warning_info.warning_linter.linter_plugin.plugin_name]
+  pcdata warning_info.warning_linter.linter_plugin.plugin_name
 
 let warnings_table_col_linter warning_info =
-  p [pcdata warning_info.warning_linter.linter_name]
+  pcdata warning_info.warning_linter.linter_name
 
 let warnings_table_col_warning warning_info =
-  p [pcdata warning_info.warning_type.output]
+  pcdata warning_info.warning_type.decl.short_name
 
 let warnings_table_entry warning_info =
   let tr =
@@ -238,11 +238,25 @@ let dashboard_head analysis_info =
         ("linters activated");
     ]
 
-let warning_li_dropdown_menu plugin_name linter_name warning_name =
+let warning_li_dropdown_menu
+      plugin_name linter_name warning_name warnings_table =
+  let tmp = (* todo change *)
+    Js.Opt.get
+      ((Tyxml_js.To_dom.of_element warnings_table)##lastChild)
+      (fun () -> failwith "" (* todo *))
+  in
+  let warnings_table_entries = (* todo change *)
+    Dom.list_of_nodeList (tmp##childNodes)
+  in
   let is_checked checkbox =
     Js.to_bool checkbox##checked
   in
-  let warn_str = warning_name in
+  let warn_str =
+    Printf.sprintf "%s.%s.%s"
+      plugin_name
+      linter_name
+      warning_name
+  in
   let checkbox =
     input
       ~a:[
@@ -258,11 +272,40 @@ let warning_li_dropdown_menu plugin_name linter_name warning_name =
           Dom_html.CoerceTo.input
           (fun _ -> failwith "get checkbox" (* todo web error *))
       in
-      if is_checked cb then
-        Js_utils.js_log (Js.string ("active " ^ warn_str))
-      else
-        Js_utils.js_log (Js.string ("unactive " ^ warn_str))
-      ;
+      let action =
+        if is_checked cb then
+          (fun e -> Js_utils.log "enable")
+        else
+          (fun e -> Js_utils.log "disable")
+      in
+      List.iter begin fun tr ->
+        (* action tr; *)
+        let tds = Array.of_list (Dom.list_of_nodeList (tr##childNodes)) in
+        let pluginval =
+          (Js.Opt.get (tds.(1)##firstChild) (fun _ -> failwith ""))##nodeValue
+        in
+        let plugin =
+          Js.to_string (Js.Opt.get (pluginval) (fun _ -> failwith ""))
+        in
+        let linterval =
+          (Js.Opt.get (tds.(2)##firstChild) (fun _ -> failwith ""))##nodeValue
+        in
+        let linter =
+          Js.to_string (Js.Opt.get (linterval) (fun _ -> failwith ""))
+        in
+        let warningval =
+          (Js.Opt.get (tds.(3)##firstChild) (fun _ -> failwith ""))##nodeValue
+        in
+        let warning =
+          Js.to_string (Js.Opt.get (warningval) (fun _ -> failwith ""))
+        in
+        if
+          Printf.sprintf "%s.%s.%s" plugin linter warning
+          =
+          "plugin_file_system.interface_missing.missing_interface"
+        then
+          action tr
+      end warnings_table_entries;
       Js._true
   end;
   li
@@ -270,11 +313,11 @@ let warning_li_dropdown_menu plugin_name linter_name warning_name =
       a
         [
           checkbox;
-          pcdata warn_str;
+          span ~a:[a_class ["filter-label"]] [pcdata warn_str];
         ]
     ]
 
-let dashboard_filter analysis_info =
+let dashboard_filter analysis_info warnings_table =
   let warnings =
     Lint_web.group_by begin fun warning_info ->
       warning_info.warning_linter.linter_plugin.plugin_name,
@@ -304,7 +347,7 @@ let dashboard_filter analysis_info =
             (* aria-labelledby "dropdownMenu1" *)
           ]
           (List.map begin fun ((pname,lname,wname),_) ->
-             warning_li_dropdown_menu pname lname wname
+             warning_li_dropdown_menu pname lname wname warnings_table
            end warnings);
       ]
   in
@@ -316,7 +359,7 @@ let dashboard_filter analysis_info =
       dropdown_menu;
     ]
 
-let dashboard_content analysis_info =
+let dashboard_content analysis_info warnings_table =
   div
     ~a:[
       a_class ["dashboard-content"];
@@ -329,15 +372,16 @@ let dashboard_content analysis_info =
       warnings_pie_group_by_severity analysis_info.warnings_info;
       br ();
       br ();
-      warnings_table analysis_info.warnings_info;
+      warnings_table;
     ]
 
 let content analysis_info =
+  let table = warnings_table analysis_info.warnings_info in
   div
     [
       dashboard_head analysis_info;
       br ();
-      dashboard_filter analysis_info;
+      dashboard_filter analysis_info table;
       br ();
-      dashboard_content analysis_info;
+      dashboard_content analysis_info table;
     ]
