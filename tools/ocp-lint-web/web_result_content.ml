@@ -67,50 +67,71 @@ let error_div error_info =
 
 
 
-
-type filter_element = {
+type filter_element = { (* todo param type *)
   filter_element_info : Lint_web_analysis_info.warning_info;
   filter_element_dom : Dom_html.element Js.t;
 }
 
-let filter_elements_create warnings_info warning_dom_creator =
-  List.map begin fun warning_info ->
-    {
-      filter_element_info =
-        warning_info;
-      filter_element_dom =
-        Tyxml_js.To_dom.of_element (warning_dom_creator warning_info)
-    }
-  end warnings_info
+type filter_system = { (* todo param type *)
+  filter_activated :
+    (string, Lint_web_analysis_info.warning_info -> bool) Hashtbl.t;
+  filter_elements :
+    filter_element list;
+}
 
-let filter_elements_infos filter_elements =
-  filter_elements
+let filter_system_create warnings_info warning_dom_creator =
+  let filter_elements =
+    List.map begin fun warning_info ->
+      {
+        filter_element_info =
+          warning_info;
+        filter_element_dom =
+          Tyxml_js.To_dom.of_element (warning_dom_creator warning_info)
+      }
+    end warnings_info
+  in
+  {
+    filter_activated = Hashtbl.create 64;
+    filter_elements = filter_elements;
+  }
+
+let filter_system_infos filter_system = (* todo filter_system_value *)
+  filter_system.filter_elements
   |> List.map (fun {filter_element_info; _} -> filter_element_info)
   |> List.sort Web_utils.warning_compare
   |> Web_utils.remove_successive_duplicates Web_utils.warning_equals
 
-let filter_elements_dom_content filter_elements =
+let filter_system_dom_contents filter_system =
   List.map begin fun {filter_element_dom; _} ->
     Tyxml_js.Of_dom.of_element filter_element_dom
-  end filter_elements
+  end filter_system.filter_elements
 
-let filter_elements_filter_display p filter_elements =
+let filter_system_register_filter filter_name filter filter_system =
+  (* todo update if file_name already save *)
+  Hashtbl.add filter_system.filter_activated filter_name filter
+
+let filter_system_remove_filter filter_name filter_system =
+  (* todo exist check *)
+  Hashtbl.remove filter_system.filter_activated filter_name
+
+let filter_system_eval_filters filter_system =
+  let full_filter filter_element =
+    Hashtbl.fold begin fun _ filter acc ->
+      acc && filter filter_element.filter_element_info
+    end filter_system.filter_activated true
+  in
   List.iter begin fun filter_element ->
-    if p filter_element.filter_element_info then
+    if full_filter filter_element then
       Web_utils.dom_element_display filter_element.filter_element_dom
-  end filter_elements
-
-let filter_elements_filter_undisplay p filter_elements =
-  List.iter begin fun filter_element ->
-    if p filter_element.filter_element_info then
+    else
       Web_utils.dom_element_undisplay filter_element.filter_element_dom
-  end filter_elements
+  end filter_system.filter_elements
 
 let filter_dropdown_selection value label_value on_select on_deselect =
   let checkbox =
     input
       ~a:[
-	a_class ["filter-checkbox"];
+        a_class ["filter-checkbox"];
         a_input_type `Checkbox;
         a_checked ();
       ] ();
@@ -137,7 +158,7 @@ let filter_dropdown_selection value label_value on_select on_deselect =
         ]
     ]
 
-let filter_dropdown_menu dropdown_selections =
+let filter_dropdown_menu label_value dropdown_selections =
   div
     ~a:[
       a_class ["dropdown"];
@@ -148,47 +169,84 @@ let filter_dropdown_menu dropdown_selections =
           a_class ["btn"; "btn-default"; "dropdown-toggle"];
           a_button_type `Button;
           a_user_data "toggle" "dropdown";
-          (* aria-haspopup true; *)
-          (* aria-expanded true *)
         ]
-        [pcdata "warnings"];
-      span ~a:[a_class ["caret"]] [];
+        [
+          pcdata (label_value ^ " "); (* todo change *)
+          span ~a:[a_class ["caret"]] [];
+        ];
       ul
         ~a:[
           a_class ["dropdown-menu"];
-          (* aria-labelledby "dropdownMenu1" *)
         ]
         dropdown_selections;
       ]
 
-let warning_filter filter_elements =
-  let dropdown_creator label_creator on_select on_deselect lst =
+let filter_searchbox filter_system =
+  let searchbox =
+    input
+      ~a:[
+        a_input_type `Search
+      ] ()
+  in
+  let filter_name = "keyword" in
+  let searchbox_dom = Tyxml_js.To_dom.of_input searchbox in
+  searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
+    let keyword = Js.to_string (searchbox_dom##value) in
+    filter_system_remove_filter
+      filter_name
+      filter_system;
+    if keyword != "" then begin
+      filter_system_register_filter
+        filter_name
+        (Web_utils.warning_contains_keyword keyword)
+        filter_system
+    end;
+    filter_system_eval_filters filter_system;
+    Js._true
+  end;
+  searchbox
+
+let warning_filter filter_system =
+  let dropdown_creator label label_creator on_select on_deselect lst =
     filter_dropdown_menu
+      label
       (List.map begin fun x ->
         filter_dropdown_selection x (label_creator x) on_select on_deselect
       end lst)
   in
   let warnings_dropdown =
+    let filter_name warning_info = (* todo enum type *)
+      Web_utils.warning_name warning_info
+    in
     dropdown_creator
+      "warnings"
       Web_utils.warning_name
       begin fun warning ->
-        filter_elements_filter_display
-	  (fun warning_info -> Web_utils.warning_equals warning warning_info)
-	  filter_elements
+        (* remove the filter *)
+        filter_system_remove_filter
+          (filter_name warning)
+          filter_system;
+        filter_system_eval_filters filter_system
       end
       begin fun warning ->
-        filter_elements_filter_undisplay
-          (fun warning_info -> Web_utils.warning_equals warning warning_info)
-          filter_elements
+        (* filtering the warning that are not the same type of the
+           unchecked warning *)
+        filter_system_register_filter
+          (filter_name warning)
+          (fun warning_info ->
+            not (Web_utils.warning_equals warning warning_info))
+          filter_system;
+        filter_system_eval_filters filter_system
       end
-      (filter_elements_infos filter_elements)
+      (filter_system_infos filter_system)
   in
   div
     ~a:[
       a_class ["dashboard-filter"];
     ]
     [
-      warnings_dropdown
+      warnings_dropdown;
+      filter_searchbox filter_system;
     ]
 
 let warning_div_head warning_info =
@@ -263,12 +321,12 @@ let warning_div warning_info =
   div_warning
 
 let content warnings_info errors_info =
-  let warnings_elements = filter_elements_create warnings_info warning_div in
+  let filter_system = filter_system_create warnings_info warning_div in
   div
     (* (List.map error_div errors_info *)
     (* @ List.map warning_div warnings_info) *)
     (
-      (warning_filter warnings_elements) ::
+      (warning_filter filter_system) ::
       (br ()) ::
-      (filter_elements_dom_content warnings_elements)
+      (filter_system_dom_contents filter_system)
     )

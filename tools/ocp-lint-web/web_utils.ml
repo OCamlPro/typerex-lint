@@ -86,14 +86,13 @@ let array_joining join arr =
     acc ^ join ^ line
   end hd tl
 
+let dom_element_is_display e =
+  e##style##display != Js.string "none"
+
 let dom_element_display e =
-  (* Firebug.console##log (Js.string "display"); *)
-  (* Firebug.console##log (e) *)
   e##style##display <- (Js.string "")
 
 let dom_element_undisplay e =
-  (* Firebug.console##log (Js.string "undisplay"); *)
-  (* Firebug.console##log (e) *)
   e##style##display <- (Js.string "none")
 
 let file_href file_info =
@@ -151,3 +150,16 @@ let warning_name warning_info =
     warning_info.warning_linter.linter_plugin.plugin_name
     warning_info.warning_linter.linter_name
     warning_info.warning_type.decl.short_name
+
+let warning_contains_keyword keyword warning_info =
+  let re = Regexp.regexp (keyword) in
+  let contains_kwd str =
+    match Regexp.search_forward re str 0 with
+    | Some _ -> true
+    | None -> false
+  in
+  contains_kwd warning_info.warning_file.file_name
+  || contains_kwd warning_info.warning_linter.linter_plugin.plugin_name
+  || contains_kwd warning_info.warning_linter.linter_name
+  || contains_kwd warning_info.warning_type.decl.short_name
+  || contains_kwd warning_info.warning_type.output
