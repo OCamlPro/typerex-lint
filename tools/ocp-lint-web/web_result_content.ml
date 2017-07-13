@@ -95,24 +95,16 @@ let filter_system_create warnings_info warning_dom_creator =
     filter_elements = filter_elements;
   }
 
-let filter_system_infos filter_system = (* todo filter_system_value *)
-  filter_system.filter_elements
-  |> List.map (fun {filter_element_info; _} -> filter_element_info)
-  |> List.sort Web_utils.warning_compare
-  |> Web_utils.remove_successive_duplicates Web_utils.warning_equals
-
 let filter_system_dom_contents filter_system =
   List.map begin fun {filter_element_dom; _} ->
     Tyxml_js.Of_dom.of_element filter_element_dom
   end filter_system.filter_elements
 
-let filter_system_register_filter filter_name filter filter_system =
-  (* todo update if file_name already save *)
-  Hashtbl.add filter_system.filter_activated filter_name filter
+let filter_system_register_filter filter_id filter filter_system =
+  Hashtbl.add filter_system.filter_activated filter_id filter
 
-let filter_system_remove_filter filter_name filter_system =
-  (* todo exist check *)
-  Hashtbl.remove filter_system.filter_activated filter_name
+let filter_system_remove_filter filter_id filter_system =
+  Hashtbl.remove filter_system.filter_activated filter_id
 
 let filter_system_eval_filters filter_system =
   let full_filter filter_element =
@@ -181,11 +173,76 @@ let filter_dropdown_menu label_value dropdown_selections =
         dropdown_selections;
       ]
 
+let dropdown_creator label label_creator on_select on_deselect lst =
+  filter_dropdown_menu
+    label
+    (List.map begin fun x ->
+      filter_dropdown_selection x (label_creator x) on_select on_deselect
+    end lst)
+
+let warnings_dropdown warnings_info filter_system =
+  let filter_id warning_info = (* todo enum type *)
+    "warning-" ^ Web_utils.warning_name warning_info
+  in
+  let filter warning_info_filter_value warning_info =
+    not (Web_utils.warning_equals warning_info_filter_value warning_info)
+  in
+  dropdown_creator
+    "warnings"
+    Web_utils.warning_name
+    begin fun warning ->
+      (* remove the filter *)
+      filter_system_remove_filter
+        (filter_id warning)
+        filter_system;
+      filter_system_eval_filters filter_system
+    end
+    begin fun warning ->
+      (* filtering the warnings that are not the same type of the
+         unchecked warning *)
+      filter_system_register_filter
+        (filter_id warning)
+	(filter warning)
+        filter_system;
+      filter_system_eval_filters filter_system
+    end
+    warnings_info
+
+let files_dropdown files_info filter_system =
+  let filter_id file_info =
+    "file-" ^ file_info.file_name
+  in
+  let filter file_info_filter_value warning_info =
+    not (Web_utils.file_equals file_info_filter_value warning_info.warning_file)
+  in
+  dropdown_creator
+    "files"
+    (fun file_info -> file_info.file_name)
+    begin fun file ->
+      (* remove the filter *)
+      filter_system_remove_filter
+        (filter_id file)
+        filter_system;
+      filter_system_eval_filters filter_system
+    end
+    begin fun file ->
+      (* filtering the files that are not the same type of the
+         unchecked file *)
+      filter_system_register_filter
+        (filter_id file)
+        (filter file)
+        filter_system;
+      filter_system_eval_filters filter_system
+    end
+    files_info
+
 let filter_searchbox filter_system =
   let searchbox =
     input
       ~a:[
-        a_input_type `Search
+        a_input_type `Text;
+        a_class ["form-control"; "filter-searchbox"];
+        a_placeholder "Search..."
       ] ()
   in
   let filter_name = "keyword" in
@@ -206,46 +263,16 @@ let filter_searchbox filter_system =
   end;
   searchbox
 
-let warning_filter filter_system =
-  let dropdown_creator label label_creator on_select on_deselect lst =
-    filter_dropdown_menu
-      label
-      (List.map begin fun x ->
-        filter_dropdown_selection x (label_creator x) on_select on_deselect
-      end lst)
-  in
-  let warnings_dropdown =
-    let filter_name warning_info = (* todo enum type *)
-      Web_utils.warning_name warning_info
-    in
-    dropdown_creator
-      "warnings"
-      Web_utils.warning_name
-      begin fun warning ->
-        (* remove the filter *)
-        filter_system_remove_filter
-          (filter_name warning)
-          filter_system;
-        filter_system_eval_filters filter_system
-      end
-      begin fun warning ->
-        (* filtering the warning that are not the same type of the
-           unchecked warning *)
-        filter_system_register_filter
-          (filter_name warning)
-          (fun warning_info ->
-            not (Web_utils.warning_equals warning warning_info))
-          filter_system;
-        filter_system_eval_filters filter_system
-      end
-      (filter_system_infos filter_system)
-  in
+let warning_div_filter files_info warnings_info filter_system =
   div
     ~a:[
       a_class ["dashboard-filter"];
     ]
     [
-      warnings_dropdown;
+      files_dropdown files_info filter_system;
+      div ~a:[a_class ["filter-separator"]] [];
+      warnings_dropdown warnings_info filter_system;
+      div ~a:[a_class ["filter-separator"]] [];
       filter_searchbox filter_system;
     ]
 
@@ -282,9 +309,16 @@ let warning_div_body warning_info =
   in
   let linter_msg =
     pcdata (
-      Printf.sprintf "raised from %s.%s"
+      Printf.sprintf "raised by %s.%s"
         warning_info.warning_linter.linter_plugin.plugin_name
         warning_info.warning_linter.linter_name
+    )
+  in
+  let warning_msg =
+    pcdata (
+      Printf.sprintf "%s : %s"
+        warning_info.warning_type.decl.short_name
+        warning_info.warning_type.output
     )
   in
   div
@@ -295,7 +329,7 @@ let warning_div_body warning_info =
       line_msg;
       br ();
       b [pcdata "/!\\  "]; (* todo img *)
-      pcdata warning_info.warning_type.decl.short_name;
+      warning_msg;
       br ();
       linter_msg;
     ]
@@ -321,12 +355,24 @@ let warning_div warning_info =
   div_warning
 
 let content warnings_info errors_info =
+  let uniq_warnings_info =
+    warnings_info
+    |> List.sort Web_utils.warning_compare
+    |> Web_utils.remove_successive_duplicates Web_utils.warning_equals
+  in
+  let uniq_files_info =
+    warnings_info
+    |> List.map (fun {warning_file; _} -> warning_file)
+    |> List.sort (fun f f' -> String.compare f.file_name f'.file_name)
+    |> Web_utils.remove_successive_duplicates
+         (fun f f' -> String.equal f.file_name f'.file_name)
+  in
   let filter_system = filter_system_create warnings_info warning_div in
   div
     (* (List.map error_div errors_info *)
     (* @ List.map warning_div warnings_info) *)
     (
-      (warning_filter filter_system) ::
+      (warning_div_filter uniq_files_info uniq_warnings_info filter_system) ::
       (br ()) ::
       (filter_system_dom_contents filter_system)
     )

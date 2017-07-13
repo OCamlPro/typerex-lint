@@ -108,6 +108,9 @@ let json_from_js_var var =
   let (str : Js.js_string Js.t) = Js.Unsafe.variable var in
   Yojson.Basic.from_string (Js.to_string str)
 
+let file_equals f f' =
+  f.file_hash = f'.file_hash
+
 let plugin_equals p p' =
   p.plugin_name = p'.plugin_name
 
