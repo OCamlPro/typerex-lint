@@ -202,7 +202,7 @@ let warnings_dropdown warnings_info filter_system =
          unchecked warning *)
       filter_system_register_filter
         (filter_id warning)
-	(filter warning)
+        (filter warning)
         filter_system;
       filter_system_eval_filters filter_system
     end
@@ -334,7 +334,12 @@ let warning_div_body warning_info =
       linter_msg;
     ]
 
-let warning_div warning_info =
+let warning_div all_warnings_info warning_info =
+  let file_warnings_info =
+    List.filter begin fun warning ->
+      Web_utils.file_equals warning.warning_file warning_info.warning_file
+    end all_warnings_info
+  in
   let div_warning =
     div
     ~a:[
@@ -347,9 +352,9 @@ let warning_div warning_info =
   in
   (Tyxml_js.To_dom.of_element div_warning)##onclick <- Dom_html.handler
   begin fun _ ->
-    Web_navigation_system.open_warning_tab
-      warning_info
-      (Web_warning_content.warning_content warning_info);
+    Web_navigation_system.open_file_tab
+      warning_info.warning_file
+      (Web_file_content.warning_content warning_info file_warnings_info);
     Js._true
   end;
   div_warning
@@ -367,7 +372,9 @@ let content warnings_info errors_info =
     |> Web_utils.remove_successive_duplicates
          (fun f f' -> String.equal f.file_name f'.file_name)
   in
-  let filter_system = filter_system_create warnings_info warning_div in
+  let filter_system =
+    filter_system_create warnings_info (warning_div warnings_info)
+  in
   div
     (* (List.map error_div errors_info *)
     (* @ List.map warning_div warnings_info) *)

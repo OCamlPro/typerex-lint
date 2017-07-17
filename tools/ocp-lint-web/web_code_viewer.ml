@@ -192,6 +192,11 @@ let code_viewer line_number href =
     ]
     []
 
+let file_code_viewer file_info =
+  code_viewer
+    (file_info.file_lines_count)
+    (Web_utils.file_href file_info)
+
 let warning_code_viewer warning_info =
   let begin_line, end_line =
     let open Web_utils in

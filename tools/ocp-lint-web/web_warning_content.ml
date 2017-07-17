@@ -57,12 +57,13 @@ let warning_content_code_view warning_info =
   
 let warning_content warning_info =
   let warning_desc =
-    "Warning " ^ (string_of_int warning_info.warning_type.decl.id) ^ " :"
+    Printf.sprintf "Warning #%d :"
+      warning_info.warning_id
   in
   let linter_desc =
-    warning_info.warning_linter.linter_name
-    ^ " : "
-    ^ warning_info.warning_linter.linter_description
+    Printf.sprintf "%s : %s"
+      warning_info.warning_linter.linter_name
+      warning_info.warning_linter.linter_description
   in
   if Web_utils.warning_info_is_ghost warning_info then
     div

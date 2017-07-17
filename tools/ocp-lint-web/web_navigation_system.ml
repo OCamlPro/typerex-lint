@@ -28,6 +28,7 @@ type navigation_element =
   | PluginsElement
   | LinterElement
   | ResultElement
+  | FileElement of file_info
   | WarningElement of warning_info
 
 type navigation_value = {
@@ -45,7 +46,8 @@ module NavigationElement =
       | HomeElement, HomeElement -> true
       | LinterElement, LinterElement -> true
       | ResultElement, ResultElement -> true
-      | WarningElement x, WarningElement y -> x = y
+      | FileElement f, FileElement f' -> Web_utils.file_equals f f'
+      | WarningElement w, WarningElement w' -> Web_utils.warning_equals w w'
       | _ -> false
     let hash = Hashtbl.hash
   end
@@ -165,6 +167,8 @@ let navigation_element_tab_id = function
      "linters-tab"
   | ResultElement ->
      "results-tab"
+  | FileElement file_info ->
+     "file-" ^ (Digest.to_hex file_info.file_hash) ^ "-tab"
   | WarningElement warning_info ->
      "warning-" ^ (string_of_int warning_info.warning_id) ^ "-tab"
 
@@ -177,6 +181,8 @@ let navigation_element_content_id = function
      "linters-content"
   | ResultElement ->
      "results-content"
+  | FileElement file_info ->
+     "file-" ^ (Digest.to_hex file_info.file_hash) ^ "-content"
   | WarningElement warning_info ->
      "warning-" ^ (string_of_int warning_info.warning_id) ^ "-content"
 
@@ -268,8 +274,13 @@ let create_dynamic_element ne tab_creator content_creator =
     (fun () -> content_creator ne)
 
 let open_warning_tab warning_info warning_content =
-  let warning_element = WarningElement warning_info in
   create_dynamic_element
-    warning_element
+    (WarningElement warning_info)
     (model_closable_tab (string_of_int warning_info.warning_id))
     (model_simple_content warning_content)
+
+let open_file_tab file_info file_content =
+  create_dynamic_element
+    (FileElement file_info)
+    (model_closable_tab file_info.file_name)
+    (model_simple_content file_content)
