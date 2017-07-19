@@ -31,11 +31,16 @@ type navigation_element =
   | FileElement of file_info
   | WarningElement of warning_info
 
+type navigation_attached_data =
+  | No_attached_data
+  | File_content_attached_data of Web_utils.file_content_data
+
 type navigation_value = {
   dom_tab : Dom_html.element Js.t;
   dom_content : Dom_html.element Js.t;
   mutable tab_is_created : bool;
   mutable content_is_created : bool;
+  attached_data : navigation_attached_data
 }
 
 module NavigationElement =
@@ -104,7 +109,7 @@ let navigation_element_find_active () =
   | Some x -> x
   | None -> raise (Web_exception NoActiveNavigationElement)
 
-let navigation_element_static_create ne tab content =
+let navigation_element_static_create ne tab content attached =
   let tab = Tyxml_js.To_dom.of_element tab in
   let content = Tyxml_js.To_dom.of_element content in
   NavigationElementHashtbl.add navigation_elements ne {
@@ -112,11 +117,14 @@ let navigation_element_static_create ne tab content =
     dom_content = content;
     tab_is_created = true;
     content_is_created = true;
+    attached_data = attached;
   };
   Dom.appendChild dom_tabs tab;
   Dom.appendChild dom_contents content
 
-let navigation_element_dynamic_create ne tab_creator content_creator =
+(* return the attached data *)
+let navigation_element_dynamic_create
+      ne tab_creator content_creator attached_creator =
   let nav_val =
     try
       NavigationElementHashtbl.find navigation_elements ne
@@ -127,6 +135,7 @@ let navigation_element_dynamic_create ne tab_creator content_creator =
          dom_content = Tyxml_js.To_dom.of_element (content_creator ());
          tab_is_created = false;
          content_is_created = false;
+	 attached_data = attached_creator ();
        }
        in
        NavigationElementHashtbl.add navigation_elements ne default_nav_val;
@@ -142,7 +151,8 @@ let navigation_element_dynamic_create ne tab_creator content_creator =
   end;
   (* focus *)
   navigation_value_set_unactive (navigation_element_find_active ());
-  navigation_value_set_active nav_val
+  navigation_value_set_active nav_val;
+  nav_val.attached_data
 
 let navigation_element_close ne =
   let nav_val = NavigationElementHashtbl.find navigation_elements ne in
@@ -244,43 +254,61 @@ let model_simple_content data ne =
     ]
     [data]
 
-let create_static_element ne tab_creator content_creator =
-  navigation_element_static_create ne (tab_creator ne) (content_creator ne)
+let create_static_element ne tab_creator content_creator attached =
+  navigation_element_static_create
+    ne
+    (tab_creator ne)
+    (content_creator ne)
+    attached
 
 let create home_content plugins_content linter_content result_content =
   create_static_element
     HomeElement
     (model_simple_tab "home")
-    (model_simple_content home_content);
+    (model_simple_content home_content)
+    No_attached_data;
   navigation_element_set_active HomeElement;
   create_static_element
     PluginsElement
     (model_simple_tab "plugins")
-    (model_simple_content plugins_content);
+    (model_simple_content plugins_content)
+    No_attached_data;
   create_static_element
     LinterElement
     (model_simple_tab "linters")
-    (model_simple_content linter_content);
+    (model_simple_content linter_content)
+    No_attached_data;
   create_static_element
     ResultElement
     (model_simple_tab "results")
-    (model_simple_content result_content);
+    (model_simple_content result_content)
+    No_attached_data;
   tabs, contents
 
-let create_dynamic_element ne tab_creator content_creator =
+let create_dynamic_element ne tab_creator content_creator attached_creator =
   navigation_element_dynamic_create
     ne
     (fun () -> tab_creator ne)
     (fun () -> content_creator ne)
+    attached_creator
 
 let open_warning_tab warning_info warning_content =
-  create_dynamic_element
-    (WarningElement warning_info)
-    (model_closable_tab (string_of_int warning_info.warning_id))
-    (model_simple_content warning_content)
+  let _ =
+    create_dynamic_element
+      (WarningElement warning_info)
+      (model_closable_tab (string_of_int warning_info.warning_id))
+      (model_simple_content warning_content)
+      (fun () -> No_attached_data)
+  in ()
 
-let open_file_tab file_info file_content =
-  create_dynamic_element
-    (FileElement file_info)
-    (model_closable_tab file_info.file_name)
-    (model_simple_content file_content)
+let open_file_tab file_info file_content attached_data_creator =
+  let attach =
+    create_dynamic_element
+      (FileElement file_info)
+      (model_closable_tab file_info.file_name)
+      (model_simple_content file_content)
+      (fun () -> File_content_attached_data (attached_data_creator ()))
+  in
+  match attach with
+  | File_content_attached_data file_content_data -> file_content_data
+  | _ -> failwith "bad attach" (* todo web err *)

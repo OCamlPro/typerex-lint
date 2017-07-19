@@ -25,3 +25,12 @@ let set table =
   dom_table##classList##add (Js.string "hover");
   dom_table##classList##add (Js.string "row-border");
   dom_table##classList##add (Js.string "nowrap")
+
+let load id =  
+  ignore (
+      Js.Unsafe.fun_call
+        (Js.Unsafe.variable "data_table")
+        [|
+          Js.Unsafe.inject (Js.string id);
+        |]
+  )

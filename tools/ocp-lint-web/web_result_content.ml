@@ -66,6 +66,11 @@ let error_div error_info =
 
 
 
+let file_warnings_table_id file_info =
+  "file-" ^ (Digest.to_hex file_info.file_hash) ^ "-warnings-table"
+
+
+
 
 type filter_element = { (* todo param type *)
   filter_element_info : Lint_web_analysis_info.warning_info;
@@ -340,6 +345,29 @@ let warning_div all_warnings_info warning_info =
       Web_utils.file_equals warning.warning_file warning_info.warning_file
     end all_warnings_info
   in
+  let warnings_table_id = file_warnings_table_id warning_info.warning_file in
+  let content_container = div [] in
+  let content_creator = function
+    | Web_utils.File_content ->
+       Tyxml_js.To_dom.of_element
+         (Web_file_content.all_file_content warning_info.warning_file)
+    | Web_utils.Warning_content warning_info ->
+       Tyxml_js.To_dom.of_element
+         (Web_warning_content.warning_content warning_info)
+  in
+  let file_content_data =
+    Web_utils.create_file_content_data
+      warning_info.warning_file
+      content_container
+      content_creator
+  in
+  let content =
+    Web_file_content.content
+      warning_info.warning_file
+      file_warnings_info
+      warnings_table_id
+      file_content_data
+  in
   let div_warning =
     div
     ~a:[
@@ -352,9 +380,16 @@ let warning_div all_warnings_info warning_info =
   in
   (Tyxml_js.To_dom.of_element div_warning)##onclick <- Dom_html.handler
   begin fun _ ->
-    Web_navigation_system.open_file_tab
-      warning_info.warning_file
-      (Web_file_content.warning_content warning_info file_warnings_info);
+    let file_content_data = 
+      Web_navigation_system.open_file_tab
+        warning_info.warning_file
+        content
+        (fun () -> file_content_data)
+    in
+    Web_utils.focus_file_content
+      file_content_data
+      (Web_utils.Warning_content warning_info)
+    ;
     Js._true
   end;
   div_warning

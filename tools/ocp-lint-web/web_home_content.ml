@@ -67,13 +67,14 @@ let warnings_table_head =
         ]
     ]
 
-let warnings_table warnings_info =
+let warnings_table warnings_info id =
   let entry_creator warning_info =
     warnings_table_entry warning_info
   in
   let table =
     tablex
       ~a:[
+	a_id id;
         (* setAttribute(Js.string "cellspacing", Js.string "0"); *)
         (* setAttribute(Js.string "width", Js.string "100%"); *)
       ]
@@ -375,8 +376,8 @@ let dashboard_content analysis_info warnings_table =
       warnings_table;
     ]
 
-let content analysis_info =
-  let table = warnings_table analysis_info.warnings_info in
+let content analysis_info warnings_table_id =
+  let table = warnings_table analysis_info.warnings_info warnings_table_id in
   div
     [
       dashboard_head analysis_info;
