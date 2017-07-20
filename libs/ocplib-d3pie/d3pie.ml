@@ -332,23 +332,25 @@ let class_of_segment_on_click_effect segment_on_click_effect =
     size
 
 let default_segment_on_click_effect =
-  Segment_on_click_effect_linear (1000, 100)
+  Segment_on_click_effect_linear (300, 10)
 
 type d3pie_effects = {
   load : d3pie_load_effect;
   segment_on_click : d3pie_segment_on_click_effect;
 }
 
-let create_effects load =
+let create_effects load pull_out_segment_on_click =
   let effects : effects Js.t =
     Js.Unsafe.obj [| |]
   in
   effects##load <- load;
+  effects##pullOutSegmentOnClick <- pull_out_segment_on_click;
   effects
 
 let class_of_effects effects =
   create_effects
     (class_of_load_effect effects.load)
+    (class_of_segment_on_click_effect effects.segment_on_click)
 
 let default_effects = {
   load = default_load_effect;
@@ -579,7 +581,7 @@ let set_callbacks on_click_segment settings =
   {
     settings with
     callbacks = {
-      on_click_segment = on_click_segment
+      on_click_segment = on_click_segment;
     };
   }
 
@@ -591,4 +593,5 @@ let d3pie div settings =
       Js.Unsafe.inject (class_of_settings settings);
     |]
   in
+  Js.Unsafe.global##pie <- pie; (* todo remove when lib correct *)
   pie

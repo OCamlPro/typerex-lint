@@ -77,7 +77,7 @@ end
 
 class type effects = object
   method load : loadEffect Js.t Js.prop
-  method pullOutSegmentOnClick : loadEffect Js.t Js.prop
+  method pullOutSegmentOnClick : pullOutSegmentOnClickEffect Js.t Js.prop
 end
 
 class type tooltips = object
