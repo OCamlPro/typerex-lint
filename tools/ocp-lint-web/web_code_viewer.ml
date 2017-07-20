@@ -108,11 +108,23 @@ let set_file_code_viewer ace warnings =
     }
     in
     let tooltip =
-      (string_of_int (List.length warnings_info))
-      ^ " warning(s) : \n - "
-      ^ Web_utils.list_joining
-          "\n - "
-          (List.map (fun warning -> warning.warning_type.output) warnings_info)
+      Printf.sprintf
+        "%d warning(s) : \n - %s"
+        (List.length warnings_info)
+        (Web_utils.list_joining "\n - " (List.map begin fun warning ->
+           let line =
+             let open Web_utils in
+             match file_loc_of_warning_info warning with
+             | Floc_line line ->
+                Printf.sprintf "line %d" line
+             | Floc_lines_cols (bline, _, eline, _) ->
+                if bline = eline then
+                  Printf.sprintf "line %d" bline
+                else
+                  Printf.sprintf "line %d to %d" bline eline
+           in
+           Printf.sprintf "%s : %s" line warning.warning_type.output
+         end warnings_info))
     in
     Ace.set_annotation ace Ace.Warning tooltip loc;
     List.iter begin fun warning ->
