@@ -21,6 +21,7 @@
 open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
+open Web_file_content_data
 
 let file_code_viewer_header file_info =
   div
@@ -61,6 +62,15 @@ let all_file_content file_info =
       br ();
       file_code_viewer file_info;
     ]
+
+let main_content_creator file_info = function
+  | File_content ->
+     Tyxml_js.To_dom.of_element (all_file_content file_info)
+  | Warning_content warning_info ->
+     (* todo maybe check if warning.file = file *)
+     Tyxml_js.To_dom.of_element
+       (* todo warning_content in this file *)
+       (Web_warning_content.warning_content warning_info)
 
 let filter_dropdown_selection value label_value on_select on_deselect =
   let checkbox =
@@ -122,37 +132,24 @@ let dropdown_creator label label_creator on_select on_deselect lst =
     (List.map begin fun x ->
       filter_dropdown_selection x (label_creator x) on_select on_deselect
      end lst)
- 
+
 let warnings_dropdown warnings_info file_content_data =
-  let filter warning_info_filter_value warning_info =
-    (* warning_info_filter_value.warning_type.decl.short_name *)
-    (* != warning_info.warning_type.decl.short_name *)
-    not (
-      String.equal
-        warning_info_filter_value.warning_type.decl.short_name
-        warning_info.warning_type.decl.short_name
-    )
-  in
   dropdown_creator
     "warnings"
     Web_utils.warning_name
     begin fun warning ->
       (* remove the filter *)
-      Web_utils.remove_file_content_filter
+      remove_file_content_filter
         file_content_data
-        (Web_utils.Warning_type_filter warning.warning_type.decl.short_name)
+        (Warning_type_filter warning)
       ;
-      Web_utils.eval_file_content_filters file_content_data
+      eval_file_content_filters file_content_data
     end
     begin fun warning ->
       (* filtering the warnings that are not the same type of the
          unchecked warning *)
-      Web_utils.add_file_content_filter
-        file_content_data  	    
-        (Web_utils.Warning_type_filter warning.warning_type.decl.short_name)
-        (filter warning)
-      ;
-      Web_utils.eval_file_content_filters file_content_data
+      add_file_content_filter file_content_data (Warning_type_filter warning);
+      eval_file_content_filters file_content_data
     end
     warnings_info
 
@@ -166,19 +163,30 @@ let filter_searchbox file_content_data =
       ] ()
   in
   let searchbox_dom = Tyxml_js.To_dom.of_input searchbox in
+  let get_keyword () =
+    let str = Js.to_string (searchbox_dom##value) in
+    if str = "" then
+      None
+    else
+      Some str
+  in
+  let previous_keyword = ref None in
   searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
-    let keyword = Js.to_string (searchbox_dom##value) in
-    Web_utils.remove_file_content_filter
-      file_content_data
-      Web_utils.Keyword_filter
-    ;
-    if keyword != "" then begin
-      Web_utils.add_file_content_filter
-        file_content_data
-        Web_utils.Keyword_filter
-        (Web_utils.warning_contains_keyword keyword)
+    let keyword = get_keyword () in
+    begin match !previous_keyword with
+    | Some kwd ->
+       remove_file_content_filter file_content_data (Keyword_filter kwd)
+    | None ->
+       ()
     end;
-    Web_utils.eval_file_content_filters file_content_data;
+    begin match keyword with
+    | Some kwd ->
+       add_file_content_filter file_content_data (Keyword_filter kwd)
+    | None ->
+       ()
+    end;
+    previous_keyword := keyword;
+    eval_file_content_filters file_content_data;
     Js._true
   end;
   searchbox
@@ -223,12 +231,10 @@ let warnings_table_entry warning_info file_content_data =
   in
   let dom_tr = Tyxml_js.To_dom.of_element tr in
   dom_tr##onclick <-Dom_html.handler begin fun _ ->
-    Web_utils.focus_file_content
-      file_content_data
-      (Web_utils.Warning_content warning_info);
+    focus_file_content file_content_data (Warning_content warning_info);
     Js._true
   end;
-  Web_utils.register_file_content_warning_data
+  register_file_content_warning_data
     file_content_data warning_info
     dom_tr
   ;
@@ -246,7 +252,7 @@ let warnings_table_head =
         ]
     ]
 
-let warnings_table warnings_info id file_content_data =
+let warnings_table warnings_info file_content_data =
   let entry_creator warning_info =
     warnings_table_entry warning_info file_content_data
   in
@@ -254,10 +260,9 @@ let warnings_table warnings_info id file_content_data =
     tablex
       ~a:[
 
-	a_class ["dyntable"];
-	
-	(* a_id id; *)
-	
+        a_class ["dyntable"];
+
+
         (* setAttribute(Js.string "cellspacing", Js.string "0"); *)
         (* setAttribute(Js.string "width", Js.string "100%"); *)
       ]
@@ -269,30 +274,27 @@ let warnings_table warnings_info id file_content_data =
   (* Web_data_table.set table; *)
   table
 
-let content
-      file_info all_file_warnings_info warning_table_id file_content_data =
+let content all_file_warnings_info file_content_data =
   let content_div =
     Tyxml_js.Of_dom.of_element
-      (file_content_data.Web_utils.file_content_container)
+      (file_content_data.file_content_container)
   in
   let all_file_button =
     button
       ~a:[
-	a_button_type `Button;
-	a_class ["btn"; "btn-info"];
+        a_button_type `Button;
+        a_class ["btn"; "btn-info"];
       ]
       [pcdata "See all file"]
   in
   (Tyxml_js.To_dom.of_element all_file_button)##onclick <-Dom_html.handler
   begin fun _ ->
-    Web_utils.focus_file_content
-      file_content_data
-      (Web_utils.File_content);
+    focus_file_content file_content_data File_content;
     Js._true
   end;
   div
     [
-      h2 [pcdata file_info.file_name];
+      h2 [pcdata file_content_data.file_content_info.file_name];
       br ();
       content_div;
       br ();
@@ -301,5 +303,29 @@ let content
       all_file_button;
       br ();
       br ();
-      warnings_table all_file_warnings_info warning_table_id file_content_data;
+      warnings_table all_file_warnings_info file_content_data;
     ]
+
+let new_file_content_data_of_file_info file_info =
+  Web_file_content_data.create_file_content_data
+    file_info
+    (div [])
+    (main_content_creator file_info)
+
+let open_tab file_info file_warnings_info =
+  let open Web_navigation_system in
+  (* todo improve *)
+  let file_content_data = new_file_content_data_of_file_info file_info in
+  let content = content file_warnings_info file_content_data in
+  let attach =
+    open_tab
+      (FileElement file_info)
+      (file_info.file_name)
+      (content)
+      begin fun () ->
+        File_content_attached_data file_content_data
+      end
+  in
+  match attach with
+  | File_content_attached_data file_content_data -> file_content_data
+  | _ -> failwith "bad attach" (* todo web err *)

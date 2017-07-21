@@ -47,9 +47,7 @@ let warnings_table_entry warning_info =
   in
   (* todo in datatable.ml *)
   (Tyxml_js.To_dom.of_element tr)##onclick <-Dom_html.handler begin fun _ ->
-    Web_navigation_system.open_warning_tab
-      warning_info
-      (Web_warning_content.warning_content warning_info);
+    Web_warning_content.open_tab warning_info;
     Js._true
   end;
   (* *)
@@ -74,7 +72,7 @@ let warnings_table warnings_info id =
   let table =
     tablex
       ~a:[
-	a_id id;
+        a_id id;
         (* setAttribute(Js.string "cellspacing", Js.string "0"); *)
         (* setAttribute(Js.string "width", Js.string "100%"); *)
       ]
@@ -89,7 +87,7 @@ let warnings_table warnings_info id =
 let default_pie_settings =
   default_settings
   |> set_size_canvas_height 200
-  |> set_size_canvas_width 300
+  |> set_size_canvas_width 298
   |> set_data_sort_order Sort_by_value_desc
   |> set_size_pie_outer_radius (Radius_percentage 100)
   |> set_size_pie_inner_radius (Radius_percentage 50)
@@ -99,10 +97,8 @@ let default_pie_settings =
   |> set_load_effect Load_effect_none
   |> set_segment_on_click_effect Segment_on_click_effect_none
 
-let div_warning_pie values on_click_segment =
-  let div_pie =
-    div ~a:[a_class ["tile-pie"]] []
-  in
+let div_warning_pie title values on_click_segment =
+  let div_pie = div [] in
   let settings =
     default_pie_settings
     |> set_callbacks on_click_segment
@@ -112,7 +108,19 @@ let div_warning_pie values on_click_segment =
   (* todo delete *)
   ignore pie;
   (* *)
-  div_pie
+  div
+    ~a:[
+      a_class ["tile-pie"];
+    ]
+    [
+      span
+        ~a:[
+          a_class ["pie-title"]
+        ]
+        [pcdata title];
+      br ();
+      div_pie;
+    ]
 
 let pie_value label count =
   {
@@ -122,19 +130,34 @@ let pie_value label count =
   }
 
 let warnings_pie_group_by_file warnings_info =
-  let on_click_segment arg =
-    Js_utils.alert ("file : " ^ (string_of_int arg.index))
+  let files_warnings_info =
+    Lint_web.group_by begin fun warning_info ->
+      warning_info.warning_file
+    end warnings_info
+  in
+  let on_click_segment (arg : d3pie_callback_argument) =
+    let file_info, file_warnings_info =
+      List.find begin fun (file, _) ->
+        String.equal file.file_name arg.data.label
+      end files_warnings_info
+    in
+    let file_content_data =
+      Web_file_content.open_tab file_info file_warnings_info
+    in
+    begin match Web_file_content_data.active_file_content file_content_data with
+    | None ->
+       Web_file_content_data.focus_file_content
+        file_content_data
+        Web_file_content_data.File_content
+    | Some _ -> ()
+    end
   in
   let values =
-    warnings_info
-    |> Lint_web.group_by begin fun warning_info ->
-         warning_info.warning_file.file_name
-       end
-    |> List.map begin fun (file, warnings) ->
-         pie_value file (List.length warnings)
-       end
+    List.map begin fun (file, warnings) ->
+      pie_value file.file_name (List.length warnings)
+    end files_warnings_info
   in
-  div_warning_pie values on_click_segment
+  div_warning_pie "Files" values on_click_segment
 
 let warnings_pie_group_by_plugin warnings_info =
   let on_click_segment arg =
@@ -149,7 +172,7 @@ let warnings_pie_group_by_plugin warnings_info =
          pie_value plugin (List.length warnings)
        end
   in
-  div_warning_pie values on_click_segment
+  div_warning_pie "Plugins" values on_click_segment
 
 let warnings_pie_group_by_linter warnings_info =
   let on_click_segment arg =
@@ -165,7 +188,7 @@ let warnings_pie_group_by_linter warnings_info =
          pie_value (plugin ^ "." ^ linter) (List.length warnings)
        end
   in
-  div_warning_pie values on_click_segment
+  div_warning_pie "Linters" values on_click_segment
 
 let warnings_pie_group_by_warning warnings_info =
   let on_click_segment arg =
@@ -182,7 +205,7 @@ let warnings_pie_group_by_warning warnings_info =
          pie_value warning (List.length warnings)
        end
   in
-  div_warning_pie values on_click_segment
+  div_warning_pie "Warnings" values on_click_segment
 
 let warnings_pie_group_by_severity warnings_info =
   let on_click_segment arg =
@@ -197,7 +220,7 @@ let warnings_pie_group_by_severity warnings_info =
          pie_value (string_of_int severity) (List.length warnings)
        end
   in
-  div_warning_pie values on_click_segment
+  div_warning_pie "Severities" values on_click_segment
 
 let dashboard_head analysis_info =
   let div_stat stat msg =
@@ -367,9 +390,13 @@ let dashboard_content analysis_info warnings_table =
     ]
     [
       warnings_pie_group_by_file analysis_info.warnings_info;
+      span [pcdata " "]; (* todo padding *)
       warnings_pie_group_by_plugin analysis_info.warnings_info;
+      span [pcdata " "];
       warnings_pie_group_by_linter analysis_info.warnings_info;
+      span [pcdata " "];
       warnings_pie_group_by_warning analysis_info.warnings_info;
+      span [pcdata " "];
       warnings_pie_group_by_severity analysis_info.warnings_info;
       br ();
       br ();

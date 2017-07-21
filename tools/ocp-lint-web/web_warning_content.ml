@@ -30,10 +30,10 @@ let warning_content_code_view_header warning_info =
     ]
     [
       a
-	~a:[
-	  a_href (Web_utils.file_href warning_info.warning_file);
-	]
-	[pcdata warning_info.warning_file.file_name]
+        ~a:[
+          a_href (Web_utils.file_href warning_info.warning_file);
+        ]
+        [pcdata warning_info.warning_file.file_name]
     ]
 
 let warning_content_code_view_body warning_info =
@@ -44,7 +44,7 @@ let warning_content_code_view_body warning_info =
     [
       Web_code_viewer.warning_code_viewer warning_info;
     ]
-    
+
 let warning_content_code_view warning_info =
   div
     ~a:[
@@ -54,7 +54,7 @@ let warning_content_code_view warning_info =
       warning_content_code_view_header warning_info;
       warning_content_code_view_body warning_info;
     ]
-  
+
 let warning_content warning_info =
   let warning_desc =
     Printf.sprintf "Warning #%d :"
@@ -68,14 +68,24 @@ let warning_content warning_info =
   if Web_utils.warning_info_is_ghost warning_info then
     div
       [
-	h3 [pcdata warning_desc];
-	h3 [pcdata linter_desc];
+        h3 [pcdata warning_desc];
+        h3 [pcdata linter_desc];
       ]
   else
     div
       [
-	h3 [pcdata warning_desc];
-	h3 [pcdata linter_desc];
-	br ();
-	warning_content_code_view warning_info;
+        h3 [pcdata warning_desc];
+        h3 [pcdata linter_desc];
+        br ();
+        warning_content_code_view warning_info;
       ]
+
+let open_tab warning_info =
+  let open Web_navigation_system in
+  ignore (
+    open_tab
+      (WarningElement warning_info)
+      (string_of_int warning_info.warning_id)
+      (warning_content warning_info)
+      (fun () -> No_attached_data)
+  )
