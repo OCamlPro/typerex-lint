@@ -72,7 +72,30 @@ let main_content_creator file_info = function
        (* todo warning_content in this file *)
        (Web_warning_content.warning_content warning_info)
 
-let filter_dropdown_selection value label_value on_select on_deselect =
+let filter_dropdown_simple_selection value label_value on_click =
+  let severity_selection =
+    a
+      [
+	label
+	  ~a:[
+            a_class ["filter-label";];
+	  ]
+	  [
+            pcdata label_value;
+	  ]
+      ]
+  in
+  let dom_selection = Tyxml_js.To_dom.of_a severity_selection in
+  dom_selection##onclick <- Dom_html.handler begin fun _ ->
+    on_click value dom_selection;
+    Js._true
+  end;
+  li
+    [
+      severity_selection;
+    ]
+
+let filter_dropdown_checkbox_selection value label_value on_select on_deselect =
   let checkbox =
     input
       ~a:[
@@ -93,14 +116,17 @@ let filter_dropdown_selection value label_value on_select on_deselect =
   end;
   li
     [
-      label
-        ~a:[
-          a_class ["filter-label";];
-        ]
+      a
         [
-          checkbox;
-          pcdata label_value;
-        ]
+	  checkbox;
+          label
+            ~a:[
+              a_class ["filter-label";];
+            ]
+            [
+              pcdata label_value;
+            ];
+	]
     ]
 
 let filter_dropdown_menu label_value dropdown_selections =
@@ -126,32 +152,53 @@ let filter_dropdown_menu label_value dropdown_selections =
         dropdown_selections;
       ]
 
-let dropdown_creator label label_creator on_select on_deselect lst =
-  filter_dropdown_menu
-    label
-    (List.map begin fun x ->
-      filter_dropdown_selection x (label_creator x) on_select on_deselect
-     end lst)
-
 let warnings_dropdown warnings_info file_content_data =
-  dropdown_creator
-    "warnings"
-    Web_utils.warning_name
-    begin fun warning ->
-      (* remove the filter *)
-      remove_file_content_filter
-        file_content_data
-        (Warning_type_filter warning)
-      ;
-      eval_file_content_filters file_content_data
-    end
-    begin fun warning ->
-      (* filtering the warnings that are not the same type of the
-         unchecked warning *)
-      add_file_content_filter file_content_data (Warning_type_filter warning);
-      eval_file_content_filters file_content_data
-    end
-    warnings_info
+  let on_select warning =
+    remove_file_content_filter file_content_data (Warning_type_filter warning);
+    eval_file_content_filters file_content_data
+  in
+  let on_deselect warning =
+    add_file_content_filter file_content_data (Warning_type_filter warning);
+    eval_file_content_filters file_content_data
+  in
+  let selections =
+    List.map begin fun warning_info ->
+      filter_dropdown_checkbox_selection
+        warning_info
+        (Web_utils.warning_name warning_info)
+        on_select
+        on_deselect
+    end warnings_info
+  in
+  filter_dropdown_menu "warnings" selections
+
+let severity_dropdown file_content_data =
+  let active_class = Js.string "dropdown-selection-active" in
+  let previous_severity = ref None in
+  let on_click severity label =
+    begin match !previous_severity with
+    | Some (svt, lbl) ->
+       remove_file_content_filter
+	 file_content_data
+	 (Higher_severity_filter svt);
+       lbl##classList##remove (active_class)
+    | None ->
+       ()
+    end;
+    add_file_content_filter file_content_data (Higher_severity_filter severity);
+    label##classList##add (active_class);
+    previous_severity := Some (severity, label);
+    eval_file_content_filters file_content_data;
+  in
+  let selections =
+    List.map begin fun severity ->
+      filter_dropdown_simple_selection
+        severity
+	(string_of_int severity)
+	on_click
+    end [1;2;3;4;5;6;7;8;9;10]
+  in
+  filter_dropdown_menu "severity" selections
 
 let filter_searchbox file_content_data =
   let searchbox =
@@ -204,6 +251,8 @@ let warnings_filter warnings_info file_content_data =
     [
       warnings_dropdown uniq_warnings_info file_content_data;
       div ~a:[a_class ["filter-separator"]] [];
+      severity_dropdown file_content_data;
+      div ~a:[a_class ["filter-separator"]] [];
       filter_searchbox file_content_data;
     ]
 
@@ -219,6 +268,9 @@ let warnings_table_col_linter warning_info =
 let warnings_table_col_warning warning_info =
   pcdata warning_info.warning_type.decl.short_name
 
+let warnings_table_col_severity warning_info =
+  pcdata (string_of_int warning_info.warning_type.decl.severity)
+
 let warnings_table_entry warning_info file_content_data =
   let tr =
     tr
@@ -227,6 +279,7 @@ let warnings_table_entry warning_info file_content_data =
         td [warnings_table_col_plugin warning_info];
         td [warnings_table_col_linter warning_info];
         td [warnings_table_col_warning warning_info];
+	td [warnings_table_col_severity warning_info];
       ]
   in
   let dom_tr = Tyxml_js.To_dom.of_element tr in
@@ -249,6 +302,7 @@ let warnings_table_head =
           th [pcdata "Plugin"];
           th [pcdata "Linter"];
           th [pcdata "Warning"];
+	  th [pcdata "Severity"];
         ]
     ]
 

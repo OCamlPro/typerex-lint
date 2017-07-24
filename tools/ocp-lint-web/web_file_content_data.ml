@@ -39,6 +39,7 @@ type file_content_warning_data = {
 type file_content_filter_type =
   | Warning_type_filter of warning_info
   | Keyword_filter of string
+  | Higher_severity_filter of int
 
 type file_content_data = {
   file_content_info :
@@ -89,6 +90,10 @@ let add_file_content_filter file_content_data filter_type =
        end
     | Keyword_filter kwd ->
        Web_utils.warning_contains_keyword kwd
+    | Higher_severity_filter lvl ->
+       begin fun warning_info ->
+         warning_info.warning_type.decl.severity >= lvl
+       end
   in
   Hashtbl.add file_content_data.file_content_filters filter_type filter
 
