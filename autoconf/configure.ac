@@ -133,9 +133,9 @@ AC_CHECK_OCAML_PKG(ocp-indent.lib)
 if test "$OCAML_PKG_ocp_indent.lib" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'ocp-indent.lib'.])
 fi
-OPAM_REPO=/home/lefessan/WindowsSharedFolder/opam-repository-with-archives
-OPAM_REPO_OFFICIAL_REMOTE=ocaml
-OPAM_REPO_FORK_REMOTE=origin
+OPAM_REPO=
+OPAM_REPO_OFFICIAL_REMOTE=
+OPAM_REPO_FORK_REMOTE=
 DOWNLOAD_URL_PREFIX=http://github.com//archive/
 
 ###############################################################
@@ -184,7 +184,7 @@ AC_SUBST(OCAMLDOC)
 AC_SUBST(OCAMLLIB)
 AC_SUBST(OCAMLBIN)
 AC_SUBST(OCAML_USE_BINANNOT)
-AC_CONFIG_FILES(Makefile.config config.ocpgen ocaml-config.h)
+AC_CONFIG_FILES(Makefile.config config.ocpgen config.ocp2gen ocaml-config.h)
 AC_OUTPUT
 
 echo

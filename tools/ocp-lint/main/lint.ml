@@ -40,6 +40,10 @@ let config_file = ref ""
 let verbose = ref false
 let severity_limit = ref 0
 let good_plugins = ref []
+let installed_plugins = ref []
+let pwarning = ref false
+let perror = ref false
+let pall = ref false
 
 module ArgAlign = struct
   open Arg
@@ -215,6 +219,15 @@ let () =
       ),
     "PLUGINS Load dynamically plugins with their corresponding 'cmxs' files.";
 
+    "--load-installed-plugins", Arg.String (fun files ->
+        let l = (Str.split (Str.regexp ",") files) in
+        try
+          Fl_dynload.load_packages l;
+          installed_plugins := l
+        with Dynlink.Error err -> ()
+      ),
+    "PLUGINS Load dynamically plugins installed in ocp-lint-plugins dir.";
+
     "--save-config", Arg.Unit (fun () -> set_action ActionSave),
     " Save ocp-lint default config file.";
 
@@ -233,32 +246,50 @@ let () =
     "--verbose", Arg.Set verbose,
     " Show extra informations.";
 
+    "--pall", Arg.Set pall,
+    " Show all the details";
+
+    "--pwarning", Arg.Set pwarning,
+    " Show warnings";
+
+    "--perror", Arg.Set perror,
+    " Show errors";
+
     "", Arg.Unit (fun () -> ()),
     " \n\nPlugins arguments:\n";
   ]
 
 let start_lint_file file =
-  Lint_actions.lint_file !verbose !no_db !db_dir !severity_limit file
+  let file_struct = Lint_utils.read_file_struct file in
+  Lint_actions.lint_file !verbose !no_db !db_dir !severity_limit file_struct
 
 let start_lint dir =
+  let ins_plugins = Lint_actions.load_installed_plugins () in
   let master_config = Filename.temp_file ".ocplint" "" in
   Lint_globals.Config.save_master master_config;
   Lint_actions.lint_sequential
     !no_db
     !db_dir
     !severity_limit
+    !pall
+    !pwarning
+    !perror
     !good_plugins
+    ins_plugins
     master_config
     dir;
   if Lint_db.DefaultDB.has_warning () then exit !exit_status
 
 let main () =
   (* Getting all options declared in all registered plugins. *)
+  Lint_init_dynload.init ();
   Lint_actions.init_config default_dir;
   add_simple_args ();
   Arg.parse_dynamic specs
     (fun cmd ->
-       Printf.printf "Error: don't know what to do with %s\n%!" cmd;
+       Printf.printf "Error cmd : %S\n%!"
+         (String.concat " " (Array.to_list Sys.argv));
+       Printf.printf "don't know what to do with %s\n%!" cmd;
        exit 1)
     usage_msg;
 

@@ -27,3 +27,4 @@ val add : string -> 'a -> 'a t -> 'a t
 val iter : (string -> 'a -> unit) -> 'a t -> unit
 val find : string -> 'a t -> 'a
 val cardinal : 'a t -> int
+val fold : (string -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b

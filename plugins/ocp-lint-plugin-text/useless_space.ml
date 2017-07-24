@@ -23,7 +23,7 @@ open Plugin_text
 
 module Linter = Plugin.MakeLint(struct
     let name = "Useless space character and empty line at the end of file."
-    let version = 1
+    let version = "1"
     let short_name = "useless_space_line"
     let details = "Checks useless space character at the end  \
                    of lines and empty line at the end of files."

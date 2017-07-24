@@ -14,6 +14,26 @@
 
 open Asttypes
 
+(* type constant = *)
+(*     Pconst_integer of string * char option *)
+(*   (\* 3 3l 3L 3n *)
+
+(*      Suffixes [g-z][G-Z] are accepted by the parser. *)
+(*      Suffixes except 'l', 'L' and 'n' are rejected by the typechecker *)
+(*   *\) *)
+(*   | Pconst_char of char *)
+(*   (\* 'c' *\) *)
+(*   | Pconst_string of string * string option *)
+(*   (\* "constant" *)
+(*      {delim|other constant|delim} *)
+(*   *\) *)
+(*   | Pconst_float of string * char option *)
+(*   (\* 3.4 2e5 1.4e-4 *)
+
+(*      Suffixes [g-z][G-Z] are accepted by the parser. *)
+(*      Suffixes are rejected by the typechecker. *)
+(*   *\) *)
+
 (** {2 Extension points} *)
 
 type attribute = string loc * payload
@@ -23,6 +43,8 @@ type attribute = string loc * payload
    Metadata containers passed around within the AST.
    The compiler ignores unknown attributes.
 *)
+
+
 
 and extension = string loc * payload
 (* [%id ARG]
@@ -35,6 +57,7 @@ and attributes = attribute list
 
 and payload =
   | PStr of structure
+  (* | PSig of signature (\* : SIG *\) *)
   | PTyp of core_type  (* : T *)
   | PPat of pattern * expression option  (* : P  or  : P when E *)
 

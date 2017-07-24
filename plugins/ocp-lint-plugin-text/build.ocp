@@ -19,6 +19,8 @@
 (**************************************************************************)
 
 begin library "ocp-lint-plugin-text"
+  install_META = true
+  install_subdir = "ocp-lint-plugins"
   files = [
     "plugin_text.ml"
 

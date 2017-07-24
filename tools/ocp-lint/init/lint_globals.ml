@@ -23,5 +23,3 @@ module Config = Lint_config.DefaultConfig
 let plugins = Hashtbl.create 42
 
 let olint_dirname = "_olint"
-
-let config_file = ".ocplint"

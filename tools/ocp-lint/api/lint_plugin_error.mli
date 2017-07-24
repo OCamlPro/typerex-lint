@@ -24,6 +24,7 @@ type error =
   | Linter_already_registered of string
   | Plugin_not_found of (module Lint_plugin_types.PLUGIN)
   | Patch_file_not_found of string
+  | Sempatch_failure of string
   | Syntax_error of string
   | Plugin_exception of exn
 

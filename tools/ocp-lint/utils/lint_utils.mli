@@ -18,32 +18,66 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** [iter_files ~recdir apply dirname] iters on the given dirname and apply
-    the function [apply] to all the found files. If [recdir] is set to false
-    it only scans the files in the given directory and does not iter recursively
-    in the subdirectories. *)
+type file_struct = {
+  name : string;
+  norm : string;
+  hash : string;
+  cmt : string option;
+  ignored : string list;
+}
+
+(** [iter_files ~recdir apply dirname] iters on the given dirname and
+    apply the function [apply] to all the found files (relative names
+    to the [dirname] directory). If [recdir] is set to false it only
+    scans the files in the given directory and does not iter
+    recursively in the subdirectories. *)
 val iter_files : ?recdir:bool -> (string -> unit) -> string -> unit
 
 (** [substitute str substs] subsitutes the string [str] with the given
      substitutes list [substs]. It replaces all the '$ID' by the
-     matching string in the list. *)
+     matching string in the list. The function is not efficient on
+    long lists of arguments. *)
 val substitute : string -> (string * string) list -> string
 
 (** [absolute_path root filename] give the absolute path of a file. *)
 val absolute_path : string -> string -> string
 
-(** [relative root filename] give the relative to root path of a file. *)
+(** [relative root file] give the relative path to [root] of [file].
+    [root] and [file] are expected to be absolute filenames.
+*)
 val relative_path : string -> string -> string
 
 (** [find_root root_dir basenames] recurcively looks for the basenames in the
      path which marks the root of a project and contains the db file. *)
-val find_root : File.t -> string list -> File.t
+val find_root : FileGen.t -> string list -> FileGen.t
 
 (** [is_in_path root file path] checks if the file is in the path. *)
 val is_in_path : string -> string -> string -> bool
 
+(** [read_file file] get the content of the file as a string. *)
 val read_file : string -> string
 
-val normalize_path : string -> string -> string
+(** [normalize_path root file] normalize a path given the root dir. *)
+val normalize_path : root:string -> file:string -> string
 
-val mk_temp_dir : unit -> string
+(** [mk_temp_dir prefix] make a temporary directory to store the db. *)
+val mk_temp_dir : string -> string
+
+val db_hash : string -> string
+
+(** [split_sources sources] will match the .cmt files to their .ml files.
+    This return 2 lists : - the association list (file.ml, file.cmt)
+                          - the sources without the .cmt *)
+val split_sources :
+  string list -> ((string * string * string) list * string list)
+
+val mk_file_struct :
+  string ->
+  string ->
+  string list ->
+  (string * string * string) list ->
+  file_struct
+
+val save_file_struct : string -> file_struct -> string
+
+val read_file_struct : string -> file_struct

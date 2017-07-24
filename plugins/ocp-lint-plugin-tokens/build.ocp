@@ -19,6 +19,8 @@
 (**************************************************************************)
 
 begin library "ocp-lint-plugin-tokens"
+  install_META = true
+  install_subdir = "ocp-lint-plugins"
   files = [
     "plugin_tokens.ml"
 
@@ -27,5 +29,6 @@ begin library "ocp-lint-plugin-tokens"
   requires = [
     "ocp-lint-config"
     "ocp-lint-api"
+    "ocplib-compiler"
   ]
 end

@@ -25,7 +25,7 @@ module Plugin = Plugin_parsetree.Plugin
 
 module Linter = Plugin.MakeLint(struct
     let name = "Good Practices"
-    let version = 1
+    let version = "1"
     let short_name = "fabrice_good_practices"
     let details = "Checks some good practices."
     let enable = true
@@ -87,7 +87,11 @@ let iter_structure ast =
       | Pexp_apply (
           { pexp_desc = Pexp_ident { txt = Lident "failwith" } },
           [
-            "" (* NoLabel *),
+#if OCAML_VERSION < "4.03.0"
+            "",
+#else
+            Nolabel ,
+#endif
             { pexp_desc = Pexp_apply (
                   { pexp_desc =
                       Pexp_ident

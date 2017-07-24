@@ -1,0 +1,1 @@
+module Location = struct end

@@ -30,10 +30,10 @@ opam-deps:
 	opam install $(OPAMDEPS)
 
 install:
-	cp _obuild/ocp-lint/ocp-lint.asm $(bindir)/ocp-lint
+	$(OCPBUILD) install
 
 uninstall:
-	rm $(bindir)/ocp-lint
+	$(OCPBUILD) install --uninstall-only
 
 include autoconf/Makefile.rules
 

@@ -19,10 +19,10 @@
 (**************************************************************************)
 
 let details =
-  "A plugin with linters on different inputs."
+  "A plugin with linters on different inputs"
 
 module PluginComplex = Lint_plugin_api.MakePlugin (struct
-    let name = "Complex plugin."
+    let name = "Complex plugin"
     let short_name = "plugin_complex"
     let details = details
     let enable = true

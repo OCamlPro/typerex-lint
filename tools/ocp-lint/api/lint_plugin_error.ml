@@ -25,6 +25,7 @@ type error =
   | Linter_already_registered of string
   | Plugin_not_found of (module Lint_plugin_types.PLUGIN)
   | Patch_file_not_found of string
+  | Sempatch_failure of string
   | Syntax_error of string
   | Plugin_exception of exn
 
@@ -41,6 +42,8 @@ let to_string = function
     Printf.sprintf "Plugin '%s' is not found." Plugin.name
   | Patch_file_not_found filename ->
     Printf.sprintf "Patch '%s' is not found." filename
+  | Sempatch_failure str ->
+    Printf.sprintf "Sempatch error: %s." str
   | Syntax_error filename ->
     Printf.sprintf "Syntax error in %S: cannot lint this file." filename
   | Plugin_exception exn ->

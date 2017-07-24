@@ -22,10 +22,10 @@ begin library "ocp-lint-api-types"
   files = [
     "lint_map.ml"
     "lint_input.ml"
+    "lint_warning_types.ml"
     "lint_warning_decl.ml"
     "lint_types.ml"
     "lint_plugin_error.ml"
-    "lint_warning_types.ml"
     "lint_plugin_types.ml"
   ]
   requires = [
@@ -43,10 +43,6 @@ begin library "ocp-lint-api"
   requires = [
     (* Compiler libs (Location, Longident, etc. *)
     "compiler-libs"
-
-    (* Other libraries: sempatch and some iterators. *)
-    "ocplib-sempatch"
-    "ocplib-compiler"
 
     (* Internal dependencies. *)
     "ocp-lint-config"

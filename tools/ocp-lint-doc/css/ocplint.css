@@ -1,0 +1,36 @@
+.sidebar-nav li a.sub-menu {
+    padding-left:20px;
+}
+
+table {
+    width: 100%
+}
+
+table tr {
+    padding: 5px;
+}
+table th {
+    padding: 5px;
+}
+table td {
+    padding: 5px;
+}
+
+.searchtab tbody tr:hover{
+    background-color: #A9A9A9;
+}
+
+.warntab tbody tr:hover {
+    background-color: #A9A9A9;
+}
+
+#search_box {
+    background-image: url('searchicon.png');
+    background-position: 10px 12px;
+    background-repeat: no-repeat;
+    width: 100%;
+    font-size: 16px;
+    padding: 12px 20px 12px 40px;
+    border: 1px solid #ddd;
+    margin-bottom: 12px;
+}

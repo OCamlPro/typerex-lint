@@ -1,6 +1,6 @@
 open Std_utils
-open Parsetree
 open Asttypes
+open Parsetree
 
 module M = Ast_mapper
 module H = Ast_helper
@@ -80,6 +80,7 @@ let convert_to_states =
         | Ptype_variant args ->
           Ptype_variant (List.map (
               fun cd ->
+#if OCAML_VERSION < "4.03.0"
                 let args =
                   match cd.pcd_args with
                   | [{ ptyp_desc = Ptyp_tuple _; ptyp_loc = loc; _} as arg] ->
@@ -91,6 +92,42 @@ let convert_to_states =
                     ]
                   | args -> args
                 in { cd with pcd_args = args }
+#else
+            match cd.pcd_args with
+           | Pcstr_tuple pcd_args ->
+             begin
+               let args =
+                 match pcd_args with
+                 | [{ ptyp_desc = Ptyp_tuple _; ptyp_loc = loc; _} as arg] ->
+                   [
+                     {
+                       arg with
+                       ptyp_desc = Ptyp_constr (L.mkloc state_lid loc, []);
+                     }
+                   ]
+                 | args -> args
+               in { cd with pcd_args = Pcstr_tuple args }
+             end
+           | Pcstr_record pcd_args ->
+             begin
+               let args =
+                 match pcd_args with
+                 | [{
+                     pld_type = { ptyp_desc = Ptyp_tuple _; ptyp_loc = loc; _}
+                       as arg;
+                     _ } as lbl_arg] ->
+                   [
+                     {
+                       lbl_arg with
+                       pld_type = { arg with
+                                    ptyp_desc = Ptyp_constr (L.mkloc state_lid loc, []);
+                                  }
+                     }
+                   ]
+                 | args -> args
+               in { cd with pcd_args = Pcstr_record args }
+             end
+#endif
             )
               args
             )

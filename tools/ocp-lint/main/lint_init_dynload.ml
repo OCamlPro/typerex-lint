@@ -18,20 +18,33 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-module UserDefined = Plugin_patch.PluginPatch.MakeLintPatch(struct
-    let name = "Lint from semantic patches (user defined)."
-    let version = 1
-    let short_name = "sempatch_lint_user_defined"
-    let details = "Lint from semantic patches (user defined)."
-    let patches =
-      try
-        let path = Sys.getenv "OCPLINT_PATCHES" in
-        let files = ref [] in
-        Lint_utils.iter_files (fun file ->
-            if Filename.check_suffix file ".md" then
-              files := (Filename.concat path file) :: !files)
-          path;
-        !files
-      with Not_found -> []
-    let enable = true
-  end)
+
+let init () =
+  (* Core modules *)
+  Findlib.record_package Findlib.Record_core "findlib";
+  Findlib.record_package Findlib.Record_core "dynlink";
+  Findlib.record_package Findlib.Record_core "findlib.dynload";
+  Findlib.record_package Findlib.Record_core "compiler-libs.common";
+  Findlib.record_package Findlib.Record_core "unix";
+  Findlib.record_package Findlib.Record_core "str";
+  Findlib.record_package Findlib.Record_core "ocplib-unix";
+  Findlib.record_package Findlib.Record_core "ocp-lint-output";
+  Findlib.record_package Findlib.Record_core "ocp-lint-config";
+  Findlib.record_package Findlib.Record_core "ocp-lint-db";
+  Findlib.record_package Findlib.Record_core "ocp-lint-init";
+  Findlib.record_package Findlib.Record_core "ocp-lint-utils";
+
+#if OCAML_VERSION >= "4.04.0"
+  (match Sys.backend_type with
+   | Sys.Native ->
+     Findlib.record_package_predicates
+       ["pkg_findlib";"pkg_dynlink";"pkg_findlib.dynload";"autolink";"native"]
+   | Sys.Bytecode ->
+     Dynlink.allow_unsafe_modules true;
+     Findlib.record_package_predicates
+       ["pkg_findlib";"pkg_dynlink";"pkg_findlib.dynload";"autolink";"byte"]
+   | Sys.Other str -> ())
+#else
+  Findlib.record_package_predicates
+    ["pkg_findlib";"pkg_dynlink";"pkg_findlib.dynload";"autolink";"native"]
+#endif

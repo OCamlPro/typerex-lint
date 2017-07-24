@@ -20,6 +20,8 @@
 
 
 begin library "ocp-lint-plugin-sempatch"
+  install_META = true
+  install_subdir = "ocp-lint-plugins"
   files = [
    "global_static_files.ml"
 
@@ -37,11 +39,12 @@ end
 begin library "ocp-lint-patch"
   files = [ *)
     "plugin_patch.ml"
-    "default_patch.ml"
-    "user_patch.ml"
+    "lint_sempatch.ml"
   ]
   requires = [
+    "ocplib-sempatch"
     "ocp-lint-api"
+    "ocplib-compiler"
         (*    "ocp-lint-static-patch-files" *)
   ]
 end

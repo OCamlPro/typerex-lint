@@ -19,10 +19,10 @@
 (**************************************************************************)
 
 let details =
-  "A plugin with linters on the source."
+  "A plugin with linters on the source"
 
 module Plugin = Lint_plugin_api.MakePlugin (struct
-    let name = "Indentation of code plugin."
+    let name = "Indentation of code plugin"
     let short_name = "plugin_indent"
     let details = details
     let enable = true

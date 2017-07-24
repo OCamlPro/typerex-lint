@@ -1,6 +1,6 @@
 open Std_utils
-open Parsetree
 open Asttypes
+open Parsetree
 
 module type ARG =
 sig

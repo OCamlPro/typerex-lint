@@ -25,7 +25,7 @@ module Plugin = Plugin_parsetree.Plugin
 
 module Linter = Plugin.MakeLint(struct
     let name = "Check Constructor Arguments"
-    let version = 1
+    let version = "1"
     let short_name = "check_constr_args"
     let details = "Check that constructor arguments are ok."
     let enable = true
@@ -68,7 +68,11 @@ let iter_structure ast =
     let enter_structure_item str =
       match str.pstr_desc with
 
+#if OCAML_VERSION < "4.03.0"
       | Pstr_type decls ->
+#else
+      | Pstr_type (_, decls) ->
+#endif
         List.iter (function
             | { ptype_kind = Ptype_variant variants } ->
               List.iter (fun pcd ->
@@ -81,7 +85,11 @@ let iter_structure ast =
                     Warnings.report pcd.pcd_loc
                       (SingleArgWithParen pcd.pcd_name.txt)
 *)
+#if OCAML_VERSION < "4.03.0"
                   | [ { ptyp_desc = Ptyp_tuple _ }] ->
+#else
+                  | Pcstr_tuple [ { ptyp_desc = Ptyp_tuple _ }] ->
+#endif
                     Warnings.report pcd.pcd_loc
                       (TupleArgWithParen pcd.pcd_name.txt)
                   | _ -> ()

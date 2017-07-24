@@ -30,7 +30,7 @@ let details =
 
 module CodeLength = Plugin.MakeLint(struct
     let name = "Code Length"
-    let version = 1
+    let version = "1"
     let short_name = "code_length"
     let details = details
     let enable = true

@@ -26,5 +26,6 @@ begin library "ocp-lint-utils"
   requires = [
     "str"
     "ocplib-system"
+    "compiler-libs.common"
   ]
 end

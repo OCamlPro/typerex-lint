@@ -24,7 +24,7 @@ let details = "Missing interface."
 
 module MissingInterface = PluginFileSystem.MakeLint(struct
     let name = "Missing interface"
-    let version = 1
+    let version = "1"
     let short_name = "interface_missing"
     let details = details
     let enable = true

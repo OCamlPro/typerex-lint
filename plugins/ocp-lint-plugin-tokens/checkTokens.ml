@@ -22,7 +22,7 @@ open SimpleConfig (* for !! *)
 
 module Linter = Plugin_tokens.Plugin.MakeLint(struct
     let name = "Detect use of unwanted chars in files"
-    let version = 1
+    let version = "1"
     let short_name = "not_that_char"
     let details =
       "Detect use of unwanted chars in files, such as tabs or non-ASCII chars"
@@ -104,5 +104,5 @@ let check_tokens tokens =
 
 (* Registering a main entry to the linter *)
 module MainSRC = Linter.MakeInputTokens(struct
-    let main source = check_tokens source
+    let main source = check_tokens (Lexer_iter.get_tokens source)
   end)

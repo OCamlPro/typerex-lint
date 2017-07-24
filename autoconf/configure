@@ -4285,9 +4285,9 @@ $as_echo "not found" >&6; }
 if test "$OCAML_PKG_ocp_indent.lib" = "no"; then
    as_fn_error $? "Please install OCaml package 'ocp-indent.lib'." "$LINENO" 5
 fi
-OPAM_REPO=/home/lefessan/WindowsSharedFolder/opam-repository-with-archives
-OPAM_REPO_OFFICIAL_REMOTE=ocaml
-OPAM_REPO_FORK_REMOTE=origin
+OPAM_REPO=
+OPAM_REPO_OFFICIAL_REMOTE=
+OPAM_REPO_FORK_REMOTE=
 DOWNLOAD_URL_PREFIX=http://github.com//archive/
 
 ###############################################################
@@ -4336,7 +4336,7 @@ DOWNLOAD_URL_PREFIX=http://github.com//archive/
 
 
 
-ac_config_files="$ac_config_files Makefile.config config.ocpgen ocaml-config.h"
+ac_config_files="$ac_config_files Makefile.config config.ocpgen config.ocp2gen ocaml-config.h"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5046,6 +5046,7 @@ do
   case $ac_config_target in
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
     "config.ocpgen") CONFIG_FILES="$CONFIG_FILES config.ocpgen" ;;
+    "config.ocp2gen") CONFIG_FILES="$CONFIG_FILES config.ocp2gen" ;;
     "ocaml-config.h") CONFIG_FILES="$CONFIG_FILES ocaml-config.h" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

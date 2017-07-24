@@ -19,6 +19,11 @@
 (**************************************************************************)
 
 begin library "ocp-lint-plugin-indent"
+    (* Uncomment when: *)
+    (*   * ocp-indent'META has field plugin *)
+    (*   * ocp-intent installs its .cmxs *)
+    (* install_META = true *)
+    (* install_subdir = "ocp-lint-plugins" *)
   files = [
     "plugin_indent.ml"
     "ocp_indent.ml"

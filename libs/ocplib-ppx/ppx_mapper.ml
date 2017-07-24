@@ -30,13 +30,23 @@ type ppx = {
 
 let rec extension_of_error {loc; msg; if_highlight; sub} =
   { loc; txt = "ocaml.error" },
+#if OCAML_VERSION < "4.03"
   PStr ([Str.eval (Exp.constant (Const_string (msg, None)));
          Str.eval (Exp.constant (Const_string (if_highlight, None)))] @
         (List.map (fun ext -> Str.extension (extension_of_error ext)) sub))
+#else
+  PStr ([Str.eval (Exp.constant (Pconst_string (msg, None)));
+         Str.eval (Exp.constant (Pconst_string (if_highlight, None)))] @
+        (List.map (fun ext -> Str.extension (extension_of_error ext)) sub))
+#endif
 
 let attribute_of_warning loc s =
   { loc; txt = "ocaml.ppwarning" },
+#if OCAML_VERSION < "4.03"
   PStr ([Str.eval ~loc (Exp.constant (Const_string (s, None)))])
+#else
+  PStr ([Str.eval ~loc (Exp.constant (Pconst_string (s, None)))])
+#endif
 
 module StringMap = Map.Make(struct
     type t = string
@@ -64,7 +74,12 @@ module PpxContext = struct
 
   let lid name = { txt = Lident name; loc = Location.none }
 
-  let make_string x = Exp.constant (Const_string (x, None))
+  let make_string x =
+#if OCAML_VERSION < "4.03"
+    Exp.constant (Const_string (x, None))
+#else
+    Exp.constant (Pconst_string (x, None))
+#endif
 
   let make_bool x =
     if x
@@ -119,7 +134,11 @@ module PpxContext = struct
   let restore fields =
     let field name payload =
       let rec get_string = function
-        | { pexp_desc = Pexp_constant (Const_string (str, None)) } -> str
+#if OCAML_VERSION < "4.03"
+| { pexp_desc = Pexp_constant (Const_string (str, None)) } -> str
+#else
+| { pexp_desc = Pexp_constant (Pconst_string (str, None)) } -> str
+#endif
         | _ ->
             raise_errorf
               "Internal error: invalid [@@@ocaml.ppx.context { %s }] string syntax"
