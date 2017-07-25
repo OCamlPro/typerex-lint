@@ -56,8 +56,6 @@ begin program "ocp-lint-web-main"
      "web_file_content_data.ml"
      "web_file_content.ml"
      "web_home_content.ml"
-     "web_plugin_content.ml"
-     "web_linter_content.ml"
      "web_result_content.ml"
      "web_main.ml"
    ]

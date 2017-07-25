@@ -25,8 +25,6 @@ open Web_errors
 
 type navigation_element =
   | HomeElement
-  | PluginsElement
-  | LinterElement
   | ResultElement
   | FileElement of file_info
   | WarningElement of warning_info
@@ -49,7 +47,6 @@ module NavigationElement =
     let equal x y =
       match x,y with
       | HomeElement, HomeElement -> true
-      | LinterElement, LinterElement -> true
       | ResultElement, ResultElement -> true
       | FileElement f, FileElement f' -> Web_utils.file_equals f f'
       | WarningElement w, WarningElement w' -> Web_utils.warning_equals w w'
@@ -203,10 +200,6 @@ let navigation_element_set_active ne =
 let navigation_element_tab_id = function
   | HomeElement ->
      "home-tab"
-  | PluginsElement ->
-     "plugins-tab"
-  | LinterElement ->
-     "linters-tab"
   | ResultElement ->
      "results-tab"
   | FileElement file_info ->
@@ -217,10 +210,6 @@ let navigation_element_tab_id = function
 let navigation_element_content_id = function
   | HomeElement ->
      "home-content"
-  | PluginsElement ->
-     "plugins-content"
-  | LinterElement ->
-     "linters-content"
   | ResultElement ->
      "results-content"
   | FileElement file_info ->
@@ -293,23 +282,13 @@ let create_static_element ne tab_creator content_creator attached =
     (content_creator ne)
     attached
 
-let create home_content plugins_content linter_content result_content =
+let create home_content result_content =
   create_static_element
     HomeElement
     (model_simple_tab "home")
     (model_simple_content home_content)
     No_attached_data;
   navigation_element_set_active HomeElement;
-  create_static_element
-    PluginsElement
-    (model_simple_tab "plugins")
-    (model_simple_content plugins_content)
-    No_attached_data;
-  create_static_element
-    LinterElement
-    (model_simple_tab "linters")
-    (model_simple_content linter_content)
-    No_attached_data;
   create_static_element
     ResultElement
     (model_simple_tab "results")

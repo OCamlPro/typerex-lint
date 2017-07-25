@@ -54,16 +54,9 @@ let footer analysis_info =
     [pcdata msg]
 
 let main_page analysis_info =
-  let warnings_plugins =
-    Lint_web.group_by begin fun warning_info ->
-      warning_info.warning_linter.linter_plugin.plugin_name
-    end analysis_info.warnings_info
-  in
   let tabs, contents =
     Web_navigation_system.create
       (Web_home_content.content analysis_info home_warnings_table_id)
-      (Web_plugin_content.content warnings_plugins)
-      Web_linter_content.content
       (Web_result_content.content
 	 analysis_info.warnings_info
 	 analysis_info.errors_info)
