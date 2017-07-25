@@ -25,6 +25,7 @@ open Lint_web_analysis_info
 type file_content_type =
   | File_content
   | Warning_content of warning_info
+  | Error_content of error_info
 
 type file_content_value = {
   dom_content : Dom_html.element Js.t;

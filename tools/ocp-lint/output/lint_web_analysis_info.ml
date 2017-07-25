@@ -385,7 +385,6 @@ let json_of_exception exn =
   `String (Printexc.to_string exn)
 
 let exception_of_json json =
-  (* todo better *)
   Failure (to_string json)
 
 let json_of_plugin_error plugin_error =

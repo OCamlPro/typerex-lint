@@ -129,7 +129,7 @@ let pie_value label count =
     caption = label;
   }
 
-let warnings_pie_group_by_file warnings_info =
+let warnings_pie_group_by_file warnings_info errors_info =
   let files_warnings_info =
     Lint_web.group_by begin fun warning_info ->
       warning_info.warning_file
@@ -141,8 +141,13 @@ let warnings_pie_group_by_file warnings_info =
         String.equal file.file_name arg.data.label
       end files_warnings_info
     in
+    let file_errors_info =
+      List.filter begin fun error ->
+        Web_utils.file_equals file_info error.error_file
+      end errors_info
+    in
     let file_content_data =
-      Web_file_content.open_tab file_info file_warnings_info
+      Web_file_content.open_tab file_info file_warnings_info file_errors_info
     in
     begin match Web_file_content_data.active_file_content file_content_data with
     | None ->
@@ -389,7 +394,9 @@ let dashboard_content analysis_info warnings_table =
       a_class ["dashboard-content"];
     ]
     [
-      warnings_pie_group_by_file analysis_info.warnings_info;
+      warnings_pie_group_by_file
+	analysis_info.warnings_info
+	analysis_info.errors_info;
       span [pcdata " "]; (* todo padding *)
       warnings_pie_group_by_plugin analysis_info.warnings_info;
       span [pcdata " "];
