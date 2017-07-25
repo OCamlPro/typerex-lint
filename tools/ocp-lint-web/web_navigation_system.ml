@@ -25,7 +25,8 @@ open Web_errors
 
 type navigation_element =
   | HomeElement
-  | ResultElement
+  | WarningsElement
+  | ErrorsElement
   | FileElement of file_info
 
 type navigation_attached_data =
@@ -46,7 +47,8 @@ module NavigationElement =
     let equal x y =
       match x,y with
       | HomeElement, HomeElement -> true
-      | ResultElement, ResultElement -> true
+      | WarningsElement, WarningsElement -> true
+      | ErrorsElement, ErrorsElement -> true
       | FileElement f, FileElement f' -> Web_utils.file_equals f f'
       | _ -> false
     let hash = Hashtbl.hash
@@ -198,16 +200,20 @@ let navigation_element_set_active ne =
 let navigation_element_tab_id = function
   | HomeElement ->
      "home-tab"
-  | ResultElement ->
-     "results-tab"
+  | WarningsElement ->
+     "warnings-tab"
+  | ErrorsElement ->
+     "errors-tab"
   | FileElement file_info ->
      "file-" ^ (Digest.to_hex file_info.file_hash) ^ "-tab"
 
 let navigation_element_content_id = function
   | HomeElement ->
      "home-content"
-  | ResultElement ->
-     "results-content"
+  | WarningsElement ->
+     "warnings-content"
+  | ErrorsElement ->
+     "errors-content"
   | FileElement file_info ->
      "file-" ^ (Digest.to_hex file_info.file_hash) ^ "-content"
 
@@ -276,7 +282,7 @@ let create_static_element ne tab_creator content_creator attached =
     (content_creator ne)
     attached
 
-let create home_content result_content =
+let create home_content warnings_content errors_content =
   create_static_element
     HomeElement
     (model_simple_tab "home")
@@ -284,9 +290,14 @@ let create home_content result_content =
     No_attached_data;
   navigation_element_set_active HomeElement;
   create_static_element
-    ResultElement
-    (model_simple_tab "results")
-    (model_simple_content result_content)
+    WarningsElement
+    (model_simple_tab "warnings")
+    (model_simple_content warnings_content)
+    No_attached_data;
+  create_static_element
+    ErrorsElement
+    (model_simple_tab "errors")
+    (model_simple_content errors_content)
     No_attached_data;
   Tyxml_js.Of_dom.of_element
     global_navigation_informations.navigation_dom_tabs,

@@ -166,3 +166,26 @@ let warning_contains_keyword keyword warning_info =
   || contains_kwd warning_info.warning_linter.linter_name
   || contains_kwd warning_info.warning_type.decl.short_name
   || contains_kwd warning_info.warning_type.output
+
+let error_type error_info =
+  match error_info.error_type with
+  | Lint_db_types.Db_error e -> "db_error"
+  | Lint_db_types.Plugin_error e -> "plugin_error"
+  | Lint_db_types.Sempatch_error e -> "sempatch_error"
+  | Lint_db_types.Ocplint_error e -> "ocplint_error"
+
+let error_description error_info =
+  match error_info.error_type with
+  | Lint_db_types.Db_error e ->
+     Lint_db_error.to_string e
+  | Lint_db_types.Plugin_error e ->
+     begin match e with
+     | Lint_plugin_error.Plugin_exception (Failure str) ->
+        Printf.sprintf "Exception %s" str	  
+     | _ ->
+        Lint_plugin_error.to_string e
+     end
+  | Lint_db_types.Sempatch_error e ->
+     e
+  | Lint_db_types.Ocplint_error e ->
+     e

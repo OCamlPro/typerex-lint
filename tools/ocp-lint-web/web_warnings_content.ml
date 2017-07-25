@@ -22,56 +22,6 @@ open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 
-let error_div_head error_info =
-  h4
-    ~a:[
-      a_class ["alert-heading"];
-    ]
-    [pcdata (Printf.sprintf "Error #%d" error_info.error_id)]
-
-let error_div error_info =
-  let file_msg =
-    a
-      ~a:[
-        a_class ["alert-link"];
-      ]
-      [
-        pcdata error_info.error_file.file_name;
-      ]
-  in
-  let error_msg =
-    let str =
-      match error_info.error_type with
-      | Lint_db_types.Db_error e ->
-         Lint_db_error.to_string e
-      | Lint_db_types.Plugin_error e ->
-         Lint_plugin_error.to_string e
-      | Lint_db_types.Sempatch_error e ->
-         e
-      | Lint_db_types.Ocplint_error e ->
-         e
-    in
-    pcdata str
-  in
-  div
-    ~a:[
-      a_class ["alert"; "alert-danger"];
-    ]
-    [
-      error_div_head error_info;
-      file_msg;
-      br ();
-      error_msg;
-    ]
-
-
-
-let file_warnings_table_id file_info =
-  "file-" ^ (Digest.to_hex file_info.file_hash) ^ "-warnings-table"
-
-
-
-
 type filter_element = { (* todo param type *)
   filter_element_info : Lint_web_analysis_info.warning_info;
   filter_element_dom : Dom_html.element Js.t;
@@ -376,27 +326,28 @@ let warning_div all_warnings_info all_errors_info warning_info =
   end;
   div_warning
 
-let content warnings_info errors_info =
+let content analysis_info =
   let uniq_warnings_info =
-    warnings_info
+    analysis_info.warnings_info
     |> List.sort Web_utils.warning_compare
     |> Web_utils.remove_successive_duplicates Web_utils.warning_equals
   in
   let uniq_files_info =
-    warnings_info
+    analysis_info.warnings_info
     |> List.map (fun {warning_file; _} -> warning_file)
     |> List.sort (fun f f' -> String.compare f.file_name f'.file_name)
     |> Web_utils.remove_successive_duplicates
          (fun f f' -> String.equal f.file_name f'.file_name)
   in
   let filter_system =
-    filter_system_create warnings_info (warning_div warnings_info errors_info)
+    filter_system_create
+      analysis_info.warnings_info
+      (warning_div analysis_info.warnings_info analysis_info.errors_info)
   in
   div
-    (* (List.map error_div errors_info *)
-    (* @ List.map warning_div warnings_info) *)
     (
       (warning_div_filter uniq_files_info uniq_warnings_info filter_system) ::
       (br ()) ::
       (filter_system_dom_contents filter_system)
     )
+

@@ -21,74 +21,50 @@
 open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
-open Web_errors
 
-let home_warnings_table_id =
-  "home-warnings-table"
 
-let header =
-  div
+let error_div_head error_info =
+  h4
     ~a:[
-      a_class ["ocp-lint-web-header"]
+      a_class ["alert-heading"];
     ]
-    [
-      h1 [pcdata "ocp-lint-web"];
-    ]
+    [pcdata (Printf.sprintf "Error #%d" error_info.error_id)]
 
-let footer analysis_info =
-  let open Unix in
-  let time = analysis_info.analysis_date in
-  let msg =
-    Printf.sprintf "generated the %04d-%02d-%02d at %02d:%02d from %s"
-      (1900 + time.tm_year)
-      (time.tm_mon + 1)
-      time.tm_mday
-      time.tm_hour
-      time.tm_min
-      analysis_info.analysis_root
+let error_div_body error_info =
+  let file_msg =
+    a
+      ~a:[
+        a_class ["alert-link"];
+      ]
+      [
+        pcdata error_info.error_file.file_name;
+      ]
   in
-  div
-    ~a:[
-      a_class ["ocp-lint-web-footer"]
-    ]
-    [pcdata msg]
-
-let main_page analysis_info =
-  let tabs, contents =
-    Web_navigation_system.create
-      (Web_home_content.content analysis_info home_warnings_table_id)
-      (Web_warnings_content.content analysis_info)
-      (Web_errors_content.content analysis_info)
+  let description_msg =
+    pcdata (
+      Printf.sprintf "%s : %s"
+        (Web_utils.error_type error_info)
+        (Web_utils.error_description error_info)
+    )
   in
   div
     [
-      header;
+      pcdata "from ";
+      file_msg;
       br ();
-      tabs;
-      contents;
-      footer analysis_info;
-      br ();
+      description_msg;
     ]
 
-let load_main_page analysis_info =
-  let body = main_page analysis_info in
-  Dom.appendChild (Dom_html.document##body) (Tyxml_js.To_dom.of_element body)
+let error_div error_info =
+  div
+    ~a:[
+      a_class ["alert"; "alert-danger"];
+    ]
+    [
+      error_div_head error_info;
+      error_div_body error_info;
+    ]
 
-let onload _ =
-  try
-    let analysis_info =
-      analysis_info_of_json
-        (Web_utils.json_from_js_var Lint_web.analysis_info_var)
-    in
-    load_main_page analysis_info;
-    Web_data_table.load home_warnings_table_id;
-    Js._true
-  with
-  | Web_exception e ->
-     process_error e;
-     Js._false
-  | e ->
-     failwith ("uncatched exception " ^ (Printexc.to_string e))
-
-let () =
-  Dom_html.window##onload <- Dom_html.handler onload;
+let content analysis_info =
+  div
+    (List.map error_div analysis_info.errors_info)
