@@ -27,7 +27,6 @@ type navigation_element =
   | HomeElement
   | ResultElement
   | FileElement of file_info
-  | WarningElement of warning_info
 
 type navigation_attached_data =
   | No_attached_data
@@ -49,7 +48,6 @@ module NavigationElement =
       | HomeElement, HomeElement -> true
       | ResultElement, ResultElement -> true
       | FileElement f, FileElement f' -> Web_utils.file_equals f f'
-      | WarningElement w, WarningElement w' -> Web_utils.warning_equals w w'
       | _ -> false
     let hash = Hashtbl.hash
   end
@@ -204,8 +202,6 @@ let navigation_element_tab_id = function
      "results-tab"
   | FileElement file_info ->
      "file-" ^ (Digest.to_hex file_info.file_hash) ^ "-tab"
-  | WarningElement warning_info ->
-     "warning-" ^ (string_of_int warning_info.warning_id) ^ "-tab"
 
 let navigation_element_content_id = function
   | HomeElement ->
@@ -214,8 +210,6 @@ let navigation_element_content_id = function
      "results-content"
   | FileElement file_info ->
      "file-" ^ (Digest.to_hex file_info.file_hash) ^ "-content"
-  | WarningElement warning_info ->
-     "warning-" ^ (string_of_int warning_info.warning_id) ^ "-content"
 
 let model_simple_tab name ne =
   li

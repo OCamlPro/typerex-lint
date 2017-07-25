@@ -35,7 +35,7 @@ let warnings_table_col_linter warning_info =
 let warnings_table_col_warning warning_info =
   pcdata warning_info.warning_type.decl.short_name
 
-let warnings_table_entry warning_info =
+let warnings_table_entry warning_info = (* TODO remove *)
   let tr =
     tr
       [
@@ -45,9 +45,8 @@ let warnings_table_entry warning_info =
         td [warnings_table_col_warning warning_info];
       ]
   in
-  (* todo in datatable.ml *)
   (Tyxml_js.To_dom.of_element tr)##onclick <-Dom_html.handler begin fun _ ->
-    Web_warning_content.open_tab warning_info;
+    (* Web_warning_content.open_tab warning_info; *)
     Js._true
   end;
   (* *)
