@@ -26,6 +26,13 @@ type file_loc =
   | Floc_line of int
   | Floc_lines_cols of int * int * int * int
 
+let is_ghost_loc loc =
+  let open Location in
+  let open Lexing in
+  (* loc.loc_ghost  && (loc.loc_start.pos_lnum = 0) *)
+  (* todo check *)
+  loc.loc_ghost || (loc.loc_start.pos_lnum = 0 && loc.loc_start.pos_cnum = -1)
+
 let file_loc_of_warning_info warning_info =
   let open Location in
   let open Lexing in
@@ -48,14 +55,22 @@ let warning_info_is_ghost warning_info =
   let open Lexing in
   let loc = warning_info.warning_type.loc in
   let ghost_warnings = [
-    "plugin_file_system", "interface_missing", "missing_interface";
+    "plugin_file_system",
+    "interface_missing",
+    "missing_interface"
+  ;
+    "plugin_parsetree",
+    "code_redefine_stdlib_module",
+    "redfine_compilerlib_module"
+  ;
   ]
   in
-  (List.exists begin fun (plugin,linter,warning) ->
-    warning_info.warning_linter.linter_plugin.plugin_name = plugin
-    && warning_info.warning_linter.linter_name = linter
-    && warning_info.warning_type.decl.short_name = warning
-   end ghost_warnings) || (loc.loc_ghost && (loc.loc_start.pos_lnum = 0))
+  let is_same_warning (plugin_name,linter_name,warning_name) =
+    warning_info.warning_linter.linter_plugin.plugin_name = plugin_name
+    && warning_info.warning_linter.linter_name = linter_name
+    && warning_info.warning_type.decl.short_name = warning_name
+  in
+  List.exists is_same_warning ghost_warnings && is_ghost_loc loc
 
 let get_element_by_id id =
   match Js_utils.Manip.by_id id with
