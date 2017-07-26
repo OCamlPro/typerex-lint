@@ -55,16 +55,46 @@ let error_div_body error_info =
       description_msg;
     ]
 
-let error_div error_info =
-  div
-    ~a:[
-      a_class ["alert"; "alert-danger"];
-    ]
-    [
-      error_div_head error_info;
-      error_div_body error_info;
-    ]
+let error_div all_warnings_info all_errors_info error_info =
+  let file_warnings_info =
+    List.filter begin fun warning ->
+      Web_utils.file_equals warning.warning_file error_info.error_file
+    end all_warnings_info
+  in
+  let file_errors_info =
+    List.filter begin fun error ->
+      Web_utils.file_equals error.error_file error_info.error_file
+    end all_errors_info
+  in
+  let div_error =
+    div
+      ~a:[
+        a_class ["alert"; "alert-danger"];
+      ]
+      [
+        error_div_head error_info;
+        error_div_body error_info;
+      ]
+  in
+  (Tyxml_js.To_dom.of_element div_error)##onclick <- Dom_html.handler
+  begin fun _ ->
+    let file_content_data =
+      Web_file_content.open_tab
+	error_info.error_file
+	file_warnings_info
+	file_errors_info
+    in
+    Web_file_content_data.focus_file_content
+      file_content_data
+      (Web_file_content_data.Error_content error_info)
+    ;
+    Js._true
+  end;
+  div_error
 
 let content analysis_info =
   div
-    (List.map error_div analysis_info.errors_info)
+    (List.map
+       (error_div analysis_info.warnings_info analysis_info.errors_info)
+       analysis_info.errors_info
+    )
