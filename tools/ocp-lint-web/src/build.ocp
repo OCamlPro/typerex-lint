@@ -72,22 +72,22 @@ begin program "ocp-lint-web-main"
 
    (* Also compile bytecode into javascript *)
 
-   build_targets = [ "static/js/ocp_lint_web.js" ]
+   build_targets = [ "../static/js/ocp_lint_web.js" ]
    client_byte = [ %string
      ( strings = [ "%{ocp-lint-web-main_FULL_DST_DIR}%/"
                    "ocp-lint-web-main.byte"
             ] ) ]
    build_rules = [
-      "static/js/ocp_lint_web.js" (
+      "../static/js/ocp_lint_web.js" (
        sources = [ client_byte ]
        commands = [
          { "js_of_ocaml"
             (* Use these options to debug Javascript:
                "-sourcemap" "-pretty" "-noinline" *)
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
-	     "static/js/ocplib_unix.js"
-	     "static/js/ocplib_re.js"
-             "-o" "static/js/ocp_lint_web.js"
+	     "../static/js/ocplib_unix.js"
+	     "../static/js/ocplib_re.js"
+             "-o" "../static/js/ocp_lint_web.js"
               client_byte }
        ]
        build_target = true
@@ -117,22 +117,22 @@ begin program "ocp-lint-web-codeviewer"
 
    (* Also compile bytecode into javascript *)
 
-   build_targets = [ "static/js/ocp_lint_web_codeviewer.js" ]
+   build_targets = [ "../static/js/ocp_lint_web_codeviewer.js" ]
    client_byte = [ %string
      ( strings = [ "%{ocp-lint-web-codeviewer_FULL_DST_DIR}%/"
                    "ocp-lint-web-codeviewer.byte"
             ] ) ]
    build_rules = [
-      "static/js/ocp_lint_web_codeviewer.js" (
+      "../static/js/ocp_lint_web_codeviewer.js" (
        sources = [ client_byte ]
        commands = [
          { "js_of_ocaml"
             (* Use these options to debug Javascript:
                "-sourcemap" "-pretty" "-noinline" *)
              "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
-	     "static/js/ocplib_unix.js"
-	     "static/js/ocplib_re.js"
-             "-o" "static/js/ocp_lint_web_codeviewer.js"
+	     "../static/js/ocplib_unix.js"
+	     "../static/js/ocplib_re.js"
+             "-o" "../static/js/ocp_lint_web_codeviewer.js"
               client_byte }
        ]
        build_target = true
