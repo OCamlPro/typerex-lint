@@ -332,10 +332,8 @@ let html_of_index =
     analysis_info_file;
     "ace"; (*** todo delete ***)
     "ocp_lint_web";
-    "jquery.min"; (*** todo ***)
+    "jquery.min";
     "bootstrap.min";
-    "jquery-1.12.4"; (*** todo ***)
-    "jquery.dataTables.min";
     "d3";
     "d3pie.min";
     "data_table";

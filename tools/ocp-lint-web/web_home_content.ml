@@ -23,66 +23,6 @@ open D3pie
 open Lint_warning_types
 open Lint_web_analysis_info
 
-let warnings_table_col_file warning_info =
-  pcdata warning_info.warning_file.file_name
-
-let warnings_table_col_plugin warning_info =
-  pcdata warning_info.warning_linter.linter_plugin.plugin_name
-
-let warnings_table_col_linter warning_info =
-  pcdata warning_info.warning_linter.linter_name
-
-let warnings_table_col_warning warning_info =
-  pcdata warning_info.warning_type.decl.short_name
-
-let warnings_table_entry warning_info = (* TODO remove *)
-  let tr =
-    tr
-      [
-        td [warnings_table_col_file warning_info];
-        td [warnings_table_col_plugin warning_info];
-        td [warnings_table_col_linter warning_info];
-        td [warnings_table_col_warning warning_info];
-      ]
-  in
-  (Tyxml_js.To_dom.of_element tr)##onclick <-Dom_html.handler begin fun _ ->
-    (* Web_warning_content.open_tab warning_info; *)
-    Js._true
-  end;
-  (* *)
-  tr
-
-let warnings_table_head =
-  thead
-    [
-      tr
-        [
-          th [pcdata "File"];
-          th [pcdata "Plugin"];
-          th [pcdata "Linter"];
-          th [pcdata "Warning"];
-        ]
-    ]
-
-let warnings_table warnings_info id =
-  let entry_creator warning_info =
-    warnings_table_entry warning_info
-  in
-  let table =
-    tablex
-      ~a:[
-        a_id id;
-        (* setAttribute(Js.string "cellspacing", Js.string "0"); *)
-        (* setAttribute(Js.string "width", Js.string "100%"); *)
-      ]
-      ~thead:warnings_table_head
-      [
-        tbody (List.map entry_creator warnings_info)
-      ]
-  in
-  Web_data_table.set table;
-  table
-
 let default_pie_settings =
   default_settings
   |> set_size_canvas_height 200
@@ -128,11 +68,11 @@ let pie_value label count =
     caption = label;
   }
 
-let warnings_pie_group_by_file warnings_info errors_info =
+let warnings_pie_group_by_file analysis_info =
   let files_warnings_info =
     Lint_web.group_by begin fun warning_info ->
       warning_info.warning_file
-    end warnings_info
+    end analysis_info.warnings_info
   in
   let on_click_segment (arg : d3pie_callback_argument) =
     let file_info, file_warnings_info =
@@ -143,7 +83,7 @@ let warnings_pie_group_by_file warnings_info errors_info =
     let file_errors_info =
       List.filter begin fun error ->
         Web_utils.file_equals file_info error.error_file
-      end errors_info
+      end analysis_info.errors_info
     in
     let file_content_data =
       Web_file_content.open_tab file_info file_warnings_info file_errors_info
@@ -163,12 +103,12 @@ let warnings_pie_group_by_file warnings_info errors_info =
   in
   div_warning_pie "Files" values on_click_segment
 
-let warnings_pie_group_by_plugin warnings_info =
+let warnings_pie_group_by_plugin analysis_info =
   let on_click_segment arg =
     Js_utils.alert ("plugin : " ^ (string_of_int arg.index))
   in
   let values =
-    warnings_info
+    analysis_info.warnings_info
     |> Lint_web.group_by begin fun warning_info ->
          warning_info.warning_linter.linter_plugin.plugin_name
        end
@@ -178,12 +118,12 @@ let warnings_pie_group_by_plugin warnings_info =
   in
   div_warning_pie "Plugins" values on_click_segment
 
-let warnings_pie_group_by_linter warnings_info =
+let warnings_pie_group_by_linter analysis_info =
   let on_click_segment arg =
     Js_utils.alert ("linter : " ^ (string_of_int arg.index))
   in
   let values =
-    warnings_info
+    analysis_info.warnings_info
     |> Lint_web.group_by begin fun warning_info ->
          warning_info.warning_linter.linter_plugin.plugin_name,
          warning_info.warning_linter.linter_name
@@ -194,12 +134,12 @@ let warnings_pie_group_by_linter warnings_info =
   in
   div_warning_pie "Linters" values on_click_segment
 
-let warnings_pie_group_by_warning warnings_info =
+let warnings_pie_group_by_warning analysis_info =
   let on_click_segment arg =
     Js_utils.alert ("warning : " ^ (string_of_int arg.index))
   in
   let values =
-    warnings_info
+    analysis_info.warnings_info
     |> Lint_web.group_by begin fun warning_info ->
          warning_info.warning_linter.linter_plugin.plugin_name,
          warning_info.warning_linter.linter_name,
@@ -211,12 +151,12 @@ let warnings_pie_group_by_warning warnings_info =
   in
   div_warning_pie "Warnings" values on_click_segment
 
-let warnings_pie_group_by_severity warnings_info =
+let warnings_pie_group_by_severity analysis_info =
   let on_click_segment arg =
     Js_utils.alert ("severity : " ^ (string_of_int arg.index))
   in
   let values =
-    warnings_info
+    analysis_info.warnings_info
     |> Lint_web.group_by begin fun warning_info ->
          warning_info.warning_type.decl.severity
        end
@@ -266,156 +206,27 @@ let dashboard_head analysis_info =
         ("linters activated");
     ]
 
-let warning_li_dropdown_menu
-      plugin_name linter_name warning_name warnings_table =
-  let tmp = (* todo change *)
-    Js.Opt.get
-      ((Tyxml_js.To_dom.of_element warnings_table)##lastChild)
-      (fun () -> failwith "" (* todo *))
-  in
-  let warnings_table_entries = (* todo change *)
-    Dom.list_of_nodeList (tmp##childNodes)
-  in
-  let is_checked checkbox =
-    Js.to_bool checkbox##checked
-  in
-  let warn_str =
-    Printf.sprintf "%s.%s.%s"
-      plugin_name
-      linter_name
-      warning_name
-  in
-  let checkbox =
-    input
-      ~a:[
-        a_input_type `Checkbox;
-        a_checked ()
-      ] ();
-  in
-  (Tyxml_js.To_dom.of_element checkbox)##onclick <-
-    Dom_html.handler begin fun evt ->
-      let cb =
-        Js.coerce_opt
-          (evt##target)
-          Dom_html.CoerceTo.input
-          (fun _ -> failwith "get checkbox" (* todo web error *))
-      in
-      let action =
-        if is_checked cb then
-          (fun e -> Js_utils.log "enable")
-        else
-          (fun e -> Js_utils.log "disable")
-      in
-      List.iter begin fun tr ->
-        (* action tr; *)
-        let tds = Array.of_list (Dom.list_of_nodeList (tr##childNodes)) in
-        let pluginval =
-          (Js.Opt.get (tds.(1)##firstChild) (fun _ -> failwith ""))##nodeValue
-        in
-        let plugin =
-          Js.to_string (Js.Opt.get (pluginval) (fun _ -> failwith ""))
-        in
-        let linterval =
-          (Js.Opt.get (tds.(2)##firstChild) (fun _ -> failwith ""))##nodeValue
-        in
-        let linter =
-          Js.to_string (Js.Opt.get (linterval) (fun _ -> failwith ""))
-        in
-        let warningval =
-          (Js.Opt.get (tds.(3)##firstChild) (fun _ -> failwith ""))##nodeValue
-        in
-        let warning =
-          Js.to_string (Js.Opt.get (warningval) (fun _ -> failwith ""))
-        in
-        if
-          Printf.sprintf "%s.%s.%s" plugin linter warning
-          =
-          "plugin_file_system.interface_missing.missing_interface"
-        then
-          action tr
-      end warnings_table_entries;
-      Js._true
-  end;
-  li
-    [
-      a
-        [
-          checkbox;
-          span ~a:[a_class ["filter-label"]] [pcdata warn_str];
-        ]
-    ]
-
-let dashboard_filter analysis_info warnings_table =
-  let warnings =
-    Lint_web.group_by begin fun warning_info ->
-      warning_info.warning_linter.linter_plugin.plugin_name,
-      warning_info.warning_linter.linter_name,
-      warning_info.warning_type.decl.short_name
-    end analysis_info.warnings_info
-  in
-  let dropdown_menu =
-    div
-      ~a:[
-        a_class ["dropdown"];
-      ]
-      [
-        button
-          ~a:[
-            a_class ["btn"; "btn-default"; "dropdown-toggle"];
-            a_button_type `Button;
-            a_user_data "toggle" "dropdown";
-            (* aria-haspopup true; *)
-            (* aria-expanded true *)
-          ]
-          [pcdata "warnings"];
-        span ~a:[a_class ["caret"]] [];
-        ul
-          ~a:[
-            a_class ["dropdown-menu"];
-            (* aria-labelledby "dropdownMenu1" *)
-          ]
-          (List.map begin fun ((pname,lname,wname),_) ->
-             warning_li_dropdown_menu pname lname wname warnings_table
-           end warnings);
-      ]
-  in
-  div
-    ~a:[
-      a_class ["dashboard-filter"];
-    ]
-    [
-      dropdown_menu;
-    ]
-
-let dashboard_content analysis_info warnings_table =
+let dashboard_content analysis_info =
   div
     ~a:[
       a_class ["dashboard-content"];
     ]
     [
-      warnings_pie_group_by_file
-	analysis_info.warnings_info
-	analysis_info.errors_info;
+      warnings_pie_group_by_file analysis_info;
       span [pcdata " "]; (* todo padding *)
-      warnings_pie_group_by_plugin analysis_info.warnings_info;
+      warnings_pie_group_by_plugin analysis_info;
       span [pcdata " "];
-      warnings_pie_group_by_linter analysis_info.warnings_info;
+      warnings_pie_group_by_linter analysis_info;
       span [pcdata " "];
-      warnings_pie_group_by_warning analysis_info.warnings_info;
+      warnings_pie_group_by_warning analysis_info;
       span [pcdata " "];
-      warnings_pie_group_by_severity analysis_info.warnings_info;
-      br ();
-      br ();
-      warnings_table;
+      warnings_pie_group_by_severity analysis_info;
     ]
 
-let content analysis_info warnings_table_id =
-  let table = warnings_table analysis_info.warnings_info warnings_table_id in
+let content analysis_info =
   div
     [
       dashboard_head analysis_info;
       br ();
-      dashboard_filter analysis_info table;
-      br ();
-      dashboard_content analysis_info table;
+      dashboard_content analysis_info;
     ]

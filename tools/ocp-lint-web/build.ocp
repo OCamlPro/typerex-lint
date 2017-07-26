@@ -49,7 +49,6 @@ begin program "ocp-lint-web-main"
    files = [
      "web_errors.ml"
      "web_utils.ml"
-     "web_data_table.ml"
      "web_code_viewer.ml"
      "web_navigation_system.ml"
      "web_file_content_data.ml"

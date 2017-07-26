@@ -23,9 +23,6 @@ open Lint_warning_types
 open Lint_web_analysis_info
 open Web_errors
 
-let home_warnings_table_id =
-  "home-warnings-table"
-
 let header =
   div
     ~a:[
@@ -56,7 +53,7 @@ let footer analysis_info =
 let main_page analysis_info =
   let tabs, contents =
     Web_navigation_system.create
-      (Web_home_content.content analysis_info home_warnings_table_id)
+      (Web_home_content.content analysis_info)
       (Web_warnings_content.content analysis_info)
       (Web_errors_content.content analysis_info)
   in
@@ -78,10 +75,9 @@ let onload _ =
   try
     let analysis_info =
       analysis_info_of_json
-        (Web_utils.json_from_js_var Lint_web.analysis_info_var)
+	(Web_utils.json_from_js_var Lint_web.analysis_info_var)
     in
     load_main_page analysis_info;
-    Web_data_table.load home_warnings_table_id;
     Js._true
   with
   | Web_exception e ->
