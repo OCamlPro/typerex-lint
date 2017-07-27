@@ -101,7 +101,7 @@ let navigation_element_find_active () =
     NavigationElementHashtbl.fold begin fun _ nav_val acc ->
     if navigation_value_is_active nav_val then
       match acc with
-      | Some _ -> raise (Web_exception ActiveNavigationElementIsNotUnique)
+      | Some _ -> raise (Web_exception Active_navigation_element_is_not_unique)
       | None -> Some nav_val
     else
       acc
@@ -109,7 +109,7 @@ let navigation_element_find_active () =
   in
   match active_value with
   | Some x -> x
-  | None -> raise (Web_exception NoActiveNavigationElement)
+  | None -> raise (Web_exception No_active_navigation_element)
 
 let navigation_element_static_create ne tab content attached =
   let tab = Tyxml_js.To_dom.of_element tab in

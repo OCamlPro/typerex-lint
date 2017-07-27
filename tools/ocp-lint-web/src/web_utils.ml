@@ -99,7 +99,11 @@ let array_joining join arr =
   let tl = Array.sub arr 1 ((Array.length arr) - 1) in
   Array.fold_left begin fun acc line ->
     acc ^ join ^ line
-  end hd tl
+end hd tl
+		  
+let value_of_optional = function
+  | Some x -> x
+  | None -> raise (Web_exception Get_value_of_empty_optional)
 
 let dom_element_is_display e =
   e##style##display != Js.string "none"

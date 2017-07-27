@@ -106,6 +106,49 @@ let default_size = {
   pie_outer_radius = Radius_default;
 }
 
+type d3pie_small_segment_grouping_type =
+  | Percentage_grouping
+  | Value_grouping
+
+let create_small_segment_grouping_type = function
+  | Percentage_grouping ->
+     Js.string "percentage"
+  | Value_grouping ->
+     Js.string "value"
+		     
+type d3pie_small_segment_grouping = {
+  enabled : bool;
+  value : int;
+  value_type : d3pie_small_segment_grouping_type;
+  label : string;
+  color : string;
+}
+
+let create_small_segment_grouping enabled value value_type label color =
+  let segment_grouping : smallSegmentGrouping Js.t = Js.Unsafe.obj [| |] in
+  segment_grouping##enabled <- enabled;
+  segment_grouping##value <- value;
+  segment_grouping##valueType <- value_type;
+  segment_grouping##label <- label;
+  segment_grouping##color <- color;
+  segment_grouping
+
+let class_of_small_segment_grouping segment_grouping =
+  create_small_segment_grouping
+    (Js.bool segment_grouping.enabled)
+    (segment_grouping.value)
+    (create_small_segment_grouping_type segment_grouping.value_type)
+    (Js.string segment_grouping.label)
+    (Js.string segment_grouping.color)
+
+let default_small_segment_grouping = {
+  enabled = false;
+  value = 1;
+  value_type = Percentage_grouping;
+  label = "Other";
+  color = "#CCCCCC";
+}
+
 type d3pie_data_content = {
   label : string;
   value : int;
@@ -124,13 +167,6 @@ let class_of_data_content data_content =
     (Js.string data_content.label)
     data_content.value
     (Js.string data_content.caption)
-
-let data_content_of_class dataContent =
-  {
-    label = Js.to_string (dataContent##label);
-    value = dataContent##value;
-    caption = Js.to_string (dataContent##caption);
-  }
 
 let default_data_content = {
   label = "";
@@ -155,12 +191,14 @@ let create_sort_order sort_order =
 type d3pie_data = {
   content : d3pie_data_content list;
   sort_order : d3pie_sort_order;
+  small_segment_grouping : d3pie_small_segment_grouping;
 }
 
-let create_data content sort_order =
+let create_data content sort_order small_segment_grouping =
   let data : data Js.t = Js.Unsafe.obj [| |] in
   data##content <- content;
   data##sortOrder <- sort_order;
+  data##smallSegmentGrouping <- small_segment_grouping;
   data
 
 let class_of_data data =
@@ -168,10 +206,12 @@ let class_of_data data =
   create_data
     (Js.array (Array.of_list content))
     (create_sort_order data.sort_order)
+    (class_of_small_segment_grouping data.small_segment_grouping)
 
 let default_data = {
   content = [];
   sort_order = No_sort;
+  small_segment_grouping = default_small_segment_grouping;
 }
 
 type d3pie_label_format_value =
@@ -392,11 +432,79 @@ let default_tooltips = {
   type_ = Tooltip_placeholder;
 }
 
+type d3pie_misc_colors = {
+  segments : string array;
+  segment_stroke : string;
+}
+
+let create_misc_colors segments segment_stroke =
+  let colors : miscColors Js.t =
+    Js.Unsafe.obj [| |]
+  in
+  colors##segments <- segments;
+  colors##segmentStroke <- segment_stroke;
+  colors
+
+let class_of_misc_colors misc_colors =
+  let segments = Array.map Js.string misc_colors.segments in
+  create_misc_colors
+    (Js.array segments)
+    (Js.string misc_colors.segment_stroke)
+
+let default_misc_colors = {
+  segments = [|
+    "#2484c1"; "#65a620"; "#7b6888"; "#a05d56"; "#961a1a";
+    "#d8d23a"; "#e98125"; "#d0743c"; "#635222"; "#6ada6a";
+    "#0c6197"; "#7d9058"; "#207f33"; "#44b9b0"; "#bca44a";
+    "#e4a14b"; "#a3acb2"; "#8cc3e9"; "#69a6f9"; "#5b388f";
+    "#546e91"; "#8bde95"; "#d2ab58"; "#273c71"; "#98bf6e";
+    "#4daa4b"; "#98abc5"; "#cc1010"; "#31383b"; "#006391";
+    "#c2643f"; "#b0a474"; "#a5a39c"; "#a9c2bc"; "#22af8c";
+    "#7fcecf"; "#987ac6"; "#3d3b87"; "#b77b1c"; "#c9c2b6";
+    "#807ece"; "#8db27c"; "#be66a2"; "#9ed3c6"; "#00644b";
+    "#005064"; "#77979f"; "#77e079"; "#9c73ab"; "#1f79a7";
+  |];
+  segment_stroke = "#ffffff";
+}
+
+type d3pie_misc = {
+  colors : d3pie_misc_colors;
+}
+
+let create_misc colors =
+  let misc : misc Js.t =
+    Js.Unsafe.obj [| |]
+  in
+  misc##colors <- colors;
+  misc
+
+let class_of_misc misc =
+  create_misc
+    (class_of_misc_colors misc.colors)
+
+let default_misc = {
+  colors = default_misc_colors;
+}
+
+type d3pie_callback_argument_data = {
+  is_grouped : bool;
+  label : string;
+  value : int;
+}
+			 
+let callback_argument_data_of_class callbackArgumentData =
+  {
+    is_grouped = Js.to_bool (callbackArgumentData##isGrouped);
+    label = Js.to_string (callbackArgumentData##label);
+    value = callbackArgumentData##value;
+  }
+    
 type d3pie_callback_argument = {
   segment : Dom_html.element Js.t;
   index : int;
   expanded : bool;
-  data : d3pie_data_content;
+  data : d3pie_callback_argument_data;
+  color : string;
 }
 
 let callback_argument_of_class callbackArgument =
@@ -404,31 +512,46 @@ let callback_argument_of_class callbackArgument =
     segment = callbackArgument##segment;
     index = callbackArgument##index;
     expanded = Js.to_bool (callbackArgument##expanded);
-    data = data_content_of_class (callbackArgument##data);
+    data = callback_argument_data_of_class (callbackArgument##data);
+    color = Js.to_string callbackArgument##segment##style##fill;
   }
 
 type d3pie_callbacks = {
   on_click_segment : d3pie_callback_argument -> unit;
+  on_mouseover_segment : d3pie_callback_argument -> unit;
+  on_mouseout_segment : d3pie_callback_argument -> unit;
 }
 
 let default_callback_value = fun _ -> ()
 
-let create_callbacks on_click_segment =
+let create_callbacks on_click_segment on_mouseover_segment on_mouseout_segment =
   let callbacks : callbacks Js.t =
     Js.Unsafe.obj [| |]
   in
   callbacks##onClickSegment <- on_click_segment;
+  callbacks##onMouseoverSegment <- on_mouseover_segment;
+  callbacks##onMouseoutSegment <- on_mouseout_segment;
   callbacks
 
 let class_of_callbacks callbacks =
   let on_click_segment arg =
     callbacks.on_click_segment (callback_argument_of_class arg)
   in
+  let on_mouseover_segment arg =
+    callbacks.on_mouseover_segment (callback_argument_of_class arg)
+  in
+  let on_mouseout_segment arg =
+    callbacks.on_mouseout_segment (callback_argument_of_class arg)
+  in
   create_callbacks
     (Js.wrap_callback on_click_segment)
+    (Js.wrap_callback on_mouseover_segment)
+    (Js.wrap_callback on_mouseout_segment)
 
 let default_callbacks = {
   on_click_segment = default_callback_value;
+  on_mouseover_segment = default_callback_value;
+  on_mouseout_segment = default_callback_value;
 }
 
 type d3pie_settings = {
@@ -438,10 +561,11 @@ type d3pie_settings = {
   labels : d3pie_labels;
   effects : d3pie_effects;
   tooltips : d3pie_tooltips;
+  misc : d3pie_misc;
   callbacks : d3pie_callbacks;
 }
 
-let create_settings data header size labels effects tooltips callbacks =
+let create_settings data header size labels effects tooltips misc callbacks =
   let settings : settings Js.t = Js.Unsafe.obj [||] in
   settings##data <- data;
   settings##header <- header;
@@ -449,6 +573,7 @@ let create_settings data header size labels effects tooltips callbacks =
   settings##labels <- labels;
   settings##effects <- effects;
   settings##tooltips <- tooltips;
+  settings##misc <- misc;
   settings##callbacks <- callbacks;
   settings
 
@@ -460,6 +585,7 @@ let class_of_settings settings =
     (class_of_labels settings.labels)
     (class_of_effects settings.effects)
     (class_of_tooltips settings.tooltips)
+    (class_of_misc settings.misc)
     (class_of_callbacks settings.callbacks)
 
 let default_settings = {
@@ -469,6 +595,7 @@ let default_settings = {
   labels = default_labels;
   effects = default_effects;
   tooltips = default_tooltips;
+  misc = default_misc;
   callbacks = default_callbacks;
 }
 
@@ -577,12 +704,80 @@ let set_segment_on_click_effect segment_on_click_effect settings =
     };
   }
 
-let set_callbacks on_click_segment settings =
+let set_on_click_callback on_click_segment settings =
   {
     settings with
     callbacks = {
+      settings.callbacks with
       on_click_segment = on_click_segment;
     };
+  }
+
+let set_on_mouseover_callback on_mouseover_segment settings =
+  {
+    settings with
+    callbacks = {
+      settings.callbacks with
+      on_mouseover_segment = on_mouseover_segment;
+    };
+  }
+
+let set_on_mouseout_callback on_mouseout_segment settings =
+  {
+    settings with
+    callbacks = {
+      settings.callbacks with
+      on_mouseout_segment = on_mouseout_segment;
+    };
+  }
+
+let set_small_segment_grouping value_type value label color settings =
+  {
+    settings with
+    data = {
+      settings.data with
+      small_segment_grouping = {
+        enabled = true;
+        value_type = value_type;
+	value = value;
+        label = label;
+	color = color;
+      }
+    }
+  }
+    
+let unset_small_segment_grouping settings =
+  {
+    settings with
+    data = {
+      settings.data with
+      small_segment_grouping = {
+        settings.data.small_segment_grouping with
+        enabled = false;
+      }
+    }
+  }
+
+let set_segments_colors array_color settings =
+  {
+    settings with
+    misc = {
+      colors = {
+	settings.misc.colors with
+        segments = array_color;
+      }
+    }
+  }
+
+let set_segment_stroke_color color settings =
+  {
+    settings with
+    misc = {
+      colors = {
+	settings.misc.colors with
+        segment_stroke = color;
+      }
+    }
   }
 
 let d3pie div settings =

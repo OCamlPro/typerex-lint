@@ -30,6 +30,14 @@ class type header = object
   method title : title Js.t Js.prop
 end
 
+class type smallSegmentGrouping = object
+  method enabled : bool Js.t Js.prop
+  method value : int Js.prop
+  method valueType : Js.js_string Js.t Js.prop
+  method label : Js.js_string Js.t Js.prop
+  method color : Js.js_string Js.t Js.prop
+end
+
 class type dataContent = object
   method label : Js.js_string Js.t Js.prop
   method value : int Js.prop
@@ -38,6 +46,7 @@ end
 
 class type data = object
   method sortOrder : Js.js_string Js.t Js.prop
+  method smallSegmentGrouping : smallSegmentGrouping Js.t Js.prop
   method content : dataContent Js.t Js.js_array Js.t Js.prop
 end
 
@@ -85,15 +94,34 @@ class type tooltips = object
   method type_ : Js.js_string Js.t Js.prop
 end
 
+class type callbackArgumentData = object
+  method isGrouped : bool Js.t Js.prop
+  method label : Js.js_string Js.t Js.prop
+  method value : int Js.prop
+end
+
+class type miscColors = object
+  method segments : Js.js_string Js.t Js.js_array Js.t Js.prop
+  method segmentStroke : Js.js_string Js.t Js.prop
+end
+			  
+class type misc = object
+  method colors : miscColors Js.t Js.prop
+end
+
 class type callbackArgument = object
   method segment : Dom_html.element Js.t Js.prop
   method index : int Js.prop
   method expanded : bool Js.t Js.prop
-  method data : dataContent Js.t Js.prop
+  method data : callbackArgumentData Js.t Js.prop
 end
 
 class type callbacks = object
   method onClickSegment :
+    (callbackArgument Js.t -> unit) Js.callback Js.writeonly_prop
+  method onMouseoverSegment :
+    (callbackArgument Js.t -> unit) Js.callback Js.writeonly_prop
+  method onMouseoutSegment :
     (callbackArgument Js.t -> unit) Js.callback Js.writeonly_prop
 end
 
@@ -104,6 +132,7 @@ class type settings = object
   method labels : labels Js.t Js.prop
   method effects : effects Js.t Js.prop
   method tooltips : tooltips Js.t Js.prop
+  method misc : misc Js.t Js.prop
   method callbacks : callbacks Js.t Js.prop
 end
 

@@ -22,8 +22,9 @@ type error =
   | Unknow_warning_id of string (* todo file *)
   | No_such_element_with_id of string
   | Ghost_location of Location.t
-  | ActiveNavigationElementIsNotUnique
-  | NoActiveNavigationElement
+  | Active_navigation_element_is_not_unique
+  | No_active_navigation_element
+  | Get_value_of_empty_optional
 
 exception Web_exception of error
 
@@ -39,7 +40,9 @@ let process_error exn =
   | Ghost_location loc ->
      let str_loc = "['loc']" in
      log ("location '" ^ str_loc ^ "' is not file-localizable")
-  | ActiveNavigationElementIsNotUnique ->
+  | Active_navigation_element_is_not_unique ->
      log "the active navigation element is not unique"
-  | NoActiveNavigationElement ->
+  | No_active_navigation_element ->
      log "there is no active navigation element"
+  | Get_value_of_empty_optional ->
+     log "trying to get the value of an empty optional"

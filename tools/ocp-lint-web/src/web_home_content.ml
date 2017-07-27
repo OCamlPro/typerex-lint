@@ -22,6 +22,22 @@ open Tyxml_js.Html
 open D3pie
 open Lint_warning_types
 open Lint_web_analysis_info
+       
+let pie_25_colors = (* should be read-only *)
+  (* todo add 5 color or group by 5% (20colors) *)
+  (* from http://there4.io/2012/05/02/google-chart-color-list/ *)
+  [|
+    "#3366CC"; "#DC3912"; "#FF9900"; "#109618"; "#990099";
+    "#3B3EAC"; "#0099C6"; "#DD4477"; "#66AA00"; "#B82E2E";
+    "#316395"; "#994499"; "#22AA99"; "#AAAA11"; "#6633CC";
+    "#E67300"; "#8B0707"; "#329262"; "#5574A6"; "#3B3EAC";
+   |]
+
+let grouping_color =
+  "#9DE825" (* todo check *)
+
+let stroke_color =
+  "#BABABA"
 
 let default_pie_settings =
   default_settings
@@ -32,16 +48,34 @@ let default_pie_settings =
   |> set_size_pie_inner_radius (Radius_percentage 50)
   |> set_inner_label_format Format_none
   |> set_outer_label_format Format_none
-  |> set_tooltip_caption
+  |> set_segments_colors pie_25_colors
+  |> set_segment_stroke_color stroke_color
   |> set_load_effect Load_effect_none
   |> set_segment_on_click_effect Segment_on_click_effect_none
 
-let div_warning_pie title values on_click_segment =
+let div_warning_pie title pie_settings =
   let div_pie = div [] in
+  let tooltip =
+    span
+      ~a:[
+	a_class ["pie-tooltip"];
+      ]
+      [
+      ]
+  in
+  let dom_tooltip = (Tyxml_js.To_dom.of_element tooltip) in
+  let on_mouseover_segment (arg : d3pie_callback_argument) =
+    dom_tooltip##style##color <- (Js.string arg.color);
+    dom_tooltip##textContent <- (Js.some (Js.string arg.data.label))
+  in
+  let on_mouseout_segment (arg : d3pie_callback_argument) =
+    dom_tooltip##textContent <- (Js.null)
+  in
   let settings =
-    default_pie_settings
-    |> set_callbacks on_click_segment
-    |> set_data_content values
+    pie_settings
+    |> set_on_mouseover_callback on_mouseover_segment
+    |> set_on_mouseout_callback on_mouseout_segment
+    |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
   in
   let pie = d3pie (Tyxml_js.To_dom.of_element div_pie) settings in
   (* todo delete *)
@@ -59,6 +93,7 @@ let div_warning_pie title values on_click_segment =
         [pcdata title];
       br ();
       div_pie;
+      tooltip;
     ]
 
 let pie_value label count =
@@ -75,25 +110,27 @@ let warnings_pie_group_by_file analysis_info =
     end analysis_info.warnings_info
   in
   let on_click_segment (arg : d3pie_callback_argument) =
-    let file_info, file_warnings_info =
-      List.find begin fun (file, _) ->
-        String.equal file.file_name arg.data.label
-      end files_warnings_info
-    in
-    let file_errors_info =
-      List.filter begin fun error ->
-        Web_utils.file_equals file_info error.error_file
-      end analysis_info.errors_info
-    in
-    let file_content_data =
-      Web_file_content.open_tab file_info file_warnings_info file_errors_info
-    in
-    begin match Web_file_content_data.active_file_content file_content_data with
-    | None ->
-       Web_file_content_data.focus_file_content
-        file_content_data
-        Web_file_content_data.File_content
-    | Some _ -> ()
+    if not arg.data.is_grouped then begin
+      let file_info, file_warnings_info =
+        List.find begin fun (file, _) ->
+          String.equal file.file_name arg.data.label
+        end files_warnings_info
+      in
+      let file_errors_info =
+        List.filter begin fun error ->
+          Web_utils.file_equals file_info error.error_file
+        end analysis_info.errors_info
+      in
+      let file_content_data =
+        Web_file_content.open_tab file_info file_warnings_info file_errors_info
+      in
+      begin match Web_file_content_data.active_file_content file_content_data with
+      | None ->
+         Web_file_content_data.focus_file_content
+          file_content_data
+          Web_file_content_data.File_content
+      | Some _ -> ()
+      end
     end
   in
   let values =
@@ -101,7 +138,13 @@ let warnings_pie_group_by_file analysis_info =
       pie_value file.file_name (List.length warnings)
     end files_warnings_info
   in
-  div_warning_pie "Files" values on_click_segment
+  let settings =
+    default_pie_settings
+    |> set_on_click_callback on_click_segment
+    |> set_data_content values
+    |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
+  in
+  div_warning_pie "Files" settings
 
 let warnings_pie_group_by_plugin analysis_info =
   let on_click_segment arg =
@@ -116,7 +159,13 @@ let warnings_pie_group_by_plugin analysis_info =
          pie_value plugin (List.length warnings)
        end
   in
-  div_warning_pie "Plugins" values on_click_segment
+  let settings =
+    default_pie_settings
+    |> set_on_click_callback on_click_segment
+    |> set_data_content values
+    |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
+  in
+  div_warning_pie "Plugins" settings
 
 let warnings_pie_group_by_linter analysis_info =
   let on_click_segment arg =
@@ -132,7 +181,13 @@ let warnings_pie_group_by_linter analysis_info =
          pie_value (plugin ^ "." ^ linter) (List.length warnings)
        end
   in
-  div_warning_pie "Linters" values on_click_segment
+  let settings =
+    default_pie_settings
+    |> set_on_click_callback on_click_segment
+    |> set_data_content values
+    |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
+  in
+  div_warning_pie "Linters" settings
 
 let warnings_pie_group_by_warning analysis_info =
   let on_click_segment arg =
@@ -149,7 +204,13 @@ let warnings_pie_group_by_warning analysis_info =
          pie_value warning (List.length warnings)
        end
   in
-  div_warning_pie "Warnings" values on_click_segment
+  let settings =
+    default_pie_settings
+    |> set_on_click_callback on_click_segment
+    |> set_data_content values
+    |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
+  in
+  div_warning_pie "Warnings" settings
 
 let warnings_pie_group_by_severity analysis_info =
   let on_click_segment arg =
@@ -164,7 +225,13 @@ let warnings_pie_group_by_severity analysis_info =
          pie_value (string_of_int severity) (List.length warnings)
        end
   in
-  div_warning_pie "Severities" values on_click_segment
+  let settings =
+    default_pie_settings
+    |> set_on_click_callback on_click_segment
+    |> set_data_content values
+    |> set_small_segment_grouping Percentage_grouping 3 "other" grouping_color
+  in
+  div_warning_pie "Severities" settings
 
 let dashboard_head analysis_info =
   let div_stat stat msg =
