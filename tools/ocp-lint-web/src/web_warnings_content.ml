@@ -239,8 +239,8 @@ let warning_div_head warning_info =
     [pcdata (Printf.sprintf "Warning #%d" warning_info.warning_id)]
 
 let warning_div_body warning_info =
-  let file_msg =
-    a
+  let file_msg = (* todo change *)
+    span
       ~a:[
         a_class ["alert-link"];
       ]
@@ -326,7 +326,7 @@ let warning_div all_warnings_info all_errors_info warning_info =
   end;
   div_warning
 
-let content analysis_info =
+let warnings_content analysis_info =
   let uniq_warnings_info =
     analysis_info.warnings_info
     |> List.sort Web_utils.warning_compare
@@ -350,4 +350,20 @@ let content analysis_info =
       (br ()) ::
       (filter_system_dom_contents filter_system)
     )
+
+let warnings_content_empty () =
+  h3 [pcdata "There are no warnings provided in this file"]
+
+let content analysis_info =
+  let content =
+    if Web_utils.list_is_empty analysis_info.warnings_info then
+      warnings_content_empty ()
+    else
+      warnings_content analysis_info
+  in
+  div
+    ~a:[
+      a_class ["container"];
+    ]
+    [content]
 

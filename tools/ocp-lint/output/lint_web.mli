@@ -23,8 +23,11 @@ val analysis_info_var:
 
 val warnings_info_var:
   string
-    
+
 val web_code_viewer_id:
+  string
+
+val web_code_loading_animation_id:
   string
 
 (* todo utils *)

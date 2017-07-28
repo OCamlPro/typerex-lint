@@ -30,23 +30,14 @@ let theme =
 let font_size =
   14
 
-let line_size =
-  17
-
-let context_line_number =
-  3
+let animation_timeout_millisecond =
+  1400.0
 
 let ace_loc begin_line begin_col end_line end_col =
   {
     loc_start = begin_line, begin_col;
     loc_end = end_line, end_col;
   }
-
-let begin_context_from_line line_number =
-  min (line_number - 1) context_line_number
-
-let end_context_from_line line_number lines_count =
-  min (lines_count - line_number) context_line_number
 
 let set_default_code_viewer ace =
   Ace.set_mode ace "ace/mode/ocaml";
@@ -68,8 +59,12 @@ let set_warning_code_viewer ace warning =
        bline, bcol, eline, ecol
   in
   let lines_count = warning.warning_file.file_lines_count in
-  let begin_context = begin_context_from_line begin_line in
-  let end_context = end_context_from_line end_line lines_count in
+  let begin_context =
+    Web_utils.code_viewer_begin_context_from_line begin_line
+  in
+  let end_context =
+    Web_utils.code_viewer_end_context_from_line end_line lines_count
+  in
   let begin_with_context = begin_line - begin_context in
   let end_with_context = end_line + end_context in
   let loc =
@@ -141,9 +136,8 @@ let set_file_code_viewer ace warnings =
     end warnings_info
   end warnings
 
-let init_code_viewer warnings_info id =
-  let code_div = Web_utils.get_element_by_id Lint_web.web_code_viewer_id in
-  let ace = Ace.create_editor (Tyxml_js.To_dom.of_div code_div) in
+let init_code_viewer code_div warnings_info id =
+  let ace = Ace.create_editor code_div in
   set_default_code_viewer ace;
   match id with
   | Some x ->
@@ -166,6 +160,26 @@ let init_code_viewer warnings_info id =
      set_file_code_viewer ace printable_warnings
 
 let onload _ =
+  let code_div = Web_utils.get_element_by_id Lint_web.web_code_viewer_id in
+  let dom_code_div = (Tyxml_js.To_dom.of_div code_div) in
+  let when_loaded = Js.wrap_callback begin fun () ->
+    Web_utils.dom_element_display dom_code_div;
+    let animation =
+      Web_utils.get_element_by_id Lint_web.web_code_loading_animation_id
+    in
+    let dom_animation = Tyxml_js.To_dom.of_node animation in
+    let animation_parent =
+      (* todo web err or use window.document.body *)
+      Js.Opt.get
+	(dom_animation##parentNode)
+	(fun () -> failwith "no animation parent")
+    in
+    ignore (animation_parent##removeChild (dom_animation))
+  end
+  in
+  let _ =
+    Dom_html.window##setTimeout(when_loaded, animation_timeout_millisecond)
+  in
   try
     let warnings_info =
       warnings_info_of_json
@@ -181,7 +195,7 @@ let onload _ =
         with
           Failure _ -> raise (Web_exception (Unknow_warning_id fragment))
     in
-    init_code_viewer warnings_info id;
+    init_code_viewer dom_code_div warnings_info id;
     Js._true
   with
   | Web_exception e ->
@@ -192,39 +206,3 @@ let onload _ =
 
 let () =
   Dom_html.window##onload <- Dom_html.handler onload
-
-let code_viewer line_number href =
-  let height = (* todo min height *)
-    line_size * (line_number + 2)
-  in
-  iframe
-    ~a:[
-      a_src href;
-      a_style ("height: " ^ (string_of_int height) ^ "px");
-    ]
-    []
-
-let file_code_viewer file_info =
-  code_viewer
-    (file_info.file_lines_count)
-    (Web_utils.file_href file_info)
-
-let warning_code_viewer warning_info =
-  let begin_line, end_line =
-    let open Web_utils in
-    match file_loc_of_warning_info warning_info with
-    | Floc_line line ->
-       line, line
-    | Floc_lines_cols (bline, _, eline, _) ->
-       bline, eline
-  in
-  let lines_count = warning_info.warning_file.file_lines_count in
-  let begin_with_context =
-    begin_line - begin_context_from_line begin_line
-  in
-  let end_with_context =
-    end_line + end_context_from_line end_line lines_count
-  in
-  code_viewer
-    (end_with_context - begin_with_context)
-    (Web_utils.file_warning_href warning_info)

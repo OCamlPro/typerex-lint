@@ -251,11 +251,19 @@ let dashboard_head analysis_info =
           ]
       ]
   in
+  let filler () =
+    div
+      ~a:[
+	a_class ["col-md-1"];
+      ]
+      []
+  in
   div
     ~a:[
       a_class ["row"; "dashboard-header"]
     ]
     [
+      filler ();
       div_stat
         (string_of_int (List.length analysis_info.errors_info))
         ("errors raised");
@@ -271,6 +279,7 @@ let dashboard_head analysis_info =
       div_stat
         (string_of_int (List.length analysis_info.linters_info))
         ("linters activated");
+      filler ();
     ]
 
 let dashboard_content analysis_info =
@@ -292,6 +301,9 @@ let dashboard_content analysis_info =
 
 let content analysis_info =
   div
+    ~a:[
+      a_class ["container"];
+    ]
     [
       dashboard_head analysis_info;
       br ();

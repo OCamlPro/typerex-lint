@@ -87,6 +87,10 @@ let rec remove_successive_duplicates equals = function
   | x :: tail ->
      x :: remove_successive_duplicates equals tail
 
+let list_is_empty = function
+  | [] -> true
+  | _ -> false
+
 let list_joining join lst =
   let hd = List.hd lst in
   let tl = List.tl lst in
@@ -95,15 +99,14 @@ let list_joining join lst =
   end hd tl
 
 let array_joining join arr =
-  let hd = arr.(0) in
-  let tl = Array.sub arr 1 ((Array.length arr) - 1) in
-  Array.fold_left begin fun acc line ->
-    acc ^ join ^ line
-end hd tl
+  list_joining join (Array.to_list arr)
 		  
 let value_of_optional = function
   | Some x -> x
   | None -> raise (Web_exception Get_value_of_empty_optional)
+
+let html_empty_node () =
+  Tyxml_js.Html.pcdata ""
 
 let dom_element_is_display e =
   e##style##display != Js.string "none"
@@ -208,3 +211,50 @@ let error_description error_info =
      e
   | Lint_db_types.Ocplint_error e ->
      e
+
+let code_viewer_line_size =
+  17
+
+let code_viewer_context_line_number =
+  3
+ 
+let code_viewer_begin_context_from_line line_number =
+  min (line_number - 1) code_viewer_context_line_number
+
+let code_viewer_end_context_from_line line_number lines_count =
+  min (lines_count - line_number) code_viewer_context_line_number
+      
+let code_viewer line_number href =
+  let height = (* todo min height *)
+    code_viewer_line_size * (line_number + 2)
+  in
+  Tyxml_js.Html.iframe
+    ~a:[
+      Tyxml_js.Html.a_src href;
+      Tyxml_js.Html.a_style ("height: " ^ (string_of_int height) ^ "px");
+    ]
+    []
+
+let file_code_viewer file_info =
+  code_viewer
+    (file_info.file_lines_count)
+    (file_href file_info)
+
+let warning_code_viewer warning_info =
+  let begin_line, end_line =
+    match file_loc_of_warning_info warning_info with
+    | Floc_line line ->
+       line, line
+    | Floc_lines_cols (bline, _, eline, _) ->
+       bline, eline
+  in
+  let lines_count = warning_info.warning_file.file_lines_count in
+  let begin_with_context =
+    begin_line - code_viewer_begin_context_from_line begin_line
+  in
+  let end_with_context =
+    end_line + code_viewer_end_context_from_line end_line lines_count
+  in
+  code_viewer
+    (end_with_context - begin_with_context)
+    (file_warning_href warning_info)

@@ -42,7 +42,7 @@ let warning_content_code_view_body warning_info =
       a_class ["panel-body"];
     ]
     [
-      Web_code_viewer.warning_code_viewer warning_info;
+      Web_utils.warning_code_viewer warning_info;
     ]
 
 let warning_content_code_view warning_info =
@@ -65,20 +65,23 @@ let warning_content warning_info =
       warning_info.warning_linter.linter_name
       warning_info.warning_linter.linter_description
   in
-  if Web_utils.warning_info_is_ghost warning_info then
-    div
-      [
-        h3 [pcdata warning_desc];
-        h4 [pcdata linter_desc];
-      ]
-  else
-    div
-      [
-        h3 [pcdata warning_desc];
-        h4 [pcdata linter_desc];
-        br ();
-        warning_content_code_view warning_info;
-      ]
+  let code_view =
+    if Web_utils.warning_info_is_ghost warning_info then
+      Web_utils.html_empty_node ()
+    else
+      div
+	[
+	  br ();
+	  warning_content_code_view warning_info;
+	  br ();
+	]
+  in
+  div
+    [
+      h3 [pcdata warning_desc];
+      h4 [pcdata linter_desc];
+      code_view;
+    ]
 
 let error_content error_info =
   let error_type, error_output = (* todo change *)
@@ -135,7 +138,7 @@ let file_code_viewer_body file_info =
       a_class ["panel-body"];
     ]
     [
-      Web_code_viewer.file_code_viewer file_info;
+      Web_utils.file_code_viewer file_info;
     ]
 
 let file_code_viewer file_info =
@@ -411,19 +414,13 @@ let warnings_table warnings_info file_content_data =
   let table =
     tablex
       ~a:[
-
-        a_class ["dyntable"];
-
-
-        (* setAttribute(Js.string "cellspacing", Js.string "0"); *)
-        (* setAttribute(Js.string "width", Js.string "100%"); *)
+        a_class ["file-content-table"; "warnings-file-content-table"];
       ]
       ~thead:warnings_table_head
       [
         tbody (List.map entry_creator warnings_info);
       ]
   in
-  (* Web_data_table.set table; *)
   table
 
 let errors_table_col_id error_info =
@@ -470,18 +467,134 @@ let errors_table errors_info file_content_data =
   in
   tablex
     ~a:[
-      a_class ["dyntable"];
+      a_class ["file-content-table"; "errors-file-content-table"];
     ]
     ~thead:errors_table_head
     [
       tbody (List.map entry_creator errors_info);
     ]
-    
-let content all_file_warnings_info all_file_errors_info file_content_data =
-  let content_div =
-    Tyxml_js.Of_dom.of_element
-      (file_content_data.file_content_container)
+
+let hideable_summary title content =
+  let opened_icon = "glyphicon-menu-down" in
+  let closed_icon = "glyphicon-menu-right" in
+  let title =
+    div
+      ~a:[
+	a_class ["subsummary-title"];
+      ]
+      [
+	h3 [pcdata title];
+      ]
   in
+  let icon =
+    span
+      ~a:[
+	a_class ["glyphicon"; opened_icon];
+      ]
+      [
+      ]
+  in
+  let dom_title = Tyxml_js.To_dom.of_element title in
+  let dom_icon = Tyxml_js.To_dom.of_element icon in
+  let dom_content = Tyxml_js.To_dom.of_element content in
+  let reverse_content_display _ =
+    if Web_utils.dom_element_is_display dom_content then begin
+      Web_utils.dom_element_undisplay dom_content;
+      dom_icon##classList##remove (Js.string opened_icon);
+      dom_icon##classList##add (Js.string closed_icon)
+    end else begin
+      Web_utils.dom_element_display dom_content;
+      dom_icon##classList##remove (Js.string closed_icon);
+      dom_icon##classList##add (Js.string opened_icon);
+    end;
+    Js._true
+  in
+  dom_title##onclick <-Dom_html.handler reverse_content_display;
+  dom_icon##onclick <-Dom_html.handler reverse_content_display;
+  div
+    [
+      div
+	~a:[
+	  a_class ["row"];
+	]
+	[
+	  div
+	    ~a:[
+	      a_class [
+		  "col-md-2";
+		  "row-vertical-center"
+		];
+	    ]
+	    [
+	      title;
+	      icon;
+	    ];
+	  div
+	    ~a:[
+	      a_class [
+		  "col-md-10";
+		  "row-vertical-center";
+		  "horizontal-separator";
+	      ];
+	    ]
+	    [];
+	];
+      content;
+    ]
+
+let warnings_summary_content all_file_warnings_info file_content_data =
+  div
+    [
+      br ();
+      br ();
+      warnings_filter all_file_warnings_info file_content_data;
+      br ();
+      warnings_table all_file_warnings_info file_content_data;
+    ]
+
+let warnings_summary_content_empty () =
+  div
+    [
+      br ();
+      h4 [pcdata "No provided warnings in this file"];
+    ]
+
+let warnings_summary all_file_warnings_info file_content_data =
+  let content = 
+  if Web_utils.list_is_empty all_file_warnings_info then
+    warnings_summary_content_empty ()
+  else
+    warnings_summary_content all_file_warnings_info file_content_data
+  in
+  hideable_summary "All warnings" content
+
+let errors_summary_content all_file_errors_info file_content_data =
+  div
+    [
+      br ();
+      br ();
+      (* todo filter *)
+      br ();
+      errors_table all_file_errors_info file_content_data;
+    ]
+
+let errors_summary_content_empty () =
+  div
+    [
+      br ();
+      h4 [pcdata "No provided errors in this file"];
+    ]
+ 
+let errors_summary all_file_errors_info file_content_data =
+  let content =
+    if Web_utils.list_is_empty all_file_errors_info then
+      errors_summary_content_empty ()
+    else
+      errors_summary_content all_file_errors_info file_content_data
+  in
+  hideable_summary "All errors" content
+
+let content_head file_content_data =
   let all_file_button =
     button
       ~a:[
@@ -496,21 +609,63 @@ let content all_file_warnings_info all_file_errors_info file_content_data =
     Js._true
   end;
   div
+    ~a:[
+      a_class ["row"];
+    ]
     [
-      h2 [pcdata file_content_data.file_content_info.file_name];
+      div
+	~a:[
+	  a_class ["col-md-11"];
+	]
+	[
+	  h2 [pcdata file_content_data.file_content_info.file_name];
+	];
+      div
+	~a:[
+	  a_class ["col-md-1"];
+	]
+	[
+	  all_file_button;
+	];
+    ]
+
+let content all_file_warnings_info all_file_errors_info file_content_data =
+  let content_div =
+    Tyxml_js.Of_dom.of_element
+      (file_content_data.file_content_container)
+  in
+  let separator () =
+    div
+      ~a:[
+	a_class ["row"];
+      ]
+      [
+	div
+	  ~a:[
+	    a_class ["col-md-12"; "horizontal-separator"];
+	  ]
+	  [];
+      ]
+  in
+  div
+    ~a:[
+      a_class ["container"];
+    ]
+    [
+      content_head file_content_data;
+      br ();
+      br ();
+      separator ();
       br ();
       content_div;
       br ();
-      warnings_filter all_file_warnings_info file_content_data;
-      br ();
-      all_file_button;
+      separator ();
       br ();
       br ();
-      warnings_table all_file_warnings_info file_content_data;
-      
+      warnings_summary all_file_warnings_info file_content_data;
       br ();
       br ();
-      errors_table all_file_errors_info file_content_data;
+      errors_summary all_file_errors_info file_content_data;
     ]
 
 let new_file_content_data_of_file_info file_info =

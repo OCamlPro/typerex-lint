@@ -320,6 +320,9 @@ let warnings_info_var =
 let web_code_viewer_id =
   "ocp-code-viewer"
 
+let web_code_loading_animation_id =
+  "ocp-code-loading"
+
 let html_of_index =
   let css_files = [
     "dataTables.min";
@@ -351,16 +354,26 @@ let html_of_index =
        end js_files)
     end
 
-let html_of_src_viewer src =
+let code_viewer src =
   div
     ~a:[
       a_id web_code_viewer_id;
+      a_style "display: none;"
     ]
     [pcdata src]
+
+let loading_animation () =
+  div
+    ~a:[
+      a_id web_code_loading_animation_id;
+      a_class ["loading-animation"];
+    ]
+    []
 
 let html_of_ocaml_src file_info warnings_info src =
   let css_files = [
     "adjustment_ace";
+    "ocp_lint_web"
   ]
   in
   let js_files = [
@@ -380,13 +393,14 @@ let html_of_ocaml_src file_info warnings_info src =
         link ~rel:[`Stylesheet] ~href:(path_of_css src) ()
        end css_files)
     end
-    begin body
-      (html_of_src_viewer src
-         :: script (cdata_script js_warnings_info_var)
-         :: List.map begin fun src ->
-              script ~a:[a_src (Xml.uri_of_string (path_of_js src))] (pcdata "")
-            end js_files)
-    end
+    begin body (
+      loading_animation ()
+      :: code_viewer src	 
+      :: script (cdata_script js_warnings_info_var)
+      :: List.map begin fun src ->
+           script ~a:[a_src (Xml.uri_of_string (path_of_js src))] (pcdata "")
+          end js_files
+    ) end
 
 let print fmt master_config file_config path db db_error = (* renommer *)
   let time = Unix.localtime (Unix.time ()) in

@@ -31,8 +31,8 @@ let error_div_head error_info =
     [pcdata (Printf.sprintf "Error #%d" error_info.error_id)]
 
 let error_div_body error_info =
-  let file_msg =
-    a
+  let file_msg = (* todo change *)
+    span
       ~a:[
         a_class ["alert-link"];
       ]
@@ -92,9 +92,25 @@ let error_div all_warnings_info all_errors_info error_info =
   end;
   div_error
 
-let content analysis_info =
+let errors_content analysis_info =
   div
     (List.map
        (error_div analysis_info.warnings_info analysis_info.errors_info)
        analysis_info.errors_info
     )
+
+let errors_content_empty () =
+  h3 [pcdata "There are no errors provided in this file"]
+
+let content analysis_info =
+  let content =
+    if Web_utils.list_is_empty analysis_info.errors_info then
+      errors_content_empty ()
+    else
+      errors_content analysis_info
+  in
+  div
+    ~a:[
+      a_class ["container"];
+    ]
+    [content]
