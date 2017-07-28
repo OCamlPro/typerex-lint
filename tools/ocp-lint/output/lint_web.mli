@@ -29,13 +29,6 @@ val web_code_viewer_id:
 
 val web_code_loading_animation_id:
   string
-
-(* todo utils *)
-val group_by:
-  ('a -> 'b) ->
-  'a list ->
-  ('b * 'a list) list
-(*            *)
   
 val print:
   Format.formatter ->

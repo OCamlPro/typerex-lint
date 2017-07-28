@@ -110,24 +110,6 @@ let emit_page name page =
   pp () fmt page; (* pretty print *)
   close_out file
 
-(* todo utils *)
-let group_by clss lst = (*** todo changer implantation ***)
-  let rec aux acc = function
-    | [] -> acc
-    | (cx, x) :: y -> (*** todo changer ***)
-       begin match acc with
-             | (cx', x') :: y' when cx = cx' ->
-                aux ((cx, x :: x') :: y') y
-             | _ ->
-                aux ((cx, [x]) :: acc) y
-       end
-  in
-  lst
-  |> List.map (fun x -> clss x, x) (*** ***)
-  |> List.sort (fun (c,_) (c',_) -> Pervasives.compare c c')
-  |> aux []
-(*           *)
-
 let path_of_dir_list dirs =
   List.fold_left begin fun acc dir ->
     Filename.concat acc dir
@@ -333,7 +315,6 @@ let html_of_index =
   ] in
   let js_files = [
     analysis_info_file;
-    "ace"; (*** todo delete ***)
     "ocp_lint_web";
     "jquery.min";
     "bootstrap.min";
@@ -424,7 +405,7 @@ let print fmt master_config file_config path db db_error = (* renommer *)
     analysis_info_var
     json_analysis;
   let warnings_info_file =
-    group_by begin fun warning_info ->
+    Lint_utils.group_by begin fun warning_info ->
       warning_info.warning_file
     end analysis_info.warnings_info
   in

@@ -75,7 +75,7 @@ let set_warning_code_viewer ace warning =
       end_col
   in
   let content =
-    Web_utils.array_joining
+    Lint_utils.array_concat
       "\n"
       (Ace.get_lines ace (begin_with_context - 1) (end_with_context - 1))
   in
@@ -87,7 +87,7 @@ let set_warning_code_viewer ace warning =
 
 let set_file_code_viewer ace warnings =
   let warnings =
-    Lint_web.group_by begin fun warning_info ->
+    Lint_utils.group_by begin fun warning_info ->
       let open Web_utils in
       match file_loc_of_warning_info warning_info with
       | Floc_line line ->
@@ -106,7 +106,7 @@ let set_file_code_viewer ace warnings =
       Printf.sprintf
         "%d warning(s) : \n - %s"
         (List.length warnings_info)
-        (Web_utils.list_joining "\n - " (List.map begin fun warning ->
+        (String.concat "\n - " (List.map begin fun warning ->
            let line =
              let open Web_utils in
              match file_loc_of_warning_info warning with

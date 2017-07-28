@@ -105,7 +105,7 @@ let pie_value label count =
 
 let warnings_pie_group_by_file analysis_info =
   let files_warnings_info =
-    Lint_web.group_by begin fun warning_info ->
+    Lint_utils.group_by begin fun warning_info ->
       warning_info.warning_file
     end analysis_info.warnings_info
   in
@@ -152,7 +152,7 @@ let warnings_pie_group_by_plugin analysis_info =
   in
   let values =
     analysis_info.warnings_info
-    |> Lint_web.group_by begin fun warning_info ->
+    |> Lint_utils.group_by begin fun warning_info ->
          warning_info.warning_linter.linter_plugin.plugin_name
        end
     |> List.map begin fun (plugin, warnings) ->
@@ -173,7 +173,7 @@ let warnings_pie_group_by_linter analysis_info =
   in
   let values =
     analysis_info.warnings_info
-    |> Lint_web.group_by begin fun warning_info ->
+    |> Lint_utils.group_by begin fun warning_info ->
          warning_info.warning_linter.linter_plugin.plugin_name,
          warning_info.warning_linter.linter_name
        end
@@ -195,7 +195,7 @@ let warnings_pie_group_by_warning analysis_info =
   in
   let values =
     analysis_info.warnings_info
-    |> Lint_web.group_by begin fun warning_info ->
+    |> Lint_utils.group_by begin fun warning_info ->
          warning_info.warning_linter.linter_plugin.plugin_name,
          warning_info.warning_linter.linter_name,
          warning_info.warning_type.decl.short_name
@@ -218,7 +218,7 @@ let warnings_pie_group_by_severity analysis_info =
   in
   let values =
     analysis_info.warnings_info
-    |> Lint_web.group_by begin fun warning_info ->
+    |> Lint_utils.group_by begin fun warning_info ->
          warning_info.warning_type.decl.severity
        end
     |> List.map begin fun (severity, warnings) ->

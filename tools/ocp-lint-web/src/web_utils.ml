@@ -77,11 +77,10 @@ let get_element_by_id id =
   | Some element -> element
   | None -> raise (Web_exception (No_such_element_with_id id))
 
+(* todo remove and use set *)
 let rec remove_successive_duplicates equals = function
   | [] ->
      []
-  | [x] ->
-     [x]
   | x :: (y :: tail as l) when equals x y ->
      remove_successive_duplicates equals l
   | x :: tail ->
@@ -90,16 +89,6 @@ let rec remove_successive_duplicates equals = function
 let list_is_empty = function
   | [] -> true
   | _ -> false
-
-let list_joining join lst =
-  let hd = List.hd lst in
-  let tl = List.tl lst in
-  List.fold_left begin fun acc line ->
-    acc ^ join ^ line
-  end hd tl
-
-let array_joining join arr =
-  list_joining join (Array.to_list arr)
 		  
 let value_of_optional = function
   | Some x -> x

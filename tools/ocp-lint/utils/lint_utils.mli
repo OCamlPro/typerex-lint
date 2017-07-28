@@ -39,6 +39,15 @@ val iter_files : ?recdir:bool -> (string -> unit) -> string -> unit
     long lists of arguments. *)
 val substitute : string -> (string * string) list -> string
 
+(** [group_by fct lst] groups the elements of the list [lst] by their
+    result of the function [fct].
+ *)
+val group_by: ('a -> 'b) -> 'a list -> ('b * 'a list) list
+
+(** [concat sep arr] Same as String.concat 
+    but on string array. *)
+val array_concat : string -> string array -> string
+
 (** [absolute_path root filename] give the absolute path of a file. *)
 val absolute_path : string -> string -> string
 

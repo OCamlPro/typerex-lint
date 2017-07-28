@@ -49,7 +49,6 @@ begin program "ocp-lint-web-main"
    files = [
      "web_errors.ml"
      "web_utils.ml"
-(*     "web_code_viewer.ml" *)
      "web_navigation_system.ml"
      "web_file_content_data.ml"
      "web_file_content.ml"
@@ -60,10 +59,8 @@ begin program "ocp-lint-web-main"
    ]
 
    requires = [
-     "c3" (* todo remove *)
      "compiler-libs"
      "js_of_ocaml"
-     "ocplib-ace"
      "ocplib-d3pie"
      "ocplib-jsutils"
      "ocp-lint-api-types"
