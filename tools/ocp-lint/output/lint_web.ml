@@ -383,7 +383,7 @@ let html_of_ocaml_src file_info warnings_info src =
           end js_files
     ) end
 
-let print fmt master_config file_config path db db_error = (* renommer *)
+let generate_web_files fmt master_config file_config path db db_error =
   let time = Unix.localtime (Unix.time ()) in
   let analysis_info =
     make_analysis_info

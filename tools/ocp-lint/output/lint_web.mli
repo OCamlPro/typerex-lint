@@ -30,7 +30,7 @@ val web_code_viewer_id:
 val web_code_loading_animation_id:
   string
   
-val print:
+val generate_web_files :
   Format.formatter ->
   string ->
   (Lint_utils.file_struct * ((string list) * string)) list ->

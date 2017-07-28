@@ -75,7 +75,7 @@ val lint_sequential :
   pdetail:bool ->
   pwarning:bool ->
   perror:bool ->
-  pjson:bool ->
+  output_web:bool ->
   gd_plugins:string list ->
   ins_plugins:string list ->
   master_config:string ->
