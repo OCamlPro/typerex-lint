@@ -277,16 +277,36 @@ let warning_div_body warning_info =
     )
   in
   div
+    ~a:
     [
-      pcdata "from ";
-      file_msg;
-      pcdata " ";
-      line_msg;
-      br ();
-      b [pcdata "/!\\  "]; (* todo img *)
-      warning_msg;
-      br ();
-      linter_msg;
+      a_class ["row"];
+    ]
+    [
+      span
+	~a:[
+	  a_class
+	    [
+	      "col-md-1";
+	      "row-vertical-center";
+	      "glyphicon";
+	      "glyphicon-alert";
+	    ];
+	]
+	[];
+      div
+	~a:[
+	  a_class ["col-md-11"; "row-vertical-center"];
+	]
+	[
+	  pcdata "from ";
+	  file_msg;
+	  pcdata " ";
+	  line_msg;
+	  br ();
+	  warning_msg;
+	  br ();
+	  linter_msg
+	];
     ]
 
 let warning_div all_warnings_info all_errors_info warning_info =
@@ -307,6 +327,7 @@ let warning_div all_warnings_info all_errors_info warning_info =
     ]
     [
       warning_div_head warning_info;
+      br ();
       warning_div_body warning_info;
     ]
   in

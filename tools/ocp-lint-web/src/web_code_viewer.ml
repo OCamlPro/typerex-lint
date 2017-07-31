@@ -167,14 +167,15 @@ let onload _ =
     let animation =
       Web_utils.get_element_by_id Lint_web.web_code_loading_animation_id
     in
-    let dom_animation = Tyxml_js.To_dom.of_node animation in
-    let animation_parent =
-      (* todo web err or use window.document.body *)
-      Js.Opt.get
-	(dom_animation##parentNode)
-	(fun () -> failwith "no animation parent")
-    in
-    ignore (animation_parent##removeChild (dom_animation))
+    Web_utils.dom_node_remove (Tyxml_js.To_dom.of_node animation)
+    (* let dom_animation = Tyxml_js.To_dom.of_node animation in *)
+    (* let animation_parent = *)
+    (*   (\* todo web err or use window.document.body *\) *)
+    (*   Js.Opt.get *)
+    (* 	(dom_animation##parentNode) *)
+    (* 	(fun () -> failwith "no animation parent") *)
+    (* in *)
+    (* ignore (animation_parent##removeChild (dom_animation)) *)
   end
   in
   let _ =

@@ -18,6 +18,9 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open Lint_warning_types
+open Lint_web_analysis_info
+
 type error =
   | Unknow_warning_id of string (* todo file *)
   | No_such_element_with_id of string
@@ -25,6 +28,7 @@ type error =
   | Active_navigation_element_is_not_unique
   | No_active_navigation_element
   | Get_value_of_empty_optional
+  | Invalid_file_name of file_info
 
 exception Web_exception of error
 
@@ -46,3 +50,5 @@ let process_error exn =
      log "there is no active navigation element"
   | Get_value_of_empty_optional ->
      log "trying to get the value of an empty optional"
+  | Invalid_file_name {file_name; _} ->
+     log ("'" ^ file_name ^ "' is not a valid file name")

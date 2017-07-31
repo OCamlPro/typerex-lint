@@ -234,10 +234,10 @@ let warnings_pie_group_by_severity analysis_info =
   div_warning_pie "Severities" settings
 
 let dashboard_head analysis_info =
-  let div_stat stat msg =
+  let div_stat stat msg grid =
     div
       ~a:[
-        a_class ["col-md-2"; "tile-stat-container"];
+        a_class (grid @ ["tile-stat-container"]);
       ]
       [
         div
@@ -251,52 +251,74 @@ let dashboard_head analysis_info =
           ]
       ]
   in
-  let filler () =
-    div
-      ~a:[
-	a_class ["col-md-1"];
-      ]
-      []
-  in
   div
     ~a:[
       a_class ["row"; "dashboard-header"]
     ]
     [
-      filler ();
       div_stat
         (string_of_int (List.length analysis_info.errors_info))
-        ("errors raised");
+        ("errors raised")
+	["col-md-2"; "col-md-offset-1"];
       div_stat
         (string_of_int (List.length analysis_info.warnings_info))
-        ("warnings raised");
+        ("warnings raised")
+	["col-md-2"];
       div_stat
         (string_of_int (List.length analysis_info.files_info))
-        ("files analyzed");
+        ("files analyzed")
+	["col-md-2"];
       div_stat
         (string_of_int (List.length analysis_info.plugins_info))
-        ("plugins activated");
+        ("plugins activated")
+	["col-md-2"];
       div_stat
         (string_of_int (List.length analysis_info.linters_info))
-        ("linters activated");
-      filler ();
+        ("linters activated")
+	["col-md-2"];
     ]
 
 let dashboard_content analysis_info =
+  let pie_container div_pie grid =
+    div
+      ~a:[
+	a_class (grid @ ["tile-pie-container"]);
+      ]
+      [div_pie]
+  in
   div
     ~a:[
       a_class ["dashboard-content"];
     ]
     [
-      warnings_pie_group_by_file analysis_info;
-      span [pcdata " "]; (* todo padding *)
-      warnings_pie_group_by_plugin analysis_info;
-      span [pcdata " "];
-      warnings_pie_group_by_linter analysis_info;
-      span [pcdata " "];
-      warnings_pie_group_by_warning analysis_info;
-      span [pcdata " "];
-      warnings_pie_group_by_severity analysis_info;
+      div
+	~a:[
+	  a_class ["row"];
+	]
+	[
+	  pie_container
+	    (warnings_pie_group_by_file analysis_info)
+	    ["col-md-4"];
+	  pie_container
+	    (warnings_pie_group_by_plugin analysis_info)
+	    ["col-md-4"];
+	  pie_container
+	    (warnings_pie_group_by_linter analysis_info)
+	    ["col-md-4"];
+      ];
+      br ();
+      div
+	~a:[
+	  a_class ["row"];
+	]
+	[
+	  pie_container
+	    (warnings_pie_group_by_warning analysis_info)
+	    ["col-md-4"; "col-md-offset-2"];
+	  pie_container
+	    (warnings_pie_group_by_severity analysis_info)
+	    ["col-md-4"];
+	]
     ]
 
 let content analysis_info =

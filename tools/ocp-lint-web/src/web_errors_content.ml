@@ -48,11 +48,32 @@ let error_div_body error_info =
     )
   in
   div
+    ~a:
     [
-      pcdata "from ";
-      file_msg;
-      br ();
-      description_msg;
+      a_class ["row"];
+    ]
+    [
+      span
+	~a:[
+	  a_class
+	    [
+	      "col-md-1";
+	      "row-vertical-center";
+	      "glyphicon";
+	      "glyphicon-remove-sign";
+	    ];
+	]
+	[];
+      div
+	~a:[
+	  a_class ["col-md-11"; "row-vertical-center"];
+	]
+	[
+	  pcdata "from ";
+	  file_msg;
+	  br ();
+	  description_msg;
+	];
     ]
 
 let error_div all_warnings_info all_errors_info error_info =
@@ -73,6 +94,7 @@ let error_div all_warnings_info all_errors_info error_info =
       ]
       [
         error_div_head error_info;
+	br ();
         error_div_body error_info;
       ]
   in

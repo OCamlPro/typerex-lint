@@ -94,8 +94,14 @@ let value_of_optional = function
   | Some x -> x
   | None -> raise (Web_exception Get_value_of_empty_optional)
 
+let value_of_js_option opt =
+  Js.Opt.get opt (fun () -> raise (Web_exception Get_value_of_empty_optional))
+
 let html_empty_node () =
   Tyxml_js.Html.pcdata ""
+
+let dom_node_remove node =
+  ignore ((value_of_js_option node##parentNode)##removeChild (node))
 
 let dom_element_is_display e =
   e##style##display != Js.string "none"
@@ -121,6 +127,14 @@ let json_from_js_var var =
 
 let file_equals f f' =
   f.file_hash = f'.file_hash
+
+let file_short_name file_info =
+  let re = Regexp.regexp (Filename.dir_sep) in
+  let dirs = Regexp.split re file_info.file_name in
+  try
+    List.hd (List.rev dirs)
+  with
+    Failure _ -> raise (Web_exception (Invalid_file_name file_info))
 
 let plugin_equals p p' =
   p.plugin_name = p'.plugin_name

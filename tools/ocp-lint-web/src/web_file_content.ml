@@ -73,49 +73,36 @@ let warning_content warning_info =
 	[
 	  br ();
 	  warning_content_code_view warning_info;
-	  br ();
 	]
   in
   div
+    ~a:[
+      a_class ["hideable-content"];
+    ]
     [
       h3 [pcdata warning_desc];
+      br ();
       h4 [pcdata linter_desc];
       code_view;
     ]
 
 let error_content error_info =
-  let error_type, error_output = (* todo change *)
-      match error_info.error_type with
-      | Lint_db_types.Db_error e ->
-	 "db_error",
-	 Lint_db_error.to_string e
-      | Lint_db_types.Plugin_error e ->
-	 "plugin_error",
-	 begin match e with
-         | Lint_plugin_error.Plugin_exception (Failure str) ->
-	    Printf.sprintf "Exception %s" str	  
-         | _ ->
-	    Lint_plugin_error.to_string e
-	 end
-      | Lint_db_types.Sempatch_error e ->
-	 "sempatch_error",
-	 e
-      | Lint_db_types.Ocplint_error e ->
-	 "ocplint_error",
-	 e
-  in
   let error_desc =
     Printf.sprintf "Error #%d :"
       error_info.error_id
   in
   let output_desc =
     Printf.sprintf "%s : %s"
-      error_type
-      error_output
+      (Web_utils.error_type error_info)
+      (Web_utils.error_description error_info)
   in
   div
+    ~a:[
+      a_class ["hideable-content"];
+    ]
     [
       h3 [pcdata error_desc];
+      br ();
       h4 [pcdata output_desc];
     ]
 
@@ -153,6 +140,9 @@ let file_code_viewer file_info =
 
 let all_file_content file_info =
   div
+    ~a:[
+      a_class ["hideable-content"];
+    ]
     [
       h3 [pcdata "All file"];
       br ();
@@ -394,7 +384,7 @@ let warnings_table_entry warning_info file_content_data =
   ;
   tr
 
-let warnings_table_head =
+let warnings_table_head () =
   thead
     [
       tr
@@ -416,7 +406,7 @@ let warnings_table warnings_info file_content_data =
       ~a:[
         a_class ["file-content-table"; "warnings-file-content-table"];
       ]
-      ~thead:warnings_table_head
+      ~thead:(warnings_table_head ())
       [
         tbody (List.map entry_creator warnings_info);
       ]
@@ -451,7 +441,7 @@ let errors_table_entry error_info file_content_data =
   end;
   tr
 
-let errors_table_head =
+let errors_table_head () =
   thead
     [
       tr
@@ -469,7 +459,7 @@ let errors_table errors_info file_content_data =
     ~a:[
       a_class ["file-content-table"; "errors-file-content-table"];
     ]
-    ~thead:errors_table_head
+    ~thead:(errors_table_head ())
     [
       tbody (List.map entry_creator errors_info);
     ]
@@ -489,7 +479,7 @@ let hideable_summary title content =
   let icon =
     span
       ~a:[
-	a_class ["glyphicon"; opened_icon];
+	a_class ["glyphicon"];
       ]
       [
       ]
@@ -497,18 +487,25 @@ let hideable_summary title content =
   let dom_title = Tyxml_js.To_dom.of_element title in
   let dom_icon = Tyxml_js.To_dom.of_element icon in
   let dom_content = Tyxml_js.To_dom.of_element content in
+  let set_close () =
+    Web_utils.dom_element_undisplay dom_content;
+    dom_icon##classList##remove (Js.string opened_icon);
+    dom_icon##classList##add (Js.string closed_icon)
+  in
+  let set_open () =
+    Web_utils.dom_element_display dom_content;
+    dom_icon##classList##remove (Js.string closed_icon);
+    dom_icon##classList##add (Js.string opened_icon);
+  in
   let reverse_content_display _ =
     if Web_utils.dom_element_is_display dom_content then begin
-      Web_utils.dom_element_undisplay dom_content;
-      dom_icon##classList##remove (Js.string opened_icon);
-      dom_icon##classList##add (Js.string closed_icon)
+      set_close ()
     end else begin
-      Web_utils.dom_element_display dom_content;
-      dom_icon##classList##remove (Js.string closed_icon);
-      dom_icon##classList##add (Js.string opened_icon);
+      set_open ()
     end;
     Js._true
   in
+  set_close ();
   dom_title##onclick <-Dom_html.handler reverse_content_display;
   dom_icon##onclick <-Dom_html.handler reverse_content_display;
   div
@@ -595,6 +592,22 @@ let errors_summary all_file_errors_info file_content_data =
   hideable_summary "All errors" content
 
 let content_head file_content_data =
+  let warnings_button =
+    button
+      ~a:[
+        a_button_type `Button;
+        a_class ["btn"; "btn-warning"];
+      ]
+      [pcdata "Show warnings"]
+  in
+  let errors_button =
+    button
+      ~a:[
+        a_button_type `Button;
+        a_class ["btn"; "btn-danger"];
+      ]
+      [pcdata "Show errors"]
+  in
   let all_file_button =
     button
       ~a:[
@@ -610,19 +623,33 @@ let content_head file_content_data =
   end;
   div
     ~a:[
-      a_class ["row"];
+      a_class ["row"; "content-head"];
     ]
     [
       div
 	~a:[
-	  a_class ["col-md-11"];
+	  a_class ["col-md-6"; "row-vertical-center"];
 	]
 	[
 	  h2 [pcdata file_content_data.file_content_info.file_name];
 	];
       div
 	~a:[
-	  a_class ["col-md-1"];
+	  a_class ["col-md-2"; "row-vertical-center"];
+	]
+	[
+	  warnings_button;
+	];
+      div
+	~a:[
+	  a_class ["col-md-2"; "row-vertical-center"];
+	]
+	[
+	  errors_button;
+	];
+      div
+	~a:[
+	  a_class ["col-md-2"; "row-vertical-center"];
 	]
 	[
 	  all_file_button;
@@ -657,9 +684,8 @@ let content all_file_warnings_info all_file_errors_info file_content_data =
       br ();
       separator ();
       br ();
-      content_div;
       br ();
-      separator ();
+      content_div;
       br ();
       br ();
       warnings_summary all_file_warnings_info file_content_data;
@@ -684,7 +710,7 @@ let open_tab file_info file_warnings_info file_errors_info =
   let attach =
     open_tab
       (FileElement file_info)
-      (file_info.file_name)
+      (Web_utils.file_short_name file_info)
       (content)
       begin fun () ->
         File_content_attached_data file_content_data
