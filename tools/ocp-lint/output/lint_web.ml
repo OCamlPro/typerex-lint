@@ -376,7 +376,7 @@ let html_of_ocaml_src file_info warnings_info src =
     end
     begin body (
       loading_animation ()
-      :: code_viewer src	 
+      :: code_viewer src
       :: script (cdata_script js_warnings_info_var)
       :: List.map begin fun src ->
            script ~a:[a_src (Xml.uri_of_string (path_of_js src))] (pcdata "")
@@ -409,7 +409,30 @@ let generate_web_files fmt master_config file_config path db db_error =
       warning_info.warning_file
     end analysis_info.warnings_info
   in
-  List.iter begin fun (file_info, warnings_info) ->
+  let errors_info_file =
+    Lint_utils.group_by begin fun error_info ->
+      error_info.error_file
+    end analysis_info.errors_info
+  in
+  let files_info_with_warn_or_err =
+    let rec aux lw le =
+      match lw, le with
+      | [], [] ->
+         []
+      | lw, [] ->
+         List.map (fun (file,warns) -> (file,warns,[])) lw
+      | [], le ->
+         List.map (fun (file,errs) -> (file,[],errs)) le
+      | (file_w,_) :: tlw, (file_e,errs) :: tle when file_w < file_e ->
+         (file_e,[],errs) :: aux lw tle
+      | (file_w,warns) :: tlw, (file_e,_) :: tle when file_w > file_e ->
+         (file_w,warns,[]) :: aux tlw le
+      | (file,warns) :: tlw, (_,errs) :: tle ->
+         (file,warns,errs) :: aux tlw tle
+    in
+    aux warnings_info_file errors_info_file
+  in
+  List.iter begin fun (file_info, warnings_info, errors_info) ->
     let html_src =
       html_of_ocaml_src
         file_info
@@ -420,7 +443,7 @@ let generate_web_files fmt master_config file_config path db db_error =
     emit_page
       (Filename.concat output_path (path_of_html page_name))
       html_src
-  end warnings_info_file;
+  end files_info_with_warn_or_err;
   emit_page
     (Filename.concat output_path (path_of_html "index"))
     html_of_index

@@ -40,8 +40,9 @@ val iter_files : ?recdir:bool -> (string -> unit) -> string -> unit
 val substitute : string -> (string * string) list -> string
 
 (** [group_by fct lst] groups the elements of the list [lst] by their
-    result of the function [fct].
- *)
+    result of the grouping function [fct].
+    The returned list will be ascending sort by Pervasives.compare on the result
+    of the grouping function. *)
 val group_by: ('a -> 'b) -> 'a list -> ('b * 'a list) list
 
 (** [concat sep arr] Same as String.concat 
