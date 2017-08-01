@@ -26,6 +26,7 @@ begin library "ocp-lint-plugin-typedtree"
 
   (* All linters attached to Typedtree plugin. *)
     "checkFunctionCall.ml"
+    "checkInheritance.ml"
     "checkModuleUtilization.ml"
     "checkFullyQualified.ml"
     "checkMutableRecord.ml"
