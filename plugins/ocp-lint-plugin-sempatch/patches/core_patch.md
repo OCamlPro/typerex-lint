@@ -185,28 +185,7 @@ severity : 5
 Printf.sprintf "%s" e
 ```
 
-@ Dynlink
-message: "Do not use dynamic linking"
-severity: 8
-```
-Dynlink.loadfile
-```
-
-@ Dynlink_2
-message: "Do not use dynamic linking"
-severity: 8
-```
-Dynlink.loadfile_private
-```
-@ String_Create
-message: "Do not use String.create"
-severity: 1
-```
-- String.create
-+ String.make
-```
-
-@ Catch_Wildcard
+@ catch_exception_wildcard
 message: "Do not try to catch the exceptions with '_'"
 expressions: e1, e2
 severity: 1
