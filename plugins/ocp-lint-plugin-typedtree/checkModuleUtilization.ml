@@ -42,7 +42,7 @@ module Linter = Plugin_typedtree.Plugin.MakeLint(struct
     let name = "Module Utilization"
     let version = "1"
     let short_name = "module_utilization"
-    let details = "Checks some properties of module utilizations"
+    let details = "Check some properties of module utilizations"
     let enable = true
   end)
 
