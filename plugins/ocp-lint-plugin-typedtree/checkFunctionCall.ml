@@ -111,7 +111,7 @@ module Linter = Plugin_typedtree.Plugin.MakeLint(struct
     let name = "Function Call"
     let version = "1"
     let short_name = "function_call"
-    let details = "Checks some properties of function calls"
+    let details = "Check some properties of function calls"
     let enable = true
   end)
 
