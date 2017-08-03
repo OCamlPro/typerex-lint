@@ -30,7 +30,6 @@ begin library "ocp-lint-plugin-typedtree"
     "checkIdentifierMasking.ml"
     "checkInheritance.ml"
     "checkModuleUtilization.ml"
-    "checkMutableRecord.ml"
     "polymorphic_comparison.ml"
   ]
   requires = [
