@@ -31,6 +31,7 @@ begin library "ocp-lint-plugin-parsetree"
 
     "checkGoodPractices.ml";
     "checkConstructorArgs.ml";
+    "checkPolymorphicVariants.ml";
 
     "redefine_std_lib.ml"
 
