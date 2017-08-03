@@ -33,11 +33,6 @@ let path_parent path =
   | _ ->
      None
 
-let rec path_child = function
-  | Path.Pident id -> Path.Pident id
-  | Path.Pdot(p, _, _) -> path_child p
-  | _ ->  failwith "path is not valid"
-
 module Linter = Plugin_typedtree.Plugin.MakeLint(struct
     let name = "Module Utilization"
     let version = "1"
@@ -47,13 +42,13 @@ module Linter = Plugin_typedtree.Plugin.MakeLint(struct
   end)
 
 type warning =
-  | IdentifierInUnrecommandedModule of Path.t * Path.t
+  | IdentifierInUnrecommandedModule of string * Path.t
   | UseOpenDirective of Path.t
 
 let w_identifier_in_unrecommanded_mod = Linter.new_warning
     ~id:1
     ~short_name:"identifier_from_unrecommanded_module"
-    ~msg:"$ident is in the unrecommanded module $mod."
+    ~msg:"Identifier \"$ident\" is in the unrecommanded module $mod."
     ~severity:1
 
 let w_open_directive = Linter.new_warning
@@ -66,9 +61,9 @@ module Warnings = Linter.MakeWarnings(struct
     type t = warning
 
     let to_warning = function
-      | IdentifierInUnrecommandedModule (pident, pmod) ->
+      | IdentifierInUnrecommandedModule (ident, pmod) ->
 	 w_identifier_in_unrecommanded_mod, [
-          ("ident",Path.name pident);
+          ("ident",ident);
           ("mod",Path.name pmod)
         ]
       | UseOpenDirective p ->
@@ -93,7 +88,7 @@ let iter =
          if is_unrecommanded parent then begin
            Warnings.report
              loc
-             (IdentifierInUnrecommandedModule (path_child ident_path, parent))
+             (IdentifierInUnrecommandedModule (Path.last ident_path, parent))
          end
 
     let enter_expression expr =
