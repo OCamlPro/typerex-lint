@@ -46,6 +46,11 @@ let unsafe_functions = [
           Ident.create "Bytes"
         ), "unsafe_to_string", 1
     );
+   Path.Pdot (
+      Path.Pident (
+          Ident.create "Bytes"
+        ), "unsafe_of_string", 1
+    );
   Path.Pdot (
       Path.Pdot (
           Path.Pident (
