@@ -35,7 +35,6 @@ begin library "ocp-lint-plugin-parsetree"
     "checkClass.ml";
     "checkExternal.ml";
     "checkPolymorphicVariants.ml";
-    "checkTuple.ml";
 
     "redefine_std_lib.ml"
 
