@@ -40,19 +40,30 @@ type file_content_filter_type =
 type file_content_data = {
   file_content_info :
     file_info;
+  file_content_warnings_info :
+    warning_info list;
+  file_content_errors_info :
+    error_info list;
   file_content_container :
     Dom_html.element Js.t;
   file_content_main_contents :
     (file_content_type, file_content_value) Hashtbl.t;
   file_content_creator :
     file_content_type -> Dom_html.element Js.t;
-  file_content_filtersys :
+  file_content_filtersys : (* warning filter system *)
     (warning_info, file_content_filter_type) Web_filter_system.t;
 }
 
-let create_file_content_data file_info dom_content_container content_creator =
+let create_file_content_data
+      file_info
+      file_warnings_info
+      file_errors_info
+      dom_content_container
+      content_creator =
   {
     file_content_info = file_info;
+    file_content_warnings_info = file_warnings_info;
+    file_content_errors_info = file_errors_info;
     file_content_container = Tyxml_js.To_dom.of_element dom_content_container;
     file_content_main_contents = Hashtbl.create 64;
     file_content_creator = content_creator;
@@ -119,3 +130,8 @@ let focus_file_content file_content_data file_content_type =
     Web_utils.dom_element_display file_content_warning.dom_content;
     file_content_warning.is_active <- true
   end
+
+let warnings_info_set file_content_data =
+  file_content_data.file_content_warnings_info
+  |> List.sort Web_utils.warning_compare
+  |> Web_utils.remove_successive_duplicates Web_utils.warning_equals

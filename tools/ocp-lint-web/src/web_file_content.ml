@@ -243,7 +243,7 @@ let filter_dropdown_menu label_value dropdown_selections =
         dropdown_selections;
       ]
 
-let warnings_dropdown warnings_info file_content_data =
+let warnings_dropdown file_content_data =
   let on_select warning =
     Web_filter_system.remove_filter
       file_content_data.file_content_filtersys
@@ -269,7 +269,7 @@ let warnings_dropdown warnings_info file_content_data =
         (Web_utils.warning_name warning_info)
         on_select
         on_deselect
-    end warnings_info
+    end (warnings_info_set file_content_data)
   in
   filter_dropdown_menu "warnings" selections
 
@@ -354,18 +354,13 @@ let filter_searchbox file_content_data =
   end;
   searchbox
 
-let warnings_filter warnings_info file_content_data =
-  let uniq_warnings_info =
-    warnings_info
-    |> List.sort Web_utils.warning_compare
-    |> Web_utils.remove_successive_duplicates Web_utils.warning_equals
-  in
+let warnings_filter file_content_data =
   div
     ~a:[
       a_class ["dashboard-filter"];
     ]
     [
-      warnings_dropdown uniq_warnings_info file_content_data;
+      warnings_dropdown file_content_data;
       div ~a:[a_class ["filter-separator"]] [];
       severity_dropdown file_content_data;
       div ~a:[a_class ["filter-separator"]] [];
@@ -423,7 +418,7 @@ let warnings_table_head () =
         ]
     ]
 
-let warnings_table warnings_info file_content_data =
+let warnings_table file_content_data =
   let entry_creator warning_info =
     warnings_table_entry warning_info file_content_data
   in
@@ -434,7 +429,9 @@ let warnings_table warnings_info file_content_data =
       ]
       ~thead:(warnings_table_head ())
       [
-        tbody (List.map entry_creator warnings_info);
+        tbody (
+            List.map entry_creator file_content_data.file_content_warnings_info
+          );
       ]
   in
   table
@@ -451,7 +448,7 @@ let errors_table_col_error error_info =
     | Lint_db_types.Ocplint_error _ -> "ocplint_error"
   in
   pcdata str_error
-    
+
 let errors_table_entry error_info file_content_data =
   let tr =
     tr
@@ -477,7 +474,7 @@ let errors_table_head () =
         ]
     ]
 
-let errors_table errors_info file_content_data =
+let errors_table file_content_data =
   let entry_creator error_info =
     errors_table_entry error_info file_content_data
   in
@@ -487,7 +484,9 @@ let errors_table errors_info file_content_data =
     ]
     ~thead:(errors_table_head ())
     [
-      tbody (List.map entry_creator errors_info);
+      tbody (
+          List.map entry_creator file_content_data.file_content_errors_info
+        );
     ]
 
 let hideable_summary title content =
@@ -565,14 +564,14 @@ let hideable_summary title content =
       content;
     ]
 
-let warnings_summary_content all_file_warnings_info file_content_data =
+let warnings_summary_content file_content_data =
   div
     [
       br ();
       br ();
-      warnings_filter all_file_warnings_info file_content_data;
+      warnings_filter file_content_data;
       br ();
-      warnings_table all_file_warnings_info file_content_data;
+      warnings_table file_content_data;
     ]
 
 let warnings_summary_content_empty () =
@@ -582,23 +581,23 @@ let warnings_summary_content_empty () =
       h4 [pcdata "No provided warnings in this file"];
     ]
 
-let warnings_summary all_file_warnings_info file_content_data =
-  let content = 
-  if Web_utils.list_is_empty all_file_warnings_info then
+let warnings_summary file_content_data =
+  let content =
+  if Web_utils.list_is_empty file_content_data.file_content_warnings_info then
     warnings_summary_content_empty ()
   else
-    warnings_summary_content all_file_warnings_info file_content_data
+    warnings_summary_content file_content_data
   in
   hideable_summary "All warnings" content
 
-let errors_summary_content all_file_errors_info file_content_data =
+let errors_summary_content file_content_data =
   div
     [
       br ();
       br ();
       (* todo filter *)
       br ();
-      errors_table all_file_errors_info file_content_data;
+      errors_table file_content_data;
     ]
 
 let errors_summary_content_empty () =
@@ -607,13 +606,13 @@ let errors_summary_content_empty () =
       br ();
       h4 [pcdata "No provided errors in this file"];
     ]
- 
-let errors_summary all_file_errors_info file_content_data =
+
+let errors_summary file_content_data =
   let content =
-    if Web_utils.list_is_empty all_file_errors_info then
+    if Web_utils.list_is_empty file_content_data.file_content_errors_info then
       errors_summary_content_empty ()
     else
-      errors_summary_content all_file_errors_info file_content_data
+      errors_summary_content file_content_data
   in
   hideable_summary "All errors" content
 
@@ -682,7 +681,7 @@ let content_head file_content_data =
 	];
     ]
 
-let content all_file_warnings_info all_file_errors_info file_content_data =
+let content file_content_data =
   let content_div =
     Tyxml_js.Of_dom.of_element
       (file_content_data.file_content_container)
@@ -714,24 +713,32 @@ let content all_file_warnings_info all_file_errors_info file_content_data =
       content_div;
       br ();
       br ();
-      warnings_summary all_file_warnings_info file_content_data;
+      warnings_summary file_content_data;
       br ();
       br ();
-      errors_summary all_file_errors_info file_content_data;
+      errors_summary file_content_data;
     ]
 
-let new_file_content_data_of_file_info file_info =
+let new_file_content_data_of_file_info
+      file_info file_warnings_info file_errors_info =
   Web_file_content_data.create_file_content_data
     file_info
+    file_warnings_info
+    file_errors_info
     (div [])
     (main_content_creator file_info)
 
 let open_tab file_info file_warnings_info file_errors_info =
   let open Web_navigation_system in
   (* todo improve *)
-  let file_content_data = new_file_content_data_of_file_info file_info in
+  let file_content_data =
+    new_file_content_data_of_file_info
+      file_info
+      file_warnings_info
+      file_errors_info
+  in
   let content =
-    content file_warnings_info file_errors_info file_content_data
+    content file_content_data
   in
   let attach =
     open_tab
