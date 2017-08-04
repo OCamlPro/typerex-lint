@@ -32,11 +32,6 @@ type file_content_value = {
   mutable is_active : bool;
 }
 
-type file_content_warning_data = {
-  file_content_warning_info : warning_info;
-  file_content_warning_element : Dom_html.element Js.t
-}
-
 type file_content_filter_type =
   | Warning_type_filter of warning_info
   | Keyword_filter of string
@@ -45,74 +40,40 @@ type file_content_filter_type =
 type file_content_data = {
   file_content_info :
     file_info;
-  mutable file_content_warnings:
-    file_content_warning_data list;
   file_content_container :
     Dom_html.element Js.t;
   file_content_main_contents :
     (file_content_type, file_content_value) Hashtbl.t;
   file_content_creator :
     file_content_type -> Dom_html.element Js.t;
-  file_content_filters :
-    (file_content_filter_type, warning_info -> bool) Hashtbl.t;
+  file_content_filtersys :
+    (warning_info, file_content_filter_type) Web_filter_system.t;
 }
 
 let create_file_content_data file_info dom_content_container content_creator =
   {
     file_content_info = file_info;
-    file_content_warnings = [];
     file_content_container = Tyxml_js.To_dom.of_element dom_content_container;
     file_content_main_contents = Hashtbl.create 64;
     file_content_creator = content_creator;
-    file_content_filters = Hashtbl.create 16;
+    file_content_filtersys = Web_filter_system.create ();
   }
 
-let register_file_content_warning_data
-      file_content_data warning_info dom_element =
-  let warning_data =
-    {
-      file_content_warning_info = warning_info;
-      file_content_warning_element = dom_element;
-    }
-  in
-  file_content_data.file_content_warnings <-
-    warning_data :: file_content_data.file_content_warnings
-
-let add_file_content_filter file_content_data filter_type =
-  let filter =
-    match filter_type with
-    | Warning_type_filter warning ->
-       begin fun warning_info ->
-         not (
-           String.equal
-             warning.warning_type.decl.short_name
-             warning_info.warning_type.decl.short_name
-         )
-       end
-    | Keyword_filter kwd ->
-       Web_utils.warning_contains_keyword kwd
-    | Higher_severity_filter lvl ->
-       begin fun warning_info ->
-         warning_info.warning_type.decl.severity >= lvl
-       end
-  in
-  Hashtbl.add file_content_data.file_content_filters filter_type filter
-
-let remove_file_content_filter file_content_data filter_type =
-  Hashtbl.remove file_content_data.file_content_filters filter_type
-
-let eval_file_content_filters file_content_data =
-  let full_filter warning =
-    Hashtbl.fold begin fun _ filter acc ->
-      acc && filter warning
-    end file_content_data.file_content_filters true
-  in
-  List.iter begin fun warning_data ->
-    if full_filter warning_data.file_content_warning_info then
-      Web_utils.dom_element_display warning_data.file_content_warning_element
-    else
-      Web_utils.dom_element_undisplay warning_data.file_content_warning_element
-  end file_content_data.file_content_warnings
+let filter_value = function
+  | Warning_type_filter warning ->
+     begin fun warning_info ->
+       not (
+         String.equal
+           warning.warning_type.decl.short_name
+           warning_info.warning_type.decl.short_name
+       )
+     end
+  | Keyword_filter kwd ->
+     Web_utils.warning_contains_keyword kwd
+  | Higher_severity_filter lvl ->
+     begin fun warning_info ->
+       warning_info.warning_type.decl.severity >= lvl
+     end
 
 let active_file_content file_content_data =
   Hashtbl.fold begin fun _ content_value acc ->

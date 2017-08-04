@@ -22,57 +22,26 @@ open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 
-type filter_element = { (* todo param type *)
-  filter_element_info : Lint_web_analysis_info.warning_info;
-  filter_element_dom : Dom_html.element Js.t;
-}
+type filter_type =
+  | Warning_type_filter of warning_info
+  | Keyword_filter of string
+  | File_filter of file_info
 
-type filter_system = { (* todo param type *)
-  filter_activated :
-    (string, Lint_web_analysis_info.warning_info -> bool) Hashtbl.t;
-  filter_elements :
-    filter_element list;
-}
-
-let filter_system_create warnings_info warning_dom_creator =
-  let filter_elements =
-    List.map begin fun warning_info ->
-      {
-        filter_element_info =
-          warning_info;
-        filter_element_dom =
-          Tyxml_js.To_dom.of_element (warning_dom_creator warning_info)
-      }
-    end warnings_info
-  in
-  {
-    filter_activated = Hashtbl.create 64;
-    filter_elements = filter_elements;
-  }
-
-let filter_system_dom_contents filter_system =
-  List.map begin fun {filter_element_dom; _} ->
-    Tyxml_js.Of_dom.of_element filter_element_dom
-  end filter_system.filter_elements
-
-let filter_system_register_filter filter_id filter filter_system =
-  Hashtbl.add filter_system.filter_activated filter_id filter
-
-let filter_system_remove_filter filter_id filter_system =
-  Hashtbl.remove filter_system.filter_activated filter_id
-
-let filter_system_eval_filters filter_system =
-  let full_filter filter_element =
-    Hashtbl.fold begin fun _ filter acc ->
-      acc && filter filter_element.filter_element_info
-    end filter_system.filter_activated true
-  in
-  List.iter begin fun filter_element ->
-    if full_filter filter_element then
-      Web_utils.dom_element_display filter_element.filter_element_dom
-    else
-      Web_utils.dom_element_undisplay filter_element.filter_element_dom
-  end filter_system.filter_elements
+let filter_value = function
+  | Warning_type_filter warning ->
+     begin fun warning_info ->
+       not (
+         String.equal
+           warning.warning_type.decl.short_name
+           warning_info.warning_type.decl.short_name
+       )
+     end
+  | Keyword_filter kwd ->
+     Web_utils.warning_contains_keyword kwd
+  | File_filter file ->
+     begin fun warning_info ->
+       not (Web_utils.file_equals file warning_info.warning_file)
+     end
 
 let filter_dropdown_selection value label_value on_select on_deselect =
   let checkbox =
@@ -136,58 +105,52 @@ let dropdown_creator label label_creator on_select on_deselect lst =
     end lst)
 
 let warnings_dropdown warnings_info filter_system =
-  let filter_id warning_info = (* todo enum type *)
-    "warning-" ^ Web_utils.warning_name warning_info
-  in
-  let filter warning_info_filter_value warning_info =
-    not (Web_utils.warning_equals warning_info_filter_value warning_info)
-  in
   dropdown_creator
     "warnings"
     Web_utils.warning_name
     begin fun warning ->
       (* remove the filter *)
-      filter_system_remove_filter
-        (filter_id warning)
-        filter_system;
-      filter_system_eval_filters filter_system
+      Web_filter_system.remove_filter
+        filter_system
+        (Warning_type_filter warning)
+      ;
+      Web_filter_system.eval_filters filter_system
     end
     begin fun warning ->
       (* filtering the warnings that are not the same type of the
          unchecked warning *)
-      filter_system_register_filter
-        (filter_id warning)
-        (filter warning)
-        filter_system;
-      filter_system_eval_filters filter_system
+      let filter_type = Warning_type_filter warning in
+      Web_filter_system.add_filter
+         filter_system
+         filter_type
+         (filter_value filter_type)
+      ;
+      Web_filter_system.eval_filters filter_system
     end
     warnings_info
 
 let files_dropdown files_info filter_system =
-  let filter_id file_info =
-    "file-" ^ file_info.file_name
-  in
-  let filter file_info_filter_value warning_info =
-    not (Web_utils.file_equals file_info_filter_value warning_info.warning_file)
-  in
   dropdown_creator
     "files"
     (fun file_info -> file_info.file_name)
     begin fun file ->
       (* remove the filter *)
-      filter_system_remove_filter
-        (filter_id file)
-        filter_system;
-      filter_system_eval_filters filter_system
+      Web_filter_system.remove_filter
+        filter_system
+        (File_filter file)
+      ;
+      Web_filter_system.eval_filters filter_system
     end
     begin fun file ->
       (* filtering the files that are not the same type of the
          unchecked file *)
-      filter_system_register_filter
-        (filter_id file)
-        (filter file)
-        filter_system;
-      filter_system_eval_filters filter_system
+      let filter_type = File_filter file in
+      Web_filter_system.add_filter
+         filter_system
+         filter_type
+         (filter_value filter_type)
+      ;
+      Web_filter_system.eval_filters filter_system
     end
     files_info
 
@@ -200,20 +163,18 @@ let filter_searchbox filter_system =
         a_placeholder "Search..."
       ] ()
   in
-  let filter_name = "keyword" in
   let searchbox_dom = Tyxml_js.To_dom.of_input searchbox in
   searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
     let keyword = Js.to_string (searchbox_dom##value) in
-    filter_system_remove_filter
-      filter_name
-      filter_system;
+    let filter_type = Keyword_filter keyword in
+    Web_filter_system.remove_filter filter_system filter_type;
     if keyword != "" then begin
-      filter_system_register_filter
-        filter_name
-        (Web_utils.warning_contains_keyword keyword)
+      Web_filter_system.add_filter
         filter_system
+        filter_type
+        (filter_value filter_type)
     end;
-    filter_system_eval_filters filter_system;
+    Web_filter_system.eval_filters filter_system;
     Js._true
   end;
   searchbox
@@ -309,7 +270,7 @@ let warning_div_body warning_info =
 	];
     ]
 
-let warning_div all_warnings_info all_errors_info warning_info =
+let warning_div all_warnings_info all_errors_info filter_system warning_info =
   let file_warnings_info =
     List.filter begin fun warning ->
       Web_utils.file_equals warning.warning_file warning_info.warning_file
@@ -331,7 +292,8 @@ let warning_div all_warnings_info all_errors_info warning_info =
       warning_div_body warning_info;
     ]
   in
-  (Tyxml_js.To_dom.of_element div_warning)##onclick <- Dom_html.handler
+  let dom_div_warning = Tyxml_js.To_dom.of_element div_warning in
+  dom_div_warning##onclick <- Dom_html.handler
   begin fun _ ->
     let file_content_data =
       Web_file_content.open_tab
@@ -345,6 +307,7 @@ let warning_div all_warnings_info all_errors_info warning_info =
     ;
     Js._true
   end;
+  Web_filter_system.register_element filter_system warning_info dom_div_warning;
   div_warning
 
 let warnings_content analysis_info =
@@ -360,16 +323,17 @@ let warnings_content analysis_info =
     |> Web_utils.remove_successive_duplicates
          (fun f f' -> String.equal f.file_name f'.file_name)
   in
-  let filter_system =
-    filter_system_create
-      analysis_info.warnings_info
-      (warning_div analysis_info.warnings_info analysis_info.errors_info)
-  in
+  let filter_system = Web_filter_system.create () in
   div
     (
       (warning_div_filter uniq_files_info uniq_warnings_info filter_system) ::
       (br ()) ::
-      (filter_system_dom_contents filter_system)
+      (List.map
+         (warning_div
+            analysis_info.warnings_info
+            analysis_info.errors_info
+            filter_system)
+         analysis_info.warnings_info)
     )
 
 let warnings_content_empty () =
@@ -387,4 +351,3 @@ let content analysis_info =
       a_class ["container"];
     ]
     [content]
-
