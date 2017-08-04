@@ -22,7 +22,7 @@ open Tyxml_js.Html
 open D3pie
 open Lint_warning_types
 open Lint_web_analysis_info
-       
+
 let pie_25_colors = (* should be read-only *)
   (* todo add 5 color or group by 5% (20colors) *)
   (* from http://there4.io/2012/05/02/google-chart-color-list/ *)
@@ -286,11 +286,59 @@ let dashboard_content analysis_info =
       ]
       [div_pie]
   in
+  let warnings_button =
+    button
+      ~a:[
+        a_button_type `Button;
+        a_class ["btn"; "btn-warning"];
+      ]
+      [pcdata "See all warnings"]
+  in
+  let errors_button =
+    button
+      ~a:[
+        a_button_type `Button;
+        a_class ["btn"; "btn-danger"];
+      ]
+      [pcdata "See all errors"]
+  in
+  (Tyxml_js.To_dom.of_element warnings_button)##onclick <- Dom_html.handler
+  begin fun _ ->
+   (* todo open static warnings tab *)
+    Js._true
+  end;
+  (Tyxml_js.To_dom.of_element errors_button)##onclick <- Dom_html.handler
+  begin fun _ ->
+   (* todo open static errors tab *)
+    Js._true
+  end;
   div
     ~a:[
       a_class ["dashboard-content"];
     ]
     [
+      div
+        ~a:[
+          a_class ["row"];
+        ]
+        [
+          div
+            ~a:[
+              a_class ["col-md-2";  "col-md-offset-4"; "row-vertical-center"];
+            ]
+            [
+              warnings_button;
+            ];
+          div
+            ~a:[
+              a_class ["col-md-2"; "row-vertical-center"];
+            ]
+            [
+              errors_button;
+            ];
+        ];
+      br ();
+      br ();
       div
 	~a:[
 	  a_class ["row"];
@@ -308,17 +356,17 @@ let dashboard_content analysis_info =
       ];
       br ();
       div
-	~a:[
-	  a_class ["row"];
-	]
-	[
-	  pie_container
-	    (warnings_pie_group_by_warning analysis_info)
-	    ["col-md-4"; "col-md-offset-2"];
-	  pie_container
-	    (warnings_pie_group_by_severity analysis_info)
-	    ["col-md-4"];
-	]
+        ~a:[
+          a_class ["row"];
+        ]
+        [
+          pie_container
+            (warnings_pie_group_by_warning analysis_info)
+            ["col-md-4"; "col-md-offset-2"];
+          pie_container
+            (warnings_pie_group_by_severity analysis_info)
+            ["col-md-4"];
+        ]
     ]
 
 let content analysis_info =
