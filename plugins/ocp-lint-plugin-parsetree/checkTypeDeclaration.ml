@@ -18,40 +18,49 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-plugin-parsetree"
-  install_META = true
-  install_subdir = "ocp-lint-plugins"
-  files = [
-    "plugin_parsetree.ml"
+module Linter = Plugin_parsetree.Plugin.MakeLint(struct
+    let name = "Type Declaration"
+    let version = "1"
+    let short_name = "type_declaration"
+    let details = "Check some properties on types declarations"
+    let enable = true
+  end)
 
-    (* All linters attached to Parsetree plugin. *)
-    "identifier_length.ml"
-    "list_function_on_singleton.ml"
-    "physical_comp_on_alloc_lit.ml"
+type warning =
+  | AliasType of string
 
-    "checkGoodPractices.ml";
-    "checkConstructorArgs.ml";
+let w_alias_type = Linter.new_warning
+    ~id:1
+    ~short_name:"alias_type"
+    ~msg:"$alias is just an alias."
+    ~severity:1
 
-    "checkClass.ml";
-    "checkExternal.ml";
-    "checkPolymorphicVariants.ml";
-    "checkTypeDeclaration.ml"
+module Warnings = Linter.MakeWarnings(struct
+    type t = warning
 
-    "redefine_std_lib.ml"
+    let to_warning = function
+      | AliasType typ ->
+        w_alias_type, [("alias", typ)]
+  end)
 
-  ]
-  pp = ["ocp-pp"]
-  requires = [
-    "ocp-lint-stdlib-helper"
-    "ocp-lint-config"
-    "ocp-lint-api"
-    "ocplib-compiler"
-  ]
-end
+let iter =
+  let module IterArg = struct
+    include Parsetree_iter.DefaultIteratorArgument
 
-(* Helper for linter running checks on stdlib *)
-begin library "ocp-lint-stdlib-helper"
-  files = [
-    "std_lib.ml"
-  ]
-end
+    let process_alias loc typ =
+      Warnings.report loc (AliasType typ)
+
+    let enter_type_declaration decl =
+      let open Parsetree in
+      let open Asttypes in
+      match decl.ptype_kind with
+      | Ptype_abstract -> process_alias decl.ptype_name.loc decl.ptype_name.txt
+      | _ -> ()
+
+  end in
+  (module IterArg : Parsetree_iter.IteratorArgument)
+
+(* Registering a main entry to the linter *)
+module MainML = Linter.MakeInputStructure(struct
+    let main ast = Parsetree_iter.iter_structure iter ast
+  end)
