@@ -10,6 +10,15 @@ let unrecommanded_modules = [
     );
 ]
 
+let environment_modification_modules = [
+  Path.Pident (
+      Ident.create "Parsing"
+    );
+  Path.Pident (
+      Ident.create "Random"
+    );
+]
+
 let rec same_path p1 p2 =
   match (p1, p2) with
   | Path.Pident id1, Path.Pident id2 ->
@@ -44,6 +53,7 @@ module Linter = Plugin_typedtree.Plugin.MakeLint(struct
 type warning =
   | IdentifierInUnrecommandedModule of string * Path.t
   | UseOpenDirective of Path.t
+  | UseEnvironmentModificationModule of Path.t
 
 let w_identifier_in_unrecommanded_mod = Linter.new_warning
     ~id:1
@@ -57,6 +67,12 @@ let w_open_directive = Linter.new_warning
     ~msg:"Avoid to use the open directive."
     ~severity:1
 
+let w_environment_modification_mod = Linter.new_warning
+    ~id:3
+    ~short_name:"environment_modification_module"
+    ~msg:"$mod modifies the global execution environment."
+    ~severity:1
+
 module Warnings = Linter.MakeWarnings(struct
     type t = warning
 
@@ -68,6 +84,10 @@ module Warnings = Linter.MakeWarnings(struct
         ]
       | UseOpenDirective p ->
          w_open_directive, []
+      | UseEnvironmentModificationModule p ->
+         w_environment_modification_mod, [
+          ("mod", Path.name p)
+        ]
   end)
 
 let iter =
@@ -76,6 +96,9 @@ let iter =
 
     let is_unrecommanded mpath =
       List.exists (same_path mpath) unrecommanded_modules
+
+    let is_environment_modifier mpath =
+      List.exists (same_path mpath) environment_modification_modules
 
     let process_module_opening mpath loc =
       Warnings.report loc (UseOpenDirective mpath)
@@ -89,6 +112,11 @@ let iter =
            Warnings.report
              loc
              (IdentifierInUnrecommandedModule (Path.last ident_path, parent))
+         end;
+         if is_environment_modifier parent then begin
+           Warnings.report
+             loc
+             (UseEnvironmentModificationModule parent)
          end
 
     let enter_expression expr =
