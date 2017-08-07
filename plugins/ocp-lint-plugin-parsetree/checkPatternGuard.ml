@@ -18,41 +18,61 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-plugin-parsetree"
-  install_META = true
-  install_subdir = "ocp-lint-plugins"
-  files = [
-    "plugin_parsetree.ml"
+module Linter = Plugin_parsetree.Plugin.MakeLint(struct
+    let name = "Pattern Guard"
+    let version = "1"
+    let short_name = "pattern_guard"
+    let details = "Check some properties on guards of patterns"
+    let enable = true
+  end)
 
-    (* All linters attached to Parsetree plugin. *)
-    "identifier_length.ml"
-    "list_function_on_singleton.ml"
-    "physical_comp_on_alloc_lit.ml"
+type warning =
+  | UseGuard
 
-    "checkGoodPractices.ml";
-    "checkConstructorArgs.ml";
+let w_use_guard = Linter.new_warning
+    ~id:1
+    ~short_name:"use_guard"
+    ~msg:"Avoid to use guard."
+    ~severity:1
 
-    "checkClass.ml";
-    "checkExternal.ml";
-    "checkPatternGuard.ml";
-    "checkPolymorphicVariants.ml";
-    "checkTypeDeclaration.ml"
+module Warnings = Linter.MakeWarnings(struct
+    type t = warning
 
-    "redefine_std_lib.ml"
+    let to_warning = function
+      | UseGuard ->
+        w_use_guard, []
+  end)
 
-  ]
-  pp = ["ocp-pp"]
-  requires = [
-    "ocp-lint-stdlib-helper"
-    "ocp-lint-config"
-    "ocp-lint-api"
-    "ocplib-compiler"
-  ]
-end
+let iter =
+  let module IterArg = struct
+    include Parsetree_iter.DefaultIteratorArgument
 
-(* Helper for linter running checks on stdlib *)
-begin library "ocp-lint-stdlib-helper"
-  files = [
-    "std_lib.ml"
-  ]
-end
+    let process_guard loc =
+      Warnings.report loc UseGuard
+
+    let process_case case =
+      let open Asttypes in
+      let open Parsetree in
+      begin match case.pc_guard with
+      | Some guard ->
+         process_guard guard.pexp_loc
+      | _ -> ()
+      end
+
+    let enter_expression exp =
+      let open Asttypes in
+      let open Parsetree in
+      match exp.pexp_desc with
+      | Pexp_match (_, cases)
+      | Pexp_function cases
+      | Pexp_try (_, cases) ->
+         List.iter process_case cases
+      | _ -> ()
+
+  end in
+  (module IterArg : Parsetree_iter.IteratorArgument)
+
+(* Registering a main entry to the linter *)
+module MainML = Linter.MakeInputStructure(struct
+    let main ast = Parsetree_iter.iter_structure iter ast
+  end)
