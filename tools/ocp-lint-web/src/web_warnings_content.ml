@@ -164,17 +164,38 @@ let filter_searchbox filter_system =
       ] ()
   in
   let searchbox_dom = Tyxml_js.To_dom.of_input searchbox in
+  let get_keyword () =
+    let str = Js.to_string (searchbox_dom##value) in
+    if str = "" then
+      None
+    else
+      Some str
+  in
+  let previous_keyword = ref None in
   searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
-    let keyword = Js.to_string (searchbox_dom##value) in
-    let filter_type = Keyword_filter keyword in
-    Web_filter_system.remove_filter filter_system filter_type;
-    if keyword != "" then begin
-      Web_filter_system.add_filter
-        filter_system
-        filter_type
-        (filter_value filter_type)
+    let keyword = get_keyword () in
+    begin match !previous_keyword with
+    | Some kwd ->
+       Web_filter_system.remove_filter
+         filter_system
+         (Keyword_filter kwd)
+    | None ->
+       ()
     end;
-    Web_filter_system.eval_filters filter_system;
+    begin match keyword with
+    | Some kwd ->
+       let filter_type = Keyword_filter kwd in
+       Web_filter_system.add_filter
+         filter_system
+         filter_type
+         (filter_value filter_type)
+    | None ->
+       ()
+    end;
+    previous_keyword := keyword;
+    Web_filter_system.eval_filters
+      filter_system
+    ;
     Js._true
   end;
   searchbox
