@@ -19,6 +19,8 @@
 (**************************************************************************)
 
 open Tyxml_js.Html
+open Lint_warning_types
+open Lint_web_analysis_info
 
 type 'a filter_element = {
   filter_element_val : 'a;
@@ -29,6 +31,14 @@ type ('a, 'b) t = {
   filter_activated : ('b, 'a -> bool) Hashtbl.t;
   mutable filter_elements : 'a filter_element list;
 }
+
+type warning_filter_id =
+  | Warning_type_filter of warning_info
+  | Keyword_filter of string
+  | Higher_severity_filter of int
+  | File_filter of file_info
+
+type warnings_filter_system = (warning_info, warning_filter_id) t
 
 let create () =
   {
@@ -61,3 +71,26 @@ let eval_filters filter_system =
     else
       Web_utils.dom_element_undisplay filter_element.filter_element_dom
   end filter_system.filter_elements
+
+let value_of_warning_filter_id = function
+  | Warning_type_filter warning ->
+     begin fun warning_info ->
+       not (
+         String.equal
+           warning.warning_type.decl.short_name
+           warning_info.warning_type.decl.short_name
+       )
+     end
+  | Keyword_filter kwd ->
+     Web_utils.warning_contains_keyword kwd
+  | File_filter file ->
+     begin fun warning_info ->
+       not (Web_utils.file_equals file warning_info.warning_file)
+     end
+  | Higher_severity_filter lvl ->
+     begin fun warning_info ->
+       warning_info.warning_type.decl.severity >= lvl
+     end
+
+let add_warning_filter filter_system filter_id =
+  add_filter filter_system filter_id (value_of_warning_filter_id filter_id)

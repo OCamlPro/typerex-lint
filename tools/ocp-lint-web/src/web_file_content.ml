@@ -246,21 +246,19 @@ let filter_dropdown_menu label_value dropdown_selections =
 let warnings_dropdown file_content_data =
   let on_select warning =
     Web_filter_system.remove_filter
-      file_content_data.file_content_filtersys
-      (Warning_type_filter warning)
+      file_content_data.file_content_warnings_filters
+      (Web_filter_system.Warning_type_filter warning)
     ;
     Web_filter_system.eval_filters
-      file_content_data.file_content_filtersys
+      file_content_data.file_content_warnings_filters
   in
   let on_deselect warning =
-    let filter_type = Warning_type_filter warning in
-    Web_filter_system.add_filter
-      file_content_data.file_content_filtersys
-      filter_type
-      (Web_file_content_data.filter_value filter_type)
+    Web_filter_system.add_warning_filter
+      file_content_data.file_content_warnings_filters
+      (Web_filter_system.Warning_type_filter warning)
     ;
     Web_filter_system.eval_filters
-      file_content_data.file_content_filtersys
+      file_content_data.file_content_warnings_filters
   in
   let selections =
     List.map begin fun warning_info ->
@@ -280,23 +278,21 @@ let severity_dropdown file_content_data =
     begin match !previous_severity with
     | Some (svt, lbl) ->
        Web_filter_system.remove_filter
-         file_content_data.file_content_filtersys
-         (Higher_severity_filter svt)
+         file_content_data.file_content_warnings_filters
+         (Web_filter_system.Higher_severity_filter svt)
        ;
        lbl##classList##remove (active_class)
     | None ->
        ()
     end;
-    let filter_type = Higher_severity_filter severity in
-    Web_filter_system.add_filter
-      file_content_data.file_content_filtersys
-      filter_type
-      (Web_file_content_data.filter_value filter_type)
+    Web_filter_system.add_warning_filter
+      file_content_data.file_content_warnings_filters
+      (Web_filter_system.Higher_severity_filter severity)
     ;
     label##classList##add (active_class);
     previous_severity := Some (severity, label);
     Web_filter_system.eval_filters
-      file_content_data.file_content_filtersys
+      file_content_data.file_content_warnings_filters
   in
   let selections =
     List.map begin fun severity ->
@@ -331,24 +327,22 @@ let filter_searchbox file_content_data =
     begin match !previous_keyword with
     | Some kwd ->
        Web_filter_system.remove_filter
-         file_content_data.file_content_filtersys
-         (Keyword_filter kwd)
+         file_content_data.file_content_warnings_filters
+         (Web_filter_system.Keyword_filter kwd)
     | None ->
        ()
     end;
     begin match keyword with
     | Some kwd ->
-       let filter_type = Keyword_filter kwd in
-       Web_filter_system.add_filter
-         file_content_data.file_content_filtersys
-         filter_type
-         (Web_file_content_data.filter_value filter_type)
+       Web_filter_system.add_warning_filter
+         file_content_data.file_content_warnings_filters
+         (Web_filter_system.Keyword_filter kwd)
     | None ->
        ()
     end;
     previous_keyword := keyword;
     Web_filter_system.eval_filters
-      file_content_data.file_content_filtersys
+      file_content_data.file_content_warnings_filters
     ;
     Js._true
   end;
@@ -399,7 +393,7 @@ let warnings_table_entry warning_info file_content_data =
     Js._true
   end;
   Web_filter_system.register_element
-    file_content_data.file_content_filtersys
+    file_content_data.file_content_warnings_filters
     warning_info
     dom_tr
   ;

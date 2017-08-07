@@ -32,11 +32,6 @@ type file_content_value = {
   mutable is_active : bool;
 }
 
-type file_content_filter_type =
-  | Warning_type_filter of warning_info
-  | Keyword_filter of string
-  | Higher_severity_filter of int
-
 type file_content_data = {
   file_content_info :
     file_info;
@@ -50,8 +45,8 @@ type file_content_data = {
     (file_content_type, file_content_value) Hashtbl.t;
   file_content_creator :
     file_content_type -> Dom_html.element Js.t;
-  file_content_filtersys : (* warning filter system *)
-    (warning_info, file_content_filter_type) Web_filter_system.t;
+  file_content_warnings_filters :
+    Web_filter_system.warnings_filter_system;
 }
 
 let create_file_content_data
@@ -67,24 +62,8 @@ let create_file_content_data
     file_content_container = Tyxml_js.To_dom.of_element dom_content_container;
     file_content_main_contents = Hashtbl.create 64;
     file_content_creator = content_creator;
-    file_content_filtersys = Web_filter_system.create ();
+    file_content_warnings_filters = Web_filter_system.create ();
   }
-
-let filter_value = function
-  | Warning_type_filter warning ->
-     begin fun warning_info ->
-       not (
-         String.equal
-           warning.warning_type.decl.short_name
-           warning_info.warning_type.decl.short_name
-       )
-     end
-  | Keyword_filter kwd ->
-     Web_utils.warning_contains_keyword kwd
-  | Higher_severity_filter lvl ->
-     begin fun warning_info ->
-       warning_info.warning_type.decl.severity >= lvl
-     end
 
 let active_file_content file_content_data =
   Hashtbl.fold begin fun _ content_value acc ->

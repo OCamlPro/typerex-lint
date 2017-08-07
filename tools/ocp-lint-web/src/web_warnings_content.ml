@@ -22,27 +22,6 @@ open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 
-type filter_type =
-  | Warning_type_filter of warning_info
-  | Keyword_filter of string
-  | File_filter of file_info
-
-let filter_value = function
-  | Warning_type_filter warning ->
-     begin fun warning_info ->
-       not (
-         String.equal
-           warning.warning_type.decl.short_name
-           warning_info.warning_type.decl.short_name
-       )
-     end
-  | Keyword_filter kwd ->
-     Web_utils.warning_contains_keyword kwd
-  | File_filter file ->
-     begin fun warning_info ->
-       not (Web_utils.file_equals file warning_info.warning_file)
-     end
-
 let filter_dropdown_selection value label_value on_select on_deselect =
   let checkbox =
     input
@@ -112,18 +91,16 @@ let warnings_dropdown warnings_info filter_system =
       (* remove the filter *)
       Web_filter_system.remove_filter
         filter_system
-        (Warning_type_filter warning)
+        (Web_filter_system.Warning_type_filter warning)
       ;
       Web_filter_system.eval_filters filter_system
     end
     begin fun warning ->
       (* filtering the warnings that are not the same type of the
          unchecked warning *)
-      let filter_type = Warning_type_filter warning in
-      Web_filter_system.add_filter
+      Web_filter_system.add_warning_filter
          filter_system
-         filter_type
-         (filter_value filter_type)
+         (Web_filter_system.Warning_type_filter warning)
       ;
       Web_filter_system.eval_filters filter_system
     end
@@ -137,18 +114,16 @@ let files_dropdown files_info filter_system =
       (* remove the filter *)
       Web_filter_system.remove_filter
         filter_system
-        (File_filter file)
+        (Web_filter_system.File_filter file)
       ;
       Web_filter_system.eval_filters filter_system
     end
     begin fun file ->
       (* filtering the files that are not the same type of the
          unchecked file *)
-      let filter_type = File_filter file in
-      Web_filter_system.add_filter
-         filter_system
-         filter_type
-         (filter_value filter_type)
+      Web_filter_system.add_warning_filter
+        filter_system
+        (Web_filter_system.File_filter file)
       ;
       Web_filter_system.eval_filters filter_system
     end
@@ -178,17 +153,15 @@ let filter_searchbox filter_system =
     | Some kwd ->
        Web_filter_system.remove_filter
          filter_system
-         (Keyword_filter kwd)
+         (Web_filter_system.Keyword_filter kwd)
     | None ->
        ()
     end;
     begin match keyword with
     | Some kwd ->
-       let filter_type = Keyword_filter kwd in
-       Web_filter_system.add_filter
+       Web_filter_system.add_warning_filter
          filter_system
-         filter_type
-         (filter_value filter_type)
+         (Web_filter_system.Keyword_filter kwd)
     | None ->
        ()
     end;
