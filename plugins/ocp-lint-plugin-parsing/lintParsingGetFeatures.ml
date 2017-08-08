@@ -1,9 +1,82 @@
+open SimpleConfig
+
+type feature_analysis_mode =
+  | Fast
+  | Slow
+
+let string_of_mode = function
+  | Fast -> "fast"
+  | Slow -> "slow"
+
+let mode_of_string = function
+  | "fast" -> Fast
+  | "slow" -> Slow
+  | _ -> failwith "string is not a valid analysis mode"
+
+let default_mode =
+  Slow
+
+type feature =
+  | Feature_if_then
+  | Feature_if_then_else
+  | Feature_match
+  | Feature_match_exception
+  | Feature_try_with
+  | Feature_while
+  | Feature_for
+
+let string_of_feature = function
+  | Feature_if_then -> "if ... then ..."
+  | Feature_if_then_else -> "if ... then ... else ..."
+  | Feature_match -> "match ... with ..."
+  | Feature_match_exception -> "match ... with ... exceptions ..."
+  | Feature_try_with -> "try ... with ..."
+  | Feature_while -> "while ... do ... done"
+  | Feature_for -> "for ... do ... done"
+
+type feature_info = {
+  mutable locations : Location.t list;
+  mutable count : int;
+}
+
+type features_table =
+    (feature, feature_info) Hashtbl.t
+
+let create_features_table () =
+  Hashtbl.create 64
+
+let get_feature tbl feature =
+  try
+    Hashtbl.find tbl feature
+  with
+  | Not_found ->
+     let default_feature_info = {
+       locations = [];
+       count = 0;
+     }
+     in
+     Hashtbl.add tbl feature default_feature_info;
+     default_feature_info
+
+let slow_register_feature tbl feature loc =
+  let feature_info = get_feature tbl feature in
+  feature_info.count <- feature_info.count + 1;
+  feature_info.locations <- loc :: feature_info.locations
+
+let fast_register_feature tbl feature loc =
+  let feature_info = get_feature tbl feature in
+  feature_info.count <- feature_info.count + 1
+
+let string_of_features_table tbl =
+  Hashtbl.fold begin fun feature info acc ->
+    Printf.sprintf "%s\n%s : %d"
+      acc
+      (string_of_feature feature)
+      (List.length info.locations)
+  end tbl "--- features table content ---"
+
 module Plugin = LintParsingPlugin.Plugin
 
-type match_type =
-  | SimpleMatch
-  | MatchException
-		  
 module Linter = Plugin.MakeLint(struct
     let name = "Get Features"
     let version = "1"
@@ -13,107 +86,20 @@ module Linter = Plugin.MakeLint(struct
   end)
 
 type warning =
-  | UseClass
-  | UseTryWith
-  | UseMatch
-  | UseExceptionPat
-  | UseWhile
-  | UseFor
-  | UseIfThenElse
-  | UseIfThen
-  | UseMethod
-  | UseLocalOpen
-  | UseLocalException
-  | UseUnpack
-    
-let w_use_class = Linter.new_warning
+  | Features of features_table
+
+let w_features_analysis = Linter.new_warning
     ~id:1
-    ~short_name:"use_class"
-    ~msg:"Use class"
+    ~short_name:"features_analysis"
+    ~msg:"$tbl"
     ~severity:1
 
-let w_use_try_with = Linter.new_warning
-    ~id:2
-    ~short_name:"use_try_with"
-    ~msg:"Use try ... with ..."
-    ~severity:1
-
-let w_use_match = Linter.new_warning
-    ~id:3
-    ~short_name:"use_match"
-    ~msg:"Use match ... with ..."
-    ~severity:1
-
-let w_use_match_exception = Linter.new_warning
-    ~id:4
-    ~short_name:"use_match_exception"
-    ~msg:"Use exception pattern"
-    ~severity:1
-
-let w_use_while = Linter.new_warning
-    ~id:5
-    ~short_name:"use_while"
-    ~msg:"Use while ... do ... done"
-    ~severity:1
-
-let w_use_for = Linter.new_warning
-    ~id:6
-    ~short_name:"use_for"
-    ~msg:"Use for ... do ... done"
-    ~severity:1
-
-let w_use_if_then_else = Linter.new_warning
-    ~id:7
-    ~short_name:"use_if_then_else"
-    ~msg:"Use if ... then ... else ..."
-    ~severity:1
-
-let w_use_if_then = Linter.new_warning
-    ~id:8
-    ~short_name:"use_if_then"
-    ~msg:"Use if ... then ..."
-    ~severity:1
-
-let w_use_method = Linter.new_warning
-    ~id:9
-    ~short_name:"use_method"
-    ~msg:"Use method ...#..."
-    ~severity:1
-    
-let w_use_local_open = Linter.new_warning
-    ~id:10
-    ~short_name:"use_local_open"
-    ~msg:"Use M.(...)"
-    ~severity:1
-
-let w_use_local_exception = Linter.new_warning
-    ~id:11
-    ~short_name:"use_local_exception"
-    ~msg:"Use let exception ... in ..."
-    ~severity:1
-
-let w_use_unpack = Linter.new_warning
-    ~id:12
-    ~short_name:"use_unpack"
-    ~msg:"Use first-class module unpacking"
-    ~severity:1
-    
 module Warnings = Linter.MakeWarnings(struct
     type t = warning
 
     let to_warning = function
-      | UseClass -> w_use_class, []
-      | UseTryWith -> w_use_try_with, []
-      | UseMatch -> w_use_match, []
-      | UseExceptionPat -> w_use_match_exception, []
-      | UseWhile -> w_use_while, []
-      | UseFor -> w_use_for, []
-      | UseIfThenElse -> w_use_if_then_else, []
-      | UseIfThen -> w_use_if_then, []
-      | UseMethod -> w_use_method, []
-      | UseLocalOpen -> w_use_local_open, []
-      | UseLocalException -> w_use_local_exception, []
-      | UseUnpack -> w_use_unpack, []
+      | Features tbl ->
+         w_features_analysis, ["tbl", string_of_features_table tbl]
   end)
 
 module Asttypes = LintParsing_Asttypes
@@ -121,51 +107,51 @@ module Parsetree = LintParsing_Parsetree
 module Parse = LintParsing_Parse
 module Ast_iterator = LintParsing_Ast_iterator
 
-module StringMap = Map.Make(String)
-			
+let analysis_mode =
+  let opt =
+    Linter.create_option
+      "mode"
+      "Mode of the features detection (fast or slow)"
+      "Mode of the features detection (fast or slow)"
+      SimpleConfig.string_option
+      (string_of_mode default_mode)
+  in
+  mode_of_string (!!opt)
+
 module MakeArg = struct
 
   open Asttypes
   open Parsetree
   open Longident
-	     
-  let enter_class_declaration cls =
-    Some ("class", cls.pci_expr.pcl_loc) (****A CHANGER****)
 
   let enter_expression exp =
     match exp.pexp_desc with
-    | Pexp_try _ -> Some ("pexp_try", exp.pexp_loc)
-    | Pexp_match _ -> Some ("pexp_match",exp.pexp_loc)
-    | Pexp_while _ -> Some ("pexp_while", exp.pexp_loc)
-    | Pexp_for _ -> Some ("pexp_for", exp.pexp_loc)
-    | Pexp_ifthenelse (_,_,Some _) -> Some ("pexp_ifthenelse", exp.pexp_loc)
-    | Pexp_ifthenelse (_,_,None) -> Some ("pexp_ifthen", exp.pexp_loc)
-    | Pexp_new _ -> Some ("pexp_new", exp.pexp_loc)
-    | Pexp_send _ -> Some ("pexp_send", exp.pexp_loc)
-    | Pexp_open _ -> Some ("pexp_open", exp.pexp_loc)
-    | Pexp_letexception _ -> Some("pexp_letexception", exp.pexp_loc)
-    | Pexp_extension _ -> Some("pexp_extension", exp.pexp_loc)
-    | _ -> None
+    | Pexp_ifthenelse (_, _, None) ->
+       Some (Feature_if_then, exp.pexp_loc)
+    | Pexp_ifthenelse (_, _, Some _) ->
+       Some (Feature_if_then_else, exp.pexp_loc)
+    | Pexp_match (_, cases) ->
+       if List.exists begin fun case ->
+         match case.pc_lhs.ppat_desc with
+         | Ppat_exception _ -> true
+         | _ -> false
+       end cases then
+         Some (Feature_match_exception, exp.pexp_loc)
+       else
+         Some (Feature_match_exception, exp.pexp_loc)
+    | Pexp_try _ ->
+       Some (Feature_try_with, exp.pexp_loc)
+    | _ ->
+       None
 
   let enter_pattern pat =
     match pat.ppat_desc with
-    | Ppat_open _ -> Some("ppat_open", pat.ppat_loc)
-    | Ppat_exception _ -> Some ("ppat_exception", pat.ppat_loc)
-    | Ppat_unpack _ -> Some("ppat_unpack", pat.ppat_loc)
-    | Ppat_extension _ -> Some("ppat_extension", pat.ppat_loc)	   
     | _ -> None
 
   let enter_type typ =
     match typ.ptype_kind with
-    | Ptype_open -> Some ("ptype_open", typ.ptype_loc)
     | _ -> None
 
-  let enter_module_type mtyp =
-    match mtyp.pmty_desc with
-    | Pmty_alias _ -> Some("pmty_alias", mtyp.pmty_loc)
-    | Pmty_extension _ -> Some("pmty_extension", mtyp.pmty_loc)
-    | _ -> None
-	     
   let main source =
     let ic = open_in source in
     Location.input_name := source;
@@ -179,68 +165,36 @@ module MakeArg = struct
         raise exn
     in
     let open Ast_iterator in
-    let features_map = ref (StringMap.empty) in
-    let add_feature = function
-      | Some(ft,loc) ->
-         let mapping =
-	   try
-	     loc :: StringMap.find ft !features_map
-	   with
-	     Not_found -> [loc]
-	 in
-	 features_map := StringMap.add ft mapping !features_map
-      | None -> ()
+    let table = create_features_table () in
+    let register =
+      match analysis_mode with
+      | Slow -> slow_register_feature
+      | Fast -> fast_register_feature
+    in
+    let process_node_result = function
+      | Some (feature, loc) ->
+         register table feature loc
+      | None ->
+         ()
     in
     let this_iterator =
       { default_iterator with
-        class_declaration =
-          (fun iterator cls ->
-             add_feature (enter_class_declaration cls);
-             default_iterator.class_declaration iterator cls);
 	expr =
 	  (fun iterator exp ->
-	     add_feature (enter_expression exp);
+	     process_node_result (enter_expression exp);
 	     default_iterator.expr iterator exp);
 	pat =
 	  (fun iterator pat ->
-	     add_feature (enter_pattern pat);
+	     process_node_result (enter_pattern pat);
 	     default_iterator.pat iterator pat);
         type_declaration =
 	  (fun iterator typ ->
-	     add_feature (enter_type typ);
+	     process_node_result (enter_type typ);
 	     default_iterator.type_declaration iterator typ);
-	module_type =
-	  (fun iterator mtyp ->
-	     add_feature (enter_module_type mtyp);
-	     default_iterator.module_type iterator mtyp);
       }
     in
     default_iterator.structure this_iterator str;
-    let err_of_feature = function 
-      | "class" -> UseClass (**** CHANGER NOM ****)
-      | "pexp_try" -> UseTryWith
-      | "pexp_match" -> UseMatch
-      | "ppat_exception" -> UseExceptionPat
-      | "pexp_while" -> UseWhile
-      | "pexp_for" -> UseFor
-      | "pexp_ifthenelse" -> UseIfThenElse
-      | "pexp_ifthen" -> UseIfThen
-      | "pexp_new" -> UseClass
-      | "pexp_send" -> UseMethod
-      | "pexp_open" -> UseLocalOpen
-      | "ppat_open" -> UseLocalOpen
-      | "pexp_letexception" -> UseLocalException
-      | "ppat_unpack" -> UseUnpack
-      | "pmty_alias"
-      | "pexp_extension"
-      | "ppat_extension"
-      | "pmty_extension"
-      | _ -> failwith "unknow feature"
-    in
-    StringMap.iter begin fun k v ->
-      let err = err_of_feature k in
-      List.iter (fun loc -> Warnings.report loc err) v
-    end !features_map
+    Warnings.report_file source (Features table)
 
 end
 
