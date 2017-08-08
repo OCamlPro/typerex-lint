@@ -22,115 +22,58 @@ open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 
-let filter_dropdown_selection value label_value on_select on_deselect =
-  let checkbox =
-    input
-      ~a:[
-        a_class ["filter-checkbox"];
-        a_input_type `Checkbox;
-        a_checked ();
-      ] ();
-  in
-  let dom_checkbox = Tyxml_js.To_dom.of_input checkbox in
-  let is_selected () = Js.to_bool dom_checkbox##checked in
-  dom_checkbox##onclick <- Dom_html.handler begin fun _ ->
-    if is_selected () then
-      on_select value
-    else
-      on_deselect value
-    ;
-    Js._true
-  end;
-  li
-    [
-      label
-        ~a:[
-          a_class ["filter-label";];
-        ]
-        [
-          checkbox;
-          pcdata label_value;
-        ]
-    ]
-
-let filter_dropdown_menu label_value dropdown_selections grid =
-  div
-    ~a:[
-      a_class (["dropdown"] @ grid);
-    ]
-    [
-      button
-        ~a:[
-          a_class ["btn"; "btn-default"; "dropdown-toggle"];
-          a_button_type `Button;
-          a_user_data "toggle" "dropdown";
-        ]
-        [
-          pcdata (label_value ^ " "); (* todo change *)
-          span ~a:[a_class ["caret"]] [];
-        ];
-      ul
-        ~a:[
-          a_class ["dropdown-menu"; "scrollable-menu"];
-        ]
-        dropdown_selections;
-      ]
-
-let dropdown_creator label label_creator on_select on_deselect lst grid =
-  filter_dropdown_menu
-    label
-    (List.map begin fun x ->
-      filter_dropdown_selection x (label_creator x) on_select on_deselect
-     end lst)
-    grid
-
 let warnings_dropdown warnings_info filter_system grid =
-  dropdown_creator
-    "warnings"
-    Web_utils.warning_name
-    begin fun warning ->
-      (* remove the filter *)
-      Web_filter_system.remove_filter
-        filter_system
-        (Web_filter_system.Warning_type_filter warning)
-      ;
-      Web_filter_system.eval_filters filter_system
-    end
-    begin fun warning ->
-      (* filtering the warnings that are not the same type of the
-         unchecked warning *)
-      Web_filter_system.add_warning_filter
-         filter_system
-         (Web_filter_system.Warning_type_filter warning)
-      ;
-      Web_filter_system.eval_filters filter_system
-    end
-    warnings_info
-    grid
+  let on_select warning =
+    Web_filter_system.remove_filter
+      filter_system
+      (Web_filter_system.Warning_type_filter warning)
+    ;
+    Web_filter_system.eval_filters
+      filter_system
+  in
+  let on_deselect warning =
+    Web_filter_system.add_warning_filter
+      filter_system
+      (Web_filter_system.Warning_type_filter warning)
+    ;
+    Web_filter_system.eval_filters filter_system
+  in
+  let selections =
+    List.map begin fun warning_info ->
+      Web_utils.filter_dropdown_checkbox_selection
+        warning_info
+        (Web_utils.warning_name warning_info)
+        on_select
+        on_deselect
+    end warnings_info
+  in
+  Web_utils.filter_dropdown_menu "warnings" selections grid
 
 let files_dropdown files_info filter_system grid =
-  dropdown_creator
-    "files"
-    (fun file_info -> file_info.file_name)
-    begin fun file ->
-      (* remove the filter *)
-      Web_filter_system.remove_filter
-        filter_system
-        (Web_filter_system.File_filter file)
-      ;
-      Web_filter_system.eval_filters filter_system
-    end
-    begin fun file ->
-      (* filtering the files that are not the same type of the
-         unchecked file *)
-      Web_filter_system.add_warning_filter
-        filter_system
-        (Web_filter_system.File_filter file)
-      ;
-      Web_filter_system.eval_filters filter_system
-    end
-    files_info
-    grid
+  let on_select file =
+    Web_filter_system.remove_filter
+      filter_system
+      (Web_filter_system.File_filter file)
+    ;
+    Web_filter_system.eval_filters filter_system
+  in
+  let on_deselect file =
+    Web_filter_system.add_warning_filter
+      filter_system
+      (Web_filter_system.File_filter file)
+    ;
+    Web_filter_system.eval_filters filter_system
+  in
+  let selections =
+    List.map begin fun file_info ->
+      Web_utils.filter_dropdown_checkbox_selection
+        file_info
+        file_info.file_name
+        on_select
+        on_deselect
+    end files_info
+  in
+  Web_utils.filter_dropdown_menu "files" selections grid
 
 let filter_searchbox filter_system grid =
   let searchbox =
@@ -196,7 +139,12 @@ let warning_div_filter files_info warnings_info filter_system =
         ["col-md-1"; "row-vertical-center"];
       filter_searchbox
         filter_system
-        ["col-md-1"; "col-md-offset-9"; "row-vertical-center"];
+        [
+          "col-md-2";
+          "col-md-offset-8";
+          "col-no-padding";
+          "row-vertical-center";
+        ];
     ]
 
 let warning_div_head warning_info =

@@ -18,6 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 open Web_errors
@@ -295,3 +296,83 @@ let warning_code_viewer warning_info =
   code_viewer
     (end_with_context - begin_with_context)
     (file_warning_href warning_info)
+
+let filter_dropdown_simple_selection value label_value on_click =
+  let severity_selection =
+    a
+      [
+        label
+	  ~a:[
+            a_class ["filter-label";];
+	  ]
+	  [
+            pcdata label_value;
+	  ]
+      ]
+  in
+  let dom_selection = Tyxml_js.To_dom.of_a severity_selection in
+  dom_selection##onclick <- Dom_html.handler begin fun _ ->
+    on_click value dom_selection;
+    Js._true
+  end;
+  li
+    [
+      severity_selection;
+    ]
+
+let filter_dropdown_checkbox_selection value label_value on_select on_deselect =
+  let checkbox =
+    input
+      ~a:[
+        a_class ["filter-checkbox"];
+        a_input_type `Checkbox;
+        a_checked ();
+      ] ();
+  in
+  let dom_checkbox = Tyxml_js.To_dom.of_input checkbox in
+  let is_selected () = Js.to_bool dom_checkbox##checked in
+  dom_checkbox##onclick <- Dom_html.handler begin fun _ ->
+    if is_selected () then
+      on_select value
+    else
+      on_deselect value
+    ;
+    Js._true
+  end;
+  li
+    [
+      a
+        [
+	  checkbox;
+          label
+            ~a:[
+              a_class ["filter-label"];
+            ]
+            [
+              pcdata label_value;
+            ];
+	]
+    ]
+
+let filter_dropdown_menu label_value dropdown_selections grid =
+  div
+    ~a:[
+      a_class (["dropdown"] @ grid);
+    ]
+    [
+      button
+        ~a:[
+          a_class ["btn"; "btn-default"; "dropdown-toggle"];
+          a_button_type `Button;
+          a_user_data "toggle" "dropdown";
+        ]
+        [
+          pcdata (label_value ^ " "); (* todo change *)
+          span ~a:[a_class ["caret"]] [];
+        ];
+      ul
+        ~a:[
+          a_class ["dropdown-menu"; "scrollable-menu"];
+        ]
+        dropdown_selections;
+      ]

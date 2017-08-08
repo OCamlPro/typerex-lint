@@ -163,86 +163,6 @@ let main_content_creator file_info file_content_type =
   in
   Tyxml_js.To_dom.of_element content
 
-let filter_dropdown_simple_selection value label_value on_click =
-  let severity_selection =
-    a
-      [
-	label
-	  ~a:[
-            a_class ["filter-label";];
-	  ]
-	  [
-            pcdata label_value;
-	  ]
-      ]
-  in
-  let dom_selection = Tyxml_js.To_dom.of_a severity_selection in
-  dom_selection##onclick <- Dom_html.handler begin fun _ ->
-    on_click value dom_selection;
-    Js._true
-  end;
-  li
-    [
-      severity_selection;
-    ]
-
-let filter_dropdown_checkbox_selection value label_value on_select on_deselect =
-  let checkbox =
-    input
-      ~a:[
-        a_class ["filter-checkbox"];
-        a_input_type `Checkbox;
-        a_checked ();
-      ] ();
-  in
-  let dom_checkbox = Tyxml_js.To_dom.of_input checkbox in
-  let is_selected () = Js.to_bool dom_checkbox##checked in
-  dom_checkbox##onclick <- Dom_html.handler begin fun _ ->
-    if is_selected () then
-      on_select value
-    else
-      on_deselect value
-    ;
-    Js._true
-  end;
-  li
-    [
-      a
-        [
-	  checkbox;
-          label
-            ~a:[
-              a_class ["filter-label";];
-            ]
-            [
-              pcdata label_value;
-            ];
-	]
-    ]
-
-let filter_dropdown_menu label_value dropdown_selections grid =
-  div
-    ~a:[
-      a_class (["dropdown"] @ grid);
-    ]
-    [
-      button
-        ~a:[
-          a_class ["btn"; "btn-default"; "dropdown-toggle"];
-          a_button_type `Button;
-          a_user_data "toggle" "dropdown";
-        ]
-        [
-          pcdata (label_value ^ " "); (* todo change *)
-          span ~a:[a_class ["caret"]] [];
-        ];
-      ul
-        ~a:[
-          a_class ["dropdown-menu"];
-        ]
-        dropdown_selections;
-      ]
-
 let warnings_dropdown file_content_data grid =
   let on_select warning =
     Web_filter_system.remove_filter
@@ -262,14 +182,14 @@ let warnings_dropdown file_content_data grid =
   in
   let selections =
     List.map begin fun warning_info ->
-      filter_dropdown_checkbox_selection
+      Web_utils.filter_dropdown_checkbox_selection
         warning_info
         (Web_utils.warning_name warning_info)
         on_select
         on_deselect
     end (warnings_info_set file_content_data)
   in
-  filter_dropdown_menu "warnings" selections grid
+  Web_utils.filter_dropdown_menu "warnings" selections grid
 
 let severity_dropdown file_content_data grid =
   let active_class = Js.string "dropdown-selection-active" in
@@ -296,13 +216,13 @@ let severity_dropdown file_content_data grid =
   in
   let selections =
     List.map begin fun severity ->
-      filter_dropdown_simple_selection
+      Web_utils.filter_dropdown_simple_selection
         severity
 	(string_of_int severity)
 	on_click
     end [1;2;3;4;5;6;7;8;9;10]
   in
-  filter_dropdown_menu "severity" selections grid
+  Web_utils.filter_dropdown_menu "severity" selections grid
 
 let filter_searchbox file_content_data grid =
   let searchbox =
@@ -366,7 +286,12 @@ let warnings_filter file_content_data =
         ["col-md-1"; "row-vertical-center"];
       filter_searchbox
         file_content_data
-        ["col-md-1"; "col-md-offset-9"; "row-vertical-center"];
+        [
+          "col-md-2";
+          "col-md-offset-8";
+          "col-no-padding";
+          "row-vertical-center";
+        ];
     ]
 
 let warnings_table_col_id warning_info =
