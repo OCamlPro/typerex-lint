@@ -154,7 +154,7 @@ let warnings_pie_group_by_file analysis_info =
 
 let warnings_pie_group_by_plugin analysis_info =
   let on_click_segment arg =
-    Js_utils.alert ("plugin : " ^ (string_of_int arg.index))
+    ()
   in
   let values =
     analysis_info.warnings_info
@@ -175,7 +175,7 @@ let warnings_pie_group_by_plugin analysis_info =
 
 let warnings_pie_group_by_linter analysis_info =
   let on_click_segment arg =
-    Js_utils.alert ("linter : " ^ (string_of_int arg.index))
+    ()
   in
   let values =
     analysis_info.warnings_info
@@ -198,7 +198,7 @@ let warnings_pie_group_by_linter analysis_info =
 
 let warnings_pie_group_by_warning analysis_info =
   let on_click_segment arg =
-    Js_utils.alert ("warning : " ^ (string_of_int arg.index))
+    ()
   in
   let values =
     analysis_info.warnings_info
@@ -221,7 +221,7 @@ let warnings_pie_group_by_warning analysis_info =
 
 let warnings_pie_group_by_severity analysis_info =
   let on_click_segment arg =
-    Js_utils.alert ("severity : " ^ (string_of_int arg.index))
+    ()
   in
   let values =
     analysis_info.warnings_info
