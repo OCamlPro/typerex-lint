@@ -53,7 +53,7 @@ let default_pie_settings =
   |> set_load_effect Load_effect_none
   |> set_segment_on_click_effect Segment_on_click_effect_none
 
-let div_warning_pie title pie_settings =
+let div_warning_pie title overflow pie_settings =
   let div_pie = div [] in
   let tooltip =
     span
@@ -65,8 +65,14 @@ let div_warning_pie title pie_settings =
   in
   let dom_tooltip = (Tyxml_js.To_dom.of_element tooltip) in
   let on_mouseover_segment (arg : d3pie_callback_argument) =
+    let label =
+      if arg.data.is_grouped then
+        arg.data.label
+      else
+        overflow arg.data.label
+    in
     dom_tooltip##style##color <- (Js.string arg.color);
-    dom_tooltip##textContent <- (Js.some (Js.string arg.data.label))
+    dom_tooltip##textContent <- (Js.some (Js.string label))
   in
   let on_mouseout_segment (arg : d3pie_callback_argument) =
     dom_tooltip##textContent <- (Js.null)
@@ -144,7 +150,7 @@ let warnings_pie_group_by_file analysis_info =
     |> set_data_content values
     |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
   in
-  div_warning_pie "Files" settings
+  div_warning_pie "Files" (Web_utils.filename_overflow 30) settings
 
 let warnings_pie_group_by_plugin analysis_info =
   let on_click_segment arg =
@@ -165,7 +171,7 @@ let warnings_pie_group_by_plugin analysis_info =
     |> set_data_content values
     |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
   in
-  div_warning_pie "Plugins" settings
+  div_warning_pie "Plugins" (Web_utils.string_overflow 30) settings
 
 let warnings_pie_group_by_linter analysis_info =
   let on_click_segment arg =
@@ -178,7 +184,8 @@ let warnings_pie_group_by_linter analysis_info =
          warning_info.warning_linter.linter_name
        end
     |> List.map begin fun ((plugin,linter), warnings) ->
-         pie_value (plugin ^ "." ^ linter) (List.length warnings)
+         (* todo use linter_name function for label *)
+         pie_value (plugin ^ "/" ^ linter) (List.length warnings)
        end
   in
   let settings =
@@ -187,7 +194,7 @@ let warnings_pie_group_by_linter analysis_info =
     |> set_data_content values
     |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
   in
-  div_warning_pie "Linters" settings
+  div_warning_pie "Linters" (Web_utils.string_overflow 30) settings
 
 let warnings_pie_group_by_warning analysis_info =
   let on_click_segment arg =
@@ -210,7 +217,7 @@ let warnings_pie_group_by_warning analysis_info =
     |> set_data_content values
     |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
   in
-  div_warning_pie "Warnings" settings
+  div_warning_pie "Warnings" (Web_utils.string_overflow 30) settings
 
 let warnings_pie_group_by_severity analysis_info =
   let on_click_segment arg =
@@ -231,7 +238,7 @@ let warnings_pie_group_by_severity analysis_info =
     |> set_data_content values
     |> set_small_segment_grouping Percentage_grouping 3 "other" grouping_color
   in
-  div_warning_pie "Severities" settings
+  div_warning_pie "Severities" (Web_utils.string_overflow 30) settings
 
 let dashboard_head analysis_info =
   let div_stat stat msg grid =
@@ -290,7 +297,7 @@ let dashboard_content analysis_info =
     button
       ~a:[
         a_button_type `Button;
-        a_class ["btn"; "btn-warning"];
+        a_class ["btn"; "btn-warning"; "warnings-button"];
       ]
       [pcdata "See all warnings"]
   in
@@ -298,7 +305,7 @@ let dashboard_content analysis_info =
     button
       ~a:[
         a_button_type `Button;
-        a_class ["btn"; "btn-danger"];
+        a_class ["btn"; "btn-danger"; "errors-button"];
       ]
       [pcdata "See all errors"]
   in
@@ -317,6 +324,7 @@ let dashboard_content analysis_info =
       a_class ["dashboard-content"];
     ]
     [
+      br ();
       div
         ~a:[
           a_class ["row"];
@@ -337,6 +345,7 @@ let dashboard_content analysis_info =
               errors_button;
             ];
         ];
+      br ();
       br ();
       br ();
       div

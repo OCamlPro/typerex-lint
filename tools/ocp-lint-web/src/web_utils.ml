@@ -89,7 +89,18 @@ let rec remove_successive_duplicates equals = function
 let list_is_empty = function
   | [] -> true
   | _ -> false
-		  
+
+let string_overflow nbchar str =
+  let len = String.length str in
+  if len <= nbchar then
+    str
+  else
+    let ovr_str = "..." in
+    let ovr_len = String.length ovr_str in
+    Firebug.console##log (len);
+    Firebug.console##log (len - nbchar - 1);
+    ovr_str ^ (String.sub str (len - nbchar + ovr_len) (nbchar - ovr_len))
+
 let value_of_optional = function
   | Some x -> x
   | None -> raise (Web_exception Get_value_of_empty_optional)
@@ -136,6 +147,29 @@ let file_short_name file_info =
   with
     Failure _ -> raise (Web_exception (Invalid_file_name file_info))
 
+let filename_overflow nbchar filename =
+  let len = String.length filename in
+  if len <= nbchar then
+    filename
+  else
+    let ovr_str = "..." in
+    let ovr_len = String.length ovr_str in
+    let sep_len = String.length Filename.dir_sep in
+    let maxlen = nbchar - ovr_len - sep_len in
+    let re = Regexp.regexp (Filename.dir_sep) in
+    let dirs = List.rev (Regexp.split re filename) in
+    let res,_ =
+      List.fold_left begin fun (acc,isended) p ->
+        if isended
+           || String.length acc + String.length p + sep_len > maxlen
+        then
+          (acc,true)
+        else
+          (p ^ Filename.dir_sep ^ acc, false)
+      end (List.hd dirs, false) (List.tl dirs)
+    in
+    ovr_str ^ Filename.dir_sep ^ res
+
 let plugin_equals p p' =
   p.plugin_name = p'.plugin_name
 
@@ -154,7 +188,7 @@ let linter_compare l l' =
     plugin_compare l.linter_plugin l'.linter_plugin
 
 let linter_name linter_info =
-  Printf.sprintf "%s.%s"
+  Printf.sprintf "%s/%s"
     linter_info.linter_plugin.plugin_name
     linter_info.linter_name
 
@@ -174,7 +208,7 @@ let warning_compare w w' =
     linter_compare w.warning_linter w'.warning_linter
 
 let warning_name warning_info =
-  Printf.sprintf "%s.%s.%s"
+  Printf.sprintf "%s/%s/%s"
     warning_info.warning_linter.linter_plugin.plugin_name
     warning_info.warning_linter.linter_name
     warning_info.warning_type.decl.short_name
@@ -206,7 +240,7 @@ let error_description error_info =
   | Lint_db_types.Plugin_error e ->
      begin match e with
      | Lint_plugin_error.Plugin_exception (Failure str) ->
-        Printf.sprintf "Exception %s" str	  
+        Printf.sprintf "Exception %s" str
      | _ ->
         Lint_plugin_error.to_string e
      end
@@ -220,13 +254,13 @@ let code_viewer_line_size =
 
 let code_viewer_context_line_number =
   3
- 
+
 let code_viewer_begin_context_from_line line_number =
   min (line_number - 1) code_viewer_context_line_number
 
 let code_viewer_end_context_from_line line_number lines_count =
   min (lines_count - line_number) code_viewer_context_line_number
-      
+
 let code_viewer line_number href =
   let height = (* todo min height *)
     code_viewer_line_size * (line_number + 2)

@@ -48,10 +48,6 @@ let error_div_body error_info =
     )
   in
   div
-    ~a:
-    [
-      a_class ["row"];
-    ]
     [
       span
 	~a:[
@@ -90,7 +86,7 @@ let error_div all_warnings_info all_errors_info error_info =
   let div_error =
     div
       ~a:[
-        a_class ["alert"; "alert-danger"];
+        a_class ["alert"; "alert-danger"; "row"];
       ]
       [
         error_div_head error_info;

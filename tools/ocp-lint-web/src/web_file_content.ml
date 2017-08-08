@@ -220,10 +220,10 @@ let filter_dropdown_checkbox_selection value label_value on_select on_deselect =
 	]
     ]
 
-let filter_dropdown_menu label_value dropdown_selections =
+let filter_dropdown_menu label_value dropdown_selections grid =
   div
     ~a:[
-      a_class ["dropdown"];
+      a_class (["dropdown"] @ grid);
     ]
     [
       button
@@ -243,7 +243,7 @@ let filter_dropdown_menu label_value dropdown_selections =
         dropdown_selections;
       ]
 
-let warnings_dropdown file_content_data =
+let warnings_dropdown file_content_data grid =
   let on_select warning =
     Web_filter_system.remove_filter
       file_content_data.file_content_warnings_filters
@@ -269,9 +269,9 @@ let warnings_dropdown file_content_data =
         on_deselect
     end (warnings_info_set file_content_data)
   in
-  filter_dropdown_menu "warnings" selections
+  filter_dropdown_menu "warnings" selections grid
 
-let severity_dropdown file_content_data =
+let severity_dropdown file_content_data grid =
   let active_class = Js.string "dropdown-selection-active" in
   let previous_severity = ref None in
   let on_click severity label =
@@ -302,9 +302,9 @@ let severity_dropdown file_content_data =
 	on_click
     end [1;2;3;4;5;6;7;8;9;10]
   in
-  filter_dropdown_menu "severity" selections
+  filter_dropdown_menu "severity" selections grid
 
-let filter_searchbox file_content_data =
+let filter_searchbox file_content_data grid =
   let searchbox =
     input
       ~a:[
@@ -346,19 +346,27 @@ let filter_searchbox file_content_data =
     ;
     Js._true
   end;
-  searchbox
+  div
+    ~a:[
+      a_class grid;
+    ]
+    [searchbox]
 
 let warnings_filter file_content_data =
   div
     ~a:[
-      a_class ["dashboard-filter"];
+      a_class ["dashboard-filter"; "row"];
     ]
     [
-      warnings_dropdown file_content_data;
-      div ~a:[a_class ["filter-separator"]] [];
-      severity_dropdown file_content_data;
-      div ~a:[a_class ["filter-separator"]] [];
-      filter_searchbox file_content_data;
+      warnings_dropdown
+        file_content_data
+        ["col-md-1"; "row-vertical-center"];
+      severity_dropdown
+        file_content_data
+        ["col-md-1"; "row-vertical-center"];
+      filter_searchbox
+        file_content_data
+        ["col-md-1"; "col-md-offset-9"; "row-vertical-center"];
     ]
 
 let warnings_table_col_id warning_info =
@@ -419,7 +427,11 @@ let warnings_table file_content_data =
   let table =
     tablex
       ~a:[
-        a_class ["file-content-table"; "warnings-file-content-table"];
+        a_class [
+            "file-content-table";
+            "warnings-file-content-table";
+            "col-md-12";
+          ];
       ]
       ~thead:(warnings_table_head ())
       [
@@ -428,7 +440,11 @@ let warnings_table file_content_data =
           );
       ]
   in
-  table
+  div
+    ~a:[
+      a_class ["row"];
+    ]
+    [table]
 
 let errors_table_col_id error_info =
   pcdata (string_of_int error_info.error_id)
@@ -472,16 +488,27 @@ let errors_table file_content_data =
   let entry_creator error_info =
     errors_table_entry error_info file_content_data
   in
-  tablex
+  let table =
+    tablex
+      ~a:[
+        a_class [
+            "file-content-table";
+            "errors-file-content-table";
+            "col-md-12";
+          ];
+      ]
+      ~thead:(errors_table_head ())
+      [
+        tbody (
+            List.map entry_creator file_content_data.file_content_errors_info
+          );
+      ]
+  in
+  div
     ~a:[
-      a_class ["file-content-table"; "errors-file-content-table"];
+      a_class ["row"];
     ]
-    ~thead:(errors_table_head ())
-    [
-      tbody (
-          List.map entry_creator file_content_data.file_content_errors_info
-        );
-    ]
+    [table]
 
 let hideable_summary title content =
   let opened_icon = "glyphicon-menu-down" in

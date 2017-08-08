@@ -53,10 +53,10 @@ let filter_dropdown_selection value label_value on_select on_deselect =
         ]
     ]
 
-let filter_dropdown_menu label_value dropdown_selections =
+let filter_dropdown_menu label_value dropdown_selections grid =
   div
     ~a:[
-      a_class ["dropdown"];
+      a_class (["dropdown"] @ grid);
     ]
     [
       button
@@ -71,19 +71,20 @@ let filter_dropdown_menu label_value dropdown_selections =
         ];
       ul
         ~a:[
-          a_class ["dropdown-menu"];
+          a_class ["dropdown-menu"; "scrollable-menu"];
         ]
         dropdown_selections;
       ]
 
-let dropdown_creator label label_creator on_select on_deselect lst =
+let dropdown_creator label label_creator on_select on_deselect lst grid =
   filter_dropdown_menu
     label
     (List.map begin fun x ->
       filter_dropdown_selection x (label_creator x) on_select on_deselect
-    end lst)
+     end lst)
+    grid
 
-let warnings_dropdown warnings_info filter_system =
+let warnings_dropdown warnings_info filter_system grid =
   dropdown_creator
     "warnings"
     Web_utils.warning_name
@@ -105,8 +106,9 @@ let warnings_dropdown warnings_info filter_system =
       Web_filter_system.eval_filters filter_system
     end
     warnings_info
+    grid
 
-let files_dropdown files_info filter_system =
+let files_dropdown files_info filter_system grid =
   dropdown_creator
     "files"
     (fun file_info -> file_info.file_name)
@@ -128,8 +130,9 @@ let files_dropdown files_info filter_system =
       Web_filter_system.eval_filters filter_system
     end
     files_info
+    grid
 
-let filter_searchbox filter_system =
+let filter_searchbox filter_system grid =
   let searchbox =
     input
       ~a:[
@@ -171,19 +174,29 @@ let filter_searchbox filter_system =
     ;
     Js._true
   end;
-  searchbox
+  div
+    ~a:[
+      a_class grid;
+    ]
+    [searchbox]
 
 let warning_div_filter files_info warnings_info filter_system =
   div
     ~a:[
-      a_class ["dashboard-filter"];
+      a_class ["dashboard-filter"; "row"];
     ]
     [
-      files_dropdown files_info filter_system;
-      div ~a:[a_class ["filter-separator"]] [];
-      warnings_dropdown warnings_info filter_system;
-      div ~a:[a_class ["filter-separator"]] [];
-      filter_searchbox filter_system;
+      files_dropdown
+        files_info
+        filter_system
+        ["col-md-1"; "row-vertical-center"];
+      warnings_dropdown
+        warnings_info
+        filter_system
+        ["col-md-1"; "row-vertical-center"];
+      filter_searchbox
+        filter_system
+        ["col-md-1"; "col-md-offset-9"; "row-vertical-center"];
     ]
 
 let warning_div_head warning_info =
@@ -219,9 +232,8 @@ let warning_div_body warning_info =
   in
   let linter_msg =
     pcdata (
-      Printf.sprintf "raised by %s.%s"
-        warning_info.warning_linter.linter_plugin.plugin_name
-        warning_info.warning_linter.linter_name
+      Printf.sprintf "raised by %s"
+        (Web_utils.linter_name warning_info.warning_linter)
     )
   in
   let warning_msg =
@@ -232,10 +244,6 @@ let warning_div_body warning_info =
     )
   in
   div
-    ~a:
-    [
-      a_class ["row"];
-    ]
     [
       span
 	~a:[
@@ -278,7 +286,7 @@ let warning_div all_warnings_info all_errors_info filter_system warning_info =
   let div_warning =
     div
     ~a:[
-      a_class ["alert"; "alert-warning"];
+      a_class ["alert"; "alert-warning"; "row"];
     ]
     [
       warning_div_head warning_info;
