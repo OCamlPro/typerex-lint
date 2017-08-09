@@ -23,9 +23,7 @@ open D3pie
 open Lint_warning_types
 open Lint_web_analysis_info
 
-let pie_25_colors = (* should be read-only *)
-  (* todo add 5 color or group by 5% (20colors) *)
-  (* from http://there4.io/2012/05/02/google-chart-color-list/ *)
+let pie_20_colors =
   [|
     "#3366CC"; "#DC3912"; "#FF9900"; "#109618"; "#990099";
     "#3B3EAC"; "#0099C6"; "#DD4477"; "#66AA00"; "#B82E2E";
@@ -33,8 +31,11 @@ let pie_25_colors = (* should be read-only *)
     "#E67300"; "#8B0707"; "#329262"; "#5574A6"; "#3B3EAC";
    |]
 
+let default_min_grouping_percent =
+  5
+
 let grouping_color =
-  "#9DE825" (* todo check *)
+  "#9DE825"
 
 let stroke_color =
   "#BABABA"
@@ -48,7 +49,7 @@ let default_pie_settings =
   |> set_size_pie_inner_radius (Radius_percentage 50)
   |> set_inner_label_format Format_none
   |> set_outer_label_format Format_none
-  |> set_segments_colors pie_25_colors
+  |> set_segments_colors pie_20_colors
   |> set_segment_stroke_color stroke_color
   |> set_load_effect Load_effect_none
   |> set_segment_on_click_effect Segment_on_click_effect_none
@@ -81,7 +82,6 @@ let div_warning_pie title overflow pie_settings =
     pie_settings
     |> set_on_mouseover_callback on_mouseover_segment
     |> set_on_mouseout_callback on_mouseout_segment
-    |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
   in
   let pie = d3pie (Tyxml_js.To_dom.of_element div_pie) settings in
   (* todo delete *)
@@ -148,7 +148,11 @@ let warnings_pie_group_by_file analysis_info =
     default_pie_settings
     |> set_on_click_callback on_click_segment
     |> set_data_content values
-    |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
+    |> set_small_segment_grouping
+         Percentage_grouping
+         default_min_grouping_percent
+         "other"
+         grouping_color
   in
   div_warning_pie "Files" (Web_utils.filename_overflow 30) settings
 
@@ -169,7 +173,11 @@ let warnings_pie_group_by_plugin analysis_info =
     default_pie_settings
     |> set_on_click_callback on_click_segment
     |> set_data_content values
-    |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
+    |> set_small_segment_grouping
+         Percentage_grouping
+         default_min_grouping_percent
+         "other"
+         grouping_color
   in
   div_warning_pie "Plugins" (Web_utils.string_overflow 30) settings
 
@@ -192,7 +200,11 @@ let warnings_pie_group_by_linter analysis_info =
     default_pie_settings
     |> set_on_click_callback on_click_segment
     |> set_data_content values
-    |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
+    |> set_small_segment_grouping
+         Percentage_grouping
+         default_min_grouping_percent
+         "other"
+         grouping_color
   in
   div_warning_pie "Linters" (Web_utils.string_overflow 30) settings
 
@@ -215,7 +227,11 @@ let warnings_pie_group_by_warning analysis_info =
     default_pie_settings
     |> set_on_click_callback on_click_segment
     |> set_data_content values
-    |> set_small_segment_grouping Percentage_grouping 4 "other" grouping_color
+    |> set_small_segment_grouping
+         Percentage_grouping
+         default_min_grouping_percent
+         "other"
+         grouping_color
   in
   div_warning_pie "Warnings" (Web_utils.string_overflow 30) settings
 
@@ -236,7 +252,11 @@ let warnings_pie_group_by_severity analysis_info =
     default_pie_settings
     |> set_on_click_callback on_click_segment
     |> set_data_content values
-    |> set_small_segment_grouping Percentage_grouping 3 "other" grouping_color
+    |> set_small_segment_grouping
+         Percentage_grouping
+         3
+         "other"
+         grouping_color
   in
   div_warning_pie "Severities" (Web_utils.string_overflow 30) settings
 
