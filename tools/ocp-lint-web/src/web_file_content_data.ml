@@ -21,6 +21,7 @@
 open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
+open Web_errors
 
 type file_content_type =
   | File_content
@@ -72,7 +73,11 @@ let active_file_content file_content_data =
   Hashtbl.fold begin fun _ content_value acc ->
     if content_value.is_active then
       match acc with
-      | Some _ -> failwith "" (* todo web err *)
+      | Some _ ->
+         raise
+           (Web_exception
+              (Active_main_file_content_is_not_unique
+                 file_content_data.file_content_info))
       | None -> Some content_value
     else
       acc

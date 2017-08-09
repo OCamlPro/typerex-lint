@@ -22,6 +22,7 @@ open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 open Web_file_content_data
+open Web_errors
 
 let warning_content_code_view_header warning_info =
   div
@@ -155,10 +156,16 @@ let main_content_creator file_info file_content_type =
     | File_content ->
        all_file_content file_info
     | Warning_content warning_info ->
-       (* todo maybe check if warning.file = file *)
+       if not (Web_utils.file_equals warning_info.warning_file file_info) then
+         raise (Web_exception
+                  (Open_warning_from_bad_file (warning_info, file_info)))
+       ;
        warning_content warning_info
     | Error_content error_info ->
-       (* todo maybe check if error.file = file *)
+       if not (Web_utils.file_equals error_info.error_file file_info) then
+         raise (Web_exception
+                  (Open_error_from_bad_file (error_info, file_info)))
+       ;
        error_content error_info
   in
   Tyxml_js.To_dom.of_element content
@@ -790,4 +797,4 @@ let open_tab file_info file_warnings_info file_errors_info =
   in
   match attach with
   | File_content_attached_data file_content_data -> file_content_data
-  | _ -> failwith "bad attach" (* todo web err *)
+  | _ -> raise (Web_exception (Invalid_content_attached_data "file"))

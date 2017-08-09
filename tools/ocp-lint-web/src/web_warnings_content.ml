@@ -160,7 +160,7 @@ let warning_div_head warning_info =
     [pcdata (Printf.sprintf "Warning #%d" warning_info.warning_id)]
 
 let warning_div_body warning_info =
-  let file_msg = (* todo change *)
+  let file_msg =
     span
       ~a:[
         a_class ["alert-link"];
@@ -186,7 +186,9 @@ let warning_div_body warning_info =
   let linter_msg =
     pcdata (
       Printf.sprintf "raised by %s"
-        (Web_utils.linter_name warning_info.warning_linter)
+        (Web_utils.linter_name
+           warning_info.warning_linter.linter_plugin.plugin_name
+           warning_info.warning_linter.linter_name)
     )
   in
   let warning_msg =

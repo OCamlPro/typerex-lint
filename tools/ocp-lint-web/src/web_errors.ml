@@ -22,13 +22,17 @@ open Lint_warning_types
 open Lint_web_analysis_info
 
 type error =
-  | Unknow_warning_id of string (* todo file *)
+  | Unknow_warning_id of string
   | No_such_element_with_id of string
   | Ghost_location of Location.t
   | Active_navigation_element_is_not_unique
   | No_active_navigation_element
   | Get_value_of_empty_optional
   | Invalid_file_name of file_info
+  | Invalid_content_attached_data of string
+  | Open_warning_from_bad_file of warning_info * file_info
+  | Open_error_from_bad_file of error_info * file_info
+  | Active_main_file_content_is_not_unique of file_info
 
 exception Web_exception of error
 
@@ -52,3 +56,15 @@ let process_error exn =
      log "trying to get the value of an empty optional"
   | Invalid_file_name {file_name; _} ->
      log ("'" ^ file_name ^ "' is not a valid file name")
+  | Invalid_content_attached_data content_type ->
+     log ("the content '" ^ content_type
+          ^ "' is linked to data that must be normally not attached to it")
+  | Open_warning_from_bad_file (warning, file) ->
+     log ("trying to open a warning from '" ^ warning.warning_file.file_name
+          ^ "' in file content of '" ^ file.file_name ^ "'")
+  | Open_error_from_bad_file (error, file) ->
+     log ("trying to open an error from '" ^ error.error_file.file_name
+          ^ "' in file content of '" ^ file.file_name ^ "'")
+  | Active_main_file_content_is_not_unique {file_name; _} ->
+     log ("there is many active main content in file content '"
+          ^ file_name ^ "'")

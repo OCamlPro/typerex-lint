@@ -160,7 +160,7 @@ let error_div_head error_info =
     [pcdata (Printf.sprintf "Error #%d" error_info.error_id)]
 
 let error_div_body error_info =
-  let file_msg = (* todo change *)
+  let file_msg =
     span
       ~a:[
         a_class ["alert-link"];

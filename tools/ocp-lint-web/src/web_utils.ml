@@ -30,7 +30,6 @@ type file_loc =
 let is_ghost_loc loc =
   let open Location in
   let open Lexing in
-  (* loc.loc_ghost  && (loc.loc_start.pos_lnum = 0) *)
   (* todo check *)
   loc.loc_ghost || (loc.loc_start.pos_lnum = 0 && loc.loc_start.pos_cnum = -1)
 
@@ -89,8 +88,6 @@ let string_overflow nbchar str =
   else
     let ovr_str = "..." in
     let ovr_len = String.length ovr_str in
-    Firebug.console##log (len);
-    Firebug.console##log (len - nbchar - 1);
     ovr_str ^ (String.sub str (len - nbchar + ovr_len) (nbchar - ovr_len))
 
 let value_of_optional = function
@@ -199,10 +196,8 @@ let linter_compare l l' =
   else
     plugin_compare l.linter_plugin l'.linter_plugin
 
-let linter_name linter_info =
-  Printf.sprintf "%s/%s"
-    linter_info.linter_plugin.plugin_name
-    linter_info.linter_name
+let linter_name pname lname =
+  Printf.sprintf "%s/%s" pname lname
 
 let warning_equals w w' =
   w.warning_type.decl.short_name = w'.warning_type.decl.short_name

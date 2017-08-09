@@ -192,8 +192,7 @@ let warnings_pie_group_by_linter analysis_info =
          warning_info.warning_linter.linter_name
        end
     |> List.map begin fun ((plugin,linter), warnings) ->
-         (* todo use linter_name function for label *)
-         pie_value (plugin ^ "/" ^ linter) (List.length warnings)
+         pie_value (Web_utils.linter_name plugin linter) (List.length warnings)
        end
   in
   let settings =
