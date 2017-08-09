@@ -34,11 +34,18 @@ type ('a, 'b) t = {
 
 type warning_filter_id =
   | Warning_type_filter of warning_info
-  | Keyword_filter of string
-  | Higher_severity_filter of int
-  | File_filter of file_info
+  | Warning_keyword_filter of string
+  | Warning_higher_severity_filter of int
+  | Warning_file_filter of file_info
 
 type warnings_filter_system = (warning_info, warning_filter_id) t
+
+type error_filter_id =
+  | Error_type_filter of error_info
+  | Error_keyword_filter of string
+  | Error_file_filter of file_info
+
+type errors_filter_system = (error_info, error_filter_id) t
 
 let create () =
   {
@@ -81,16 +88,35 @@ let value_of_warning_filter_id = function
            warning_info.warning_type.decl.short_name
        )
      end
-  | Keyword_filter kwd ->
+  | Warning_keyword_filter kwd ->
      Web_utils.warning_contains_keyword kwd
-  | File_filter file ->
+  | Warning_file_filter file ->
      begin fun warning_info ->
        not (Web_utils.file_equals file warning_info.warning_file)
      end
-  | Higher_severity_filter lvl ->
+  | Warning_higher_severity_filter lvl ->
      begin fun warning_info ->
        warning_info.warning_type.decl.severity >= lvl
      end
 
 let add_warning_filter filter_system filter_id =
   add_filter filter_system filter_id (value_of_warning_filter_id filter_id)
+
+let value_of_error_filter_id = function
+  | Error_type_filter error ->
+     begin fun error_info ->
+       not (
+         String.equal
+           (Web_utils.error_type error)
+           (Web_utils.error_type error_info)
+       )
+     end
+  | Error_keyword_filter kwd ->
+     Web_utils.error_contains_keyword kwd
+  | Error_file_filter file ->
+     begin fun error_info ->
+       not (Web_utils.file_equals file error_info.error_file)
+     end
+
+let add_error_filter filter_system filter_id =
+  add_filter filter_system filter_id (value_of_error_filter_id filter_id)

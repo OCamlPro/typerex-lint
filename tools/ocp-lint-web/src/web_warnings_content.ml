@@ -53,14 +53,14 @@ let files_dropdown files_info filter_system grid =
   let on_select file =
     Web_filter_system.remove_filter
       filter_system
-      (Web_filter_system.File_filter file)
+      (Web_filter_system.Warning_file_filter file)
     ;
     Web_filter_system.eval_filters filter_system
   in
   let on_deselect file =
     Web_filter_system.add_warning_filter
       filter_system
-      (Web_filter_system.File_filter file)
+      (Web_filter_system.Warning_file_filter file)
     ;
     Web_filter_system.eval_filters filter_system
   in
@@ -99,7 +99,7 @@ let filter_searchbox filter_system grid =
     | Some kwd ->
        Web_filter_system.remove_filter
          filter_system
-         (Web_filter_system.Keyword_filter kwd)
+         (Web_filter_system.Warning_keyword_filter kwd)
     | None ->
        ()
     end;
@@ -107,7 +107,7 @@ let filter_searchbox filter_system grid =
     | Some kwd ->
        Web_filter_system.add_warning_filter
          filter_system
-         (Web_filter_system.Keyword_filter kwd)
+         (Web_filter_system.Warning_keyword_filter kwd)
     | None ->
        ()
     end;

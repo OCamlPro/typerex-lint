@@ -22,6 +22,130 @@ open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 
+let errors_dropdown errors_info filter_system grid =
+  let on_select error =
+    Web_filter_system.remove_filter
+      filter_system
+      (Web_filter_system.Error_type_filter error)
+    ;
+    Web_filter_system.eval_filters
+      filter_system
+  in
+  let on_deselect error =
+    Web_filter_system.add_error_filter
+      filter_system
+      (Web_filter_system.Error_type_filter error)
+    ;
+    Web_filter_system.eval_filters filter_system
+  in
+  let selections =
+    List.map begin fun error_info ->
+      Web_utils.filter_dropdown_checkbox_selection
+        error_info
+        (Web_utils.error_type error_info)
+        on_select
+        on_deselect
+    end errors_info
+  in
+  Web_utils.filter_dropdown_menu "errors" selections grid
+
+let files_dropdown files_info filter_system grid =
+  let on_select file =
+    Web_filter_system.remove_filter
+      filter_system
+      (Web_filter_system.Error_file_filter file)
+    ;
+    Web_filter_system.eval_filters filter_system
+  in
+  let on_deselect file =
+    Web_filter_system.add_error_filter
+      filter_system
+      (Web_filter_system.Error_file_filter file)
+    ;
+    Web_filter_system.eval_filters filter_system
+  in
+  let selections =
+    List.map begin fun file_info ->
+      Web_utils.filter_dropdown_checkbox_selection
+        file_info
+        file_info.file_name
+        on_select
+        on_deselect
+    end files_info
+  in
+  Web_utils.filter_dropdown_menu "files" selections grid
+
+let filter_searchbox filter_system grid =
+  let searchbox =
+    input
+      ~a:[
+        a_input_type `Text;
+        a_class ["form-control"; "filter-searchbox"];
+        a_placeholder "Search..."
+      ] ()
+  in
+  let searchbox_dom = Tyxml_js.To_dom.of_input searchbox in
+  let get_keyword () =
+    let str = Js.to_string (searchbox_dom##value) in
+    if str = "" then
+      None
+    else
+      Some str
+  in
+  let previous_keyword = ref None in
+  searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
+    let keyword = get_keyword () in
+    begin match !previous_keyword with
+    | Some kwd ->
+       Web_filter_system.remove_filter
+         filter_system
+         (Web_filter_system.Error_keyword_filter kwd)
+    | None ->
+       ()
+    end;
+    begin match keyword with
+    | Some kwd ->
+       Web_filter_system.add_error_filter
+         filter_system
+         (Web_filter_system.Error_keyword_filter kwd)
+    | None ->
+       ()
+    end;
+    previous_keyword := keyword;
+    Web_filter_system.eval_filters
+      filter_system
+    ;
+    Js._true
+  end;
+  div
+    ~a:[
+      a_class grid;
+    ]
+    [searchbox]
+
+let error_div_filter files_info errors_info filter_system =
+  div
+    ~a:[
+      a_class ["dashboard-filter"; "row"];
+    ]
+    [
+      files_dropdown
+        files_info
+        filter_system
+        ["col-md-1"; "row-vertical-center"];
+      errors_dropdown
+        errors_info
+        filter_system
+        ["col-md-1"; "row-vertical-center"];
+      filter_searchbox
+        filter_system
+        [
+          "col-md-2";
+          "col-md-offset-8";
+          "col-no-padding";
+          "row-vertical-center";
+        ];
+    ]
 
 let error_div_head error_info =
   h4
@@ -72,7 +196,7 @@ let error_div_body error_info =
 	];
     ]
 
-let error_div all_warnings_info all_errors_info error_info =
+let error_div all_warnings_info all_errors_info filter_system error_info =
   let file_warnings_info =
     List.filter begin fun warning ->
       Web_utils.file_equals warning.warning_file error_info.error_file
@@ -94,8 +218,8 @@ let error_div all_warnings_info all_errors_info error_info =
         error_div_body error_info;
       ]
   in
-  (Tyxml_js.To_dom.of_element div_error)##onclick <- Dom_html.handler
-  begin fun _ ->
+  let dom_div_error = Tyxml_js.To_dom.of_element div_error in
+  dom_div_error##onclick <- Dom_html.handler begin fun _ ->
     let file_content_data =
       Web_file_content.open_tab
 	error_info.error_file
@@ -108,13 +232,34 @@ let error_div all_warnings_info all_errors_info error_info =
     ;
     Js._true
   end;
+  Web_filter_system.register_element filter_system error_info dom_div_error;
   div_error
 
 let errors_content analysis_info =
+  let uniq_errors_info =
+    analysis_info.errors_info
+    |> List.sort Web_utils.error_compare
+    |> Web_utils.remove_successive_duplicates Web_utils.error_equals
+  in
+  let uniq_files_info =
+    analysis_info.errors_info
+    |> List.map (fun {error_file; _} -> error_file)
+    |> List.sort (fun f f' -> String.compare f.file_name f'.file_name)
+    |> Web_utils.remove_successive_duplicates
+         (fun f f' -> String.equal f.file_name f'.file_name)
+  in
+  let filter_system = Web_filter_system.create () in
   div
-    (List.map
-       (error_div analysis_info.warnings_info analysis_info.errors_info)
-       analysis_info.errors_info
+    (
+      (error_div_filter uniq_files_info uniq_errors_info filter_system) ::
+      (br ()) ::
+      (List.map
+         (error_div
+            analysis_info.warnings_info
+            analysis_info.errors_info
+            filter_system)
+         analysis_info.errors_info
+      )
     )
 
 let errors_content_empty () =

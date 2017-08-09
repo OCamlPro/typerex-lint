@@ -250,6 +250,23 @@ let error_description error_info =
   | Lint_db_types.Ocplint_error e ->
      e
 
+let error_equals e e' =
+  (error_type e) = (error_type e')
+
+let error_compare e e' =
+  String.compare (error_type e) (error_type e')
+
+let error_contains_keyword keyword error_info =
+  let re = Regexp.regexp (keyword) in
+  let contains_kwd str =
+    match Regexp.search_forward re str 0 with
+    | Some _ -> true
+    | None -> false
+  in
+  contains_kwd (error_type error_info)
+  || contains_kwd (error_description error_info)
+  || contains_kwd error_info.error_file.file_name
+
 let code_viewer_line_size =
   17
 
@@ -376,3 +393,4 @@ let filter_dropdown_menu label_value dropdown_selections grid =
         ]
         dropdown_selections;
       ]
+

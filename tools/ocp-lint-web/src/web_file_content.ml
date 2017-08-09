@@ -199,7 +199,7 @@ let severity_dropdown file_content_data grid =
     | Some (svt, lbl) ->
        Web_filter_system.remove_filter
          file_content_data.file_content_warnings_filters
-         (Web_filter_system.Higher_severity_filter svt)
+         (Web_filter_system.Warning_higher_severity_filter svt)
        ;
        lbl##classList##remove (active_class)
     | None ->
@@ -207,7 +207,7 @@ let severity_dropdown file_content_data grid =
     end;
     Web_filter_system.add_warning_filter
       file_content_data.file_content_warnings_filters
-      (Web_filter_system.Higher_severity_filter severity)
+      (Web_filter_system.Warning_higher_severity_filter severity)
     ;
     label##classList##add (active_class);
     previous_severity := Some (severity, label);
@@ -224,7 +224,7 @@ let severity_dropdown file_content_data grid =
   in
   Web_utils.filter_dropdown_menu "severity" selections grid
 
-let filter_searchbox file_content_data grid =
+let warning_filter_searchbox file_content_data grid =
   let searchbox =
     input
       ~a:[
@@ -248,7 +248,7 @@ let filter_searchbox file_content_data grid =
     | Some kwd ->
        Web_filter_system.remove_filter
          file_content_data.file_content_warnings_filters
-         (Web_filter_system.Keyword_filter kwd)
+         (Web_filter_system.Warning_keyword_filter kwd)
     | None ->
        ()
     end;
@@ -256,7 +256,7 @@ let filter_searchbox file_content_data grid =
     | Some kwd ->
        Web_filter_system.add_warning_filter
          file_content_data.file_content_warnings_filters
-         (Web_filter_system.Keyword_filter kwd)
+         (Web_filter_system.Warning_keyword_filter kwd)
     | None ->
        ()
     end;
@@ -284,7 +284,7 @@ let warnings_filter file_content_data =
       severity_dropdown
         file_content_data
         ["col-md-1"; "row-vertical-center"];
-      filter_searchbox
+      warning_filter_searchbox
         file_content_data
         [
           "col-md-2";
@@ -371,18 +371,106 @@ let warnings_table file_content_data =
     ]
     [table]
 
+let errors_dropdown file_content_data grid =
+  let on_select error =
+    Web_filter_system.remove_filter
+      file_content_data.file_content_errors_filters
+      (Web_filter_system.Error_type_filter error)
+    ;
+    Web_filter_system.eval_filters
+      file_content_data.file_content_errors_filters
+  in
+  let on_deselect error =
+    Web_filter_system.add_error_filter
+      file_content_data.file_content_errors_filters
+      (Web_filter_system.Error_type_filter error)
+    ;
+    Web_filter_system.eval_filters
+      file_content_data.file_content_errors_filters
+  in
+  let selections =
+    List.map begin fun error_info ->
+      Web_utils.filter_dropdown_checkbox_selection
+        error_info
+        (Web_utils.error_type error_info)
+        on_select
+        on_deselect
+    end (errors_info_set file_content_data)
+  in
+  Web_utils.filter_dropdown_menu "errors" selections grid
+
+let error_filter_searchbox file_content_data grid =
+  let searchbox =
+    input
+      ~a:[
+        a_input_type `Text;
+        a_class ["form-control"; "filter-searchbox"];
+        a_placeholder "Search..."
+      ] ()
+  in
+  let searchbox_dom = Tyxml_js.To_dom.of_input searchbox in
+  let get_keyword () =
+    let str = Js.to_string (searchbox_dom##value) in
+    if str = "" then
+      None
+    else
+      Some str
+  in
+  let previous_keyword = ref None in
+  searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
+    let keyword = get_keyword () in
+    begin match !previous_keyword with
+    | Some kwd ->
+       Web_filter_system.remove_filter
+         file_content_data.file_content_errors_filters
+         (Web_filter_system.Error_keyword_filter kwd)
+    | None ->
+       ()
+    end;
+    begin match keyword with
+    | Some kwd ->
+       Web_filter_system.add_error_filter
+         file_content_data.file_content_errors_filters
+         (Web_filter_system.Error_keyword_filter kwd)
+    | None ->
+       ()
+    end;
+    previous_keyword := keyword;
+    Web_filter_system.eval_filters
+      file_content_data.file_content_errors_filters
+    ;
+    Js._true
+  end;
+  div
+    ~a:[
+      a_class grid;
+    ]
+    [searchbox]
+
+let errors_filter file_content_data =
+  div
+    ~a:[
+      a_class ["dashboard-filter"; "row"];
+    ]
+    [
+      errors_dropdown
+        file_content_data
+        ["col-md-1"; "row-vertical-center"];
+      error_filter_searchbox
+        file_content_data
+        [
+          "col-md-2";
+          "col-md-offset-9";
+          "col-no-padding";
+          "row-vertical-center";
+        ];
+    ]
+
 let errors_table_col_id error_info =
   pcdata (string_of_int error_info.error_id)
 
 let errors_table_col_error error_info =
-  let str_error =
-    match error_info.error_type with
-    | Lint_db_types.Db_error _ -> "db_error"
-    | Lint_db_types.Plugin_error _ -> "plugin_error"
-    | Lint_db_types.Sempatch_error _ -> "sempatch_error"
-    | Lint_db_types.Ocplint_error _ -> "ocplint_error"
-  in
-  pcdata str_error
+  pcdata (Web_utils.error_type error_info)
 
 let errors_table_entry error_info file_content_data =
   let tr =
@@ -397,6 +485,11 @@ let errors_table_entry error_info file_content_data =
     focus_file_content file_content_data (Error_content error_info);
     Js._true
   end;
+  Web_filter_system.register_element
+    file_content_data.file_content_errors_filters
+    error_info
+    dom_tr
+  ;
   tr
 
 let errors_table_head () =
@@ -541,7 +634,7 @@ let errors_summary_content file_content_data =
     [
       br ();
       br ();
-      (* todo filter *)
+      errors_filter file_content_data;
       br ();
       errors_table file_content_data;
     ]

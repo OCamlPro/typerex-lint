@@ -47,6 +47,8 @@ type file_content_data = {
     file_content_type -> Dom_html.element Js.t;
   file_content_warnings_filters :
     Web_filter_system.warnings_filter_system;
+  file_content_errors_filters :
+    Web_filter_system.errors_filter_system;
 }
 
 let create_file_content_data
@@ -63,6 +65,7 @@ let create_file_content_data
     file_content_main_contents = Hashtbl.create 64;
     file_content_creator = content_creator;
     file_content_warnings_filters = Web_filter_system.create ();
+    file_content_errors_filters = Web_filter_system.create ();
   }
 
 let active_file_content file_content_data =
@@ -114,3 +117,8 @@ let warnings_info_set file_content_data =
   file_content_data.file_content_warnings_info
   |> List.sort Web_utils.warning_compare
   |> Web_utils.remove_successive_duplicates Web_utils.warning_equals
+
+let errors_info_set file_content_data =
+  file_content_data.file_content_errors_info
+  |> List.sort Web_utils.error_compare
+  |> Web_utils.remove_successive_duplicates Web_utils.error_equals
