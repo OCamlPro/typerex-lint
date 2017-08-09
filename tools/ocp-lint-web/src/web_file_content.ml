@@ -187,7 +187,7 @@ let warnings_dropdown file_content_data grid =
         (Web_utils.warning_name warning_info)
         on_select
         on_deselect
-    end (warnings_info_set file_content_data)
+    end (Web_utils.warnings_set file_content_data.file_content_warnings_info)
   in
   Web_utils.filter_dropdown_menu "warnings" selections grid
 
@@ -395,7 +395,7 @@ let errors_dropdown file_content_data grid =
         (Web_utils.error_type error_info)
         on_select
         on_deselect
-    end (errors_info_set file_content_data)
+    end (Web_utils.errors_set file_content_data.file_content_errors_info)
   in
   Web_utils.filter_dropdown_menu "errors" selections grid
 

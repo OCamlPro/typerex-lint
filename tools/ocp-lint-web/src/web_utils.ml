@@ -78,15 +78,6 @@ let get_element_by_id id =
   | Some element -> element
   | None -> raise (Web_exception (No_such_element_with_id id))
 
-(* todo remove and use set *)
-let rec remove_successive_duplicates equals = function
-  | [] ->
-     []
-  | x :: (y :: tail as l) when equals x y ->
-     remove_successive_duplicates equals l
-  | x :: tail ->
-     x :: remove_successive_duplicates equals tail
-
 let list_is_empty = function
   | [] -> true
   | _ -> false
@@ -140,6 +131,9 @@ let json_from_js_var var =
 let file_equals f f' =
   f.file_hash = f'.file_hash
 
+let file_compare f f' =
+  String.compare f.file_hash f'.file_hash
+
 let file_short_name file_info =
   let re = Regexp.regexp (Filename.dir_sep) in
   let dirs = Regexp.split re file_info.file_name in
@@ -170,6 +164,23 @@ let filename_overflow nbchar filename =
       end (List.hd dirs, false) (List.tl dirs)
     in
     ovr_str ^ Filename.dir_sep ^ res
+
+module FileInfo = struct
+
+  type t = file_info
+
+  let compare = file_compare
+
+end
+
+module FileInfoSet = Set.Make(FileInfo)
+
+let files_set files_info =
+  FileInfoSet.elements (
+      List.fold_left begin fun acc file ->
+        FileInfoSet.add file acc
+       end FileInfoSet.empty files_info
+    )
 
 let plugin_equals p p' =
   p.plugin_name = p'.plugin_name
@@ -227,6 +238,23 @@ let warning_contains_keyword keyword warning_info =
   || contains_kwd warning_info.warning_type.decl.short_name
   || contains_kwd warning_info.warning_type.output
 
+module WarningInfo = struct
+
+  type t = warning_info
+
+  let compare = warning_compare
+
+end
+
+module WarningInfoSet = Set.Make(WarningInfo)
+
+let warnings_set warnings_info =
+  WarningInfoSet.elements (
+      List.fold_left begin fun acc warning ->
+        WarningInfoSet.add warning acc
+       end WarningInfoSet.empty warnings_info
+    )
+
 let error_type error_info =
   match error_info.error_type with
   | Lint_db_types.Db_error e -> "db_error"
@@ -266,6 +294,23 @@ let error_contains_keyword keyword error_info =
   contains_kwd (error_type error_info)
   || contains_kwd (error_description error_info)
   || contains_kwd error_info.error_file.file_name
+
+module ErrorInfo = struct
+
+  type t = error_info
+
+  let compare = error_compare
+
+end
+
+module ErrorInfoSet = Set.Make(ErrorInfo)
+
+let errors_set errors_info =
+  ErrorInfoSet.elements (
+      List.fold_left begin fun acc error ->
+        ErrorInfoSet.add error acc
+       end ErrorInfoSet.empty errors_info
+    )
 
 let code_viewer_line_size =
   17

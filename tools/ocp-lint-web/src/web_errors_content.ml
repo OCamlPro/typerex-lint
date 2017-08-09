@@ -22,7 +22,7 @@ open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 
-let errors_dropdown errors_info filter_system grid =
+let errors_dropdown analysis_info filter_system grid =
   let on_select error =
     Web_filter_system.remove_filter
       filter_system
@@ -45,11 +45,16 @@ let errors_dropdown errors_info filter_system grid =
         (Web_utils.error_type error_info)
         on_select
         on_deselect
-    end errors_info
+    end (Web_utils.errors_set analysis_info.errors_info)
   in
   Web_utils.filter_dropdown_menu "errors" selections grid
 
-let files_dropdown files_info filter_system grid =
+let files_dropdown analysis_info filter_system grid =
+  let files_info =
+    analysis_info.errors_info
+    |> List.map (fun {error_file; _} -> error_file)
+    |> Web_utils.files_set
+  in
   let on_select file =
     Web_filter_system.remove_filter
       filter_system
@@ -123,18 +128,18 @@ let filter_searchbox filter_system grid =
     ]
     [searchbox]
 
-let error_div_filter files_info errors_info filter_system =
+let error_div_filter analysis_info filter_system =
   div
     ~a:[
       a_class ["dashboard-filter"; "row"];
     ]
     [
       files_dropdown
-        files_info
+        analysis_info
         filter_system
         ["col-md-1"; "row-vertical-center"];
       errors_dropdown
-        errors_info
+        analysis_info
         filter_system
         ["col-md-1"; "row-vertical-center"];
       filter_searchbox
@@ -236,22 +241,10 @@ let error_div all_warnings_info all_errors_info filter_system error_info =
   div_error
 
 let errors_content analysis_info =
-  let uniq_errors_info =
-    analysis_info.errors_info
-    |> List.sort Web_utils.error_compare
-    |> Web_utils.remove_successive_duplicates Web_utils.error_equals
-  in
-  let uniq_files_info =
-    analysis_info.errors_info
-    |> List.map (fun {error_file; _} -> error_file)
-    |> List.sort (fun f f' -> String.compare f.file_name f'.file_name)
-    |> Web_utils.remove_successive_duplicates
-         (fun f f' -> String.equal f.file_name f'.file_name)
-  in
   let filter_system = Web_filter_system.create () in
   div
     (
-      (error_div_filter uniq_files_info uniq_errors_info filter_system) ::
+      (error_div_filter analysis_info filter_system) ::
       (br ()) ::
       (List.map
          (error_div

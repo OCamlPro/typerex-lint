@@ -112,13 +112,3 @@ let focus_file_content file_content_data file_content_type =
     Web_utils.dom_element_display file_content_warning.dom_content;
     file_content_warning.is_active <- true
   end
-
-let warnings_info_set file_content_data =
-  file_content_data.file_content_warnings_info
-  |> List.sort Web_utils.warning_compare
-  |> Web_utils.remove_successive_duplicates Web_utils.warning_equals
-
-let errors_info_set file_content_data =
-  file_content_data.file_content_errors_info
-  |> List.sort Web_utils.error_compare
-  |> Web_utils.remove_successive_duplicates Web_utils.error_equals

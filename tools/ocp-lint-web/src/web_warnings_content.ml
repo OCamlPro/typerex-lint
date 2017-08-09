@@ -22,7 +22,7 @@ open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 
-let warnings_dropdown warnings_info filter_system grid =
+let warnings_dropdown analysis_info filter_system grid =
   let on_select warning =
     Web_filter_system.remove_filter
       filter_system
@@ -45,11 +45,16 @@ let warnings_dropdown warnings_info filter_system grid =
         (Web_utils.warning_name warning_info)
         on_select
         on_deselect
-    end warnings_info
+    end (Web_utils.warnings_set analysis_info.warnings_info)
   in
   Web_utils.filter_dropdown_menu "warnings" selections grid
 
-let files_dropdown files_info filter_system grid =
+let files_dropdown analysis_info filter_system grid =
+  let files_info =
+    analysis_info.warnings_info
+    |> List.map (fun {warning_file; _} -> warning_file)
+    |> Web_utils.files_set
+  in
   let on_select file =
     Web_filter_system.remove_filter
       filter_system
@@ -123,18 +128,18 @@ let filter_searchbox filter_system grid =
     ]
     [searchbox]
 
-let warning_div_filter files_info warnings_info filter_system =
+let warning_div_filter analysis_info filter_system =
   div
     ~a:[
       a_class ["dashboard-filter"; "row"];
     ]
     [
       files_dropdown
-        files_info
+        analysis_info
         filter_system
         ["col-md-1"; "row-vertical-center"];
       warnings_dropdown
-        warnings_info
+        analysis_info
         filter_system
         ["col-md-1"; "row-vertical-center"];
       filter_searchbox
@@ -261,22 +266,10 @@ let warning_div all_warnings_info all_errors_info filter_system warning_info =
   div_warning
 
 let warnings_content analysis_info =
-  let uniq_warnings_info =
-    analysis_info.warnings_info
-    |> List.sort Web_utils.warning_compare
-    |> Web_utils.remove_successive_duplicates Web_utils.warning_equals
-  in
-  let uniq_files_info =
-    analysis_info.warnings_info
-    |> List.map (fun {warning_file; _} -> warning_file)
-    |> List.sort (fun f f' -> String.compare f.file_name f'.file_name)
-    |> Web_utils.remove_successive_duplicates
-         (fun f f' -> String.equal f.file_name f'.file_name)
-  in
   let filter_system = Web_filter_system.create () in
   div
     (
-      (warning_div_filter uniq_files_info uniq_warnings_info filter_system) ::
+      (warning_div_filter analysis_info filter_system) ::
       (br ()) ::
       (List.map
          (warning_div
