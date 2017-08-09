@@ -30,6 +30,9 @@ let theme =
 let font_size =
   14
 
+let tab_size =
+  8
+
 let animation_timeout_millisecond =
   1400.0
 
@@ -47,7 +50,8 @@ let set_default_code_viewer ace =
   Ace.set_show_print_margin ace false;
   Ace.set_display_indent_guides ace false;
   Ace.set_highlight_active_line ace false;
-  Ace.set_highlight_gutter_line ace false
+  Ace.set_highlight_gutter_line ace false;
+  Ace.set_tab_size ace tab_size
 
 let set_warning_code_viewer ace warning =
   let begin_line, begin_col, end_line, end_col =

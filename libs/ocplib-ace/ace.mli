@@ -22,7 +22,7 @@ type 'a editor
 type loc = {
   loc_start: int * int;
   loc_end: int * int;
-}	     
+}
 
 val create_editor: Dom_html.divElement Js.t -> 'a editor
 
@@ -89,11 +89,12 @@ val set_value: 'a editor -> string -> unit
 type option_value =
   | Int of int
   | String of string
-					
+
 val set_option: 'a editor -> string -> option_value -> unit
 
 val set_first_line_number: 'a editor -> int -> unit
-							    
+val set_tab_size: 'a editor -> int -> unit
+
 val get_length: 'a editor -> int
 val get_lines: 'a editor -> int -> int -> string array
 

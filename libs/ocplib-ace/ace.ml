@@ -341,7 +341,10 @@ let set_option { editor } option value =
 
 let set_first_line_number editor n =
   set_option editor "firstLineNumber" (Int n)
-	
+
+let set_tab_size editor n =
+  set_option editor "tabSize" (Int n)
+
 let get_length { editor } =
   let document = editor##getSession()##getDocument() in
   document##getLength ()
