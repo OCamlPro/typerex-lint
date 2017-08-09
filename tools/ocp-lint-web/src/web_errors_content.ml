@@ -201,16 +201,16 @@ let error_div_body error_info =
 	];
     ]
 
-let error_div all_warnings_info all_errors_info filter_system error_info =
+let error_div analysis_info filter_system error_info =
   let file_warnings_info =
     List.filter begin fun warning ->
       Web_utils.file_equals warning.warning_file error_info.error_file
-    end all_warnings_info
+    end analysis_info.warnings_info
   in
   let file_errors_info =
     List.filter begin fun error ->
       Web_utils.file_equals error.error_file error_info.error_file
-    end all_errors_info
+    end analysis_info.errors_info
   in
   let div_error =
     div
@@ -247,10 +247,7 @@ let errors_content analysis_info =
       (error_div_filter analysis_info filter_system) ::
       (br ()) ::
       (List.map
-         (error_div
-            analysis_info.warnings_info
-            analysis_info.errors_info
-            filter_system)
+         (error_div analysis_info filter_system)
          analysis_info.errors_info
       )
     )

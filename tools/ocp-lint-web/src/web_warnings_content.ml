@@ -225,16 +225,16 @@ let warning_div_body warning_info =
 	];
     ]
 
-let warning_div all_warnings_info all_errors_info filter_system warning_info =
+let warning_div analysis_info filter_system warning_info =
   let file_warnings_info =
     List.filter begin fun warning ->
       Web_utils.file_equals warning.warning_file warning_info.warning_file
-    end all_warnings_info
+    end analysis_info.warnings_info
   in
   let file_errors_info =
     List.filter begin fun error ->
       Web_utils.file_equals error.error_file warning_info.warning_file
-    end all_errors_info
+    end analysis_info.errors_info
   in
   let div_warning =
     div
@@ -272,10 +272,7 @@ let warnings_content analysis_info =
       (warning_div_filter analysis_info filter_system) ::
       (br ()) ::
       (List.map
-         (warning_div
-            analysis_info.warnings_info
-            analysis_info.errors_info
-            filter_system)
+         (warning_div analysis_info filter_system)
          analysis_info.warnings_info)
     )
 
