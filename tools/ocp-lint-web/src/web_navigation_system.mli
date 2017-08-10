@@ -74,7 +74,7 @@ type t = {
   navigation_content_creator :
     t ->
     navigation_element ->
-    Dom_html.element Js.t * navigation_attached_data;
+    Html_types.div Tyxml_js.Html.elt * navigation_attached_data;
 }
 
 (**
@@ -84,7 +84,7 @@ val create :
   (
     t ->
     navigation_element ->
-    Dom_html.element Js.t * navigation_attached_data
+    Html_types.div Tyxml_js.Html.elt * navigation_attached_data
   ) ->
   t
 

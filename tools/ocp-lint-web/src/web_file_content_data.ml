@@ -45,14 +45,14 @@ type t = {
   file_content_main_contents :
     (file_content_type, file_content_value) Hashtbl.t;
   file_content_panel_creator :
-    file_content_type -> Dom_html.element Js.t;
+    file_content_type -> Html_types.div Tyxml_js.Html.elt;
   file_content_warnings_filters :
     Web_filter_system.warnings_filter_system;
   file_content_errors_filters :
     Web_filter_system.errors_filter_system;
 }
 
-let create_file_content_data
+let create
       file_info
       file_warnings_info
       file_errors_info
@@ -93,7 +93,8 @@ let focus_file_content file_content_data file_content_type =
     | Not_found ->
        let default_content_value = {
          dom_content =
-           file_content_data.file_content_panel_creator file_content_type;
+           Tyxml_js.To_dom.of_element
+             (file_content_data.file_content_panel_creator file_content_type);
          is_active =
            false;
        }

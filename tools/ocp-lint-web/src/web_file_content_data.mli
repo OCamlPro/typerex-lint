@@ -57,7 +57,7 @@ type t = {
     (file_content_type, file_content_value) Hashtbl.t;
   (** The alterable panel content creator **)
   file_content_panel_creator :
-    file_content_type -> Dom_html.element Js.t;
+    file_content_type -> Html_types.div Tyxml_js.Html.elt;
   (** The warnings filter system **)
   file_content_warnings_filters :
     Web_filter_system.warnings_filter_system;
@@ -69,12 +69,12 @@ type t = {
 (**
   Create file content data
   **)
-val create_file_content_data :
+val create :
   Lint_web_analysis_info.file_info ->
   Lint_web_analysis_info.warning_info list ->
   Lint_web_analysis_info.error_info list ->
   [> Html_types.div ] Tyxml_js.Html.elt ->
-  (file_content_type -> Dom_html.element Js.t) ->
+  (file_content_type -> Html_types.div Tyxml_js.Html.elt) ->
   t
 
 (**

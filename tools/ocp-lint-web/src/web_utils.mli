@@ -309,31 +309,31 @@ val code_viewer_end_context_from_line :
   **)
 val file_code_viewer :
   Lint_web_analysis_info.file_info ->
-  [> `Iframe ] Tyxml_js.Html.elt
+  Html_types.iframe Tyxml_js.Html.elt
 
 (**
   Get a warning code viewer
   **)
 val warning_code_viewer :
   Lint_web_analysis_info.warning_info ->
-  [> `Iframe ] Tyxml_js.Html.elt
+  Html_types.iframe Tyxml_js.Html.elt
 
 (* todo doc *)
 val dropdown_simple_selection :
   'a ->
   string ->
   ('a -> Dom_html.element Js.t -> unit) ->
-  [> Html_types.li ] Tyxml_js.Html.elt
+  Html_types.li Tyxml_js.Html.elt
 
 val dropdown_checkbox_selection :
   'a ->
   string ->
   ('a -> unit) ->
   ('a -> unit) ->
-  [> Html_types.li ] Tyxml_js.Html.elt
+  Html_types.li Tyxml_js.Html.elt
 
 val dropdown_menu :
   string ->
-  [< Html_types.ul_content_fun ] Tyxml_js.Html.elt Tyxml_js.Html.list_wrap ->
+  Html_types.ul_content_fun Tyxml_js.Html.elt list ->
   string list ->
-  [> Html_types.div ] Tyxml_js.Html.elt
+  Html_types.div Tyxml_js.Html.elt

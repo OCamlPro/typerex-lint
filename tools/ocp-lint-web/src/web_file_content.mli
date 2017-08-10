@@ -24,7 +24,7 @@
 val content :
   Web_navigation_system.t ->
   Web_file_content_data.t ->
-  [> Html_types.div ] Tyxml_js.Html.elt
+  Html_types.div Tyxml_js.Html.elt
 
 (**
   Create a content for the alterable panel
@@ -32,4 +32,4 @@ val content :
 val alterable_panel_content_creator :
   Lint_web_analysis_info.file_info ->
   Web_file_content_data.file_content_type ->
-  Dom_html.element Js.t
+  Html_types.div Tyxml_js.Html.elt

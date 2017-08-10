@@ -59,7 +59,8 @@ module NavigationElement =
 
 module NavigationElementHashtbl = Hashtbl.Make(NavigationElement)
 
-type t = {
+
+type  t = {
   navigation_elements :
     navigation_value NavigationElementHashtbl.t;
   navigation_dom_tabs :
@@ -69,7 +70,7 @@ type t = {
   navigation_content_creator :
     t ->
     navigation_element ->
-    Dom_html.element Js.t * navigation_attached_data;
+    Html_types.div Tyxml_js.Html.elt * navigation_attached_data;
 }
 
 let navigation_value_is_active nav_val =
@@ -275,7 +276,7 @@ let tab_content_attach_creator navigation_system ne =
     navigation_system.navigation_content_creator navigation_system ne
   in
   tab_creator ne,
-  model_simple_content (Tyxml_js.Of_dom.of_element content) ne,
+  model_simple_content content ne,
   attach
 
 let add_navigation_element navigation_system ne =

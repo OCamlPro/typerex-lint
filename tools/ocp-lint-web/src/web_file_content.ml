@@ -150,25 +150,21 @@ let all_file_content file_info =
       file_code_viewer file_info;
     ]
 
-let alterable_panel_content_creator file_info file_content_type =
-  let content =
-    match file_content_type with
-    | File_content ->
-       all_file_content file_info
-    | Warning_content warning_info ->
-       if not (Web_utils.file_equals warning_info.warning_file file_info) then
-         raise (Web_exception
-                  (Open_warning_from_bad_file (warning_info, file_info)))
-       ;
-       warning_content warning_info
-    | Error_content error_info ->
-       if not (Web_utils.file_equals error_info.error_file file_info) then
-         raise (Web_exception
-                  (Open_error_from_bad_file (error_info, file_info)))
-       ;
-       error_content error_info
-  in
-  Tyxml_js.To_dom.of_element content
+let alterable_panel_content_creator file_info = function
+  | File_content ->
+     all_file_content file_info
+  | Warning_content warning_info ->
+     if not (Web_utils.file_equals warning_info.warning_file file_info) then
+       raise (Web_exception
+                (Open_warning_from_bad_file (warning_info, file_info)))
+     ;
+     warning_content warning_info
+  | Error_content error_info ->
+     if not (Web_utils.file_equals error_info.error_file file_info) then
+       raise (Web_exception
+                (Open_error_from_bad_file (error_info, file_info)))
+     ;
+     error_content error_info
 
 let warnings_dropdown file_content_data grid =
   let on_select warning =

@@ -24,4 +24,4 @@
 val content :
   Web_navigation_system.t ->
   Lint_web_analysis_info.analysis_info ->
-  [> Html_types.div ] Tyxml_js.Html.elt
+  Html_types.div Tyxml_js.Html.elt
