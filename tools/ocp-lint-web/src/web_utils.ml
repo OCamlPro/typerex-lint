@@ -202,6 +202,10 @@ let warning_is_ghost warning_info =
     "code_redefine_stdlib_module",
     "redfine_compilerlib_module"
   ;
+    "plugin_text",
+    "useless_space_line",
+    "useless_line"
+  ;
   ]
   in
   let is_same_warning (plugin_name,linter_name,warning_name) =
