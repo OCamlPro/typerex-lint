@@ -56,32 +56,18 @@ module NavigationElement =
 
 module NavigationElementHashtbl = Hashtbl.Make(NavigationElement)
 
-type navigation_informations = {
-  navigation_elements : navigation_value NavigationElementHashtbl.t;
-  navigation_dom_tabs : Dom_html.element Js.t;
-  navigation_dom_contents : Dom_html.element Js.t;
+type t = {
+  navigation_elements :
+    navigation_value NavigationElementHashtbl.t;
+  navigation_dom_tabs :
+    Dom_html.element Js.t;
+  navigation_dom_contents :
+    Dom_html.element Js.t;
+  navigation_content_creator :
+    t ->
+    navigation_element ->
+    Dom_html.element Js.t * navigation_attached_data;
 }
-
-let global_navigation_informations =
-  let tabs =
-    ul
-      ~a:[
-        a_class ["nav"; "nav-tabs"];
-      ]
-      []
-  in
-  let contents =
-    div
-      ~a:[
-        a_class ["tab-content"];
-      ]
-      []
-  in
-  {
-    navigation_elements = NavigationElementHashtbl.create 32;
-    navigation_dom_tabs = Tyxml_js.To_dom.of_element tabs;
-    navigation_dom_contents = Tyxml_js.To_dom.of_element contents;
-  }
 
 let navigation_value_is_active nav_val =
   Js.to_bool (nav_val.dom_tab##classList##contains (Js.string "active"))
@@ -96,88 +82,69 @@ let navigation_value_set_unactive nav_val =
   nav_val.dom_content##classList##remove (Js.string "in");
   nav_val.dom_content##classList##remove (Js.string "active")
 
-let navigation_element_find_active () =
+let navigation_element_find_active navigation_system =
   let active_value =
     NavigationElementHashtbl.fold begin fun _ nav_val acc ->
-    if navigation_value_is_active nav_val then
-      match acc with
-      | Some _ -> raise (Web_exception Active_navigation_element_is_not_unique)
-      | None -> Some nav_val
-    else
-      acc
-    end global_navigation_informations.navigation_elements None
+      if navigation_value_is_active nav_val then
+        match acc with
+        | Some _ ->
+           raise (Web_exception Active_navigation_element_is_not_unique)
+        | None ->
+           Some nav_val
+      else
+        acc
+    end navigation_system.navigation_elements None
   in
   match active_value with
   | Some x -> x
   | None -> raise (Web_exception No_active_navigation_element)
 
-let navigation_element_static_create ne tab content attached =
-  let tab = Tyxml_js.To_dom.of_element tab in
-  let content = Tyxml_js.To_dom.of_element content in
-  NavigationElementHashtbl.add
-    global_navigation_informations.navigation_elements
-    ne
-    {
-      dom_tab = tab;
-      dom_content = content;
-      tab_is_created = true;
-      content_is_created = true;
-      attached_data = attached;
-    };
-  Dom.appendChild global_navigation_informations.navigation_dom_tabs tab;
-  Dom.appendChild global_navigation_informations.navigation_dom_contents content
-
-(* return the attached data *)
-let navigation_element_dynamic_create
-      ne tab_creator content_creator attached_creator =
+let navigation_element_create navigation_system ne tab_content_attach_creator =
   let nav_val =
     try
       NavigationElementHashtbl.find
-        global_navigation_informations.navigation_elements
+        navigation_system.navigation_elements
         ne
     with
     | Not_found ->
+       let tab, content, attach = tab_content_attach_creator () in
        let default_nav_val = {
-         dom_tab = Tyxml_js.To_dom.of_element (tab_creator ());
-         dom_content = Tyxml_js.To_dom.of_element (content_creator ());
+         dom_tab = Tyxml_js.To_dom.of_element tab;
+         dom_content = Tyxml_js.To_dom.of_element content;
          tab_is_created = false;
          content_is_created = false;
-         attached_data = attached_creator ();
+         attached_data = attach;
        }
        in
        NavigationElementHashtbl.add
-         global_navigation_informations.navigation_elements
+         navigation_system.navigation_elements
          ne
          default_nav_val;
        default_nav_val
   in
   if not nav_val.tab_is_created then begin
     Dom.appendChild
-      global_navigation_informations.navigation_dom_tabs
+      navigation_system.navigation_dom_tabs
       nav_val.dom_tab;
     nav_val.tab_is_created <- true;
     if not nav_val.content_is_created then begin
       Dom.appendChild
-        global_navigation_informations.navigation_dom_contents
-        nav_val.dom_content
-      ;
+        navigation_system.navigation_dom_contents
+        nav_val.dom_content;
       nav_val.content_is_created <- true;
     end
   end;
-  (* focus *)
-  navigation_value_set_unactive (navigation_element_find_active ());
-  navigation_value_set_active nav_val;
-  nav_val.attached_data
+  nav_val
 
-let navigation_element_close ne =
+let navigation_element_close navigation_system ne =
   let nav_val =
     NavigationElementHashtbl.find
-      global_navigation_informations.navigation_elements
+      navigation_system.navigation_elements
       ne
   in
   let default =
     NavigationElementHashtbl.find
-      global_navigation_informations.navigation_elements
+      navigation_system.navigation_elements
       HomeElement
   in
   if navigation_value_is_active nav_val then begin
@@ -186,16 +153,8 @@ let navigation_element_close ne =
   nav_val.tab_is_created <- false;
   navigation_value_set_unactive nav_val;
   Dom.removeChild
-    global_navigation_informations.navigation_dom_tabs
+    navigation_system.navigation_dom_tabs
     nav_val.dom_tab
-
-let navigation_element_set_active ne =
-  let nav_val =
-    NavigationElementHashtbl.find
-      global_navigation_informations.navigation_elements
-      ne
-  in
-  navigation_value_set_active nav_val
 
 let navigation_element_tab_id = function
   | HomeElement ->
@@ -231,7 +190,7 @@ let model_simple_tab name ne =
         [pcdata name]
     ]
 
-let model_closable_tab name ne =
+let model_closable_tab navigation_system name ne =
   let close_button =
     button
       ~a:[
@@ -262,7 +221,7 @@ let model_closable_tab name ne =
     fun evt ->
       Dom.preventDefault evt;
       Dom_html.stopPropagation evt;
-      navigation_element_close ne;
+      navigation_element_close navigation_system ne;
       Js._true
   end;
   tab
@@ -275,51 +234,88 @@ let model_simple_content data ne =
     ]
     [data]
 
-let create_static_element ne tab_creator content_creator attached =
-  navigation_element_static_create
+let create content_creator =
+  let tabs =
+    ul
+      ~a:[
+        a_class ["nav"; "nav-tabs"];
+      ]
+      []
+  in
+  let contents =
+    div
+      ~a:[
+        a_class ["tab-content"];
+      ]
+      []
+  in
+  {
+    navigation_elements = NavigationElementHashtbl.create 32;
+    navigation_dom_tabs = Tyxml_js.To_dom.of_element tabs;
+    navigation_dom_contents = Tyxml_js.To_dom.of_element contents;
+    navigation_content_creator = content_creator;
+  }
+
+let tab_content_attach_creator navigation_system ne =
+  let tab_creator =
+    match ne with
+    | HomeElement ->
+       model_simple_tab "home"
+    | WarningsElement ->
+       model_simple_tab "warnings"
+    | ErrorsElement ->
+       model_simple_tab "errors"
+    | FileElement file ->
+       model_closable_tab navigation_system (Web_utils.file_short_name file)
+  in
+  let content, attach =
+    navigation_system.navigation_content_creator navigation_system ne
+  in
+  tab_creator ne,
+  model_simple_content (Tyxml_js.Of_dom.of_element content) ne,
+  attach
+
+let add_navigation_element navigation_system ne =
+  navigation_element_create
+    navigation_system
     ne
-    (tab_creator ne)
-    (content_creator ne)
-    attached
+    (fun () -> tab_content_attach_creator navigation_system ne)
 
-let create home_content warnings_content errors_content =
-  create_static_element
-    HomeElement
-    (model_simple_tab "home")
-    (model_simple_content home_content)
-    No_attached_data;
-  navigation_element_set_active HomeElement;
-  create_static_element
-    WarningsElement
-    (model_simple_tab "warnings")
-    (model_simple_content warnings_content)
-    No_attached_data;
-  create_static_element
-    ErrorsElement
-    (model_simple_tab "errors")
-    (model_simple_content errors_content)
-    No_attached_data;
-  Tyxml_js.Of_dom.of_element
-    global_navigation_informations.navigation_dom_tabs,
-  Tyxml_js.Of_dom.of_element
-    global_navigation_informations.navigation_dom_contents
+let init navigation_system =
+  let home_nav_val =
+    (add_navigation_element navigation_system HomeElement)
+  in
+  navigation_value_set_active home_nav_val;
+  ignore
+    (add_navigation_element navigation_system WarningsElement);
+  ignore
+    (add_navigation_element navigation_system ErrorsElement)
 
-let create_dynamic_element ne tab_creator content_creator attached_creator =
-  navigation_element_dynamic_create
-    ne
-    (fun () -> tab_creator ne)
-    (fun () -> content_creator ne)
-    attached_creator
+let open_tab navigation_system navigation_element =
+  let navigation_value =
+    add_navigation_element navigation_system navigation_element
+  in
+  navigation_value_set_unactive
+    (navigation_element_find_active navigation_system);
+  navigation_value_set_active navigation_value;
+  navigation_value.attached_data
 
-let open_tab navigation_element tab_name content attach_generator =
-  (* todo improve *)
-  (* navigation_element_dynamic_create *)
-  (*   navigation_element *)
-  (*   (fun () -> model_closable_tab tab_name) *)
-  (*   (fun () -> model_simple_content content) *)
-  (*   attach_generator *)
-  create_dynamic_element
-    navigation_element
-    (model_closable_tab tab_name)
-    (model_simple_content content)
-    attach_generator
+let open_home_tab navigation_system =
+  match open_tab navigation_system HomeElement with
+  | No_attached_data -> ()
+  | _ -> raise (Web_exception (Invalid_content_attached_data "home"))
+
+let open_warnings_tab navigation_system =
+  match open_tab navigation_system WarningsElement with
+  | No_attached_data -> ()
+  | _ -> raise (Web_exception (Invalid_content_attached_data "warnings"))
+
+let open_errors_tab navigation_system =
+  match open_tab navigation_system ErrorsElement with
+  | No_attached_data -> ()
+  | _ -> raise (Web_exception (Invalid_content_attached_data "errors"))
+
+let open_file_tab navigation_system file_info =
+  match open_tab navigation_system (FileElement file_info) with
+  | File_content_attached_data file_content_data -> file_content_data
+  | _ -> raise (Web_exception (Invalid_content_attached_data "file"))

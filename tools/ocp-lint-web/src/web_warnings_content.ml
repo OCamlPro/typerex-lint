@@ -227,17 +227,7 @@ let warning_div_body warning_info =
 	];
     ]
 
-let warning_div analysis_info filter_system warning_info =
-  let file_warnings_info =
-    List.filter begin fun warning ->
-      Web_utils.file_equals warning.warning_file warning_info.warning_file
-    end analysis_info.warnings_info
-  in
-  let file_errors_info =
-    List.filter begin fun error ->
-      Web_utils.file_equals error.error_file warning_info.warning_file
-    end analysis_info.errors_info
-  in
+let warning_div analysis_info navigation_system filter_system warning_info =
   let div_warning =
     div
     ~a:[
@@ -253,10 +243,9 @@ let warning_div analysis_info filter_system warning_info =
   dom_div_warning##onclick <- Dom_html.handler
   begin fun _ ->
     let file_content_data =
-      Web_file_content.open_tab
-	warning_info.warning_file
-	file_warnings_info
-	file_errors_info
+      Web_navigation_system.open_file_tab
+        navigation_system
+        warning_info.warning_file
     in
     Web_file_content_data.focus_file_content
       file_content_data
@@ -267,26 +256,26 @@ let warning_div analysis_info filter_system warning_info =
   Web_filter_system.register_element filter_system warning_info dom_div_warning;
   div_warning
 
-let warnings_content analysis_info =
+let warnings_content navigation_system analysis_info =
   let filter_system = Web_filter_system.create () in
   div
     (
       (warning_div_filter analysis_info filter_system) ::
       (br ()) ::
       (List.map
-         (warning_div analysis_info filter_system)
+         (warning_div analysis_info navigation_system filter_system)
          analysis_info.warnings_info)
     )
 
 let warnings_content_empty () =
   h3 [pcdata "There are no warnings provided in this file"]
 
-let content analysis_info =
+let content navigation_system analysis_info =
   let content =
     if Web_utils.list_is_empty analysis_info.warnings_info then
       warnings_content_empty ()
     else
-      warnings_content analysis_info
+      warnings_content navigation_system analysis_info
   in
   div
     ~a:[

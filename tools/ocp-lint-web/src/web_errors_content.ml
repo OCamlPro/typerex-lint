@@ -201,17 +201,7 @@ let error_div_body error_info =
 	];
     ]
 
-let error_div analysis_info filter_system error_info =
-  let file_warnings_info =
-    List.filter begin fun warning ->
-      Web_utils.file_equals warning.warning_file error_info.error_file
-    end analysis_info.warnings_info
-  in
-  let file_errors_info =
-    List.filter begin fun error ->
-      Web_utils.file_equals error.error_file error_info.error_file
-    end analysis_info.errors_info
-  in
+let error_div analysis_info navigation_system filter_system error_info =
   let div_error =
     div
       ~a:[
@@ -226,10 +216,9 @@ let error_div analysis_info filter_system error_info =
   let dom_div_error = Tyxml_js.To_dom.of_element div_error in
   dom_div_error##onclick <- Dom_html.handler begin fun _ ->
     let file_content_data =
-      Web_file_content.open_tab
-	error_info.error_file
-	file_warnings_info
-	file_errors_info
+      Web_navigation_system.open_file_tab
+        navigation_system
+        error_info.error_file
     in
     Web_file_content_data.focus_file_content
       file_content_data
@@ -240,14 +229,14 @@ let error_div analysis_info filter_system error_info =
   Web_filter_system.register_element filter_system error_info dom_div_error;
   div_error
 
-let errors_content analysis_info =
+let errors_content navigation_system analysis_info =
   let filter_system = Web_filter_system.create () in
   div
     (
       (error_div_filter analysis_info filter_system) ::
       (br ()) ::
       (List.map
-         (error_div analysis_info filter_system)
+         (error_div analysis_info navigation_system filter_system)
          analysis_info.errors_info
       )
     )
@@ -255,12 +244,12 @@ let errors_content analysis_info =
 let errors_content_empty () =
   h3 [pcdata "There are no errors provided in this file"]
 
-let content analysis_info =
+let content navigation_system analysis_info =
   let content =
     if Web_utils.list_is_empty analysis_info.errors_info then
       errors_content_empty ()
     else
-      errors_content analysis_info
+      errors_content navigation_system analysis_info
   in
   div
     ~a:[

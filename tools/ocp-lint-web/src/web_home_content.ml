@@ -109,7 +109,7 @@ let pie_value label count =
     caption = label;
   }
 
-let warnings_pie_group_by_file analysis_info =
+let warnings_pie_group_by_file navigation_system analysis_info =
   let files_warnings_info =
     Lint_utils.group_by begin fun warning_info ->
       warning_info.warning_file
@@ -117,25 +117,23 @@ let warnings_pie_group_by_file analysis_info =
   in
   let on_click_segment (arg : d3pie_callback_argument) =
     if not arg.data.is_grouped then begin
-      let file_info, file_warnings_info =
+      let file_info, _ =
         List.find begin fun (file, _) ->
           String.equal file.file_name arg.data.label
         end files_warnings_info
       in
-      let file_errors_info =
-        List.filter begin fun error ->
-          Web_utils.file_equals file_info error.error_file
-        end analysis_info.errors_info
-      in
       let file_content_data =
-        Web_file_content.open_tab file_info file_warnings_info file_errors_info
+        Web_navigation_system.open_file_tab
+          navigation_system
+          file_info
       in
-      begin match Web_file_content_data.active_file_content file_content_data with
-      | None ->
-         Web_file_content_data.focus_file_content
-          file_content_data
-          Web_file_content_data.File_content
-      | Some _ -> ()
+      begin
+        match Web_file_content_data.active_file_content file_content_data with
+        | None ->
+           Web_file_content_data.focus_file_content
+             file_content_data
+             Web_file_content_data.File_content
+        | Some _ -> ()
       end
     end
   in
@@ -304,7 +302,7 @@ let dashboard_head analysis_info =
 	["col-md-2"];
     ]
 
-let dashboard_content analysis_info =
+let dashboard_content navigation_system analysis_info =
   let pie_container div_pie grid =
     div
       ~a:[
@@ -330,12 +328,12 @@ let dashboard_content analysis_info =
   in
   (Tyxml_js.To_dom.of_element warnings_button)##onclick <- Dom_html.handler
   begin fun _ ->
-   (* todo open static warnings tab *)
+    Web_navigation_system.open_warnings_tab navigation_system;
     Js._true
   end;
   (Tyxml_js.To_dom.of_element errors_button)##onclick <- Dom_html.handler
   begin fun _ ->
-   (* todo open static errors tab *)
+    Web_navigation_system.open_errors_tab navigation_system;
     Js._true
   end;
   div
@@ -373,7 +371,7 @@ let dashboard_content analysis_info =
 	]
 	[
 	  pie_container
-	    (warnings_pie_group_by_file analysis_info)
+	    (warnings_pie_group_by_file navigation_system analysis_info)
 	    ["col-md-4"];
 	  pie_container
 	    (warnings_pie_group_by_plugin analysis_info)
@@ -397,7 +395,7 @@ let dashboard_content analysis_info =
         ]
     ]
 
-let content analysis_info =
+let content navigation_system analysis_info =
   div
     ~a:[
       a_class ["container"];
@@ -405,5 +403,5 @@ let content analysis_info =
     [
       dashboard_head analysis_info;
       br ();
-      dashboard_content analysis_info;
+      dashboard_content navigation_system analysis_info;
     ]

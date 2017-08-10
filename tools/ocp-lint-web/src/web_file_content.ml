@@ -764,37 +764,3 @@ let content file_content_data =
       br ();
       errors_summary file_content_data;
     ]
-
-let new_file_content_data_of_file_info
-      file_info file_warnings_info file_errors_info =
-  Web_file_content_data.create_file_content_data
-    file_info
-    file_warnings_info
-    file_errors_info
-    (div [])
-    (main_content_creator file_info)
-
-let open_tab file_info file_warnings_info file_errors_info =
-  let open Web_navigation_system in
-  (* todo improve *)
-  let file_content_data =
-    new_file_content_data_of_file_info
-      file_info
-      file_warnings_info
-      file_errors_info
-  in
-  let content =
-    content file_content_data
-  in
-  let attach =
-    open_tab
-      (FileElement file_info)
-      (Web_utils.file_short_name file_info)
-      (content)
-      begin fun () ->
-        File_content_attached_data file_content_data
-      end
-  in
-  match attach with
-  | File_content_attached_data file_content_data -> file_content_data
-  | _ -> raise (Web_exception (Invalid_content_attached_data "file"))

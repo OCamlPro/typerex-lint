@@ -50,12 +50,55 @@ let footer analysis_info =
     ]
     [pcdata msg]
 
+let content_attach_creator analysis_info navigation_system navigation_element =
+  let content, attach =
+    match navigation_element with
+    | Web_navigation_system.HomeElement ->
+       Web_home_content.content navigation_system analysis_info,
+       Web_navigation_system.No_attached_data
+    | Web_navigation_system.WarningsElement ->
+       Web_warnings_content.content navigation_system analysis_info,
+       Web_navigation_system.No_attached_data
+    | Web_navigation_system.ErrorsElement ->
+       Web_errors_content.content navigation_system analysis_info,
+       Web_navigation_system.No_attached_data
+    | Web_navigation_system.FileElement file_info ->
+       let file_warnings_info =
+         List.filter begin fun warning_info ->
+           Web_utils.file_equals file_info warning_info.warning_file
+         end analysis_info.warnings_info
+       in
+       let file_errors_info =
+         List.filter begin fun error_info ->
+           Web_utils.file_equals file_info error_info.error_file
+         end analysis_info.errors_info
+       in
+       let file_content_data =
+         Web_file_content_data.create_file_content_data
+           file_info
+           file_warnings_info
+           file_errors_info
+           (div [])
+           (Web_file_content.main_content_creator file_info)
+       in
+       Web_file_content.content file_content_data,
+       Web_navigation_system.File_content_attached_data file_content_data
+  in
+  Tyxml_js.To_dom.of_element content, attach
+
 let main_page analysis_info =
-  let tabs, contents =
-    Web_navigation_system.create
-      (Web_home_content.content analysis_info)
-      (Web_warnings_content.content analysis_info)
-      (Web_errors_content.content analysis_info)
+  let navigation_system =
+    Web_navigation_system.create (content_attach_creator analysis_info)
+  in
+  Web_navigation_system.init
+    navigation_system;
+  let tabs =
+    Tyxml_js.Of_dom.of_element
+      navigation_system.Web_navigation_system.navigation_dom_tabs
+  in
+  let contents =
+    Tyxml_js.Of_dom.of_element
+      navigation_system.Web_navigation_system.navigation_dom_contents
   in
   div
     [
