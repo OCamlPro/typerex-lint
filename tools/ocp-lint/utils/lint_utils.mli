@@ -45,7 +45,7 @@ val substitute : string -> (string * string) list -> string
     of the grouping function. *)
 val group_by: ('a -> 'b) -> 'a list -> ('b * 'a list) list
 
-(** [concat sep arr] Same as String.concat 
+(** [concat sep arr] Same as String.concat
     but on string array. *)
 val array_concat : string -> string array -> string
 

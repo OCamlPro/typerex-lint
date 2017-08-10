@@ -114,7 +114,7 @@ let onload _ =
   try
     let analysis_info =
       analysis_info_of_json
-	(Web_utils.json_from_js_var Lint_web.analysis_info_var)
+        (Web_utils.json_from_js_var Lint_web.analysis_info_var)
     in
     load_main_page analysis_info;
     Js._true

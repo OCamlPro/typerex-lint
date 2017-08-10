@@ -201,30 +201,30 @@ let warning_div_body warning_info =
   div
     [
       span
-	~a:[
-	  a_class
-	    [
-	      "col-md-1";
-	      "row-vertical-center";
-	      "glyphicon";
-	      "glyphicon-alert";
-	    ];
-	]
-	[];
+        ~a:[
+          a_class
+            [
+              "col-md-1";
+              "row-vertical-center";
+              "glyphicon";
+              "glyphicon-alert";
+            ];
+        ]
+        [];
       div
-	~a:[
-	  a_class ["col-md-11"; "row-vertical-center"];
-	]
-	[
-	  pcdata "from ";
-	  file_msg;
-	  pcdata " ";
-	  line_msg;
-	  br ();
-	  warning_msg;
-	  br ();
-	  linter_msg
-	];
+        ~a:[
+          a_class ["col-md-11"; "row-vertical-center"];
+        ]
+        [
+          pcdata "from ";
+          file_msg;
+          pcdata " ";
+          line_msg;
+          br ();
+          warning_msg;
+          br ();
+          linter_msg
+        ];
     ]
 
 let warning_div analysis_info navigation_system filter_system warning_info =

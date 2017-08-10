@@ -179,26 +179,26 @@ let error_div_body error_info =
   div
     [
       span
-	~a:[
-	  a_class
-	    [
-	      "col-md-1";
-	      "row-vertical-center";
-	      "glyphicon";
-	      "glyphicon-remove-sign";
-	    ];
-	]
-	[];
+        ~a:[
+          a_class
+            [
+              "col-md-1";
+              "row-vertical-center";
+              "glyphicon";
+              "glyphicon-remove-sign";
+            ];
+        ]
+        [];
       div
-	~a:[
-	  a_class ["col-md-11"; "row-vertical-center"];
-	]
-	[
-	  pcdata "from ";
-	  file_msg;
-	  br ();
-	  description_msg;
-	];
+        ~a:[
+          a_class ["col-md-11"; "row-vertical-center"];
+        ]
+        [
+          pcdata "from ";
+          file_msg;
+          br ();
+          description_msg;
+        ];
     ]
 
 let error_div analysis_info navigation_system filter_system error_info =
@@ -209,7 +209,7 @@ let error_div analysis_info navigation_system filter_system error_info =
       ]
       [
         error_div_head error_info;
-	br ();
+        br ();
         error_div_body error_info;
       ]
   in

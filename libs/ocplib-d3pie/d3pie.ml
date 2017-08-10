@@ -115,7 +115,7 @@ let create_small_segment_grouping_type = function
      Js.string "percentage"
   | Value_grouping ->
      Js.string "value"
-		     
+
 type d3pie_small_segment_grouping = {
   enabled : bool;
   value : int;
@@ -491,14 +491,14 @@ type d3pie_callback_argument_data = {
   label : string;
   value : int;
 }
-			 
+
 let callback_argument_data_of_class callbackArgumentData =
   {
     is_grouped = Js.to_bool (callbackArgumentData##isGrouped);
     label = Js.to_string (callbackArgumentData##label);
     value = callbackArgumentData##value;
   }
-    
+
 type d3pie_callback_argument = {
   segment : Dom_html.element Js.t;
   index : int;
@@ -739,13 +739,13 @@ let set_small_segment_grouping value_type value label color settings =
       small_segment_grouping = {
         enabled = true;
         value_type = value_type;
-	value = value;
+        value = value;
         label = label;
-	color = color;
+        color = color;
       }
     }
   }
-    
+
 let unset_small_segment_grouping settings =
   {
     settings with
@@ -763,7 +763,7 @@ let set_segments_colors array_color settings =
     settings with
     misc = {
       colors = {
-	settings.misc.colors with
+        settings.misc.colors with
         segments = array_color;
       }
     }
@@ -774,7 +774,7 @@ let set_segment_stroke_color color settings =
     settings with
     misc = {
       colors = {
-	settings.misc.colors with
+        settings.misc.colors with
         segment_stroke = color;
       }
     }

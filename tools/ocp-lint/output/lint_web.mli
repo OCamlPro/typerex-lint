@@ -29,7 +29,7 @@ val web_code_viewer_id:
 
 val web_code_loading_animation_id:
   string
-  
+
 val generate_web_files :
   Format.formatter ->
   string ->

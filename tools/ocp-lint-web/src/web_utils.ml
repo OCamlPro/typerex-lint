@@ -363,12 +363,12 @@ let dropdown_simple_selection value label_value on_click =
     a
       [
         label
-	  ~a:[
+          ~a:[
             a_class ["filter-label";];
-	  ]
-	  [
+          ]
+          [
             pcdata label_value;
-	  ]
+          ]
       ]
   in
   let dom_selection = Tyxml_js.To_dom.of_element severity_selection in
@@ -404,7 +404,7 @@ let dropdown_checkbox_selection value label_value on_select on_deselect =
     [
       a
         [
-	  checkbox;
+          checkbox;
           label
             ~a:[
               a_class ["filter-label"];
@@ -412,7 +412,7 @@ let dropdown_checkbox_selection value label_value on_select on_deselect =
             [
               pcdata label_value;
             ];
-	]
+        ]
     ]
 
 let dropdown_menu label_value dropdown_selections grid =
@@ -437,4 +437,3 @@ let dropdown_menu label_value dropdown_selections grid =
         ]
         dropdown_selections;
       ]
-

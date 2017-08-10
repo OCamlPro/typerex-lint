@@ -20,7 +20,7 @@
 
 (**
   The file informations required by the web interface
-  **) 
+  **)
 type file_info = {
   (** The name of the file **)
   file_name : string;
@@ -32,7 +32,7 @@ type file_info = {
 
 (**
   The plugin informations required by the web interface
-  **) 
+  **)
 type plugin_info = {
   (** The name of the plugin **)
   plugin_name : string;
@@ -68,7 +68,7 @@ type warning_info = {
 
 (**
   The error informations required by the web interface
-  **)		      
+  **)
 type error_info = {
   (** The unique identifier of the error information **)
   error_id : int;
@@ -108,7 +108,7 @@ val generated_static_page_of_file : (* todo maybe move in lint_web *)
 (* todo add raised exception to json fun *)
 
 (**
-  Convert a list of warning informations to this JSON representation 
+  Convert a list of warning informations to this JSON representation
   **)
 val json_of_warnings_info :
   warning_info list ->

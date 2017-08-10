@@ -59,7 +59,7 @@ let div_warning_pie title overflow pie_settings =
   let tooltip =
     span
       ~a:[
-	a_class ["pie-tooltip"];
+        a_class ["pie-tooltip"];
       ]
       [
       ]
@@ -283,30 +283,30 @@ let dashboard_head analysis_info =
       div_stat
         (string_of_int (List.length analysis_info.errors_info))
         ("errors raised")
-	["col-md-2"; "col-md-offset-1"];
+        ["col-md-2"; "col-md-offset-1"];
       div_stat
         (string_of_int (List.length analysis_info.warnings_info))
         ("warnings raised")
-	["col-md-2"];
+        ["col-md-2"];
       div_stat
         (string_of_int (List.length analysis_info.files_info))
         ("files analyzed")
-	["col-md-2"];
+        ["col-md-2"];
       div_stat
         (string_of_int (List.length analysis_info.plugins_info))
         ("plugins activated")
-	["col-md-2"];
+        ["col-md-2"];
       div_stat
         (string_of_int (List.length analysis_info.linters_info))
         ("linters activated")
-	["col-md-2"];
+        ["col-md-2"];
     ]
 
 let dashboard_content navigation_system analysis_info =
   let pie_container div_pie grid =
     div
       ~a:[
-	a_class (grid @ ["tile-pie-container"]);
+        a_class (grid @ ["tile-pie-container"]);
       ]
       [div_pie]
   in
@@ -366,19 +366,19 @@ let dashboard_content navigation_system analysis_info =
       br ();
       br ();
       div
-	~a:[
-	  a_class ["row"];
-	]
-	[
-	  pie_container
-	    (warnings_pie_group_by_file navigation_system analysis_info)
-	    ["col-md-4"];
-	  pie_container
-	    (warnings_pie_group_by_plugin analysis_info)
-	    ["col-md-4"];
-	  pie_container
-	    (warnings_pie_group_by_linter analysis_info)
-	    ["col-md-4"];
+        ~a:[
+          a_class ["row"];
+        ]
+        [
+          pie_container
+            (warnings_pie_group_by_file navigation_system analysis_info)
+            ["col-md-4"];
+          pie_container
+            (warnings_pie_group_by_plugin analysis_info)
+            ["col-md-4"];
+          pie_container
+            (warnings_pie_group_by_linter analysis_info)
+            ["col-md-4"];
       ];
       br ();
       div

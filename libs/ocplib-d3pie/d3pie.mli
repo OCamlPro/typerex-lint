@@ -186,7 +186,7 @@ val set_size_pie_outer_radius:
   d3pie_size_radius_value ->
   d3pie_settings ->
   d3pie_settings
-    
+
 val set_inner_label_format:
   d3pie_label_format_value ->
   d3pie_settings ->

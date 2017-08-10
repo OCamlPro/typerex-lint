@@ -71,10 +71,10 @@ let warning_content warning_info =
       Web_utils.html_empty_node ()
     else
       div
-	[
-	  br ();
-	  warning_content_code_view warning_info;
-	]
+        [
+          br ();
+          warning_content_code_view warning_info;
+        ]
   in
   div
     ~a:[
@@ -221,8 +221,8 @@ let severity_dropdown file_content_data grid =
     List.map begin fun severity ->
       Web_utils.dropdown_simple_selection
         severity
-	(string_of_int severity)
-	on_click
+        (string_of_int severity)
+        on_click
     end [1;2;3;4;5;6;7;8;9;10]
   in
   Web_utils.dropdown_menu "severity" selections grid
@@ -320,7 +320,7 @@ let warnings_table_entry warning_info file_content_data =
         td [warnings_table_col_plugin warning_info];
         td [warnings_table_col_linter warning_info];
         td [warnings_table_col_warning warning_info];
-	td [warnings_table_col_severity warning_info];
+        td [warnings_table_col_severity warning_info];
       ]
   in
   let dom_tr = Tyxml_js.To_dom.of_element tr in
@@ -344,7 +344,7 @@ let warnings_table_head () =
           th [pcdata "Plugin"];
           th [pcdata "Linter"];
           th [pcdata "Warning"];
-	  th [pcdata "Severity"];
+          th [pcdata "Severity"];
         ]
     ]
 
@@ -537,16 +537,16 @@ let hideable_summary title content =
   let title =
     div
       ~a:[
-	a_class ["subsummary-title"];
+        a_class ["subsummary-title"];
       ]
       [
-	h3 [pcdata title];
+        h3 [pcdata title];
       ]
   in
   let icon =
     span
       ~a:[
-	a_class ["glyphicon"];
+        a_class ["glyphicon"];
       ]
       [
       ]
@@ -578,31 +578,31 @@ let hideable_summary title content =
   div
     [
       div
-	~a:[
-	  a_class ["row"];
-	]
-	[
-	  div
-	    ~a:[
-	      a_class [
-		  "col-md-2";
-		  "row-vertical-center"
-		];
-	    ]
-	    [
-	      title;
-	      icon;
-	    ];
-	  div
-	    ~a:[
-	      a_class [
-		  "col-md-10";
-		  "row-vertical-center";
-		  "horizontal-separator";
-	      ];
-	    ]
-	    [];
-	];
+        ~a:[
+          a_class ["row"];
+        ]
+        [
+          div
+            ~a:[
+              a_class [
+                  "col-md-2";
+                  "row-vertical-center"
+                ];
+            ]
+            [
+              title;
+              icon;
+            ];
+          div
+            ~a:[
+              a_class [
+                  "col-md-10";
+                  "row-vertical-center";
+                  "horizontal-separator";
+                ];
+            ]
+            [];
+        ];
       content;
     ]
 
@@ -694,33 +694,33 @@ let content_head file_content_data =
     ]
     [
       div
-	~a:[
-	  a_class ["col-md-6"; "row-vertical-center"];
-	]
-	[
-	  h2 [pcdata file_content_data.file_content_info.file_name];
-	];
+        ~a:[
+          a_class ["col-md-6"; "row-vertical-center"];
+        ]
+        [
+          h2 [pcdata file_content_data.file_content_info.file_name];
+        ];
       div
-	~a:[
-	  a_class ["col-md-2"; "row-vertical-center"];
-	]
-	[
-	  warnings_button;
-	];
+        ~a:[
+          a_class ["col-md-2"; "row-vertical-center"];
+        ]
+        [
+          warnings_button;
+        ];
       div
-	~a:[
-	  a_class ["col-md-2"; "row-vertical-center"];
-	]
-	[
-	  errors_button;
-	];
+        ~a:[
+          a_class ["col-md-2"; "row-vertical-center"];
+        ]
+        [
+          errors_button;
+        ];
       div
-	~a:[
-	  a_class ["col-md-2"; "row-vertical-center"];
-	]
-	[
-	  all_file_button;
-	];
+        ~a:[
+          a_class ["col-md-2"; "row-vertical-center"];
+        ]
+        [
+          all_file_button;
+        ];
     ]
 
 let content navigation_system file_content_data =
@@ -731,14 +731,14 @@ let content navigation_system file_content_data =
   let separator () =
     div
       ~a:[
-	a_class ["row"];
+        a_class ["row"];
       ]
       [
-	div
-	  ~a:[
-	    a_class ["col-md-12"; "horizontal-separator"];
-	  ]
-	  [];
+        div
+          ~a:[
+            a_class ["col-md-12"; "horizontal-separator"];
+          ]
+          [];
       ]
   in
   div
