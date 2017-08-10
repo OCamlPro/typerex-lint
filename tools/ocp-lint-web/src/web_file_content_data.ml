@@ -33,7 +33,7 @@ type file_content_value = {
   mutable is_active : bool;
 }
 
-type file_content_data = {
+type t = {
   file_content_info :
     file_info;
   file_content_warnings_info :
@@ -44,7 +44,7 @@ type file_content_data = {
     Dom_html.element Js.t;
   file_content_main_contents :
     (file_content_type, file_content_value) Hashtbl.t;
-  file_content_creator :
+  file_content_panel_creator :
     file_content_type -> Dom_html.element Js.t;
   file_content_warnings_filters :
     Web_filter_system.warnings_filter_system;
@@ -64,13 +64,13 @@ let create_file_content_data
     file_content_errors_info = file_errors_info;
     file_content_container = Tyxml_js.To_dom.of_element dom_content_container;
     file_content_main_contents = Hashtbl.create 64;
-    file_content_creator = content_creator;
+    file_content_panel_creator = content_creator;
     file_content_warnings_filters = Web_filter_system.create ();
     file_content_errors_filters = Web_filter_system.create ();
   }
 
-let active_file_content file_content_data =
-  Hashtbl.fold begin fun _ content_value acc ->
+let focused_panel_content file_content_data =
+  Hashtbl.fold begin fun content_type content_value acc ->
     if content_value.is_active then
       match acc with
       | Some _ ->
@@ -78,7 +78,7 @@ let active_file_content file_content_data =
            (Web_exception
               (Active_main_file_content_is_not_unique
                  file_content_data.file_content_info))
-      | None -> Some content_value
+      | None -> Some content_type
     else
       acc
   end file_content_data.file_content_main_contents None
@@ -92,8 +92,10 @@ let focus_file_content file_content_data file_content_type =
     with
     | Not_found ->
        let default_content_value = {
-         dom_content = file_content_data.file_content_creator file_content_type;
-         is_active = false;
+         dom_content =
+           file_content_data.file_content_panel_creator file_content_type;
+         is_active =
+           false;
        }
        in
        Web_utils.dom_element_undisplay default_content_value.dom_content;
@@ -107,11 +109,16 @@ let focus_file_content file_content_data file_content_type =
        default_content_value
   in
   if not file_content_warning.is_active then begin
-    let active = active_file_content file_content_data in
+    let active = focused_panel_content file_content_data in
     begin match active with
-      | Some content ->
-         Web_utils.dom_element_undisplay content.dom_content;
-         content.is_active <- false
+      | Some content_type ->
+         let content_value =
+           Hashtbl.find
+             file_content_data.file_content_main_contents
+             content_type
+         in
+         Web_utils.dom_element_undisplay content_value.dom_content;
+         content_value.is_active <- false
       | _ -> ()
     end;
     Web_utils.dom_element_display file_content_warning.dom_content;

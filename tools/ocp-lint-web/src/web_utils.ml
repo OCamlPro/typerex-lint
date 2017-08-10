@@ -50,33 +50,6 @@ let file_loc_of_warning_info warning_info =
   else
     raise (Web_exception (Ghost_location loc))
 
-let warning_info_is_ghost warning_info =
-  let open Location in
-  let open Lexing in
-  let loc = warning_info.warning_type.loc in
-  let ghost_warnings = [
-    "plugin_file_system",
-    "interface_missing",
-    "missing_interface"
-  ;
-    "plugin_parsetree",
-    "code_redefine_stdlib_module",
-    "redfine_compilerlib_module"
-  ;
-  ]
-  in
-  let is_same_warning (plugin_name,linter_name,warning_name) =
-    warning_info.warning_linter.linter_plugin.plugin_name = plugin_name
-    && warning_info.warning_linter.linter_name = linter_name
-    && warning_info.warning_type.decl.short_name = warning_name
-  in
-  List.exists is_same_warning ghost_warnings && is_ghost_loc loc
-
-let get_element_by_id id =
-  match Js_utils.Manip.by_id id with
-  | Some element -> element
-  | None -> raise (Web_exception (No_such_element_with_id id))
-
 let list_is_empty = function
   | [] -> true
   | _ -> false
@@ -112,14 +85,10 @@ let dom_element_display e =
 let dom_element_undisplay e =
   e##style##display <- (Js.string "none")
 
-let file_href file_info =
-    (generated_static_page_of_file file_info)
-    ^ ".html"
-
-let file_warning_href warning_info =
-  (generated_static_page_of_file warning_info.warning_file)
-  ^ ".html#"
-  ^ (string_of_int warning_info.warning_id)
+let get_element_by_id id =
+  match Js_utils.Manip.by_id id with
+  | Some element -> element
+  | None -> raise (Web_exception (No_such_element_with_id id))
 
 let json_from_js_var var =
   let (str : Js.js_string Js.t) = Js.Unsafe.variable var in
@@ -219,6 +188,28 @@ let warning_name warning_info =
     warning_info.warning_linter.linter_plugin.plugin_name
     warning_info.warning_linter.linter_name
     warning_info.warning_type.decl.short_name
+
+let warning_is_ghost warning_info =
+  let open Location in
+  let open Lexing in
+  let loc = warning_info.warning_type.loc in
+  let ghost_warnings = [
+    "plugin_file_system",
+    "interface_missing",
+    "missing_interface"
+  ;
+    "plugin_parsetree",
+    "code_redefine_stdlib_module",
+    "redfine_compilerlib_module"
+  ;
+  ]
+  in
+  let is_same_warning (plugin_name,linter_name,warning_name) =
+    warning_info.warning_linter.linter_plugin.plugin_name = plugin_name
+    && warning_info.warning_linter.linter_name = linter_name
+    && warning_info.warning_type.decl.short_name = warning_name
+  in
+  List.exists is_same_warning ghost_warnings && is_ghost_loc loc
 
 let warning_contains_keyword keyword warning_info =
   let re = Regexp.regexp (keyword) in
@@ -330,6 +321,15 @@ let code_viewer line_number href =
     ]
     []
 
+let file_href file_info =
+  Printf.sprintf "%s.html"
+    (generated_static_page_of_file file_info)
+
+let file_warning_href warning_info =
+  Printf.sprintf "%s.html#%d"
+    (generated_static_page_of_file warning_info.warning_file)
+    warning_info.warning_id
+
 let file_code_viewer file_info =
   code_viewer
     (file_info.file_lines_count)
@@ -354,7 +354,7 @@ let warning_code_viewer warning_info =
     (end_with_context - begin_with_context)
     (file_warning_href warning_info)
 
-let filter_dropdown_simple_selection value label_value on_click =
+let dropdown_simple_selection value label_value on_click =
   let severity_selection =
     a
       [
@@ -367,7 +367,7 @@ let filter_dropdown_simple_selection value label_value on_click =
 	  ]
       ]
   in
-  let dom_selection = Tyxml_js.To_dom.of_a severity_selection in
+  let dom_selection = Tyxml_js.To_dom.of_element severity_selection in
   dom_selection##onclick <- Dom_html.handler begin fun _ ->
     on_click value dom_selection;
     Js._true
@@ -377,7 +377,7 @@ let filter_dropdown_simple_selection value label_value on_click =
       severity_selection;
     ]
 
-let filter_dropdown_checkbox_selection value label_value on_select on_deselect =
+let dropdown_checkbox_selection value label_value on_select on_deselect =
   let checkbox =
     input
       ~a:[
@@ -411,7 +411,7 @@ let filter_dropdown_checkbox_selection value label_value on_select on_deselect =
 	]
     ]
 
-let filter_dropdown_menu label_value dropdown_selections grid =
+let dropdown_menu label_value dropdown_selections grid =
   div
     ~a:[
       a_class (["dropdown"] @ grid);

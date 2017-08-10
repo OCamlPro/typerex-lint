@@ -158,7 +158,7 @@ let init_code_viewer code_div warnings_info id =
   | None ->
      let printable_warnings =
        List.filter begin fun warning_info ->
-         not (Web_utils.warning_info_is_ghost warning_info)
+         not (Web_utils.warning_is_ghost warning_info)
        end warnings_info
      in
      set_file_code_viewer ace printable_warnings

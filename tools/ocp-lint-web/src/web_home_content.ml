@@ -128,7 +128,7 @@ let warnings_pie_group_by_file navigation_system analysis_info =
           file_info
       in
       begin
-        match Web_file_content_data.active_file_content file_content_data with
+        match Web_file_content_data.focused_panel_content file_content_data with
         | None ->
            Web_file_content_data.focus_file_content
              file_content_data

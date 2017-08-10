@@ -79,9 +79,9 @@ let content_attach_creator analysis_info navigation_system navigation_element =
            file_warnings_info
            file_errors_info
            (div [])
-           (Web_file_content.main_content_creator file_info)
+           (Web_file_content.alterable_panel_content_creator file_info)
        in
-       Web_file_content.content file_content_data,
+       Web_file_content.content navigation_system file_content_data,
        Web_navigation_system.File_content_attached_data file_content_data
   in
   Tyxml_js.To_dom.of_element content, attach

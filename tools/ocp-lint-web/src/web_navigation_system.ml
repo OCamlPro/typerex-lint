@@ -31,12 +31,12 @@ type navigation_element =
 
 type navigation_attached_data =
   | No_attached_data
-  | File_content_attached_data of Web_file_content_data.file_content_data
+  | File_content_attached_data of Web_file_content_data.t
 
 type navigation_value = {
   dom_tab : Dom_html.element Js.t;
   dom_content : Dom_html.element Js.t;
-  mutable tab_is_created : bool;
+  mutable tab_is_open : bool;
   mutable content_is_created : bool;
   attached_data : navigation_attached_data
 }
@@ -47,10 +47,13 @@ module NavigationElement =
     let equal x y =
       match x,y with
       | HomeElement, HomeElement -> true
+      | HomeElement, _ -> false
       | WarningsElement, WarningsElement -> true
+      | WarningsElement, _ -> false
       | ErrorsElement, ErrorsElement -> true
+      | ErrorsElement, _ -> false
       | FileElement f, FileElement f' -> Web_utils.file_equals f f'
-      | _ -> false
+      | FileElement _, _ -> false
     let hash = Hashtbl.hash
   end
 
@@ -111,7 +114,7 @@ let navigation_element_create navigation_system ne tab_content_attach_creator =
        let default_nav_val = {
          dom_tab = Tyxml_js.To_dom.of_element tab;
          dom_content = Tyxml_js.To_dom.of_element content;
-         tab_is_created = false;
+         tab_is_open = false;
          content_is_created = false;
          attached_data = attach;
        }
@@ -122,11 +125,11 @@ let navigation_element_create navigation_system ne tab_content_attach_creator =
          default_nav_val;
        default_nav_val
   in
-  if not nav_val.tab_is_created then begin
+  if not nav_val.tab_is_open then begin
     Dom.appendChild
       navigation_system.navigation_dom_tabs
       nav_val.dom_tab;
-    nav_val.tab_is_created <- true;
+    nav_val.tab_is_open <- true;
     if not nav_val.content_is_created then begin
       Dom.appendChild
         navigation_system.navigation_dom_contents
@@ -150,7 +153,7 @@ let navigation_element_close navigation_system ne =
   if navigation_value_is_active nav_val then begin
     navigation_value_set_active default
   end;
-  nav_val.tab_is_created <- false;
+  nav_val.tab_is_open <- false;
   navigation_value_set_unactive nav_val;
   Dom.removeChild
     navigation_system.navigation_dom_tabs

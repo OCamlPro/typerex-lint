@@ -67,7 +67,7 @@ let warning_content warning_info =
       warning_info.warning_linter.linter_description
   in
   let code_view =
-    if Web_utils.warning_info_is_ghost warning_info then
+    if Web_utils.warning_is_ghost warning_info then
       Web_utils.html_empty_node ()
     else
       div
@@ -150,7 +150,7 @@ let all_file_content file_info =
       file_code_viewer file_info;
     ]
 
-let main_content_creator file_info file_content_type =
+let alterable_panel_content_creator file_info file_content_type =
   let content =
     match file_content_type with
     | File_content ->
@@ -189,14 +189,14 @@ let warnings_dropdown file_content_data grid =
   in
   let selections =
     List.map begin fun warning_info ->
-      Web_utils.filter_dropdown_checkbox_selection
+      Web_utils.dropdown_checkbox_selection
         warning_info
         (Web_utils.warning_name warning_info)
         on_select
         on_deselect
     end (Web_utils.warnings_set file_content_data.file_content_warnings_info)
   in
-  Web_utils.filter_dropdown_menu "warnings" selections grid
+  Web_utils.dropdown_menu "warnings" selections grid
 
 let severity_dropdown file_content_data grid =
   let active_class = Js.string "dropdown-selection-active" in
@@ -223,13 +223,13 @@ let severity_dropdown file_content_data grid =
   in
   let selections =
     List.map begin fun severity ->
-      Web_utils.filter_dropdown_simple_selection
+      Web_utils.dropdown_simple_selection
         severity
 	(string_of_int severity)
 	on_click
     end [1;2;3;4;5;6;7;8;9;10]
   in
-  Web_utils.filter_dropdown_menu "severity" selections grid
+  Web_utils.dropdown_menu "severity" selections grid
 
 let warning_filter_searchbox file_content_data grid =
   let searchbox =
@@ -397,14 +397,14 @@ let errors_dropdown file_content_data grid =
   in
   let selections =
     List.map begin fun error_info ->
-      Web_utils.filter_dropdown_checkbox_selection
+      Web_utils.dropdown_checkbox_selection
         error_info
         (Web_utils.error_type error_info)
         on_select
         on_deselect
     end (Web_utils.errors_set file_content_data.file_content_errors_info)
   in
-  Web_utils.filter_dropdown_menu "errors" selections grid
+  Web_utils.dropdown_menu "errors" selections grid
 
 let error_filter_searchbox file_content_data grid =
   let searchbox =
@@ -727,7 +727,7 @@ let content_head file_content_data =
 	];
     ]
 
-let content file_content_data =
+let content navigation_system file_content_data =
   let content_div =
     Tyxml_js.Of_dom.of_element
       (file_content_data.file_content_container)
