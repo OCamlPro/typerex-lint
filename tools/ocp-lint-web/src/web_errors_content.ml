@@ -242,7 +242,7 @@ let errors_content navigation_system analysis_info =
     )
 
 let errors_content_empty () =
-  h3 [pcdata "There are no errors provided in this file"]
+  h3 [pcdata "There are no errors provided."]
 
 let content navigation_system analysis_info =
   let content =

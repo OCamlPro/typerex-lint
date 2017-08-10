@@ -302,6 +302,17 @@ let dashboard_head analysis_info =
         ["col-md-2"];
     ]
 
+let dashboard_empty_content () =
+  div
+    ~a:[
+      a_class ["dashboard-empty-content"];
+    ]
+    [
+      h2
+        [pcdata "Congratulations, your project has no warnings."];
+      br ();
+    ]
+
 let dashboard_content navigation_system analysis_info =
   let pie_container div_pie grid =
     div
@@ -336,6 +347,42 @@ let dashboard_content navigation_system analysis_info =
     Web_navigation_system.open_errors_tab navigation_system;
     Js._true
   end;
+  let content =
+    if Web_utils.list_is_empty analysis_info.warnings_info then
+      dashboard_empty_content ()
+    else
+      div
+        [
+          div
+            ~a:[
+              a_class ["row"];
+            ]
+            [
+              pie_container
+                (warnings_pie_group_by_file navigation_system analysis_info)
+                ["col-md-4"];
+              pie_container
+                (warnings_pie_group_by_plugin analysis_info)
+                ["col-md-4"];
+              pie_container
+                (warnings_pie_group_by_linter analysis_info)
+                ["col-md-4"];
+            ];
+          br ();
+          div
+            ~a:[
+              a_class ["row"];
+            ]
+            [
+              pie_container
+                (warnings_pie_group_by_warning analysis_info)
+                ["col-md-4"; "col-md-offset-2"];
+              pie_container
+                (warnings_pie_group_by_severity analysis_info)
+                ["col-md-4"];
+            ]
+        ]
+  in
   div
     ~a:[
       a_class ["dashboard-content"];
@@ -365,34 +412,7 @@ let dashboard_content navigation_system analysis_info =
       br ();
       br ();
       br ();
-      div
-        ~a:[
-          a_class ["row"];
-        ]
-        [
-          pie_container
-            (warnings_pie_group_by_file navigation_system analysis_info)
-            ["col-md-4"];
-          pie_container
-            (warnings_pie_group_by_plugin analysis_info)
-            ["col-md-4"];
-          pie_container
-            (warnings_pie_group_by_linter analysis_info)
-            ["col-md-4"];
-      ];
-      br ();
-      div
-        ~a:[
-          a_class ["row"];
-        ]
-        [
-          pie_container
-            (warnings_pie_group_by_warning analysis_info)
-            ["col-md-4"; "col-md-offset-2"];
-          pie_container
-            (warnings_pie_group_by_severity analysis_info)
-            ["col-md-4"];
-        ]
+      content;
     ]
 
 let content navigation_system analysis_info =

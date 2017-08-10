@@ -620,7 +620,7 @@ let warnings_summary_content_empty () =
   div
     [
       br ();
-      h4 [pcdata "No provided warnings in this file"];
+      h4 [pcdata "No provided warnings in this file."];
     ]
 
 let warnings_summary file_content_data =
@@ -646,7 +646,7 @@ let errors_summary_content_empty () =
   div
     [
       br ();
-      h4 [pcdata "No provided errors in this file"];
+      h4 [pcdata "No provided errors in this file."];
     ]
 
 let errors_summary file_content_data =
