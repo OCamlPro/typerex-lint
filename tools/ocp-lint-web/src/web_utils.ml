@@ -165,7 +165,7 @@ let linter_compare l l' =
   else
     plugin_compare l.linter_plugin l'.linter_plugin
 
-let linter_name pname lname =
+let linter_name ~pname ~lname =
   Printf.sprintf "%s/%s" pname lname
 
 let warning_equals w w' =
@@ -311,7 +311,7 @@ let code_viewer_context_line_number =
 let code_viewer_begin_context_from_line line_number =
   min (line_number - 1) code_viewer_context_line_number
 
-let code_viewer_end_context_from_line line_number lines_count =
+let code_viewer_end_context_from_line ~line_number ~lines_count =
   min (lines_count - line_number) code_viewer_context_line_number
 
 let code_viewer line_number href =

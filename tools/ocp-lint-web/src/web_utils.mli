@@ -91,7 +91,7 @@ val dom_element_undisplay :
   Dom_html.element Js.t ->
   unit
 
-val json_from_js_var :
+val json_from_js_var : (* todo doc *)
   string ->
   Yojson.Basic.json
 
@@ -182,9 +182,9 @@ val linter_compare :
 (**
   Get the full name of the linter
   **)
-val linter_name : (* todo label *)
-  string ->
-  string ->
+val linter_name :
+  pname:string ->
+  lname:string ->
   string
 
 (**
@@ -300,8 +300,8 @@ val code_viewer_begin_context_from_line :
   Get the end of the line with the context
   **)
 val code_viewer_end_context_from_line :
-  int -> (* todo label *)
-  int ->
+  line_number:int ->
+  lines_count:int ->
   int
 
 (**
