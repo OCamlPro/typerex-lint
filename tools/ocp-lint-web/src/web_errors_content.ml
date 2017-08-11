@@ -111,81 +111,20 @@ let error_div_filter analysis_info filter_system =
         ];
     ]
 
-let error_div_head error_info =
-  h4
-    ~a:[
-      a_class ["alert-heading"];
-    ]
-    [pcdata (Printf.sprintf "Error #%d" error_info.error_id)]
-
-let error_div_body error_info =
-  let file_msg =
-    span
-      ~a:[
-        a_class ["alert-link"];
-      ]
-      [
-        pcdata error_info.error_file.file_name;
-      ]
-  in
-  let description_msg =
-    pcdata (
-      Printf.sprintf "%s : %s"
-        (Web_utils.error_type error_info)
-        (Web_utils.error_description error_info)
-    )
-  in
-  div
-    [
-      span
-        ~a:[
-          a_class
-            [
-              "col-md-1";
-              "row-vertical-center";
-              "glyphicon";
-              "glyphicon-remove-sign";
-            ];
-        ]
-        [];
-      div
-        ~a:[
-          a_class ["col-md-11"; "row-vertical-center"];
-        ]
-        [
-          pcdata "from ";
-          file_msg;
-          br ();
-          description_msg;
-        ];
-    ]
-
 let error_div analysis_info navigation_system filter_system error_info =
   let div_error =
-    div
-      ~a:[
-        a_class ["alert"; "alert-danger"; "row"];
-      ]
-      [
-        error_div_head error_info;
-        br ();
-        error_div_body error_info;
-      ]
-  in
-  let dom_div_error = Tyxml_js.To_dom.of_element div_error in
-  dom_div_error##onclick <- Dom_html.handler begin fun _ ->
-    let file_content_data =
+    Web_components.error_box error_info begin fun () ->
+      let file_content_data =
       Web_navigation_system.open_file_tab
         navigation_system
         error_info.error_file
-    in
-    Web_file_content_data.focus_file_content
-      file_content_data
-      (Web_file_content_data.Error_content error_info)
-    ;
-    Js._true
-  end;
-  Web_filter_system.register_element filter_system error_info dom_div_error;
+      in
+      Web_file_content_data.focus_file_content
+        file_content_data
+        (Web_file_content_data.Error_content error_info)
+    end
+  in
+  Web_filter_system.register_element filter_system error_info (Tyxml_js.To_dom.of_element div_error);
   div_error
 
 let errors_content navigation_system analysis_info =

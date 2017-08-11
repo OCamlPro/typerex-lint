@@ -88,3 +88,15 @@ val searchbox :
   ('b -> 'a -> bool) ->
   string list ->
   Html_types.div Tyxml_js.Html.elt
+
+(* todo doc *)
+val warning_box :
+  Lint_web_analysis_info.warning_info ->
+  (unit -> unit) ->
+  [> Html_types.div ] Tyxml_js.Html.elt
+
+(* todo doc *)
+val error_box :
+  Lint_web_analysis_info.error_info ->
+  (unit -> unit) ->
+  [> Html_types.div ] Tyxml_js.Html.elt

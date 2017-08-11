@@ -111,108 +111,20 @@ let warning_div_filter analysis_info filter_system =
         ];
     ]
 
-let warning_div_head warning_info =
-  h4
-    ~a:[
-      a_class ["alert-heading"];
-    ]
-    [pcdata (Printf.sprintf "Warning #%d" warning_info.warning_id)]
-
-let warning_div_body warning_info =
-  let file_msg =
-    span
-      ~a:[
-        a_class ["alert-link"];
-      ]
-      [
-        pcdata warning_info.warning_file.file_name;
-      ]
-  in
-  let line_msg =
-    let str =
-      let open Web_utils in
-      match file_loc_of_warning_info warning_info with
-      | Floc_line line ->
-         Printf.sprintf "line %d" line
-      | Floc_lines_cols (bline, _, eline, _) ->
-         if bline = eline then
-           Printf.sprintf "line %d" bline
-         else
-           Printf.sprintf "line %d to %d" bline eline
-    in
-    pcdata str
-  in
-  let linter_msg =
-    pcdata (
-      Printf.sprintf "raised by %s"
-        (Web_utils.linter_name
-           warning_info.warning_linter.linter_plugin.plugin_name
-           warning_info.warning_linter.linter_name)
-    )
-  in
-  let warning_msg =
-    pcdata (
-      Printf.sprintf "%s : %s"
-        warning_info.warning_type.decl.short_name
-        warning_info.warning_type.output
-    )
-  in
-  div
-    [
-      span
-        ~a:[
-          a_class
-            [
-              "col-md-1";
-              "row-vertical-center";
-              "glyphicon";
-              "glyphicon-alert";
-            ];
-        ]
-        [];
-      div
-        ~a:[
-          a_class ["col-md-11"; "row-vertical-center"];
-        ]
-        [
-          pcdata "from ";
-          file_msg;
-          pcdata " ";
-          line_msg;
-          br ();
-          warning_msg;
-          br ();
-          linter_msg
-        ];
-    ]
-
 let warning_div analysis_info navigation_system filter_system warning_info =
   let div_warning =
-    div
-    ~a:[
-      a_class ["alert"; "alert-warning"; "row"];
-    ]
-    [
-      warning_div_head warning_info;
-      br ();
-      warning_div_body warning_info;
-    ]
+    Web_components.warning_box warning_info begin fun () ->
+      let file_content_data =
+        Web_navigation_system.open_file_tab
+          navigation_system
+          warning_info.warning_file
+      in
+      Web_file_content_data.focus_file_content
+        file_content_data
+        (Web_file_content_data.Warning_content warning_info)
+    end
   in
-  let dom_div_warning = Tyxml_js.To_dom.of_element div_warning in
-  dom_div_warning##onclick <- Dom_html.handler
-  begin fun _ ->
-    let file_content_data =
-      Web_navigation_system.open_file_tab
-        navigation_system
-        warning_info.warning_file
-    in
-    Web_file_content_data.focus_file_content
-      file_content_data
-      (Web_file_content_data.Warning_content warning_info)
-    ;
-    Js._true
-  end;
-  Web_filter_system.register_element filter_system warning_info dom_div_warning;
+  Web_filter_system.register_element filter_system warning_info (Tyxml_js.To_dom.of_element div_warning);
   div_warning
 
 let warnings_content navigation_system analysis_info =

@@ -195,3 +195,165 @@ let searchbox
       a_class grid;
     ]
     [searchbox_input]
+
+let warning_box_head warning_info =
+  h4
+    ~a:[
+      a_class ["alert-heading"];
+    ]
+    [pcdata (Printf.sprintf "Warning #%d" warning_info.warning_id)]
+
+let warning_box_body warning_info =
+  let file_msg =
+    span
+      ~a:[
+        a_class ["alert-link"];
+      ]
+      [
+        pcdata warning_info.warning_file.file_name;
+      ]
+  in
+  let line_msg =
+    let str =
+      let open Web_utils in
+      match file_loc_of_warning_info warning_info with
+      | Floc_line line ->
+         Printf.sprintf "line %d" line
+      | Floc_lines_cols (bline, _, eline, _) ->
+         if bline = eline then
+           Printf.sprintf "line %d" bline
+         else
+           Printf.sprintf "line %d to %d" bline eline
+    in
+    pcdata str
+  in
+  let linter_msg =
+    pcdata (
+      Printf.sprintf "raised by %s"
+        (Web_utils.linter_name
+           warning_info.warning_linter.linter_plugin.plugin_name
+           warning_info.warning_linter.linter_name)
+    )
+  in
+  let warning_msg =
+    pcdata (
+      Printf.sprintf "%s : %s"
+        warning_info.warning_type.decl.short_name
+        warning_info.warning_type.output
+    )
+  in
+  div
+    [
+      span
+        ~a:[
+          a_class
+            [
+              "col-md-1";
+              "row-vertical-center";
+              "glyphicon";
+              "glyphicon-alert";
+            ];
+        ]
+        [];
+      div
+        ~a:[
+          a_class ["col-md-11"; "row-vertical-center"];
+        ]
+        [
+          pcdata "from ";
+          file_msg;
+          pcdata " ";
+          line_msg;
+          br ();
+          warning_msg;
+          br ();
+          linter_msg
+        ];
+    ]
+
+let warning_box warning_info onclick =
+  let div_warning =
+    div
+    ~a:[
+      a_class ["alert"; "alert-warning"; "row"];
+    ]
+    [
+      warning_box_head warning_info;
+      br ();
+      warning_box_body warning_info;
+    ]
+  in
+  (Tyxml_js.To_dom.of_element div_warning)##onclick <- Dom_html.handler
+  begin fun _ ->
+    onclick ();
+    Js._true
+  end;
+  div_warning
+
+let error_box_head error_info =
+  h4
+    ~a:[
+      a_class ["alert-heading"];
+    ]
+    [pcdata (Printf.sprintf "Error #%d" error_info.error_id)]
+
+let error_box_body error_info =
+  let file_msg =
+    span
+      ~a:[
+        a_class ["alert-link"];
+      ]
+      [
+        pcdata error_info.error_file.file_name;
+      ]
+  in
+  let description_msg =
+    pcdata (
+      Printf.sprintf "%s : %s"
+        (Web_utils.error_type error_info)
+        (Web_utils.error_description error_info)
+    )
+  in
+  div
+    [
+      span
+        ~a:[
+          a_class
+            [
+              "col-md-1";
+              "row-vertical-center";
+              "glyphicon";
+              "glyphicon-remove-sign";
+            ];
+        ]
+        [];
+      div
+        ~a:[
+          a_class ["col-md-11"; "row-vertical-center"];
+        ]
+        [
+          pcdata "from ";
+          file_msg;
+          br ();
+          description_msg;
+        ];
+    ]
+
+let error_box error_info onclick =
+  let div_error =
+    div
+    ~a:[
+      a_class ["alert"; "alert-danger"; "row"];
+    ]
+    [
+      error_box_head error_info;
+      br ();
+      error_box_body error_info;
+    ]
+  in
+  (Tyxml_js.To_dom.of_element div_error)##onclick <- Dom_html.handler
+  begin fun _ ->
+    onclick ();
+    Js._true
+  end;
+  div_error
