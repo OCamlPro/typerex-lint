@@ -282,15 +282,14 @@ let warnings_table_entry warning_info file_content_data =
         td [warnings_table_col_severity warning_info];
       ]
   in
-  let dom_tr = Tyxml_js.To_dom.of_element tr in
-  dom_tr##onclick <-Dom_html.handler begin fun _ ->
+  (Tyxml_js.To_dom.of_element tr)##onclick <-Dom_html.handler begin fun _ ->
     focus_file_content file_content_data (Warning_content warning_info);
     Js._true
   end;
   Web_filter_system.register_element
     file_content_data.file_content_warnings_filters
     warning_info
-    dom_tr
+    tr
   ;
   tr
 
@@ -401,15 +400,14 @@ let errors_table_entry error_info file_content_data =
         td [errors_table_col_error error_info];
       ]
   in
-  let dom_tr = Tyxml_js.To_dom.of_element tr in
-  dom_tr##onclick <-Dom_html.handler begin fun _ ->
+  (Tyxml_js.To_dom.of_element tr)##onclick <-Dom_html.handler begin fun _ ->
     focus_file_content file_content_data (Error_content error_info);
     Js._true
   end;
   Web_filter_system.register_element
     file_content_data.file_content_errors_filters
     error_info
-    dom_tr
+    tr
   ;
   tr
 

@@ -57,7 +57,7 @@ let register_element filter_system value dom =
   filter_system.filter_elements <-
     {
       filter_element_val = value;
-      filter_element_dom = dom;
+      filter_element_dom = (Tyxml_js.To_dom.of_element dom);
     } :: filter_system.filter_elements
 
 let add_filter filter_system filter_id filter =

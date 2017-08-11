@@ -53,7 +53,7 @@ val create :
 val register_element :
   ('a, 'b) t ->
   'a ->
-  Dom_html.element Js.t ->
+  'c Tyxml_js.To_dom.elt ->
   unit
 
 (**

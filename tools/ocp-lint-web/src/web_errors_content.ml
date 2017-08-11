@@ -124,7 +124,7 @@ let error_div analysis_info navigation_system filter_system error_info =
         (Web_file_content_data.Error_content error_info)
     end
   in
-  Web_filter_system.register_element filter_system error_info (Tyxml_js.To_dom.of_element div_error);
+  Web_filter_system.register_element filter_system error_info div_error;
   div_error
 
 let errors_content navigation_system analysis_info =

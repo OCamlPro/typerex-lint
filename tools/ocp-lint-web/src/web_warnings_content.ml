@@ -124,7 +124,7 @@ let warning_div analysis_info navigation_system filter_system warning_info =
         (Web_file_content_data.Warning_content warning_info)
     end
   in
-  Web_filter_system.register_element filter_system warning_info (Tyxml_js.To_dom.of_element div_warning);
+  Web_filter_system.register_element filter_system warning_info div_warning;
   div_warning
 
 let warnings_content navigation_system analysis_info =
