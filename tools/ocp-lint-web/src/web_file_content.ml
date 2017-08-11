@@ -228,52 +228,11 @@ let severity_dropdown file_content_data grid =
   Web_components.dropdown_menu "severity" selections grid
 
 let warning_filter_searchbox file_content_data grid =
-  let searchbox =
-    input
-      ~a:[
-        a_input_type `Text;
-        a_class ["form-control"; "filter-searchbox"];
-        a_placeholder "Search..."
-      ] ()
-  in
-  let searchbox_dom = Tyxml_js.To_dom.of_input searchbox in
-  let get_keyword () =
-    let str = Js.to_string (searchbox_dom##value) in
-    if str = "" then
-      None
-    else
-      Some str
-  in
-  let previous_keyword = ref None in
-  searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
-    let keyword = get_keyword () in
-    begin match !previous_keyword with
-    | Some kwd ->
-       Web_filter_system.remove_filter
-         file_content_data.file_content_warnings_filters
-         (Web_filter_system.Warning_keyword_filter kwd)
-    | None ->
-       ()
-    end;
-    begin match keyword with
-    | Some kwd ->
-       Web_filter_system.add_warning_filter
-         file_content_data.file_content_warnings_filters
-         (Web_filter_system.Warning_keyword_filter kwd)
-    | None ->
-       ()
-    end;
-    previous_keyword := keyword;
-    Web_filter_system.eval_filters
-      file_content_data.file_content_warnings_filters
-    ;
-    Js._true
-  end;
-  div
-    ~a:[
-      a_class grid;
-    ]
-    [searchbox]
+  Web_components.searchbox
+    file_content_data.file_content_warnings_filters
+    (fun kwd -> Web_filter_system.Warning_keyword_filter kwd)
+    Web_filter_system.value_of_warning_filter
+    grid
 
 let warnings_filter file_content_data =
   div
@@ -403,52 +362,11 @@ let errors_dropdown file_content_data grid =
   Web_components.dropdown_menu "errors" selections grid
 
 let error_filter_searchbox file_content_data grid =
-  let searchbox =
-    input
-      ~a:[
-        a_input_type `Text;
-        a_class ["form-control"; "filter-searchbox"];
-        a_placeholder "Search..."
-      ] ()
-  in
-  let searchbox_dom = Tyxml_js.To_dom.of_input searchbox in
-  let get_keyword () =
-    let str = Js.to_string (searchbox_dom##value) in
-    if str = "" then
-      None
-    else
-      Some str
-  in
-  let previous_keyword = ref None in
-  searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
-    let keyword = get_keyword () in
-    begin match !previous_keyword with
-    | Some kwd ->
-       Web_filter_system.remove_filter
-         file_content_data.file_content_errors_filters
-         (Web_filter_system.Error_keyword_filter kwd)
-    | None ->
-       ()
-    end;
-    begin match keyword with
-    | Some kwd ->
-       Web_filter_system.add_error_filter
-         file_content_data.file_content_errors_filters
-         (Web_filter_system.Error_keyword_filter kwd)
-    | None ->
-       ()
-    end;
-    previous_keyword := keyword;
-    Web_filter_system.eval_filters
-      file_content_data.file_content_errors_filters
-    ;
-    Js._true
-  end;
-  div
-    ~a:[
-      a_class grid;
-    ]
-    [searchbox]
+  Web_components.searchbox
+    file_content_data.file_content_errors_filters
+    (fun kwd -> Web_filter_system.Error_keyword_filter kwd)
+    Web_filter_system.value_of_error_filter
+    grid
 
 let errors_filter file_content_data =
   div

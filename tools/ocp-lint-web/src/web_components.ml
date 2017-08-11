@@ -149,3 +149,49 @@ let dropdown_menu label_value dropdown_selections grid =
         ]
         dropdown_selections;
       ]
+
+let searchbox
+      filter_system filter_type_creator filter_value_of_id_creator grid =
+  let searchbox_input =
+    input
+      ~a:[
+        a_input_type `Text;
+        a_class ["form-control"; "filter-searchbox"];
+        a_placeholder "Search..."
+      ] ()
+  in
+  let searchbox_dom = Tyxml_js.To_dom.of_input searchbox_input in
+  let get_filter () =
+    let str = Js.to_string (searchbox_dom##value) in
+    if str = "" then
+      None
+    else
+      Some (filter_type_creator str)
+  in
+  let previous_filter = ref None in
+  searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
+    let filter = get_filter () in
+    begin match !previous_filter with
+    | Some fltr ->
+       Web_filter_system.remove_filter filter_system fltr
+    | None ->
+       ()
+    end;
+    begin match filter with
+    | Some fltr ->
+       Web_filter_system.add_filter
+         filter_system
+         fltr
+         (filter_value_of_id_creator fltr)
+    | None ->
+       ()
+    end;
+    previous_filter := filter;
+    Web_filter_system.eval_filters filter_system;
+    Js._true
+  end;
+  div
+    ~a:[
+      a_class grid;
+    ]
+    [searchbox_input]

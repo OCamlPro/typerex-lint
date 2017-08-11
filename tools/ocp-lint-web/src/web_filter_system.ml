@@ -79,7 +79,7 @@ let eval_filters filter_system =
       Web_utils.dom_element_undisplay filter_element.filter_element_dom
   end filter_system.filter_elements
 
-let value_of_warning_filter_id = function
+let value_of_warning_filter = function
   | Warning_type_filter warning ->
      begin fun warning_info ->
        not (
@@ -100,9 +100,9 @@ let value_of_warning_filter_id = function
      end
 
 let add_warning_filter filter_system filter_id =
-  add_filter filter_system filter_id (value_of_warning_filter_id filter_id)
+  add_filter filter_system filter_id (value_of_warning_filter filter_id)
 
-let value_of_error_filter_id = function
+let value_of_error_filter = function
   | Error_type_filter error ->
      begin fun error_info ->
        not (
@@ -119,4 +119,4 @@ let value_of_error_filter_id = function
      end
 
 let add_error_filter filter_system filter_id =
-  add_filter filter_system filter_id (value_of_error_filter_id filter_id)
+  add_filter filter_system filter_id (value_of_error_filter filter_id)

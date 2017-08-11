@@ -81,52 +81,11 @@ let files_dropdown analysis_info filter_system grid =
   Web_components.dropdown_menu "files" selections grid
 
 let filter_searchbox filter_system grid =
-  let searchbox =
-    input
-      ~a:[
-        a_input_type `Text;
-        a_class ["form-control"; "filter-searchbox"];
-        a_placeholder "Search..."
-      ] ()
-  in
-  let searchbox_dom = Tyxml_js.To_dom.of_input searchbox in
-  let get_keyword () =
-    let str = Js.to_string (searchbox_dom##value) in
-    if str = "" then
-      None
-    else
-      Some str
-  in
-  let previous_keyword = ref None in
-  searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
-    let keyword = get_keyword () in
-    begin match !previous_keyword with
-    | Some kwd ->
-       Web_filter_system.remove_filter
-         filter_system
-         (Web_filter_system.Warning_keyword_filter kwd)
-    | None ->
-       ()
-    end;
-    begin match keyword with
-    | Some kwd ->
-       Web_filter_system.add_warning_filter
-         filter_system
-         (Web_filter_system.Warning_keyword_filter kwd)
-    | None ->
-       ()
-    end;
-    previous_keyword := keyword;
-    Web_filter_system.eval_filters
-      filter_system
-    ;
-    Js._true
-  end;
-  div
-    ~a:[
-      a_class grid;
-    ]
-    [searchbox]
+  Web_components.searchbox
+    filter_system
+    (fun kwd -> Web_filter_system.Warning_keyword_filter kwd)
+    Web_filter_system.value_of_warning_filter
+    grid
 
 let warning_div_filter analysis_info filter_system =
   div

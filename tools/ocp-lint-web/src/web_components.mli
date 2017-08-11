@@ -80,3 +80,11 @@ val dropdown_menu :
   Html_types.ul_content_fun Tyxml_js.Html.elt list ->
   string list ->
   Html_types.div Tyxml_js.Html.elt
+
+(* todo doc *)
+val searchbox :
+  ('a, 'b) Web_filter_system.t ->
+  (string -> 'b) ->
+  ('b -> 'a -> bool) ->
+  string list ->
+  Html_types.div Tyxml_js.Html.elt

@@ -97,6 +97,14 @@ type warnings_filter_system =
     (Lint_web_analysis_info.warning_info, warning_filter_id) t
 
 (**
+  Get the predicate of a warning filter id
+  **)
+val value_of_warning_filter :
+  warning_filter_id ->
+  Lint_web_analysis_info.warning_info ->
+  bool
+
+(**
   Add a filter in a warnings filter system
   **)
 val add_warning_filter :
@@ -117,6 +125,14 @@ type error_filter_id =
   **)
 type errors_filter_system =
     (Lint_web_analysis_info.error_info, error_filter_id) t
+
+(**
+  Get the predicate of an error filter id
+  **)
+val value_of_error_filter :
+  error_filter_id ->
+  Lint_web_analysis_info.error_info ->
+  bool
 
 (**
   Add a filter in a warnings filter system
