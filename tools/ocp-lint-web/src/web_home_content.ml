@@ -305,7 +305,7 @@ let dashboard_head analysis_info =
 let dashboard_empty_content () =
   div
     ~a:[
-      a_class ["dashboard-empty-content"];
+      a_class ["empty-content"];
     ]
     [
       h2

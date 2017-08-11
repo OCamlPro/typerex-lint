@@ -139,7 +139,13 @@ let warnings_content navigation_system analysis_info =
     )
 
 let warnings_content_empty () =
-  h3 [pcdata "There are no warnings provided."]
+  div
+    ~a:[
+      a_class ["empty-content"];
+    ]
+    [
+      h3 [pcdata "There are no warnings provided."];
+    ]
 
 let content navigation_system analysis_info =
   let content =

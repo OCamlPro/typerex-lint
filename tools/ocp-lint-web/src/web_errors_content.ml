@@ -140,7 +140,13 @@ let errors_content navigation_system analysis_info =
     )
 
 let errors_content_empty () =
-  h3 [pcdata "There are no errors provided."]
+  div
+    ~a:[
+      a_class ["empty-content"];
+    ]
+    [
+      h3 [pcdata "There are no errors provided."];
+    ]
 
 let content navigation_system analysis_info =
   let content =
