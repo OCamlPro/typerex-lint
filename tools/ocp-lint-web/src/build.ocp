@@ -51,6 +51,7 @@ begin program "ocp-lint-web-main"
      "web_utils.ml"
      "web_filter_system.ml"
      "web_navigation_system.ml"
+     "web_components.ml"
      "web_file_content_data.ml"
      "web_file_content.ml"
      "web_home_content.ml"
@@ -100,6 +101,7 @@ begin program "ocp-lint-web-codeviewer"
    files = [
      "web_errors.ml"
      "web_utils.ml"
+     "web_components.ml"
      "web_code_viewer.ml"
    ]
 

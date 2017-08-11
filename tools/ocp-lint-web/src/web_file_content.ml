@@ -43,7 +43,7 @@ let warning_content_code_view_body warning_info =
       a_class ["panel-body"];
     ]
     [
-      Web_utils.warning_code_viewer warning_info;
+      Web_components.warning_code_viewer warning_info;
     ]
 
 let warning_content_code_view warning_info =
@@ -126,7 +126,7 @@ let file_code_viewer_body file_info =
       a_class ["panel-body"];
     ]
     [
-      Web_utils.file_code_viewer file_info;
+      Web_components.file_code_viewer file_info;
     ]
 
 let file_code_viewer file_info =
@@ -185,14 +185,14 @@ let warnings_dropdown file_content_data grid =
   in
   let selections =
     List.map begin fun warning_info ->
-      Web_utils.dropdown_checkbox_selection
+      Web_components.dropdown_checkbox_selection
         warning_info
         (Web_utils.warning_name warning_info)
         on_select
         on_deselect
     end (Web_utils.warnings_set file_content_data.file_content_warnings_info)
   in
-  Web_utils.dropdown_menu "warnings" selections grid
+  Web_components.dropdown_menu "warnings" selections grid
 
 let severity_dropdown file_content_data grid =
   let active_class = Js.string "dropdown-selection-active" in
@@ -219,13 +219,13 @@ let severity_dropdown file_content_data grid =
   in
   let selections =
     List.map begin fun severity ->
-      Web_utils.dropdown_simple_selection
+      Web_components.dropdown_simple_selection
         severity
         (string_of_int severity)
         on_click
     end [1;2;3;4;5;6;7;8;9;10]
   in
-  Web_utils.dropdown_menu "severity" selections grid
+  Web_components.dropdown_menu "severity" selections grid
 
 let warning_filter_searchbox file_content_data grid =
   let searchbox =
@@ -393,14 +393,14 @@ let errors_dropdown file_content_data grid =
   in
   let selections =
     List.map begin fun error_info ->
-      Web_utils.dropdown_checkbox_selection
+      Web_components.dropdown_checkbox_selection
         error_info
         (Web_utils.error_type error_info)
         on_select
         on_deselect
     end (Web_utils.errors_set file_content_data.file_content_errors_info)
   in
-  Web_utils.dropdown_menu "errors" selections grid
+  Web_components.dropdown_menu "errors" selections grid
 
 let error_filter_searchbox file_content_data grid =
   let searchbox =

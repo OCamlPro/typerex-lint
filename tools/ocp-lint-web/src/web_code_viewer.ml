@@ -64,10 +64,10 @@ let set_warning_code_viewer ace warning =
   in
   let lines_count = warning.warning_file.file_lines_count in
   let begin_context =
-    Web_utils.code_viewer_begin_context_from_line begin_line
+    Web_components.code_viewer_begin_context_from_line begin_line
   in
   let end_context =
-    Web_utils.code_viewer_end_context_from_line end_line lines_count
+    Web_components.code_viewer_end_context_from_line end_line lines_count
   in
   let begin_with_context = begin_line - begin_context in
   let end_with_context = end_line + end_context in

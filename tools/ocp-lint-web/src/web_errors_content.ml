@@ -40,14 +40,14 @@ let errors_dropdown analysis_info filter_system grid =
   in
   let selections =
     List.map begin fun error_info ->
-      Web_utils.dropdown_checkbox_selection
+      Web_components.dropdown_checkbox_selection
         error_info
         (Web_utils.error_type error_info)
         on_select
         on_deselect
     end (Web_utils.errors_set analysis_info.errors_info)
   in
-  Web_utils.dropdown_menu "errors" selections grid
+  Web_components.dropdown_menu "errors" selections grid
 
 let files_dropdown analysis_info filter_system grid =
   let files_info =
@@ -71,14 +71,14 @@ let files_dropdown analysis_info filter_system grid =
   in
   let selections =
     List.map begin fun file_info ->
-      Web_utils.dropdown_checkbox_selection
+      Web_components.dropdown_checkbox_selection
         file_info
         file_info.file_name
         on_select
         on_deselect
     end files_info
   in
-  Web_utils.dropdown_menu "files" selections grid
+  Web_components.dropdown_menu "files" selections grid
 
 let filter_searchbox filter_system grid =
   let searchbox =

@@ -18,7 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
 open Web_errors
@@ -107,6 +106,15 @@ let file_short_name file_info =
     List.hd (List.rev dirs)
   with
     Failure _ -> raise (Web_exception (Invalid_file_name file_info))
+
+let file_href file_info =
+  Printf.sprintf "%s.html"
+    (generated_static_page_of_file file_info)
+
+let file_warning_href warning_info =
+  Printf.sprintf "%s.html#%d"
+    (generated_static_page_of_file warning_info.warning_file)
+    warning_info.warning_id
 
 let filename_overflow nbchar filename =
   let len = String.length filename in
@@ -301,139 +309,3 @@ let errors_set errors_info =
         ErrorInfoSet.add error acc
        end ErrorInfoSet.empty errors_info
     )
-
-let code_viewer_line_size =
-  17
-
-let code_viewer_context_line_number =
-  3
-
-let code_viewer_begin_context_from_line line_number =
-  min (line_number - 1) code_viewer_context_line_number
-
-let code_viewer_end_context_from_line ~line_number ~lines_count =
-  min (lines_count - line_number) code_viewer_context_line_number
-
-let code_viewer line_number href =
-  let height = (* todo min height *)
-    code_viewer_line_size * (line_number + 2)
-  in
-  Tyxml_js.Html.iframe
-    ~a:[
-      Tyxml_js.Html.a_src href;
-      Tyxml_js.Html.a_style ("height: " ^ (string_of_int height) ^ "px");
-    ]
-    []
-
-let file_href file_info =
-  Printf.sprintf "%s.html"
-    (generated_static_page_of_file file_info)
-
-let file_warning_href warning_info =
-  Printf.sprintf "%s.html#%d"
-    (generated_static_page_of_file warning_info.warning_file)
-    warning_info.warning_id
-
-let file_code_viewer file_info =
-  code_viewer
-    (file_info.file_lines_count)
-    (file_href file_info)
-
-let warning_code_viewer warning_info =
-  let begin_line, end_line =
-    match file_loc_of_warning_info warning_info with
-    | Floc_line line ->
-       line, line
-    | Floc_lines_cols (bline, _, eline, _) ->
-       bline, eline
-  in
-  let lines_count = warning_info.warning_file.file_lines_count in
-  let begin_with_context =
-    begin_line - code_viewer_begin_context_from_line begin_line
-  in
-  let end_with_context =
-    end_line + code_viewer_end_context_from_line end_line lines_count
-  in
-  code_viewer
-    (end_with_context - begin_with_context)
-    (file_warning_href warning_info)
-
-let dropdown_simple_selection value label_value on_click =
-  let severity_selection =
-    a
-      [
-        label
-          ~a:[
-            a_class ["filter-label";];
-          ]
-          [
-            pcdata label_value;
-          ]
-      ]
-  in
-  let dom_selection = Tyxml_js.To_dom.of_element severity_selection in
-  dom_selection##onclick <- Dom_html.handler begin fun _ ->
-    on_click value dom_selection;
-    Js._true
-  end;
-  li
-    [
-      severity_selection;
-    ]
-
-let dropdown_checkbox_selection value label_value on_select on_deselect =
-  let checkbox =
-    input
-      ~a:[
-        a_class ["filter-checkbox"];
-        a_input_type `Checkbox;
-        a_checked ();
-      ] ();
-  in
-  let dom_checkbox = Tyxml_js.To_dom.of_input checkbox in
-  let is_selected () = Js.to_bool dom_checkbox##checked in
-  dom_checkbox##onclick <- Dom_html.handler begin fun _ ->
-    if is_selected () then
-      on_select value
-    else
-      on_deselect value
-    ;
-    Js._true
-  end;
-  li
-    [
-      a
-        [
-          checkbox;
-          label
-            ~a:[
-              a_class ["filter-label"];
-            ]
-            [
-              pcdata label_value;
-            ];
-        ]
-    ]
-
-let dropdown_menu label_value dropdown_selections grid =
-  div
-    ~a:[
-      a_class (["dropdown"] @ grid);
-    ]
-    [
-      button
-        ~a:[
-          a_class ["btn"; "btn-default"; "dropdown-toggle"];
-          a_button_type `Button;
-          a_user_data "toggle" "dropdown";
-        ]
-        [
-          pcdata (label_value ^ " "); (* todo change *)
-          span ~a:[a_class ["caret"]] [];
-        ];
-      ul
-        ~a:[
-          a_class ["dropdown-menu"; "scrollable-menu"];
-        ]
-        dropdown_selections;
-      ]
