@@ -28,6 +28,8 @@ val content :
 
 (**
   Create a content for the alterable panel
+  Raise Open_warning_from_bad_file if the file and the warning content type file  are differents
+  Raise Open_error_from_bad_file if the file and the error content type file are differents
   **)
 val alterable_panel_content_creator :
   Lint_web_analysis_info.file_info ->

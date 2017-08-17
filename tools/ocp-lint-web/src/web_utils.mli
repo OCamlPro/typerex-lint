@@ -18,8 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(* todo doc *)
-
 (**
   A location in a file
   **)
@@ -29,17 +27,11 @@ type file_loc =
 
 (**
   Get the file location of a warning
+  Raise Web_exception Ghost_location if the location of the warning is ghost
   **)
 val file_loc_of_warning_info :
   Lint_web_analysis_info.warning_info ->
   file_loc
-
-(**
-  Get a dom element by id
-  **)
-val get_element_by_id :
-  string ->
-  'a Tyxml_js.Html5.elt
 
 (**
   true if the list if empty, else false
@@ -57,12 +49,28 @@ val string_contains_keyword :
   bool
 
 (**
-todo
+  Get the string writing with at most n characters
   **)
 val string_overflow :
   int ->
   string ->
   string
+
+(**
+  Get the value of a non-empty optional
+  Raise Web_exception Get_value_of_empty_optional if the optional is empty
+  **)
+val value_of_optional :
+  'a option ->
+  'a
+
+(**
+  Get the value of a non-empty js optional
+  Raise Web_exception Get_value_of_empty_optional if the optional is empty
+  **)
+val value_of_js_option :
+  'a Js.Opt.t ->
+  'a
 
 (**
   Create an html empty node
@@ -99,7 +107,18 @@ val dom_element_undisplay :
   Dom_html.element Js.t ->
   unit
 
-val json_from_js_var : (* todo doc *)
+(**
+  Get a dom element by id
+  Raise Web_exception No_such_element_with_id if there is no element with specified id
+  **)
+val get_element_by_id :
+  string ->
+  'a Tyxml_js.Html5.elt
+
+(**
+  Get the JSON of the variable from his name
+  **)
+val json_from_js_var :
   string ->
   Yojson.Basic.json
 
@@ -135,13 +154,14 @@ val file_compare :
 
 (**
   Get the name of the file without the path
+  Raise Web_exception Invalid_file_name file_info if the filename is not valid
   **)
 val file_short_name :
   Lint_web_analysis_info.file_info ->
   string
 
 (**
-
+  Get the filename writing with at most n characters
   **)
 val filename_overflow :
   int ->

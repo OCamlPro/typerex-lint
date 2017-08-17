@@ -80,6 +80,7 @@ val create :
 (**
   Get the displayed content type of the alterable panel
   The option is empty if the panel is no content was created
+  Raise Web_exception Active_main_file_content_is_not_unique if there are more than one panel marked as active
   **)
 val focused_panel_content :
   t ->

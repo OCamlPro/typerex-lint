@@ -97,6 +97,9 @@ val init :
 
 (**
   Open the home tab
+  Raise Web_exception Active_navigation_element_is_not_unique if there are more than one tab marked as active
+  Raise Web_exception No_active_navigation_element if there is no than one tab marked as active
+  Raise Web_exception Invalid_content_attached_data if the home content is attached to invalid data
   **)
 val open_home_tab :
   t ->
@@ -104,6 +107,9 @@ val open_home_tab :
 
 (**
   Open the warnings tab
+  Raise Web_exception Active_navigation_element_is_not_unique if there are more than one tab marked as active
+  Raise Web_exception No_active_navigation_element if there is no than one tab marked as active
+  Raise Web_exception Invalid_content_attached_data if the home content is attached to invalid data
   **)
 val open_warnings_tab :
   t ->
@@ -111,6 +117,9 @@ val open_warnings_tab :
 
 (**
   Open the errors tab
+  Raise Web_exception Active_navigation_element_is_not_unique if there are more than one tab marked as active
+  Raise Web_exception No_active_navigation_element if there is no than one tab marked as active
+  Raise Web_exception Invalid_content_attached_data if the home content is attached to invalid data
   **)
 val open_errors_tab :
   t ->
@@ -118,6 +127,9 @@ val open_errors_tab :
 
 (**
   Open the file tab
+  Raise Web_exception Active_navigation_element_is_not_unique if there are more than one tab marked as active
+  Raise Web_exception No_active_navigation_element if there is no than one tab marked as active
+  Raise Web_exception Invalid_content_attached_data if the home content is attached to invalid data
   **)
 val open_file_tab :
   t ->

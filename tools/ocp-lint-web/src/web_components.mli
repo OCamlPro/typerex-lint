@@ -59,14 +59,18 @@ val warning_code_viewer :
   Lint_web_analysis_info.warning_info ->
   Html_types.iframe Tyxml_js.Html.elt
 
-(* todo doc *)
+(**
+  Create a simple selection for dropdown menu
+  **)
 val dropdown_simple_selection :
   'a ->
   string ->
   ('a -> Dom_html.element Js.t -> unit) ->
   Html_types.li Tyxml_js.Html.elt
 
-(* todo doc *)
+(**
+  Create a checkbox selection for dropdown menu
+  **)
 val dropdown_checkbox_selection :
   'a ->
   string ->
@@ -74,14 +78,18 @@ val dropdown_checkbox_selection :
   ('a -> unit) ->
   Html_types.li Tyxml_js.Html.elt
 
-(* todo doc *)
+(**
+  Create a dropdown menu
+  **)
 val dropdown_menu :
   string ->
   Html_types.ul_content_fun Tyxml_js.Html.elt list ->
   string list ->
   Html_types.div Tyxml_js.Html.elt
 
-(* todo doc *)
+(**
+  Create a searchbox input
+  **)
 val searchbox :
   ('a, 'b) Web_filter_system.t ->
   (string -> 'b) ->
@@ -89,13 +97,17 @@ val searchbox :
   string list ->
   Html_types.div Tyxml_js.Html.elt
 
-(* todo doc *)
+(**
+  Create a warning box
+  **)
 val warning_box :
   Lint_web_analysis_info.warning_info ->
   (unit -> unit) ->
   [> Html_types.div ] Tyxml_js.Html.elt
 
-(* todo doc *)
+(**
+  Create an error box
+  **)
 val error_box :
   Lint_web_analysis_info.error_info ->
   (unit -> unit) ->
