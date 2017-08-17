@@ -89,7 +89,23 @@ let value_of_warning_filter = function
        )
      end
   | Warning_keyword_filter kwd ->
-     Web_utils.warning_contains_keyword kwd
+     begin fun warning_info ->
+       Web_utils.string_contains_keyword
+         kwd
+         warning_info.warning_file.file_name
+       || Web_utils.string_contains_keyword
+            kwd
+            warning_info.warning_linter.linter_plugin.plugin_name
+       || Web_utils.string_contains_keyword
+            kwd
+            warning_info.warning_linter.linter_name
+       || Web_utils.string_contains_keyword
+            kwd
+            warning_info.warning_type.decl.short_name
+       || Web_utils.string_contains_keyword
+            kwd
+            warning_info.warning_type.output
+     end
   | Warning_file_filter file ->
      begin fun warning_info ->
        not (Web_utils.file_equals file warning_info.warning_file)
@@ -112,7 +128,17 @@ let value_of_error_filter = function
        )
      end
   | Error_keyword_filter kwd ->
-     Web_utils.error_contains_keyword kwd
+     begin fun error_info ->
+       Web_utils.string_contains_keyword
+         kwd
+         (Web_utils.error_type error_info)
+       || Web_utils.string_contains_keyword
+            kwd
+            (Web_utils.error_description error_info)
+       || Web_utils.string_contains_keyword
+            kwd
+            error_info.error_file.file_name
+     end
   | Error_file_filter file ->
      begin fun error_info ->
        not (Web_utils.file_equals file error_info.error_file)

@@ -49,7 +49,15 @@ val list_is_empty :
   bool
 
 (**
+  true if the string contains the keyword, else false
+  **)
+val string_contains_keyword :
+  kwd:string ->
+  str:string ->
+  bool
 
+(**
+todo
   **)
 val string_overflow :
   int ->
@@ -218,14 +226,6 @@ val warning_is_ghost :
   bool
 
 (**
-  true if warning contains the keyword, else false
-  **)
-val warning_contains_keyword :
-  string ->
-  Lint_web_analysis_info.warning_info ->
-  bool
-
-(**
   Get the list of warnings without duplicates
   **)
 val warnings_set :
@@ -261,14 +261,6 @@ val error_compare :
   Lint_web_analysis_info.error_info ->
   Lint_web_analysis_info.error_info ->
   int
-
-(**
-  true if error contains the keyword, else false
-  **)
-val error_contains_keyword :
-  string ->
-  Lint_web_analysis_info.error_info ->
-  bool
 
 (**
   Get the list of errors without duplicates

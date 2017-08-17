@@ -53,6 +53,12 @@ let list_is_empty = function
   | [] -> true
   | _ -> false
 
+let string_contains_keyword ~kwd ~str =
+  let re = Regexp.regexp (kwd) in
+  match Regexp.search_forward re str 0 with
+  | Some _ -> true
+  | None -> false
+
 let string_overflow nbchar str =
   let len = String.length str in
   if len <= nbchar then
@@ -223,19 +229,6 @@ let warning_is_ghost warning_info =
   in
   List.exists is_same_warning ghost_warnings && is_ghost_loc loc
 
-let warning_contains_keyword keyword warning_info =
-  let re = Regexp.regexp (keyword) in
-  let contains_kwd str =
-    match Regexp.search_forward re str 0 with
-    | Some _ -> true
-    | None -> false
-  in
-  contains_kwd warning_info.warning_file.file_name
-  || contains_kwd warning_info.warning_linter.linter_plugin.plugin_name
-  || contains_kwd warning_info.warning_linter.linter_name
-  || contains_kwd warning_info.warning_type.decl.short_name
-  || contains_kwd warning_info.warning_type.output
-
 module WarningInfo = struct
 
   type t = warning_info
@@ -281,17 +274,6 @@ let error_equals e e' =
 
 let error_compare e e' =
   String.compare (error_type e) (error_type e')
-
-let error_contains_keyword keyword error_info =
-  let re = Regexp.regexp (keyword) in
-  let contains_kwd str =
-    match Regexp.search_forward re str 0 with
-    | Some _ -> true
-    | None -> false
-  in
-  contains_kwd (error_type error_info)
-  || contains_kwd (error_description error_info)
-  || contains_kwd error_info.error_file.file_name
 
 module ErrorInfo = struct
 
