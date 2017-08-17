@@ -31,8 +31,6 @@ type error =
   | Active_navigation_element_is_not_unique
   | No_active_navigation_element
   | Get_value_of_empty_optional
-  | Invalid_file_name of
-      Lint_web_analysis_info.file_info
   | Invalid_content_attached_data of
       string
   | Open_warning_from_bad_file of

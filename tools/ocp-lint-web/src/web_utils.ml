@@ -108,10 +108,7 @@ let file_compare f f' =
 let file_short_name file_info =
   let re = Regexp.regexp (Filename.dir_sep) in
   let dirs = Regexp.split re file_info.file_name in
-  try
-    List.hd (List.rev dirs)
-  with
-    Failure _ -> raise (Web_exception (Invalid_file_name file_info))
+  List.hd (List.rev dirs)
 
 let file_href file_info =
   Printf.sprintf "%s.html"
