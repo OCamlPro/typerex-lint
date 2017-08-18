@@ -90,21 +90,23 @@ let value_of_warning_filter = function
      end
   | Warning_keyword_filter kwd ->
      begin fun warning_info ->
+       let kwd = String.lowercase_ascii kwd in
        Web_utils.string_contains_keyword
          kwd
-         warning_info.warning_file.file_name
+         (String.lowercase_ascii warning_info.warning_file.file_name)
        || Web_utils.string_contains_keyword
             kwd
-            warning_info.warning_linter.linter_plugin.plugin_name
+            (String.lowercase_ascii
+               warning_info.warning_linter.linter_plugin.plugin_name)
        || Web_utils.string_contains_keyword
             kwd
-            warning_info.warning_linter.linter_name
+            (String.lowercase_ascii warning_info.warning_linter.linter_name)
        || Web_utils.string_contains_keyword
             kwd
-            warning_info.warning_type.decl.short_name
+            (String.lowercase_ascii warning_info.warning_type.decl.short_name)
        || Web_utils.string_contains_keyword
             kwd
-            warning_info.warning_type.output
+            (String.lowercase_ascii warning_info.warning_type.output)
      end
   | Warning_file_filter file ->
      begin fun warning_info ->
@@ -129,15 +131,16 @@ let value_of_error_filter = function
      end
   | Error_keyword_filter kwd ->
      begin fun error_info ->
+       let kwd = String.lowercase_ascii kwd in
        Web_utils.string_contains_keyword
          kwd
-         (Web_utils.error_type error_info)
+         (String.lowercase_ascii (Web_utils.error_type error_info))
        || Web_utils.string_contains_keyword
             kwd
-            (Web_utils.error_description error_info)
+            (String.lowercase_ascii (Web_utils.error_description error_info))
        || Web_utils.string_contains_keyword
             kwd
-            error_info.error_file.file_name
+            (String.lowercase_ascii error_info.error_file.file_name)
      end
   | Error_file_filter file ->
      begin fun error_info ->
