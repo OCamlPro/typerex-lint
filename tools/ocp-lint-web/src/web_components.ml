@@ -160,17 +160,39 @@ let searchbox
         a_placeholder "Search..."
       ] ()
   in
-  let searchbox_dom = Tyxml_js.To_dom.of_input searchbox_input in
-  let get_filter () =
-    let str = Js.to_string (searchbox_dom##value) in
-    if str = "" then
-      None
-    else
-      Some (filter_type_creator str)
+  let clear_button =
+    span
+      ~a:[
+        a_class [
+            "form-control-clear";
+            "form-control-feedback";
+          ];
+        a_style "display:none";
+      ]
+      [pcdata "×"]
   in
+  let searchbox_dom = Tyxml_js.To_dom.of_input searchbox_input in
+  let clear_button_dom = Tyxml_js.To_dom.of_element clear_button in
+  let get_input () = Js.to_string (searchbox_dom##value) in
   let previous_filter = ref None in
+  clear_button_dom##onclick <- Dom_html.handler begin fun _ ->
+    (* todo *)
+    Js._true
+  end;
   searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
-    let filter = get_filter () in
+    let input = get_input () in
+    if input = "" && Web_utils.dom_element_is_display clear_button_dom then
+      Web_utils.dom_element_undisplay clear_button_dom
+    else if input != ""
+            && not (Web_utils.dom_element_is_display clear_button_dom) then
+      Web_utils.dom_element_display clear_button_dom
+    ;
+    let filter =
+      if input = "" then
+        None
+      else
+        Some (filter_type_creator input)
+    in
     begin match !previous_filter with
     | Some fltr ->
        Web_filter_system.remove_filter filter_system fltr
@@ -192,9 +214,18 @@ let searchbox
   end;
   div
     ~a:[
-      a_class grid;
+      a_class (["input-group"] @ grid);
     ]
-    [searchbox_input]
+    [
+      div
+        ~a:[
+          a_class ["form-group"; "has-feedback"; "has-clear"];
+        ]
+        [
+          searchbox_input;
+          clear_button;
+        ]
+    ]
 
 let warning_box_head warning_info =
   h4
