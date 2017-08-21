@@ -47,7 +47,7 @@ let class_parents clss =
   aux clss
 
 let default_inheritance_depth =
-  2
+  3
 
 module Linter = Plugin_typedtree.Plugin.MakeLint(struct
     let name = "Class Inheritance"
