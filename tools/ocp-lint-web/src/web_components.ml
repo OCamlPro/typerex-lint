@@ -23,6 +23,110 @@ open Lint_warning_types
 open Lint_web_analysis_info
 open Web_errors
 
+type hideable_menu = {
+  hideable_menu_title : Dom_html.element Js.t;
+  hideable_menu_icon : Dom_html.element Js.t;
+  hideable_menu_content : Dom_html.element Js.t;
+  mutable hideable_menu_is_open : bool;
+}
+
+let hideable_menu_closed_icon =
+  "glyphicon-menu-right"
+
+let hideable_menu_opened_icon =
+  "glyphicon-menu-down"
+
+let hideable_menu_create title content =
+  let title =
+    div
+      ~a:[
+        a_class ["hideable-menu-title"];
+      ]
+      [
+        h3 [pcdata title];
+      ]
+  in
+  let icon =
+    span
+      ~a:[
+        a_class ["glyphicon"; hideable_menu_closed_icon];
+      ]
+      []
+  in
+  let menu =
+    {
+      hideable_menu_title = Tyxml_js.To_dom.of_element title;
+      hideable_menu_icon = Tyxml_js.To_dom.of_element icon;
+      hideable_menu_content = Tyxml_js.To_dom.of_element content;
+      hideable_menu_is_open = false;
+    }
+  in
+  Web_utils.dom_element_undisplay menu.hideable_menu_content;
+  menu
+
+let hideable_menu_is_open hideable_menu =
+  hideable_menu.hideable_menu_is_open
+
+let hideable_menu_open hideable_menu =
+  Web_utils.dom_element_display hideable_menu.hideable_menu_content;
+  hideable_menu.hideable_menu_icon##classList##
+    remove (Js.string hideable_menu_closed_icon);
+  hideable_menu.hideable_menu_icon##classList##
+    add (Js.string hideable_menu_opened_icon);
+  hideable_menu.hideable_menu_is_open <- true
+
+let hideable_menu_close hideable_menu =
+  Web_utils.dom_element_undisplay hideable_menu.hideable_menu_content;
+  hideable_menu.hideable_menu_icon##classList##
+    remove (Js.string hideable_menu_opened_icon);
+  hideable_menu.hideable_menu_icon##classList##
+    add (Js.string hideable_menu_closed_icon);
+  hideable_menu.hideable_menu_is_open <- false
+
+let hideable_menu_div_element hideable_menu =
+  let reverse_content_display _ =
+    if hideable_menu_is_open hideable_menu then
+      hideable_menu_close hideable_menu
+    else
+      hideable_menu_open hideable_menu
+    ;
+    Js._true
+  in
+  hideable_menu.hideable_menu_title##onclick <-Dom_html.handler
+    reverse_content_display;
+  hideable_menu.hideable_menu_icon##onclick <-Dom_html.handler
+    reverse_content_display;
+  div
+    [
+      div
+        ~a:[
+          a_class ["row"];
+        ]
+        [
+          div
+            ~a:[
+              a_class [
+                  "col-md-2";
+                  "row-vertical-center"
+                ];
+            ]
+            [
+              Tyxml_js.Of_dom.of_element hideable_menu.hideable_menu_title;
+              Tyxml_js.Of_dom.of_element hideable_menu.hideable_menu_icon;
+            ];
+          div
+            ~a:[
+              a_class [
+                  "col-md-10";
+                  "row-vertical-center";
+                  "horizontal-separator";
+                ];
+            ]
+            [];
+        ];
+      Tyxml_js.Of_dom.of_element hideable_menu.hideable_menu_content;
+    ]
+
 let code_viewer_line_size =
   17
 

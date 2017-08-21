@@ -447,81 +447,6 @@ let errors_table file_content_data =
     ]
     [table]
 
-let hideable_summary title content =
-  let opened_icon = "glyphicon-menu-down" in
-  let closed_icon = "glyphicon-menu-right" in
-  let title =
-    div
-      ~a:[
-        a_class ["subsummary-title"];
-      ]
-      [
-        h3 [pcdata title];
-      ]
-  in
-  let icon =
-    span
-      ~a:[
-        a_class ["glyphicon"];
-      ]
-      [
-      ]
-  in
-  let dom_title = Tyxml_js.To_dom.of_element title in
-  let dom_icon = Tyxml_js.To_dom.of_element icon in
-  let dom_content = Tyxml_js.To_dom.of_element content in
-  let set_close () =
-    Web_utils.dom_element_undisplay dom_content;
-    dom_icon##classList##remove (Js.string opened_icon);
-    dom_icon##classList##add (Js.string closed_icon)
-  in
-  let set_open () =
-    Web_utils.dom_element_display dom_content;
-    dom_icon##classList##remove (Js.string closed_icon);
-    dom_icon##classList##add (Js.string opened_icon);
-  in
-  let reverse_content_display _ =
-    if Web_utils.dom_element_is_display dom_content then begin
-      set_close ()
-    end else begin
-      set_open ()
-    end;
-    Js._true
-  in
-  set_close ();
-  dom_title##onclick <-Dom_html.handler reverse_content_display;
-  dom_icon##onclick <-Dom_html.handler reverse_content_display;
-  div
-    [
-      div
-        ~a:[
-          a_class ["row"];
-        ]
-        [
-          div
-            ~a:[
-              a_class [
-                  "col-md-2";
-                  "row-vertical-center"
-                ];
-            ]
-            [
-              title;
-              icon;
-            ];
-          div
-            ~a:[
-              a_class [
-                  "col-md-10";
-                  "row-vertical-center";
-                  "horizontal-separator";
-                ];
-            ]
-            [];
-        ];
-      content;
-    ]
-
 let warnings_summary_content file_content_data =
   div
     [
@@ -546,7 +471,10 @@ let warnings_summary file_content_data =
   else
     warnings_summary_content file_content_data
   in
-  hideable_summary "All warnings" content
+  let hideable_menu =
+    Web_components.hideable_menu_create "All warnings" content
+  in
+  Web_components.hideable_menu_div_element hideable_menu
 
 let errors_summary_content file_content_data =
   div
@@ -572,7 +500,10 @@ let errors_summary file_content_data =
     else
       errors_summary_content file_content_data
   in
-  hideable_summary "All errors" content
+  let hideable_menu =
+    Web_components.hideable_menu_create "All errors" content
+  in
+  Web_components.hideable_menu_div_element hideable_menu
 
 let content_head file_content_data =
   let warnings_button =
@@ -599,6 +530,14 @@ let content_head file_content_data =
       ]
       [pcdata "See all file"]
   in
+  (Tyxml_js.To_dom.of_element warnings_button)##onclick <-Dom_html.handler
+  begin fun _ ->
+    Js._true
+  end;
+  (Tyxml_js.To_dom.of_element errors_button)##onclick <-Dom_html.handler
+  begin fun _ ->
+    Js._true
+  end;
   (Tyxml_js.To_dom.of_element all_file_button)##onclick <-Dom_html.handler
   begin fun _ ->
     focus_file_content file_content_data File_content;

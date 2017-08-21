@@ -19,6 +19,57 @@
 (**************************************************************************)
 
 (**
+  A fold menu
+  **)
+type hideable_menu = {
+  (** The title of the menu **)
+  hideable_menu_title : Dom_html.element Js.t;
+  (** The icon of the menu (close or open) **)
+  hideable_menu_icon : Dom_html.element Js.t;
+  (** The content of the menu **)
+  hideable_menu_content : Dom_html.element Js.t;
+  (** true if the menu is unfolded, else false **)
+  mutable hideable_menu_is_open : bool;
+}
+
+(**
+  Create a hideable menu
+  The menu is initially closed
+  **)
+val hideable_menu_create :
+  string ->
+  Html_types.div Tyxml_js.Html.elt ->
+  hideable_menu
+
+(**
+  true if the menu is open, else false
+  **)
+val hideable_menu_is_open :
+  hideable_menu ->
+  bool
+
+(**
+  Unfold the content of the menu
+  **)
+val hideable_menu_open :
+  hideable_menu ->
+  unit
+
+(**
+  Fold the content of the menu
+  **)
+val hideable_menu_close :
+  hideable_menu ->
+  unit
+
+(**
+  Get the HTML representation of the menu
+  **)
+val hideable_menu_div_element :
+  hideable_menu ->
+  [> Html_types.div ] Tyxml_js.Html.elt
+
+(**
   The size of a line in the code viewer
   **)
 val code_viewer_line_size :
