@@ -464,18 +464,6 @@ let warnings_summary_content_empty () =
       h4 [pcdata "No provided warnings in this file."];
     ]
 
-let warnings_summary file_content_data =
-  let content =
-  if Web_utils.list_is_empty file_content_data.file_content_warnings_info then
-    warnings_summary_content_empty ()
-  else
-    warnings_summary_content file_content_data
-  in
-  let hideable_menu =
-    Web_components.hideable_menu_create "All warnings" content
-  in
-  Web_components.hideable_menu_div_element hideable_menu
-
 let errors_summary_content file_content_data =
   div
     [
@@ -505,7 +493,7 @@ let errors_summary file_content_data =
   in
   Web_components.hideable_menu_div_element hideable_menu
 
-let content_head file_content_data =
+let content_head file_content_data hideable_warnings_menu hideable_errors_menu =
   let warnings_button =
     button
       ~a:[
@@ -532,10 +520,16 @@ let content_head file_content_data =
   in
   (Tyxml_js.To_dom.of_element warnings_button)##onclick <-Dom_html.handler
   begin fun _ ->
+    if not (Web_components.hideable_menu_is_open hideable_warnings_menu) then
+      Web_components.hideable_menu_open hideable_warnings_menu
+    ;
     Js._true
   end;
   (Tyxml_js.To_dom.of_element errors_button)##onclick <-Dom_html.handler
   begin fun _ ->
+    if not (Web_components.hideable_menu_is_open hideable_errors_menu) then
+      Web_components.hideable_menu_open hideable_errors_menu
+    ;
     Js._true
   end;
   (Tyxml_js.To_dom.of_element all_file_button)##onclick <-Dom_html.handler
@@ -583,6 +577,24 @@ let content navigation_system file_content_data =
     Tyxml_js.Of_dom.of_element
       (file_content_data.file_content_container)
   in
+  let warnings_content =
+    if Web_utils.list_is_empty file_content_data.file_content_warnings_info then
+      warnings_summary_content_empty ()
+    else
+      warnings_summary_content file_content_data
+  in
+  let hideable_warnings_menu =
+    Web_components.hideable_menu_create "All warnings" warnings_content
+  in
+  let errors_content =
+    if Web_utils.list_is_empty file_content_data.file_content_errors_info then
+      errors_summary_content_empty ()
+    else
+      errors_summary_content file_content_data
+  in
+  let hideable_errors_menu =
+    Web_components.hideable_menu_create "All errors" errors_content
+  in
   let separator () =
     div
       ~a:[
@@ -601,7 +613,10 @@ let content navigation_system file_content_data =
       a_class ["container"];
     ]
     [
-      content_head file_content_data;
+      content_head
+        file_content_data
+        hideable_warnings_menu
+        hideable_errors_menu;
       br ();
       br ();
       separator ();
@@ -610,8 +625,8 @@ let content navigation_system file_content_data =
       content_div;
       br ();
       br ();
-      warnings_summary file_content_data;
+      Web_components.hideable_menu_div_element hideable_warnings_menu;
       br ();
       br ();
-      errors_summary file_content_data;
+      Web_components.hideable_menu_div_element hideable_errors_menu;
     ]

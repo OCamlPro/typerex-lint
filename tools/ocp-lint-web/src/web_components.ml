@@ -280,7 +280,16 @@ let searchbox
   let get_input () = Js.to_string (searchbox_dom##value) in
   let previous_filter = ref None in
   clear_button_dom##onclick <- Dom_html.handler begin fun _ ->
-    (* todo *)
+    begin match !previous_filter with
+    | Some fltr ->
+       Web_filter_system.remove_filter filter_system fltr;
+       Web_filter_system.eval_filters filter_system
+    | None ->
+       ()
+    end;
+    previous_filter := None;
+    Web_utils.dom_element_undisplay clear_button_dom;
+    searchbox_dom##value <- Js.string "";
     Js._true
   end;
   searchbox_dom##onkeyup <- Dom_html.handler begin fun _ ->
