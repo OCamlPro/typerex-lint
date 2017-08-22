@@ -37,10 +37,31 @@ let path_parent path =
     | _ -> failwith "path is not valid"
   in
   match path with
-  | Path.Pdot (Path.Pdot _,_,_) | Path.Pdot (Path.Pident _,_,_) ->
+  | Path.Pdot (Path.Pdot _,_,_)
+  | Path.Pdot (Path.Pident _,_,_) ->
      Some (aux path)
   | _ ->
      None
+
+let list_of_path path =
+  let rec aux acc = function
+    | Path.Pident {Ident.name = name; _} ->
+       name :: acc
+    | Path.Pdot(ppath, name, _) ->
+       aux (name :: acc) ppath
+    | _ ->
+       failwith "invalid path"
+  in
+  aux [] path
+
+let rec is_prefixed prefix path =
+  match prefix, path with
+  | [], _ ->
+     true
+  | hd_prefix :: tl_prefix, hd_path :: tl_path ->
+     String.equal hd_prefix hd_path && is_prefixed tl_prefix tl_path
+  | _ ->
+     false
 
 module Linter = Plugin_typedtree.Plugin.MakeLint(struct
     let name = "Module Utilization"
@@ -51,7 +72,7 @@ module Linter = Plugin_typedtree.Plugin.MakeLint(struct
   end)
 
 type warning =
-  | IdentifierInUnrecommandedModule of string * Path.t
+  | IdentifierInUnrecommandedModule of Path.t * Path.t
   | UseOpenDirective of Path.t
   | UseEnvironmentModificationModule of Path.t
 
@@ -79,7 +100,7 @@ module Warnings = Linter.MakeWarnings(struct
     let to_warning = function
       | IdentifierInUnrecommandedModule (ident, pmod) ->
 	 w_identifier_in_unrecommanded_mod, [
-          ("ident",ident);
+          ("ident",Path.name ident);
           ("mod",Path.name pmod)
         ]
       | UseOpenDirective p ->
@@ -94,30 +115,50 @@ let iter =
   let module IterArg = struct
     include Typedtree_iter.DefaultIteratorArgument
 
-    let is_unrecommanded mpath =
-      List.exists (same_path mpath) unrecommanded_modules
+    let unrecommanded_parent ipath =
+      let ident_path = list_of_path ipath in
+      try
+        let unrecommanded_mdl =
+          List.find begin fun mdl ->
+            is_prefixed (list_of_path mdl) ident_path
+          end unrecommanded_modules
+        in
+        Some unrecommanded_mdl
+      with
+        Not_found -> None
 
-    let is_environment_modifier mpath =
-      List.exists (same_path mpath) environment_modification_modules
+    let environment_modifier_parent ipath =
+      let ident_path = list_of_path ipath in
+      try
+        let modifier_mdl =
+          List.find begin fun mdl ->
+            is_prefixed (list_of_path mdl) ident_path
+          end environment_modification_modules
+        in
+        Some modifier_mdl
+      with
+        Not_found -> None
 
     let process_module_opening mpath loc =
       Warnings.report loc (UseOpenDirective mpath)
 
     let process_ident ident_path loc =
-      match path_parent ident_path with
+      begin match unrecommanded_parent ident_path with
+      | Some parent ->
+         Warnings.report
+           loc
+           (IdentifierInUnrecommandedModule (ident_path, parent))
       | None ->
          ()
+      end;
+      begin match environment_modifier_parent ident_path with
       | Some parent ->
-         if is_unrecommanded parent then begin
-           Warnings.report
-             loc
-             (IdentifierInUnrecommandedModule (Path.last ident_path, parent))
-         end;
-         if is_environment_modifier parent then begin
-           Warnings.report
-             loc
-             (UseEnvironmentModificationModule parent)
-         end
+         Warnings.report
+           loc
+           (UseEnvironmentModificationModule ident_path)
+      | None ->
+         ()
+      end
 
     let enter_expression expr =
       let open Typedtree in
