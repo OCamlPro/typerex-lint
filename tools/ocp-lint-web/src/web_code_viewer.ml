@@ -166,13 +166,14 @@ let init_code_viewer code_div warnings_info id =
 let onload _ =
   let code_div = Web_utils.get_element_by_id Lint_web.web_code_viewer_id in
   let dom_code_div = (Tyxml_js.To_dom.of_div code_div) in
-  let when_loaded = Js.wrap_callback begin fun () ->
-    Web_utils.dom_element_display dom_code_div;
-    let animation =
-      Web_utils.get_element_by_id Lint_web.web_code_loading_animation_id
-    in
-    Web_utils.dom_node_remove (Tyxml_js.To_dom.of_node animation)
-  end
+  let animation =
+    Web_utils.get_element_by_id Lint_web.web_code_loading_animation_id
+  in
+  let when_loaded =
+    Js.wrap_callback begin fun () ->
+      Web_utils.dom_element_display dom_code_div;
+      Web_utils.dom_node_remove (Tyxml_js.To_dom.of_node animation)
+    end
   in
   let _ =
     Dom_html.window##setTimeout(when_loaded, animation_timeout_millisecond)
