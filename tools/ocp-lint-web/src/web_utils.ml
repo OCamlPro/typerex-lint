@@ -29,7 +29,6 @@ type file_loc =
 let is_ghost_loc loc =
   let open Location in
   let open Lexing in
-  (* todo check *)
   loc.loc_ghost || (loc.loc_start.pos_lnum = 0 && loc.loc_start.pos_cnum = -1)
 
 let file_loc_of_warning_info warning_info =

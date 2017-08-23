@@ -244,7 +244,7 @@ let dropdown_menu label_value dropdown_selections grid =
           a_user_data "toggle" "dropdown";
         ]
         [
-          pcdata (label_value ^ " "); (* todo change *)
+          pcdata label_value;
           span ~a:[a_class ["caret"]] [];
         ];
       ul

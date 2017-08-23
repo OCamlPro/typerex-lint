@@ -83,10 +83,7 @@ let div_warning_pie title overflow pie_settings =
     |> set_on_mouseover_callback on_mouseover_segment
     |> set_on_mouseout_callback on_mouseout_segment
   in
-  let pie = d3pie (Tyxml_js.To_dom.of_element div_pie) settings in
-  (* todo delete *)
-  ignore pie;
-  (* *)
+  let _ = d3pie (Tyxml_js.To_dom.of_element div_pie) settings in
   div
     ~a:[
       a_class ["tile-pie"];
