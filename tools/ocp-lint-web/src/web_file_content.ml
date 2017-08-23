@@ -62,9 +62,14 @@ let warning_content warning_info =
       warning_info.warning_id
   in
   let linter_desc =
-    Printf.sprintf "%s : %s"
+    Printf.sprintf "Linter %s : %s"
       warning_info.warning_linter.linter_name
       warning_info.warning_linter.linter_description
+  in
+  let warning_output_desc =
+    Printf.sprintf "%s : %s"
+      warning_info.warning_type.decl.short_name
+      warning_info.warning_type.output
   in
   let code_view =
     if Web_utils.warning_is_ghost warning_info then
@@ -83,7 +88,10 @@ let warning_content warning_info =
     [
       h3 [pcdata warning_desc];
       br ();
+      br ();
       h4 [pcdata linter_desc];
+      br ();
+      h4 [pcdata warning_output_desc];
       code_view;
     ]
 
