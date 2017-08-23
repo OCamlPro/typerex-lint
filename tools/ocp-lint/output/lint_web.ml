@@ -307,9 +307,7 @@ let web_code_loading_animation_id =
 
 let html_of_index =
   let css_files = [
-    "dataTables.min";
     "bootstrap.min";
-    "adjustment_dataTables";
     "adjustment_bootstrap";
     "ocp_lint_web"
   ] in
@@ -320,7 +318,6 @@ let html_of_index =
     "bootstrap.min";
     "d3";
     "d3pie.min";
-    "data_table";
   ] in
   html
     begin head
