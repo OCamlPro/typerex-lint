@@ -140,8 +140,11 @@ let code_viewer_end_context_from_line ~line_number ~lines_count =
   min (lines_count - line_number) code_viewer_context_line_number
 
 let code_viewer line_number href =
-  let height = (* todo min height *)
-    code_viewer_line_size * (line_number + 2)
+  let lines =
+    max line_number 5
+  in
+  let height =
+    code_viewer_line_size * (lines + 2)
   in
   Tyxml_js.Html.iframe
     ~a:[
