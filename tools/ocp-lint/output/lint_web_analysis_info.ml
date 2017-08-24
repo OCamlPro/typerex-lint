@@ -64,9 +64,6 @@ type analysis_info = {
   analysis_date : Unix.tm;
 }
 
-let generated_static_page_of_file file_info =
-  "ocp_lint_web_generated_" ^ (Digest.to_hex file_info.file_hash)
-
 let json_of_digest digest =
   `String (Digest.to_hex digest)
 

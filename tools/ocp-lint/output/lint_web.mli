@@ -18,18 +18,40 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+(**
+  The name of the JSON analysis result in the index
+  **)
 val analysis_info_var:
   string
 
+(**
+  The name of the JSON warnings list in the files contents
+  **)
 val warnings_info_var:
   string
 
+(**
+  The id of the code viewer element in the files contents
+  **)
 val web_code_viewer_id:
   string
 
+(**
+  The id of the animation element in the files contents
+  **)
 val web_code_loading_animation_id:
   string
 
+(**
+  Get the name of the generated static file page
+  **)
+val generated_static_page_of_file :
+  Lint_web_analysis_info.file_info ->
+  string
+
+(**
+  Generate the web output
+  **)
 val generate_web_files :
   Format.formatter ->
   string ->

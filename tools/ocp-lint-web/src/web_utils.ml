@@ -111,11 +111,11 @@ let file_short_name file_info =
 
 let file_href file_info =
   Printf.sprintf "%s.html"
-    (generated_static_page_of_file file_info)
+    (Lint_web.generated_static_page_of_file file_info)
 
 let file_warning_href warning_info =
   Printf.sprintf "%s.html#%d"
-    (generated_static_page_of_file warning_info.warning_file)
+    (Lint_web.generated_static_page_of_file warning_info.warning_file)
     warning_info.warning_id
 
 let filename_overflow nbchar filename =

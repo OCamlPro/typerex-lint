@@ -99,15 +99,6 @@ type analysis_info = {
 }
 
 (**
-  Get the name of the generated static file page
-  **)
-val generated_static_page_of_file : (* todo maybe move in lint_web *)
-  file_info ->
-  string
-
-(* todo add raised exception to json fun *)
-
-(**
   Convert a list of warning informations to this JSON representation
   **)
 val json_of_warnings_info :
@@ -116,6 +107,7 @@ val json_of_warnings_info :
 
 (**
   Convert a JSON object to a list of warning information
+  raise Yojson.Basic.Type_error if the json is not a valid representation of a warning
   **)
 val warnings_info_of_json :
   Yojson.Basic.json ->
@@ -130,6 +122,7 @@ val json_of_analysis_info :
 
 (**
   Convert a JSON object to an analysis informations
+  raise Yojson.Basic.Type_error if the json is not a valid representation of a warning
   **)
 val analysis_info_of_json :
   Yojson.Basic.json ->
