@@ -45,7 +45,7 @@ val web_code_loading_animation_id:
 (**
   Get the name of the generated static file page
   **)
-val generated_static_page_of_file :
+val file_info_page :
   Lint_web_analysis_info.file_info ->
   string
 

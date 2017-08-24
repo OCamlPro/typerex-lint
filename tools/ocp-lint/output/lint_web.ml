@@ -92,18 +92,6 @@ let dump_js_var_file fname var v =
   dump_js_var fd var v;
   Unix.close fd
 
-let js_string_of_json_var var v =
-  (* todo changer implantation *)
-  let tmp_file_name =
-    "tools/ocp-lint-web/tmp_js_var"
-  in
-  let fd =
-    Unix.(openfile tmp_file_name [O_WRONLY;O_CREAT;O_TRUNC] 0o777)
-  in
-  dump_js_var fd var (Yojson.Basic.to_string v);
-  Unix.close fd;
-  Lint_utils.read_file tmp_file_name
-
 let emit_page name page =
   let file = open_out name in
   let fmt = Format.formatter_of_out_channel file in
@@ -278,14 +266,14 @@ let make_analysis_info
     analysis_date = time;
   }
 
-let generated_static_page_of_file file_info =
-  "ocp_lint_web_generated_" ^ (Digest.to_hex file_info.file_hash)
-
 let output_path =
   path_of_dir_list ["tools"; "ocp-lint-web"; "static"]
 
-let path_of_js fname =
+let path_of_lib_js fname =
   Filename.concat "js" (fname ^ ".js")
+
+let path_of_generated_js fname =
+  fname ^ ".js"
 
 let path_of_css fname =
   Filename.concat "css" (fname ^ ".css")
@@ -293,14 +281,17 @@ let path_of_css fname =
 let path_of_html fname =
   fname ^ ".html"
 
-let analysis_info_file =
-  "ocp_lint_web_analysis_info"
+let analysis_info_page =
+  "ocp_lint_web_analysis"
+
+let file_info_page file_info =
+  "ocp_lint_web_file_" ^ (Digest.to_hex file_info.file_hash)
 
 let analysis_info_var =
   "analysis_info_json"
 
 let warnings_info_var =
-  "info_warnings_json"
+  "warnings_info_json"
 
 let web_code_viewer_id =
   "ocp-code-viewer"
@@ -309,19 +300,27 @@ let web_code_loading_animation_id =
   "ocp-code-loading"
 
 let html_of_index =
-  let css_files = [
-    "bootstrap.min";
-    "adjustment_bootstrap";
-    "ocp_lint_web"
-  ] in
-  let js_files = [
-    analysis_info_file;
-    "ocp_lint_web";
-    "jquery.min";
-    "bootstrap.min";
-    "d3";
-    "d3pie.min";
-  ] in
+  let css_files =
+    [
+      "bootstrap.min";
+      "adjustment_bootstrap";
+      "ocp_lint_web"
+    ]
+  in
+  let js_lib_files =
+    [
+      "ocp_lint_web";
+      "jquery.min";
+      "bootstrap.min";
+      "d3";
+      "d3pie.min";
+    ]
+  in
+  let js_generated_files =
+    [
+      analysis_info_page;
+    ]
+  in
   html
     begin head
       (title (pcdata "index"))
@@ -330,9 +329,17 @@ let html_of_index =
        end css_files)
     end
     begin body
-      (List.map begin fun src ->
-         script ~a:[a_src (Xml.uri_of_string (path_of_js src))] (pcdata "")
-       end js_files)
+    (
+      List.map begin fun src ->
+        script ~a:[a_src (Xml.uri_of_string (path_of_lib_js src))] (pcdata "")
+      end js_lib_files
+      @
+      List.map begin fun src ->
+        script
+          ~a:[a_src (Xml.uri_of_string (path_of_generated_js src))]
+          (pcdata "")
+      end js_generated_files
+    )
     end
 
 let code_viewer src =
@@ -352,20 +359,22 @@ let loading_animation () =
     []
 
 let html_of_ocaml_src file_info warnings_info src =
-  let css_files = [
-    "adjustment_ace";
-    "ocp_lint_web"
-  ]
+  let css_files =
+    [
+      "adjustment_ace";
+      "ocp_lint_web"
+    ]
   in
-  let js_files = [
-    "ace";
-    "ocp_lint_web_codeviewer";
-  ]
+  let js_lib_files =
+    [
+      "ace";
+      "ocp_lint_web_codeviewer";
+    ]
   in
-  let js_warnings_info_var =
-    js_string_of_json_var
-      warnings_info_var
-      (json_of_warnings_info warnings_info)
+  let js_generated_files =
+    [
+      file_info_page file_info;
+    ]
   in
   html
     begin head
@@ -377,10 +386,16 @@ let html_of_ocaml_src file_info warnings_info src =
     begin body (
       loading_animation ()
       :: code_viewer src
-      :: script (cdata_script js_warnings_info_var)
       :: List.map begin fun src ->
-           script ~a:[a_src (Xml.uri_of_string (path_of_js src))] (pcdata "")
-          end js_files
+           script
+             ~a:[a_src (Xml.uri_of_string (path_of_lib_js src))]
+             (pcdata "")
+         end js_lib_files
+       @ List.map begin fun src ->
+          script
+            ~a:[a_src (Xml.uri_of_string (path_of_generated_js src))]
+            (pcdata "")
+         end js_generated_files
     ) end
 
 let generate_web_files fmt master_config file_config path db db_error =
@@ -401,7 +416,7 @@ let generate_web_files fmt master_config file_config path db db_error =
   in
   clear_dir output_path;
   dump_js_var_file
-    (Filename.concat output_path (path_of_js analysis_info_file))
+    (Filename.concat output_path (path_of_generated_js analysis_info_page))
     analysis_info_var
     json_analysis;
   let warnings_info_file =
@@ -439,10 +454,14 @@ let generate_web_files fmt master_config file_config path db db_error =
         warnings_info
         (Lint_utils.read_file file_info.file_name)
     in
-    let page_name = generated_static_page_of_file file_info in
+    let page_name = file_info_page file_info in
     emit_page
       (Filename.concat output_path (path_of_html page_name))
-      html_src
+      html_src;
+    dump_js_var_file
+      (Filename.concat output_path (path_of_generated_js page_name))
+      warnings_info_var
+      (Yojson.Basic.to_string (json_of_warnings_info warnings_info))
   end files_info_with_warn_or_err;
   emit_page
     (Filename.concat output_path (path_of_html "index"))
