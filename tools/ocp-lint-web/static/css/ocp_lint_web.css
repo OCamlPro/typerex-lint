@@ -309,8 +309,11 @@ button
     text-align: center;
 }
 
-::-ms-clear {
-  display: none;
+.empty-content
+.home-link
+{
+    cursor: pointer;
+    text-decoration: none;
 }
 
 .form-control-clear {

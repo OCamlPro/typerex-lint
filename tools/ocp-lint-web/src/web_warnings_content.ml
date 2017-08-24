@@ -138,19 +138,37 @@ let warnings_content navigation_system analysis_info =
          analysis_info.warnings_info)
     )
 
-let warnings_content_empty () =
+let warnings_content_empty navigation_system =
+  let home_link =
+    a
+      ~a:[
+        a_class ["home-link"];
+      ]
+      [pcdata "Come back to home page"]
+  in
+  (Tyxml_js.To_dom.of_element home_link)##onclick <- Dom_html.handler
+  begin fun _ ->
+    Web_navigation_system.open_home_tab navigation_system;
+    Js._true
+  end;
   div
     ~a:[
       a_class ["empty-content"];
     ]
     [
       h3 [pcdata "There are no warnings provided."];
+      br ();
+      h4
+        [
+          home_link;
+        ];
+      br ();
     ]
 
 let content navigation_system analysis_info =
   let content =
     if Web_utils.list_is_empty analysis_info.warnings_info then
-      warnings_content_empty ()
+      warnings_content_empty navigation_system
     else
       warnings_content navigation_system analysis_info
   in
