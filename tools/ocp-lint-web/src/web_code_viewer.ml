@@ -87,7 +87,7 @@ let set_warning_code_viewer ace warning =
   Ace.clear_selection ace;
   Ace.set_first_line_number ace begin_with_context;
   Ace.add_marker ace Ace.Warning loc;
-  Ace.set_annotation ace Ace.Warning warning.warning_type.output loc
+  Ace.set_annotation ace Ace.Warning warning.warning_type.decl.short_name loc
 
 let set_file_code_viewer ace warnings =
   let warnings =
@@ -122,7 +122,7 @@ let set_file_code_viewer ace warnings =
                 else
                   Printf.sprintf "line %d to %d" bline eline
            in
-           Printf.sprintf "%s : %s" line warning.warning_type.output
+           Printf.sprintf "%s : %s" line warning.warning_type.decl.short_name
          end warnings_info))
     in
     Ace.set_annotation ace Ace.Warning tooltip loc;
