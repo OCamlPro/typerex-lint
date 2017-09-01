@@ -1,0 +1,150 @@
+.nav.nav-tabs
+{
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-bottom:12px;
+}
+
+.nav.nav-tabs
+a
+{
+    outline: 0;
+}
+
+.nav.nav-tabs
+.closableTab
+a
+{
+    padding-right: 5px;
+}
+
+.nav.nav-tabs
+.closableTab
+a
+span
+{
+    display: inline
+}
+
+.nav.nav-tabs
+.close.closeTab
+{
+    margin-left: 10px;
+}
+
+.tab-content
+{
+    padding-top: 30px;
+    padding-bottom: 30px;
+    padding-right: 40px;
+    padding-left: 40px;
+}
+
+.panel.panel-default
+{
+    border: 0;
+    margin: 0;
+    background-color: transparent;
+}
+
+.panel.panel-default
+.panel-heading
+{
+    border: 1px solid #DDD;
+}
+
+.panel.panel-default
+.panel-heading
+a
+{
+    outline: 0;
+    text-decoration: none;
+}
+
+.panel.panel-default
+.panel-body
+{
+    padding:0;
+}
+
+.panel.panel-default
+.panel-body
+iframe
+{
+    max-height: 100%;
+    overflow-y: hidden;
+    width:100%;
+    /* height:100%; */
+    border:none;
+    border-radius:0 0 4px 4px;
+}
+
+.dropdown
+{
+    display: inline;
+    padding: 0;
+    padding-left: 5px;
+}
+
+.dropdown
+button
+{
+    width: 100%;
+}
+
+.dropdown-menu > li > a {
+    padding:5px 15px 0 5px;
+    height:28px;
+    line-height:28px;
+    white-space: nowrap;
+}
+
+.dropdown-menu > li > a.dropdown-selection-active {
+    background-color: #5BC0DE;
+    color: white;
+}
+
+.alert.alert-warning {
+    cursor: pointer;
+}
+
+.alert.alert-danger {
+    cursor: pointer;
+}
+
+span.glyphicon.glyphicon-menu-down
+{
+    cursor: pointer;
+    display: inline-block;
+}
+
+span.glyphicon.glyphicon-menu-right
+{
+    cursor: pointer;
+    display: inline-block;
+}
+
+.row
+.row-vertical-center {
+    display: inline-block;
+    vertical-align: middle;
+    float: none;
+}
+
+.alert
+.glyphicon
+{
+    font-size: 3.0em;
+    text-align: center;
+}
+
+.btn
+.caret
+{
+    margin-left: 5px;
+}
+
+.col-no-padding
+{
+    padding: 0;
+}

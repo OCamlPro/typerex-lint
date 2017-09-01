@@ -18,28 +18,20 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-output"
-  files = [
-    "lint_text.ml"
-  ]
-  requires = [
-    "compiler-libs"
-    "ocp-lint-api"
-    "ocp-lint-db"
-    "ocp-lint-utils"
-  ]
-end
+(**
+  Create the file content page
+  **)
+val content :
+  Web_navigation_system.t ->
+  Web_file_content_data.t ->
+  Html_types.div Tyxml_js.Html.elt
 
-begin library "ocp-lint-output-web"
-  files = [
-    "lint_web_analysis_info.ml"
-    "lint_web.ml"
-  ]
-  requires = [
-    "ocp-lint-api"
-    "ocp-lint-db"
-    "tyxml"
-    "unix"
-    "yojson"
-  ]
-end
+(**
+  Create a content for the alterable panel
+  Raise Open_warning_from_bad_file if the file and the warning content type file  are differents
+  Raise Open_error_from_bad_file if the file and the error content type file are differents
+  **)
+val alterable_panel_content_creator :
+  Lint_web_analysis_info.file_info ->
+  Web_file_content_data.file_content_type ->
+  Html_types.div Tyxml_js.Html.elt

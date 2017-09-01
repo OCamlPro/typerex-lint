@@ -1,0 +1,142 @@
+(**************************************************************************)
+(*                                                                        *)
+(*                        OCamlPro Typerex                                *)
+(*                                                                        *)
+(*   Copyright OCamlPro 2011-2016. All rights reserved.                   *)
+(*   This file is distributed under the terms of the GPL v3.0             *)
+(*   (GNU General Public Licence version 3.0).                            *)
+(*                                                                        *)
+(*     Contact: <typerex@ocamlpro.com> (http://www.ocamlpro.com/)         *)
+(*                                                                        *)
+(*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       *)
+(*  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES       *)
+(*  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND              *)
+(*  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS   *)
+(*  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN    *)
+(*  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN     *)
+(*  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE      *)
+(*  SOFTWARE.                                                             *)
+(**************************************************************************)
+
+optcomp_opt = %string(strings = [
+  "-let ocaml_full_version=("
+    ocaml_major_version ","
+    ocaml_minor_version ","
+    ocaml_point_version
+  ")"
+])
+
+camlp4_optcomp_js = [
+  "camlp4o"
+  "%{optcomp_SRC_DIR}%/optcomp.cma" optcomp_opt
+  "%{js_of_ocaml_SRC_DIR}%/pa_js.cmo"
+]
+
+camlp4_js = [
+  "camlp4o"
+  "%{js_of_ocaml_SRC_DIR}%/pa_js.cmo"
+]
+
+camlp4_optcomp = [
+  "camlp4o"
+  "%{optcomp_SRC_DIR}%/optcomp.cma" optcomp_opt
+]
+
+begin program "ocp-lint-web-main"
+
+   has_asm = false
+   pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
+   files = [
+     "web_errors.ml"
+     "web_utils.ml"
+     "web_filter_system.ml"
+     "web_navigation_system.ml"
+     "web_components.ml"
+     "web_file_content_data.ml"
+     "web_file_content.ml"
+     "web_home_content.ml"
+     "web_warnings_content.ml"
+     "web_errors_content.ml"
+     "web_main.ml"
+   ]
+
+   requires = [
+     "compiler-libs"
+     "js_of_ocaml"
+     "ocplib-d3pie"
+     "ocplib-jsutils"
+     "ocp-lint-api-types"
+     "ocp-lint-output-web"
+   ]
+
+   (* Also compile bytecode into javascript *)
+
+   build_targets = [ "../static/js/ocp_lint_web.js" ]
+   client_byte = [ %string
+     ( strings = [ "%{ocp-lint-web-main_FULL_DST_DIR}%/"
+                   "ocp-lint-web-main.byte"
+            ] ) ]
+   build_rules = [
+      "../static/js/ocp_lint_web.js" (
+       sources = [ client_byte ]
+       commands = [
+         { "js_of_ocaml"
+            (* Use these options to debug Javascript:
+               "-sourcemap" "-pretty" "-noinline" *)
+             "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
+	     "../static/js/ocplib_unix.js"
+	     "../static/js/ocplib_re.js"
+             "-o" "../static/js/ocp_lint_web.js"
+              client_byte }
+       ]
+       build_target = true
+     )
+   ]
+end
+
+begin program "ocp-lint-web-codeviewer"
+
+   has_asm = false
+   pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ]
+   files = [
+     "web_errors.ml"
+     "web_utils.ml"
+     "web_filter_system"
+     "web_components.ml"
+     "web_code_viewer.ml"
+   ]
+
+   requires = [
+     "compiler-libs"
+     "js_of_ocaml"
+     "ocplib-jsutils"
+     "ocplib-ace"
+     "ocp-lint-api-types"
+     "ocp-lint-output-web"
+     "yojson"
+   ]
+
+   (* Also compile bytecode into javascript *)
+
+   build_targets = [ "../static/js/ocp_lint_web_codeviewer.js" ]
+   client_byte = [ %string
+     ( strings = [ "%{ocp-lint-web-codeviewer_FULL_DST_DIR}%/"
+                   "ocp-lint-web-codeviewer.byte"
+            ] ) ]
+   build_rules = [
+      "../static/js/ocp_lint_web_codeviewer.js" (
+       sources = [ client_byte ]
+       commands = [
+         { "js_of_ocaml"
+            (* Use these options to debug Javascript:
+               "-sourcemap" "-pretty" "-noinline" *)
+             "+toplevel.js" "+weak.js" (* WHY ??? GRGR *)
+	     "../static/js/ocplib_unix.js"
+	     "../static/js/ocplib_re.js"
+             "-o" "../static/js/ocp_lint_web_codeviewer.js"
+              client_byte }
+       ]
+       build_target = true
+     )
+   ]
+end

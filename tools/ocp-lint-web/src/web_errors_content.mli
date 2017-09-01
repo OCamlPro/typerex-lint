@@ -18,28 +18,10 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-output"
-  files = [
-    "lint_text.ml"
-  ]
-  requires = [
-    "compiler-libs"
-    "ocp-lint-api"
-    "ocp-lint-db"
-    "ocp-lint-utils"
-  ]
-end
-
-begin library "ocp-lint-output-web"
-  files = [
-    "lint_web_analysis_info.ml"
-    "lint_web.ml"
-  ]
-  requires = [
-    "ocp-lint-api"
-    "ocp-lint-db"
-    "tyxml"
-    "unix"
-    "yojson"
-  ]
-end
+(**
+  Create the errors content page
+  **)
+val content :
+  Web_navigation_system.t ->
+  Lint_web_analysis_info.analysis_info ->
+  Html_types.div Tyxml_js.Html.elt

@@ -44,7 +44,8 @@ let installed_plugins = ref []
 let pwarning = ref false
 let perror = ref false
 let pall = ref false
-
+let output_web = ref false
+	       
 module ArgAlign = struct
   open Arg
 
@@ -255,6 +256,9 @@ let () =
     "--perror", Arg.Set perror,
     " Show errors";
 
+    "--output-web", Arg.Set output_web,
+    " Generate web output";
+
     "", Arg.Unit (fun () -> ()),
     " \n\nPlugins arguments:\n";
   ]
@@ -274,6 +278,7 @@ let start_lint dir =
     !pall
     !pwarning
     !perror
+    !output_web
     !good_plugins
     ins_plugins
     master_config

@@ -18,28 +18,33 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-output"
-  files = [
-    "lint_text.ml"
-  ]
-  requires = [
-    "compiler-libs"
-    "ocp-lint-api"
-    "ocp-lint-db"
-    "ocp-lint-utils"
-  ]
-end
+(**
+  The differents web errors
+  **)
+type error =
+  | Unknow_warning_id of
+      string
+  | No_such_element_with_id of
+      string
+  | Ghost_location of
+      Location.t
+  | Active_navigation_element_is_not_unique
+  | No_active_navigation_element
+  | Get_value_of_empty_optional
+  | Invalid_content_attached_data of
+      string
+  | Open_warning_from_bad_file of
+      Lint_web_analysis_info.warning_info * Lint_web_analysis_info.file_info
+  | Open_error_from_bad_file of
+      Lint_web_analysis_info.error_info * Lint_web_analysis_info.file_info
+  | Active_main_file_content_is_not_unique of
+      Lint_web_analysis_info.file_info
 
-begin library "ocp-lint-output-web"
-  files = [
-    "lint_web_analysis_info.ml"
-    "lint_web.ml"
-  ]
-  requires = [
-    "ocp-lint-api"
-    "ocp-lint-db"
-    "tyxml"
-    "unix"
-    "yojson"
-  ]
-end
+exception Web_exception of error
+
+(**
+  Process a web error
+  **)
+val process_error :
+  error ->
+  unit

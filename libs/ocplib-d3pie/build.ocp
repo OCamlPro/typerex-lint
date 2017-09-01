@@ -1,0 +1,92 @@
+(**************************************************************************)
+(*                                                                        *)
+(*                        OCamlPro Typerex                                *)
+(*                                                                        *)
+(*   Copyright OCamlPro 2011-2016. All rights reserved.                   *)
+(*   This file is distributed under the terms of the GPL v3.0             *)
+(*   (GNU General Public Licence version 3.0).                            *)
+(*                                                                        *)
+(*     Contact: <typerex@ocamlpro.com> (http://www.ocamlpro.com/)         *)
+(*                                                                        *)
+(*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       *)
+(*  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES       *)
+(*  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND              *)
+(*  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS   *)
+(*  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN    *)
+(*  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN     *)
+(*  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE      *)
+(*  SOFTWARE.                                                             *)
+(**************************************************************************)
+
+optcomp_opt = %string(strings = [
+  "-let ocaml_full_version=("
+    ocaml_major_version ","
+    ocaml_minor_version ","
+    ocaml_point_version
+  ")"
+])
+
+camlp4_optcomp_js = [
+  "camlp4o"
+  "%{optcomp_SRC_DIR}%/optcomp.cma" optcomp_opt
+  "%{js_of_ocaml_SRC_DIR}%/pa_js.cmo"
+]
+
+camlp4_js = [
+  "camlp4o"
+  "%{js_of_ocaml_SRC_DIR}%/pa_js.cmo"
+]
+
+camlp4_optcomp = [
+  "camlp4o"
+  "%{optcomp_SRC_DIR}%/optcomp.cma" optcomp_opt
+]
+
+begin library "ocplib-d3pie"
+  link = [ "-linkall" ]
+  files = [
+    "d3pie_types.mli"
+    "d3pie.ml"    ( pp = camlp4_optcomp_js )
+  ]
+  requires = [
+    "js_of_ocaml"
+    "js_of_ocaml.tyxml"
+  ]
+end
+
+(* begin program "d3-test" *)
+
+(*    has_asm = false *)
+(*    pp = [ "camlp4o" "-I" "%{js_of_ocaml_SRC_DIR}%" "pa_js.cmo" ] *)
+(*    files = [ *)
+(*     "d3pie_types.mli" *)
+(*     "d3pie.ml"    ( pp = camlp4_optcomp_js ) *)
+(*   ] *)
+(*   requires = [ *)
+(*     "js_of_ocaml" *)
+(*     "js_of_ocaml.tyxml" *)
+(*   ] *)
+
+(*    (\* Also compile bytecode into javascript *\) *)
+
+(*    build_targets = [ "d3.js" ] *)
+(*    client_byte = [ %string *)
+(*      ( strings = [ "%{d3-test_FULL_DST_DIR}%/" *)
+(*                    "d3-test.byte" *)
+(*             ] ) ] *)
+(*    build_rules = [ *)
+(*       "d3.js" ( *)
+(*        sources = [ client_byte ] *)
+(*        commands = [ *)
+(*          { "js_of_ocaml" *)
+(*             (\* Use these options to debug Javascript: *)
+(*                "-sourcemap" "-pretty" "-noinline" *\) *)
+(* 	       "--pretty" *)
+(*              "+toplevel.js" "+weak.js" (\* WHY ??? GRGR *\) *)
+(* 	     "-o" "d3.js" *)
+(*               client_byte } *)
+(*        ] *)
+(*        build_target = true *)
+(*      ) *)
+(*    ] *)
+(* end *)
