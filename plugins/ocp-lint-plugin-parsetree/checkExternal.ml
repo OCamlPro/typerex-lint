@@ -18,41 +18,50 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-begin library "ocp-lint-plugin-parsetree"
-  install_META = true
-  install_subdir = "ocp-lint-plugins"
-  files = [
-    "plugin_parsetree.ml"
+module Linter = Plugin_parsetree.Plugin.MakeLint(struct
+    let name = "External Code"
+    let version = "1"
+    let short_name = "external_code"
+    let details = "Check if external code is used"
+    let enable = true
+  end)
 
-    (* All linters attached to Parsetree plugin. *)
-    "identifier_length.ml"
-    "list_function_on_singleton.ml"
-    "physical_comp_on_alloc_lit.ml"
+type warning =
+  | ExternalValue of string
 
-    "checkGoodPractices.ml";
-    "checkConstructorArgs.ml";
+let w_external_value = Linter.new_warning
+    ~id:1
+    ~short_name:"external_value"
+    ~msg:"Value \"$value\" is external defined."
+    ~severity:1
 
-    "checkClass.ml";
-    "checkExternal.ml";
-    "checkPatternGuard.ml";
-    "checkPolymorphicVariants.ml";
-    "checkTypeDeclaration.ml"
+module Warnings = Linter.MakeWarnings(struct
+    type t = warning
 
-    "redefine_std_lib.ml"
+    let to_warning = function
+      | ExternalValue value ->
+        w_external_value, ["value", value]
+  end)
 
-  ]
-  pp = ["ocp-pp"]
-  requires = [
-    "ocp-lint-stdlib-helper"
-    "ocp-lint-config"
-    "ocp-lint-api"
-    "ocplib-compiler"
-  ]
-end
+let iter =
+  let module IterArg = struct
+    include Parsetree_iter.DefaultIteratorArgument
 
-(* Helper for linter running checks on stdlib *)
-begin library "ocp-lint-stdlib-helper"
-  files = [
-    "std_lib.ml"
-  ]
-end
+    let process_external_value loc value =
+      Warnings.report loc (ExternalValue value)
+
+     let enter_value_description desc =
+      let open Parsetree in
+      let open Asttypes in
+      begin match desc.pval_prim with
+      | [] -> ()
+      | _ -> process_external_value desc.pval_name.loc desc.pval_name.txt
+      end
+
+  end in
+  (module IterArg : Parsetree_iter.IteratorArgument)
+
+(* Registering a main entry to the linter *)
+module MainML = Linter.MakeInputStructure(struct
+    let main ast = Parsetree_iter.iter_structure iter ast
+  end)
