@@ -64,7 +64,7 @@ let warn_bad_docstrings () =
 end
 *)
 
-(* Docstring constructors and descturctors *)
+(* Docstring constructors and destructors *)
 
 let docstring body loc =
   let ds =
@@ -125,7 +125,7 @@ let info_attr = docs_attr
 
 let add_info_attrs info attrs =
   match info with
-  | None -> attrs
+  | None | Some {ds_body=""; _} -> attrs
   | Some ds -> attrs @ [info_attr ds]
 
 (* Docstrings not attached to a specifc item *)
@@ -150,7 +150,8 @@ let text_attr ds =
     (text_loc, PStr [item])
 
 let add_text_attrs dsl attrs =
-  (List.map text_attr dsl) @ attrs
+  let fdsl = List.filter (function {ds_body=""} -> false | _ -> true) dsl in
+  (List.map text_attr fdsl) @ attrs
 
 (* Find the first non-info docstring in a list, attach it and return it *)
 let get_docstring ~info dsl =

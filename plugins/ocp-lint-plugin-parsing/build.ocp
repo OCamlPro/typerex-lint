@@ -36,6 +36,7 @@ begin library "ocp-lint-plugin-parsing";
         "lintParsing_Ast_iterator.ml";
         "lintParsing_Parse.ml";
 
+	"lintParsingGetFeatures.ml";
         "lintParsingLinter.ml";
   ];
   requires = [

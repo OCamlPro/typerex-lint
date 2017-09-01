@@ -71,7 +71,7 @@ let map = ref StringMap.empty
 
 let update_translations_file = ref None
 
-let translation_config = SimpleConfig.create_config_file (File.of_string ".")
+let translation_config = SimpleConfig.create_config_file (FileGen.of_string ".")
 
 let translations = SimpleConfig.create_option translation_config
     [ "translations" ]
@@ -143,7 +143,7 @@ let init ?(verbose=false) ?(path= !translation_path) ?var ?langs program_name =
             if Sys.file_exists filename then begin
               translations =:= [];
               SimpleConfig.set_config_file translation_config
-                (File.of_string filename);
+                (FileGen.of_string filename);
               SimpleConfig.load translation_config;
               List.iter (fun (s1, s2) ->
                   map := StringMap.add s1 s2 !map
@@ -172,7 +172,7 @@ let () =
         begin
           try
             SimpleConfig.set_config_file translation_config
-              (File.of_string config_file);
+              (FileGen.of_string config_file);
             SimpleConfig.save_with_help translation_config
           with exn ->
             Printf.eprintf "Warning: could not save translation file %S\n%!"
