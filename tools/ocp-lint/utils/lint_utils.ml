@@ -18,6 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open OcpCompat
+
 type file_struct = {
   name : string;
   norm : string;
@@ -116,7 +118,7 @@ let read_file f =
   let s = Bytes.create n in
   really_input ic s 0 n;
   close_in ic;
-  s
+  Bytes.to_string s
 
 let db_hash file =
   let file_content = read_file file in
