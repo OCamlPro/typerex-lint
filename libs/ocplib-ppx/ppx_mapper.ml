@@ -40,6 +40,23 @@ let rec extension_of_error {loc; msg; if_highlight; sub} =
         (List.map (fun ext -> Str.extension (extension_of_error ext)) sub))
 #endif
 
+#if OCAML_VERSION >= "4.06"
+
+let extension_of_exn exn =
+  match error_of_exn exn with
+  | Some (`Ok error) -> extension_of_error error
+  | Some `Already_displayed -> { loc = Location.none; txt = "ocaml.error" }, PStr []
+  | None -> raise exn
+
+#else
+
+let extension_of_exn exn =
+   match error_of_exn exn with
+  | Some error -> extension_of_error error
+  | None -> raise exn
+
+#endif
+
 let attribute_of_warning loc s =
   { loc; txt = "ocaml.ppwarning" },
 #if OCAML_VERSION < "4.03"
@@ -246,11 +263,8 @@ let apply_lazy ~source ~target ppx =
       let fields = PpxContext.update_cookies fields in
       Str.attribute (PpxContext.mk fields) :: ast
     with exn ->
-      match error_of_exn exn with
-      | Some error ->
-          [{pstr_desc = Pstr_extension (extension_of_error error, []);
+          [{pstr_desc = Pstr_extension (extension_of_exn exn, []);
             pstr_loc  = Location.none}]
-      | None -> raise exn
   in
   let iface ast =
     try
@@ -266,11 +280,8 @@ let apply_lazy ~source ~target ppx =
       let fields = PpxContext.update_cookies fields in
       Sig.attribute (PpxContext.mk fields) :: ast
     with exn ->
-      match error_of_exn exn with
-      | Some error ->
-          [{psig_desc = Psig_extension (extension_of_error error, []);
+          [{psig_desc = Psig_extension (extension_of_exn exn, []);
             psig_loc  = Location.none}]
-      | None -> raise exn
   in
   let ast =
     if magic = Config.ast_impl_magic_number

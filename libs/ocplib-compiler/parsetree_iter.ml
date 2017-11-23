@@ -562,7 +562,11 @@ module MakeIterator(Iter : IteratorArgument) : sig
         | Pwith_type (_, decl) -> iter_type_declaration decl
 #endif
         | Pwith_module _ -> ()
+#if OCAML_VERSION < "4.06"
         | Pwith_typesubst decl -> iter_type_declaration decl
+#else
+        | Pwith_typesubst (loc,decl) -> iter_type_declaration decl
+#endif
         | Pwith_modsubst _ -> ()
       end;
       Iter.leave_with_constraint cstr;
@@ -624,6 +628,9 @@ module MakeIterator(Iter : IteratorArgument) : sig
 
         | Pcl_constr (_, tyl) ->
           List.iter iter_core_type tyl
+#if OCAML_VERSION >= "4.06"
+      | Pcl_open (ovflag, lid, ct) -> iter_class_expr ct
+#endif
       end;
       Iter.leave_class_expr cexpr;
 
@@ -643,6 +650,9 @@ module MakeIterator(Iter : IteratorArgument) : sig
           iter_core_type ct;
           iter_class_type cl
         | Pcty_extension ext -> iter_extension ext
+#endif
+#if OCAML_VERSION >= "4.06"
+      | Pcty_open (ovflag, lid, ct) -> iter_class_type ct
 #endif
       end;
       Iter.leave_class_type ct;
@@ -690,8 +700,18 @@ module MakeIterator(Iter : IteratorArgument) : sig
         | Ptyp_class (path, list, _labels) ->
           List.iter iter_core_type list
 #else
+#if OCAML_VERSION < "4.06"
         | Ptyp_object (list, _close_flag) ->
           List.iter (fun (_s, _attr, ct) -> iter_core_type ct) list
+#else
+        | Ptyp_object (list, _close_flag) ->
+           List.iter (function
+                      | Otag (_s, _attr, ct) -> iter_core_type ct
+                      | Oinherit ct -> iter_core_type ct
+                     ) list
+#endif
+
+
         | Ptyp_class (_loc, list) -> List.iter iter_core_type list
         | Ptyp_extension ext -> iter_extension ext
 #endif

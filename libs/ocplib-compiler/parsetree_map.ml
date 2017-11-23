@@ -670,7 +670,12 @@ end = struct
       | Pwith_type (lid,decl) -> Pwith_type (lid, map_type_declaration decl)
 #endif
 
+#if OCAML_VERSION < "4.06"
       | Pwith_typesubst decl -> Pwith_typesubst (map_type_declaration decl)
+#else
+      | Pwith_typesubst (lid,decl) -> Pwith_typesubst (lid, map_type_declaration decl)
+#endif
+
 #if OCAML_VERSION < "4.02"
       | Pwith_module (lid) -> cstr
 #else
@@ -735,6 +740,10 @@ end = struct
 #if OCAML_VERSION >= "4.02"
       | Pcl_extension _ -> cexpr.pcl_desc
 #endif
+#if OCAML_VERSION >= "4.06"
+      | Pcl_open (ovflag, lid, ct) ->
+         Pcl_open (ovflag, lid, map_class_expr ct)
+#endif
     in
     Map.leave_class_expr { cexpr with pcl_desc = cl_desc }
 
@@ -752,6 +761,10 @@ end = struct
       | Pcty_arrow (label, ct, cl) ->
         Pcty_arrow (label, map_core_type ct, map_class_type cl)
       | Pcty_extension _ -> ct.pcty_desc
+#endif
+#if OCAML_VERSION >= "4.06"
+      | Pcty_open (ovflag, lid, ct) ->
+         Pcty_open (ovflag, lid, map_class_type ct)
 #endif
     in
     Map.leave_class_type { ct with pcty_desc = cltyp_desc }
@@ -818,9 +831,17 @@ end = struct
       | Ptyp_class (lid, list, labels) ->
         Ptyp_class (lid, List.map map_core_type list, labels)
 #else
+#if OCAML_VERSION < "4.06"
       | Ptyp_object (list, closed) ->
         Ptyp_object (List.map (fun (s,attrs,ct) ->
           (s, attrs, map_core_type ct)) list, closed)
+#else
+      | Ptyp_object (list, closed) ->
+         Ptyp_object (List.map (function
+           | Otag (s,attrs,ct) -> Otag (s, attrs, map_core_type ct)
+           | Oinherit ct -> Oinherit (map_core_type ct)
+          ) list, closed)
+#endif
       | Ptyp_class (lid, list) ->
         Ptyp_class (lid, List.map map_core_type list)
       | Ptyp_extension _ -> ct.ptyp_desc

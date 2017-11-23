@@ -18,6 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open OcpCompat
+
 type file_struct = {
   name : string;
   norm : string;

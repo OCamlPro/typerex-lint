@@ -225,9 +225,7 @@ let escaped_newlines = ref false
 
 (* Warn about Latin-1 characters used in idents *)
 
-let warn_latin1 lexbuf =
-  Location.prerr_warning (Location.curr lexbuf)
-    (Warnings.Deprecated "ISO-Latin1 characters in identifiers")
+let warn_latin1 lexbuf = ()
 ;;
 
 let handle_docstrings = ref true
@@ -270,7 +268,7 @@ let report_error ppf = function
      begin match explanation with
        | None -> ()
        | Some expl -> fprintf ppf ": %s" expl
-     end	     
+     end
 
 let () =
   Location.register_error_of_exn

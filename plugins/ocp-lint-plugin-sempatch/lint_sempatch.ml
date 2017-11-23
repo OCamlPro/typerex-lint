@@ -18,6 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open OcpCompat
 open Sempatch
 open Lint_plugin_error
 open Lint_warning_decl
