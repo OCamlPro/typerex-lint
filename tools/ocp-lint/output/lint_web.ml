@@ -123,7 +123,7 @@ let find_cfg_tmp file config_dep =
 
 let check_flag options =
   try
-    bool_of_string (Lint_globals.Config.get_option_value options)
+    bool_of_string (Lint_globals.LintConfig.get_option_value options)
   with
     Not_found -> true
 
@@ -135,7 +135,7 @@ let linter_is_enabled plugin_name linter_name =
 
 let warnings_activations plugin_name linter_name =
   let opt = [plugin_name; linter_name; "warnings"] in
-  Lint_parse_args.parse_options (Lint_globals.Config.get_option_value opt)
+  Lint_parse_args.parse_options (Lint_globals.LintConfig.get_option_value opt)
 
 let make_plugins_linters_info plugins_tbl =
   Hashtbl.fold begin fun plugin linters (plugin_acc,linter_acc) ->
@@ -173,7 +173,7 @@ let make_files_warnings_info master_config file_config linters_info db =
       let configs ,cfg_opt = find_cfg_tmp file_name file_config in
       begin match cfg_opt with
          | None -> ()
-         | Some cfg -> Lint_globals.Config.load_config_tmp master_config cfg
+         | Some cfg -> Lint_globals.LintConfig.load_config_tmp master_config cfg
       end;
       let file_info =
         {

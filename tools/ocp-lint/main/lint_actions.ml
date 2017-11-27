@@ -238,16 +238,16 @@ let init_db no_db db_dir path = match db_dir with
       db_dir, true
 
 let init_config path =
-  let path_t = File.of_string path in
+  let path_t = FileGen.of_string path in
   let config_file = Lint_globals.LintConfig.config_file_name in
   try
     let root_path_t = Lint_utils.find_root path_t [config_file] in
-    let file_t = File.concat root_path_t (File.of_string config_file) in
+    let file_t = FileGen.concat root_path_t (FileGen.of_string config_file) in
     Lint_globals.LintConfig.init_config file_t;
   with Not_found -> ()
 
 let init_config_file file =
-  let file_t = File.of_string file in
+  let file_t = FileGen.of_string file in
   Lint_globals.LintConfig.init_config file_t
 
 let list_plugins fmt =
