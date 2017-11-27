@@ -7,7 +7,7 @@
 #   * ocp-autoconf.ac for autoconf parts              #
 #                                                     #
 #######################################################
-AC_INIT(typerex-lint,1.0)
+AC_INIT(typerex-lint,1.1)
 CONFIGURE_ARGS=$*
 AC_COPYRIGHT(Copyright 2016 OCamlPro SAS)
 OCAML_MINIMAL_VERSION=4.02.0
@@ -133,9 +133,33 @@ AC_CHECK_OCAML_PKG(ocp-indent.lib)
 if test "$OCAML_PKG_ocp_indent.lib" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'ocp-indent.lib'.])
 fi
-OPAM_REPO=
-OPAM_REPO_OFFICIAL_REMOTE=
-OPAM_REPO_FORK_REMOTE=
+AC_CHECK_OCAML_PKG(js_of_ocaml)
+if test "$OCAML_PKG_js_of_ocaml" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'js_of_ocaml'.])
+fi
+AC_CHECK_OCAML_PKG(tyxml)
+if test "$OCAML_PKG_tyxml" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'tyxml'.])
+fi
+AC_CHECK_OCAML_PKG(lwt)
+if test "$OCAML_PKG_lwt" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'lwt'.])
+fi
+AC_CHECK_OCAML_PKG(omd)
+if test "$OCAML_PKG_omd" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'omd'.])
+fi
+AC_CHECK_OCAML_PKG(yojson)
+if test "$OCAML_PKG_yojson" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'yojson'.])
+fi
+AC_CHECK_OCAML_PKG(js_of_ocaml-tyxml)
+if test "$OCAML_PKG_js_of_ocaml_tyxml" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'js_of_ocaml-tyxml'.])
+fi
+OPAM_REPO=/home/lefessan/GIT/ocp-public/opam-repository
+OPAM_REPO_OFFICIAL_REMOTE=ocaml
+OPAM_REPO_FORK_REMOTE=origin
 DOWNLOAD_URL_PREFIX=http://github.com//archive/
 
 ###############################################################
@@ -188,7 +212,7 @@ AC_CONFIG_FILES(Makefile.config config.ocpgen config.ocp2gen ocaml-config.h)
 AC_OUTPUT
 
 echo
-echo "Summary:"
+echo "Summary for ${PACKAGE_NAME}.${PACKAGE_VERSION}:"
 echo "prefix=${prefix}"
 echo "exec_prefix=${exec_prefix}"
 echo "bindir=${bindir}"

@@ -1,0 +1,11 @@
+autoconf/.gitignore 00973f185af428536c3caff11a53626d
+autoconf/Makefile.config.in 8edc4964d3e8d09eb9867cadc98d13a7
+autoconf/Makefile.rules c9e85dee44380b1a855cb2d49da44d54
+autoconf/build.ocp 9d81103f0dd977b6414645b9ab29c713
+autoconf/config.ocp2gen.in 98b5f8ae8a16187c0c76daccc72bee2d
+autoconf/config.ocpgen.in 159639bcf1a04a7c846aa1dffe556db9
+autoconf/configure.ac a9025ee12ac853a12e587619a7e6c803
+autoconf/m4/ax_compare_version.m4 ebb455a7fd6a8ba9a4e38a25c8f0b686
+autoconf/m4/ocaml.m4 bffe7da970a9e23a89b611c00360f36f
+autoconf/ocaml-config.h.in 361f7d5a23b30c6c49756a9e34c2dcf9
+ocp-autoconf.d/configure.ac bb8a88addef00eed10bfc70827998e9e
