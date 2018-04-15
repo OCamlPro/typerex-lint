@@ -29,7 +29,7 @@ module Linter = PluginFileSystem.MakeLint(struct
     let version = "1"
     let short_name = "project_files"
     let details = details
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

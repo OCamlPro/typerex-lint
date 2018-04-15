@@ -140,7 +140,7 @@ let warnings_activations plugin_name linter_name =
 let make_plugins_linters_info plugins_tbl =
   Hashtbl.fold begin fun plugin linters (plugin_acc,linter_acc) ->
     let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
-    if Plugin.enable then
+    if Plugin.enabled then
       let plugin_info =
         {
           plugin_name = Plugin.short_name;
@@ -150,7 +150,7 @@ let make_plugins_linters_info plugins_tbl =
       plugin_info :: plugin_acc,
       Lint_map.fold begin fun lname lint linter_acc ->
         let module Linter = (val lint : Lint_types.LINT) in
-        if Linter.enable then
+        if Linter.enabled then
           let linter_info =
             {
               linter_plugin = plugin_info;

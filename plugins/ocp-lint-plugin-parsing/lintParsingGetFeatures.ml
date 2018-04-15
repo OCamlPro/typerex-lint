@@ -82,7 +82,7 @@ module Linter = Plugin.MakeLint(struct
     let version = "1"
     let short_name = "get_features"
     let details = "Extract the features of the language"
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

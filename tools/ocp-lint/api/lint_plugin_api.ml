@@ -39,7 +39,7 @@ let register_main plugin cname new_lint =
         let version = New_lint.version
         let short_name = New_lint.short_name
         let details = New_lint.details
-        let enable = New_lint.enable
+        let enabled = New_lint.enabled
         let inputs = Old_lint.inputs @ New_lint.inputs
         let wdecls = WarningDeclaration.union Old_lint.wdecls New_lint.wdecls
       end in
@@ -65,27 +65,27 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
   let name = P.name
   let short_name = P.short_name
   let details = P.details
-  let enable = P.enable
+  let enabled = P.enabled
 
   module Plugin = struct
     let name = name
     let short_name = short_name
     let details = details
-    let enable = enable
+    let enabled = enabled
   end
   let plugin = (module Plugin : Lint_plugin_types.PLUGIN)
 
   let create_option options short_help lhelp ty default =
     Lint_globals.LintConfig.create_option options short_help lhelp 0 ty default
 
-  let create_default_lint_option lint_short_name lint_long_name enable =
+  let create_default_lint_option lint_short_name lint_long_name enabled =
     let details = Printf.sprintf "Enable/Disable linter %S." lint_long_name in
     ignore @@
     create_option [P.short_name; lint_short_name; "enabled"]
       details
       details
       SimpleConfig.enable_option
-      enable;
+      enabled;
     let details =
       Printf.sprintf "Module to ignore durint the lint of %S" lint_long_name in
     ignore @@
@@ -113,7 +113,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
     let version = C.version
     let short_name = C.short_name
     let details = C.details
-    let enable = C.enable
+    let enabled = C.enabled
     let wdecls = WarningDeclaration.empty ()
     let is_unique =
       check_lint_uniqueness Lint_globals.plugins plugin C.short_name
@@ -178,7 +178,7 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
             let version = version
             let short_name = short_name
             let details = details
-            let enable = enable
+            let enabled = enabled
             let inputs = [ I.input ]
             let wdecls = wdecls
           end in
@@ -234,16 +234,16 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
 
 
     let () =
-      create_default_lint_option C.short_name C.name C.enable
+      create_default_lint_option C.short_name C.name C.enabled
   end (* MakeLint *)
 
   let () =
-    (* Creating default options for plugins: "--plugin.enable" *)
+    (* Creating default options for plugins: "--plugin.enabled" *)
     ignore @@
     create_option
       [P.short_name; "enabled"]
       details
       details
-      SimpleConfig.enable_option P.enable;
+      SimpleConfig.enable_option P.enabled;
     register_plugin plugin
 end (* MakePlugin*)

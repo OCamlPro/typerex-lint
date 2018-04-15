@@ -10,7 +10,7 @@
 AC_INIT(typerex-lint,1.1)
 CONFIGURE_ARGS=$*
 AC_COPYRIGHT(Copyright 2016 OCamlPro SAS)
-OCAML_MINIMAL_VERSION=4.02.0
+OCAML_MINIMAL_VERSION=4.02.3
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_ARG_ENABLE(version-check,
@@ -129,6 +129,8 @@ AC_CHECK_OCAML_PKG(ocplib-config)
 if test "$OCAML_PKG_ocplib_config" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'ocplib-config'.])
 fi
+  AX_COMPARE_VERSION( [$OCAML_PKG_ocplib_config_VERSION], [lt], [1.99.20-beta],
+     AC_MSG_ERROR([Version 1.99.20-beta of ocplib-config is needed]))
 AC_CHECK_OCAML_PKG(ocp-indent.lib)
 if test "$OCAML_PKG_ocp_indent.lib" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'ocp-indent.lib'.])
@@ -157,10 +159,14 @@ AC_CHECK_OCAML_PKG(js_of_ocaml-tyxml)
 if test "$OCAML_PKG_js_of_ocaml_tyxml" = "no"; then
    AC_MSG_ERROR([Please install OCaml package 'js_of_ocaml-tyxml'.])
 fi
+AC_CHECK_OCAML_PKG(js_of_ocaml-camlp4)
+if test "$OCAML_PKG_js_of_ocaml_camlp4" = "no"; then
+   AC_MSG_ERROR([Please install OCaml package 'js_of_ocaml-camlp4'.])
+fi
 OPAM_REPO=/home/lefessan/GIT/ocp-public/opam-repository
 OPAM_REPO_OFFICIAL_REMOTE=ocaml
 OPAM_REPO_FORK_REMOTE=origin
-DOWNLOAD_URL_PREFIX=http://github.com//archive/
+DOWNLOAD_URL_PREFIX=http://github.com/OCamlPro/typerex-lint/archive/
 
 ###############################################################
 ##                                                            #

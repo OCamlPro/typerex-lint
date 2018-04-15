@@ -26,7 +26,7 @@ module OCPIndent = Plugin.MakeLint(struct
     let version = "1"
     let short_name = "ocp_indent"
     let details = "Checks indentation with ocp-indent"
-    let enable = true
+    let enabled = true
   end)
 
 type warning = File of string

@@ -255,20 +255,16 @@ let list_plugins fmt =
   let open Lint_warning_types in
   Lint_plugin.iter_plugins (fun plugin checks ->
       let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
-      let status = if Plugin.enable then "enable" else "disable" in
-      if Plugin.enable then
-        Format.fprintf fmt "=== %s === (\027[32m%s\027[m)\n" Plugin.name status
-      else
-        Format.fprintf fmt "=== %s === (\027[31m%s\027[m)\n" Plugin.name status;
+      let status = if Plugin.enabled then "enabled" else "disabled" in
+      let color = if Plugin.enabled then "[32m" else "[31m" in
+      Format.fprintf fmt "=== %s === (\027%s%s\027[m)\n"
+                     Plugin.name color status;
       Lint_map.iter (fun cname lint ->
           let module Linter = (val lint : Lint_types.LINT) in
-          let status = if Linter.enable then "enable" else "disable" in
-          if Linter.enable then
-            Format.fprintf fmt "  ** %s (\027[32m%s\027[m)\n%!"
-              Linter.name status
-          else
-            Format.fprintf fmt "  ** %s (\027[31m%s\027[m)\n%!"
-              Linter.name status;
+          let status = if Linter.enabled then "enabled" else "disabled" in
+          let color = if Linter.enabled then "[32m" else "[31m" in
+          Format.fprintf fmt "  ** %s (\027%s%s\027[m)\n%!"
+                         Linter.name color status;
           WarningDeclaration.iter (fun wdecl ->
               Format.fprintf fmt "      Warning %d: %S.\n%!"
                 wdecl.id wdecl.short_name)
@@ -543,7 +539,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
   done;
   FileDir.remove_all (FileGen.of_string tmp_file_dir);
   Printf.eprintf "\rRunning analyses... %d / %d" len len;
-  Printf.eprintf "\nMergin database...%!";
+  Printf.eprintf "\nMerging database...%!";
   let sources =
     List.map (fun file ->
         Lint_utils.mk_file_struct !Lint_db.DefaultDB.root file [] cmts_infos
@@ -552,7 +548,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
   Printf.eprintf "\n%!";
   if pwarning then
     Lint_text.print
-      Format.err_formatter
+      Format.std_formatter
       master_config
       !file_config_dep
       severity
@@ -560,7 +556,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
       Lint_db.DefaultDB.db;
   if perror then
     Lint_text.print_error
-      Format.err_formatter
+      Format.std_formatter
       path
       Lint_db.DefaultDB.db_errors;
   if output_web then

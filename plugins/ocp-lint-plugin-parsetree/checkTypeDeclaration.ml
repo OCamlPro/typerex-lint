@@ -23,7 +23,7 @@ module Linter = Plugin_parsetree.Plugin.MakeLint(struct
     let version = "1"
     let short_name = "type_declaration"
     let details = "Check some properties on types declarations"
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

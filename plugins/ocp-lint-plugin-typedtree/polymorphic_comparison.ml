@@ -28,7 +28,7 @@ module Linter = Plugin.MakeLint(struct
     let version = "1.1"
     let short_name = "polymorphic_function"
     let details = "Detects all polymorphic functions."
-    let enable = true
+    let enabled = true
   end)
 
 type warning = Poly of (string * string)

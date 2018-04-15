@@ -54,7 +54,7 @@ module Linter = Plugin_typedtree.Plugin.MakeLint(struct
     let version = "1"
     let short_name = "class_inheritance"
     let details = "Check some properties of the classes inheritance"
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

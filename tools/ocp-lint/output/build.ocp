@@ -20,7 +20,7 @@
 
 begin library "ocp-lint-output"
   files = [
-    "lint_text.ml"
+    "lint_text.ml" (pp = "ocp-pp")
   ]
   requires = [
     "compiler-libs"

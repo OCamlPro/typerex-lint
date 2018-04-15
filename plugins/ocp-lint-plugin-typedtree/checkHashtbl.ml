@@ -13,7 +13,7 @@ module Linter = Plugin_typedtree.Plugin.MakeLint(struct
     let version = "1"
     let short_name = "check_hash_table"
     let details = "Check some properties on hash table"
-    let enable = true
+    let enabled = true
   end)
 
 type warning =
@@ -46,7 +46,7 @@ let iter =
 
     let apply_args_stack = ref []
 
-    let is_enable_option opt =
+    let is_enabled_option opt =
       let open Typedtree in
       let open Asttypes in
       let open Types in
@@ -65,9 +65,13 @@ let iter =
       match !apply_args_stack with
       | [args] ->
          if not (
-           List.exists begin function
-             | Optional "random", Some {exp_desc = opt; _} ->
-                is_enable_option opt
+                List.exists begin function
+#if OCAML_VERSION > "4.02.3"
+                              | Optional "random", Some {exp_desc = opt; _} ->
+#else
+                              | "random", Some {exp_desc = opt; _}, Optional ->
+#endif
+                    is_enabled_option opt
              | _ ->
                 false
            end args

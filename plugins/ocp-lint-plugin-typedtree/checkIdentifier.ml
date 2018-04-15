@@ -305,7 +305,7 @@ module Linter = Plugin_typedtree.Plugin.MakeLint(struct
     let version = "1"
     let short_name = "check_identifier"
     let details = "Check some properties on identifiers"
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

@@ -116,7 +116,7 @@ let warnings_pie_group_by_file navigation_system analysis_info =
     if not arg.data.is_grouped then begin
       let file_info, _ =
         List.find begin fun (file, _) ->
-          String.equal file.file_name arg.data.label
+          file.file_name = arg.data.label
         end files_warnings_info
       in
       let file_content_data =

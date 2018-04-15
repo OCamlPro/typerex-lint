@@ -28,7 +28,7 @@ module Linter = Plugin.MakeLint(struct
     let version = "1"
     let short_name = "check_tuple"
     let details = "Check some properties on tuple"
-    let enable = true
+    let enabled = true
   end)
 
 

@@ -28,7 +28,7 @@ module Linter = Plugin.MakeLint(struct
     let version = "1"
     let short_name = "fabrice_good_practices"
     let details = "Checks some good practices."
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

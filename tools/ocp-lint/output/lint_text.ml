@@ -21,6 +21,18 @@
 open Lint_warning_types
 open Lint_db_types
 
+#if OCAML_VERSION >= "4.03"
+external isatty : out_channel -> bool = "caml_sys_isatty"
+
+let () =
+  if not (isatty stdout) then
+#if OCAML_VERSION < "4.05"
+    Misc.Color.setup Misc.Color.Never
+#else
+    Misc.Color.setup (Some Misc.Color.Never)
+#endif
+#endif
+
 let find_cfg_tmp file config_dep =
   let open Lint_utils in
   try
@@ -100,7 +112,7 @@ let update_breakdown tbl pname lname version wid =
       Hashtbl.add tbl pname new_p_htbl
     end
 
-let summary ~master_config ~file_config ~severity ~path
+let summary ?(oc=stderr) ~master_config ~file_config ~severity ~path
     ~pdetails ~no_db ~db ~db_errors =
   let files_linted = Hashtbl.create 42 in
   let files_cached = ref StringCompat.StringSet.empty in
@@ -214,20 +226,20 @@ let summary ~master_config ~file_config ~severity ~path
   let files_cached_errors_total =
     StringCompat.StringSet.cardinal !files_cached_errors in
   if not no_db then begin
-    Printf.printf "Summary:\n%!";
-    Printf.printf "== Infos ==\n%!";
-    Printf.printf "  * root dir: %s\n%!" !Lint_db.DefaultDB.root;
+    Printf.fprintf oc "Summary:\n%!";
+    Printf.fprintf oc "== Infos ==\n%!";
+    Printf.fprintf oc "  * root dir: %s\n%!" !Lint_db.DefaultDB.root;
 
-    Printf.printf "== Cache Infos ==\n%!";
+    Printf.fprintf oc "== Cache Infos ==\n%!";
     if pdetails then begin
       Printf.printf
         "  * %d file(s) were found in cache:\n%!"
         files_cached_total;
-      StringCompat.StringSet.iter (Printf.printf "    - %s\n%!") !files_cached;
+      StringCompat.StringSet.iter (Printf.fprintf oc "    - %s\n%!") !files_cached;
     end
     else
-      Printf.printf "  * %d file(s) were found in cache\n%!" files_cached_total;
-    Printf.printf "  * %d warning(s) were found in cache:\n%!"
+      Printf.fprintf oc "  * %d file(s) were found in cache\n%!" files_cached_total;
+    Printf.fprintf oc "  * %d warning(s) were found in cache:\n%!"
       warnings_cached_total;
     Hashtbl.iter (fun pname ptbl ->
         let total =
@@ -239,7 +251,7 @@ let summary ~master_config ~file_config ~severity ~path
             ptbl 0 in
         if total > 1 then
           begin
-            Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
+            Printf.fprintf oc "    * %d warning(s) raised by %S\n%!" total_w pname;
             Hashtbl.iter (fun lname wtbl ->
                 let total_l =
                   Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
@@ -247,10 +259,10 @@ let summary ~master_config ~file_config ~severity ~path
                   Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
                 if total_l > 1 then
                   begin
-                    Printf.printf "      * %d warning(s) raised by %S\n%!"
+                    Printf.fprintf oc "      * %d warning(s) raised by %S\n%!"
                       total_l_w lname;
                     Hashtbl.iter (fun wid cpt ->
-                        Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                        Printf.fprintf oc "        * %d warning(s) #%i\n%!" cpt wid)
                       wtbl
                   end
                 else
@@ -270,10 +282,10 @@ let summary ~master_config ~file_config ~severity ~path
                 Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
               if total_l > 1 then
                 begin
-                  Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
+                  Printf.fprintf oc "      * %d warning(s) raised by %S/%S\n%!"
                     total_l_w pname lname;
                   Hashtbl.iter (fun wid cpt ->
-                      Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                      Printf.fprintf oc "        * %d warning(s) #%i\n%!" cpt wid)
                     wtbl
                 end
               else
@@ -288,30 +300,30 @@ let summary ~master_config ~file_config ~severity ~path
             ptbl)
       breakdown_cached;
     if pdetails then begin
-      Printf.printf "  * %d files(s) couldn't be linted:\n%!"
+      Printf.fprintf oc "  * %d files(s) couldn't be linted:\n%!"
         files_cached_errors_total;
       StringCompat.StringSet.iter
-        (Printf.printf "    - %s\n%!") !files_cached_errors;
+        (Printf.fprintf oc "    - %s\n%!") !files_cached_errors;
     end
     else
-      Printf.printf "  * %d files(s) couldn't be linted\n%!"
+      Printf.fprintf oc "  * %d files(s) couldn't be linted\n%!"
         files_cached_errors_total
   end;
 
-  Printf.printf "== New Warnings ==\n%!";
+  Printf.fprintf oc "== New Warnings ==\n%!";
   if pdetails then begin
-    Printf.printf "  * %d file(s) were linted:\n%!" files_linted_total;
+    Printf.fprintf oc "  * %d file(s) were linted:\n%!" files_linted_total;
     Hashtbl.iter (fun file cfgs ->
-        Printf.printf "    - %s\n%!" file;
+        Printf.fprintf oc "    - %s\n%!" file;
         StringCompat.StringSet.iter (fun cfg ->
             let cfg = Filename.concat cfg ".ocplint" in
-            Printf.printf "        * %s\n" cfg)
+            Printf.fprintf oc "        * %s\n" cfg)
           cfgs)
       files_linted;
   end
   else
-    Printf.printf "  * %d file(s) were linted\n%!" files_linted_total;
-  Printf.printf "  * %d warning(s) were emitted:\n%!" warnings_linted_total;
+    Printf.fprintf oc "  * %d file(s) were linted\n%!" files_linted_total;
+  Printf.fprintf oc "  * %d warning(s) were emitted:\n%!" warnings_linted_total;
   Hashtbl.iter (fun pname ptbl ->
       let total =
         Hashtbl.fold (fun lname wtbl acc -> acc + 1)
@@ -322,17 +334,17 @@ let summary ~master_config ~file_config ~severity ~path
           ptbl 0 in
       if total > 1 then
         begin
-          Printf.printf "    * %d warning(s) raised by %S\n%!" total_w pname;
+          Printf.fprintf oc "    * %d warning(s) raised by %S\n%!" total_w pname;
           Hashtbl.iter (fun lname wtbl ->
               let total_l = Hashtbl.fold (fun wid cpt acc -> acc + 1) wtbl 0 in
               let total_l_w =
                 Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
               if total_l > 1 then
                 begin
-                  Printf.printf "      * %d warning(s) raised by %S\n%!"
+                  Printf.fprintf oc "      * %d warning(s) raised by %S\n%!"
                     total_l_w lname;
                   Hashtbl.iter (fun wid cpt ->
-                      Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                      Printf.fprintf oc "        * %d warning(s) #%i\n%!" cpt wid)
                     wtbl
                 end
               else
@@ -352,10 +364,10 @@ let summary ~master_config ~file_config ~severity ~path
               Hashtbl.fold (fun wid cpt acc -> acc + cpt) wtbl 0 in
             if total_l > 1 then
               begin
-                Printf.printf "      * %d warning(s) raised by %S/%S\n%!"
+                Printf.fprintf oc "      * %d warning(s) raised by %S/%S\n%!"
                   total_l_w pname lname;
                 Hashtbl.iter (fun wid cpt ->
-                    Printf.printf "        * %d warning(s) #%i\n%!" cpt wid)
+                    Printf.fprintf oc "        * %d warning(s) #%i\n%!" cpt wid)
                   wtbl
               end
             else
@@ -370,13 +382,13 @@ let summary ~master_config ~file_config ~severity ~path
           ptbl)
     breakdown_linted;
   if pdetails then begin
-    Printf.printf "  * %d file(s) couldn't be linted:\n%!"
+    Printf.fprintf oc "  * %d file(s) couldn't be linted:\n%!"
       files_linted_errors_total;
     StringCompat.StringSet.iter
-      (Printf.printf "    - %s\n%!") !files_linted_errors
+      (Printf.fprintf oc "    - %s\n%!") !files_linted_errors
   end
   else
-    Printf.printf "  * %d file(s) couldn't be linted\n%!"
+    Printf.fprintf oc "  * %d file(s) couldn't be linted\n%!"
       files_linted_errors_total
 
 let print fmt master_config file_config severity path db =

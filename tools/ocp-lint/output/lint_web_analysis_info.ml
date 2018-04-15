@@ -367,7 +367,7 @@ let json_of_plugin_module plugin_module =
      ("name", `String P.name);
      ("short_name", `String P.short_name);
      ("details", `String P.details);
-     ("enable", `Bool P.enable);
+     ("enabled", `Bool P.enabled);
    ]
 
 let plugin_module_of_json json =
@@ -375,7 +375,7 @@ let plugin_module_of_json json =
     let name = json |> member "name" |> to_string
     let short_name = json |> member "short_name" |> to_string
     let details = json |> member "details" |> to_string
-    let enable = json |> member "enable" |> to_bool
+    let enabled = json |> member "enabled" |> to_bool
    end : Lint_plugin_types.PLUGIN)
 
 let json_of_exception exn =

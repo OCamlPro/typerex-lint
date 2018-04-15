@@ -592,6 +592,7 @@ OPAM_REPO_FORK_REMOTE
 OPAM_REPO_OFFICIAL_REMOTE
 OPAM_REPO
 ROOTDIR
+OCAML_PKG_js_of_ocaml_camlp4
 OCAML_PKG_js_of_ocaml_tyxml
 OCAML_PKG_yojson
 OCAML_PKG_omd
@@ -1798,7 +1799,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 CONFIGURE_ARGS=$*
 
-OCAML_MINIMAL_VERSION=4.02.0
+OCAML_MINIMAL_VERSION=4.02.3
 
 
 # Check whether --enable-version-check was given.
@@ -4274,6 +4275,41 @@ if test "$OCAML_PKG_ocplib_config" = "no"; then
    as_fn_error $? "Please install OCaml package 'ocplib-config'." "$LINENO" 5
 fi
 
+
+
+  # Used to indicate true or false condition
+  ax_compare_version=false
+
+  # Convert the two version strings to be compared into a format that
+  # allows a simple string comparison.  The end result is that a version
+  # string of the form 1.12.5-r617 will be converted to the form
+  # 0001001200050617.  In other words, each number is zero padded to four
+  # digits, and non digits are removed.
+
+  ax_compare_version_A=`echo "$OCAML_PKG_ocplib_config_VERSION" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+  ax_compare_version_B=`echo "1.99.20-beta" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+    ax_compare_version=`echo "x$ax_compare_version_A
+x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/false/;s/x${ax_compare_version_B}/true/;1q"`
+
+
+
+    if test "$ax_compare_version" = "true" ; then
+    as_fn_error $? "Version 1.99.20-beta of ocplib-config is needed" "$LINENO" 5
+      fi
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package ocp-indent.lib" >&5
 $as_echo_n "checking for OCaml findlib package ocp-indent.lib... " >&6; }
 
@@ -4483,10 +4519,40 @@ $as_echo "not found" >&6; }
 if test "$OCAML_PKG_js_of_ocaml_tyxml" = "no"; then
    as_fn_error $? "Please install OCaml package 'js_of_ocaml-tyxml'." "$LINENO" 5
 fi
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package js_of_ocaml-camlp4" >&5
+$as_echo_n "checking for OCaml findlib package js_of_ocaml-camlp4... " >&6; }
+
+  unset found
+  unset pkg
+  found=no
+  for pkg in js_of_ocaml-camlp4  ; do
+    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
+      OCAML_PKG_js_of_ocaml_camlp4=$pkg
+      ocaml_pkg_version=$($OCAMLFIND query -l $pkg|grep version: | awk '{ print $2}')
+      OCAML_PKG_js_of_ocaml_camlp4_VERSION=$ocaml_pkg_version
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ocaml_pkg_version" >&5
+$as_echo "$ocaml_pkg_version" >&6; }
+      found=yes
+      break
+    fi
+  done
+  if test "$found" = "no" ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+    OCAML_PKG_js_of_ocaml_camlp4=no
+  fi
+
+
+
+if test "$OCAML_PKG_js_of_ocaml_camlp4" = "no"; then
+   as_fn_error $? "Please install OCaml package 'js_of_ocaml-camlp4'." "$LINENO" 5
+fi
 OPAM_REPO=/home/lefessan/GIT/ocp-public/opam-repository
 OPAM_REPO_OFFICIAL_REMOTE=ocaml
 OPAM_REPO_FORK_REMOTE=origin
-DOWNLOAD_URL_PREFIX=http://github.com//archive/
+DOWNLOAD_URL_PREFIX=http://github.com/OCamlPro/typerex-lint/archive/
 
 ###############################################################
 ##                                                            #

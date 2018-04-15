@@ -3,7 +3,7 @@ module Linter = Plugin_typedtree.Plugin.MakeLint(struct
     let version = "1"
     let short_name = "identifier_masking"
     let details = "Check if some identifiers are masked"
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

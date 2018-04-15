@@ -59,7 +59,7 @@ let rec is_prefixed prefix path =
   | [], _ ->
      true
   | hd_prefix :: tl_prefix, hd_path :: tl_path ->
-     String.equal hd_prefix hd_path && is_prefixed tl_prefix tl_path
+     hd_prefix = hd_path && is_prefixed tl_prefix tl_path
   | _ ->
      false
 
@@ -68,7 +68,7 @@ module Linter = Plugin_typedtree.Plugin.MakeLint(struct
     let version = "1"
     let short_name = "module_utilization"
     let details = "Check some properties of module utilizations"
-    let enable = true
+    let enabled = true
   end)
 
 type warning =
@@ -178,8 +178,10 @@ let iter =
       let open Asttypes in
       List.iter
 	begin function extra,loc,_ ->
-	   match extra with
-	   | Tpat_open (p,_,_) -> process_module_opening p loc
+          match extra with
+#if OCAML_VERSION >= "4.04"
+	  | Tpat_open (p,_,_) -> process_module_opening p loc
+#endif
 	   | _ -> ()
 	end pat.pat_extra
 

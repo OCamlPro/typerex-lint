@@ -1,3 +1,4 @@
+open StringCompat
 module LI = Longident
 module L =Location
 open Asttypes

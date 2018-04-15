@@ -26,7 +26,7 @@ module ListOnSingleton = Plugin_parsetree.Plugin.MakeLint(struct
     let version = "1"
     let short_name = "code_list_on_singleton"
     let details = details
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

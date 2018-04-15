@@ -18,6 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open StringCompat
 open Tyxml_js.Html
 open Lint_warning_types
 open Lint_web_analysis_info
@@ -83,8 +84,7 @@ let value_of_warning_filter = function
   | Warning_type_filter warning ->
      begin fun warning_info ->
        not (
-         String.equal
-           warning.warning_type.decl.short_name
+           warning.warning_type.decl.short_name =
            warning_info.warning_type.decl.short_name
        )
      end
@@ -124,8 +124,7 @@ let value_of_error_filter = function
   | Error_type_filter error ->
      begin fun error_info ->
        not (
-         String.equal
-           (Web_utils.error_type error)
+           (Web_utils.error_type error) =
            (Web_utils.error_type error_info)
        )
      end

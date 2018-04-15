@@ -26,7 +26,7 @@ module PhysCompLit = Plugin_parsetree.Plugin.MakeLint(struct
     let version = "1"
     let short_name = "phys_comp_allocated_lit"
     let details = details
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

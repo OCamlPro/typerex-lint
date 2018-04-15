@@ -18,17 +18,17 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-(** [LINTARG] is a type module which is used by the functor
+(** [LINTARG] is a module type that is used by the functor
     [Lint_plugin_api.MakeLint]. *)
 module type LINTARG = sig
   val name : string
   val version : string
   val short_name : string
   val details : string
-  val enable : bool
+  val enabled : bool
 end
 
-(** [LINTPATCHARG] is a type module which is used by the functor
+(** [LINTPATCHARG] is a module type that is used by the functor
     [Lint_plugin_api.MakeLintPatch]. *)
 module type LINTPATCHARG = sig
   include LINTARG
@@ -40,7 +40,7 @@ module type LINT = sig
   val version : string
   val short_name : string
   val details : string
-  val enable : bool
+  val enabled : bool
   val inputs : Lint_input.input list
   val wdecls : Lint_warning_decl.WarningDeclaration.t
 end

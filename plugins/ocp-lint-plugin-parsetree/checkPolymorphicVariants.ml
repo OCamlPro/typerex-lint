@@ -23,7 +23,7 @@ module Linter = Plugin_parsetree.Plugin.MakeLint(struct
     let version = "1"
     let short_name = "polymorphic_variants"
     let details = "Check if polymorphics variants are used"
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

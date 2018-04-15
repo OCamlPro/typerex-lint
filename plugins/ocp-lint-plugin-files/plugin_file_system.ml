@@ -25,5 +25,5 @@ module PluginFileSystem = Lint_plugin_api.MakePlugin (struct
     let name = "File System plugin"
     let short_name = "plugin_file_system"
     let details = details
-    let enable = true
+    let enabled = true
   end)

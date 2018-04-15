@@ -18,6 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open StringCompat
+
 (* Parse warning options "a la OCaml", i.e. "+A-43-12..16" *)
 
 let warning_max = 512

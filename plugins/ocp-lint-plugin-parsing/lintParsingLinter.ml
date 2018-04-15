@@ -40,7 +40,7 @@ module Linter = Plugin.MakeLint(struct
     let version = "1"
     let short_name = "raw_syntax"
     let details = "Checks properties on raw syntax."
-    let enable = true
+    let enabled = true
   end)
 
 type warning =
@@ -124,7 +124,10 @@ module MakeArg = struct
 
   let should_not_paren exp =
     match exp.pexp_desc with
-    | Pexp_constant _
+    (* negative constants need parentheses *)
+    | Pexp_constant (Pconst_integer (n,_)) when Int64.of_string n < 0L -> false
+    | Pexp_constant (Pconst_float (n,_)) when float_of_string n < 0. -> false
+
     | Pexp_ident _
     | Pexp_begin _
     | Pexp_paren _
@@ -142,6 +145,7 @@ module MakeArg = struct
     | Pexp_override _
     | Pexp_pack _
     | Pexp_extension _
+    | Pexp_constant _
       -> true
     | _ -> false
 
