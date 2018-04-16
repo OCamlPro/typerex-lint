@@ -31,7 +31,9 @@ opam-deps:
 	opam install $(OPAMDEPS)
 
 install:
-	$(OCPBUILD) install
+	$(OCPBUILD) install         \
+		--install-lib $(ocamldir) --install-meta $(metadir)    \
+		--install-bin $(bindir)
 
 uninstall:
 	$(OCPBUILD) install --uninstall-only
