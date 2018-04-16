@@ -417,10 +417,10 @@ let json_of_plugin_error plugin_error =
         ("Syntax_error",
          `List [`String filename]);
       ]
-  | Plugin_exception exn ->
+  | Plugin_error s ->
      `Assoc [
-        ("Plugin_exception",
-         `List [json_of_exception exn]);
+        ("Plugin_error",
+         `List [`String s]);
       ]
 
 let plugin_error_of_json json =
@@ -445,9 +445,8 @@ let plugin_error_of_json json =
      | ("Syntax_error", [filename]) ->
         Lint_plugin_error.Syntax_error
           (to_string filename)
-     | ("Plugin_exception", [exn]) ->
-        Lint_plugin_error.Plugin_exception
-          (exception_of_json exn)
+     | ("Plugin_error", [`String s]) ->
+        Lint_plugin_error.Plugin_error s
      | _ ->
         raise (Type_error ("object is not a valid error", json))
      end

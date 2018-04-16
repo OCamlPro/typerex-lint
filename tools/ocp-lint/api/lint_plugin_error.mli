@@ -26,7 +26,7 @@ type error =
   | Patch_file_not_found of string
   | Sempatch_failure of string
   | Syntax_error of string
-  | Plugin_exception of exn
+  | Plugin_error of string
 
 (** [to_string err] returns a string representation of [err].  *)
 val to_string : error -> string

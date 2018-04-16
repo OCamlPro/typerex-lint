@@ -127,6 +127,8 @@ module MakeArg = struct
     in
     default_iterator.structure this_iterator str
 
+  let main = LintParsingPlugin.wrap_syntax_error main
+
 end
 
 module Main = Linter.MakeInputML(MakeArg)

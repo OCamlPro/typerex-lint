@@ -22,8 +22,6 @@ begin library "ocp-lint-plugin-parsing";
   install_META = true
   install_subdir = "ocp-lint-plugins"
   files = [
-        "lintParsingPlugin.ml";
-
           (* From ocaml-4.03.0 *)
         "lintParsing_Location.ml";
         "lintParsing_Asttypes.ml";
@@ -36,8 +34,9 @@ begin library "ocp-lint-plugin-parsing";
         "lintParsing_Ast_iterator.ml";
         "lintParsing_Parse.ml";
 
-	"lintParsingGetFeatures.ml";
-        "lintParsingLinter.ml";
+        "lintParsingPlugin.ml";
+	"lintParsingLinterGetFeatures.ml";
+        "lintParsingLinterRawSyntax.ml";
         "lintParsingLinterCheckTuple.ml";
   ];
   requires = [

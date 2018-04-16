@@ -53,17 +53,17 @@ let print_warning ppf pname lname warning =
   Format.fprintf ppf "@."
 
 let print_error ppf error =
-  let str = match error with
-    | Db_error err -> Printf.eprintf "Db_error\n%!"; Lint_db_error.to_string err
-    | Plugin_error err ->
-      Printf.eprintf "Plugin_error\n%!";
-      Lint_plugin_error.to_string err
-    | Sempatch_error err ->
-      Printf.eprintf "Sem_error\n%!";
-      err
-    | Ocplint_error str -> Printf.eprintf "OCPL_error\n%!"; str
-  in
-  Format.fprintf ppf "  %s\n%!" str
+  match error with
+  | Db_error err ->
+     Format.fprintf ppf "Db_error:\n%s\n%!" (Lint_db_error.to_string err)
+  | Plugin_error err ->
+     Format.fprintf ppf "Plugin_error:\n%s\n%!"
+                    (Lint_plugin_error.to_string err)
+  | Sempatch_error err ->
+     Format.fprintf ppf "Sempatch_error:\n%s\n%!" err
+  | Ocplint_error str ->
+     Format.fprintf ppf "Ocplint_error:\n%s\n%!" str
+
 
 let check_flag options =
   try

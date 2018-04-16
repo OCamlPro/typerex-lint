@@ -190,7 +190,13 @@ module MakePlugin(P : Lint_plugin_types.PLUGINARG) = struct
       try
         ( f arg : unit )
       with
-      | exn -> raise (Lint_plugin_error.Plugin_error (Plugin_exception exn))
+      | Lint_plugin_error.Plugin_error _ as exn -> raise exn
+      | exn ->
+         raise
+           (Lint_plugin_error.Plugin_error
+              (Plugin_error
+                 (Printf.sprintf "Exception %s"
+                                 (Printexc.to_string exn))))
 
     module MakeInputStructure(S : Lint_input.STRUCTURE) = struct
       module R = Register(struct

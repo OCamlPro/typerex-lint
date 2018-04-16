@@ -264,19 +264,21 @@ module MakeArg = struct
       { default_iterator with
         expr =
           (fun iterator exp ->
-             check_expr exp;
-             default_iterator.expr iterator exp);
+            check_expr exp;
+            default_iterator.expr iterator exp);
         case =
           (fun iterator case ->
-             check_case case;
-             default_iterator.case iterator case);
+            check_case case;
+            default_iterator.case iterator case);
         structure_item =
           (fun iterator str_item ->
-             check_str_item str_item;
-             default_iterator.structure_item iterator str_item);
+            check_str_item str_item;
+            default_iterator.structure_item iterator str_item);
       }
     in
     default_iterator.structure this_iterator str
+
+  let main = LintParsingPlugin.wrap_syntax_error main
 
 end
 

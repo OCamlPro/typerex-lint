@@ -254,12 +254,7 @@ let error_description error_info =
   | Lint_db_types.Db_error e ->
      Lint_db_error.to_string e
   | Lint_db_types.Plugin_error e ->
-     begin match e with
-     | Lint_plugin_error.Plugin_exception (Failure str) ->
-        Printf.sprintf "Exception %s" str
-     | _ ->
-        Lint_plugin_error.to_string e
-     end
+     Lint_plugin_error.to_string e
   | Lint_db_types.Sempatch_error e ->
      e
   | Lint_db_types.Ocplint_error e ->

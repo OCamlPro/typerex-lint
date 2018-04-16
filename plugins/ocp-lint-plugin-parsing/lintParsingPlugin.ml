@@ -28,3 +28,15 @@ module Plugin = Lint_plugin_api.MakePlugin (struct
     let details = details
     let enabled = true
   end)
+
+let wrap_syntax_error main s =
+  try
+    main s
+  with
+  | LintParsing_Syntaxerr.Error error ->
+     let s = LintParsing_Syntaxerr.prepare_error error in
+     ignore (Format.flush_str_formatter ());
+     LintParsing_Location.report_error Format.str_formatter s;
+     let s = Format.flush_str_formatter () in
+     raise (Lint_plugin_error.Plugin_error
+              (Lint_plugin_error.Plugin_error s))

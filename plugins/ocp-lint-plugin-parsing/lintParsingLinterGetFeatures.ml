@@ -196,6 +196,7 @@ module MakeArg = struct
     default_iterator.structure this_iterator str;
     Warnings.report_file source (Features table)
 
+  let main = LintParsingPlugin.wrap_syntax_error main
 end
 
 module Main = Linter.MakeInputML(MakeArg)
