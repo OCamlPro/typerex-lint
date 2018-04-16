@@ -12,5 +12,5 @@ autoconf/ocaml-config.h.in 361f7d5a23b30c6c49756a9e34c2dcf9
 autoconf/travis-ci.sh e22cfae9156c383ce5a4abf646798a17
 autoconf/travis-install.sh 9bfd3722ac873da3f33d69fd670659b2
 ocp-autoconf.d/configure.ac bb8a88addef00eed10bfc70827998e9e
-opam a3513ce61a0f96bbd7d33deb1cfa1c27
+opam a2c1b9114d4d81fa06544968c4e58902
 push-opam.sh c48fac7c8991f96357c9fc65a2ae6288

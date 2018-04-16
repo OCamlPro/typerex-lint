@@ -16,7 +16,10 @@ dev-repo: "https://github.com/OCamlPro/typerex-lint.git"
 bug-reports: "https://github.com/OCamlPro/typerex-lint/issues"
 build: [
   [     "./configure"
-    "--prefix=%{prefix}%"
+    "--prefix"
+    "%{prefix}%"
+    "--with-ocamldir=%{prefix}%/lib"
+    "--with-metadir=%{prefix}%/lib"
   ]
   [ make ]
 ]
