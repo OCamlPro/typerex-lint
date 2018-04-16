@@ -2,7 +2,6 @@ module H = Ast_helper
 module L = Location
 module LI = Longident
 module M = Ast_mapper
-module S = String
 open Asttypes
 open Parsetree
 open Std_utils

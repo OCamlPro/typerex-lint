@@ -27,7 +27,7 @@ module Linter = Plugin.MakeLint(struct
     let short_name = "not_that_char"
     let details =
       "Detect use of unwanted chars in files, such as tabs or non-ASCII chars"
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

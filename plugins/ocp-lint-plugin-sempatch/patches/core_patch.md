@@ -185,17 +185,10 @@ severity : 5
 Printf.sprintf "%s" e
 ```
 
-@ Dynlink
-message: "Do not use dynamic linking"
-severity: 8
+@ catch_exception_wildcard
+message: "Do not try to catch the exceptions with '_'"
+expressions: e1, e2
+severity: 1
 ```
-Dynlink.loadfile
+try e1 with _ -> e2
 ```
-
-@ Dynlink_2
-message: "Do not use dynamic linking"
-severity: 8
-```
-Dynlink.loadfile_private
-```
-

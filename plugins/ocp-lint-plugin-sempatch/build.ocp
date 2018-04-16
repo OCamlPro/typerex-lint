@@ -18,7 +18,6 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
-
 begin library "ocp-lint-plugin-sempatch"
   install_META = true
   install_subdir = "ocp-lint-plugins"
@@ -29,15 +28,6 @@ begin library "ocp-lint-plugin-sempatch"
      (file2string = [
         "./patches/core_patch.md"
        ])
-     (*
-  ]
-  requires = [
-    "ocp-lint-config"
-  ]
-end
-
-begin library "ocp-lint-patch"
-  files = [ *)
     "plugin_patch.ml"
     "lint_sempatch.ml"
   ]
@@ -45,6 +35,5 @@ begin library "ocp-lint-patch"
     "ocplib-sempatch"
     "ocp-lint-api"
     "ocplib-compiler"
-        (*    "ocp-lint-static-patch-files" *)
   ]
 end

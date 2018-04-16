@@ -18,6 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open OcpCompat
 open Sempatch
 open Lint_plugin_error
 open Lint_warning_decl
@@ -112,7 +113,7 @@ module LintSempatch = Plugin_patch.PluginPatch.MakeLint(struct
     let version = generate_version "1" user_patches
     let short_name = "sempatch_lint"
     let details = "Lint from semantic patches."
-    let enable = true
+    let enabled = true
   end)
 
 let patches =

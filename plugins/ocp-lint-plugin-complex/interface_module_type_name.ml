@@ -18,6 +18,7 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open StringCompat
 open Plugin_complex
 
 let details = "Checks if the module type name is capitalized."
@@ -27,7 +28,7 @@ module ModuleTypeName = PluginComplex.MakeLint(struct
     let version = "1"
     let short_name = "interface_module_type_name"
     let details = details
-    let enable = true
+    let enabled = true
   end)
 
 type warning = Module_name of (string * string)

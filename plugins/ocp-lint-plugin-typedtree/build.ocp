@@ -26,6 +26,11 @@ begin library "ocp-lint-plugin-typedtree"
 
   (* All linters attached to Typedtree plugin. *)
     "checkFullyQualified.ml"
+    "checkHashtbl.ml" (pp = "ocp-pp")
+    "checkIdentifier.ml"
+    "checkIdentifierMasking.ml" (* todo may be in check identifier *)
+    "checkInheritance.ml"
+    "checkModuleUtilization.ml" (pp = "ocp-pp")
     "polymorphic_comparison.ml"
   ]
   requires = [

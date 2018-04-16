@@ -4,3 +4,5 @@ _obuild
 *.out
 *.output
 _olint
+/tools/ocp-lint-web/static/js/ocp_lint_web.js
+/tools/ocp-lint-web/static/js/ocp_lint_web_codeviewer.js

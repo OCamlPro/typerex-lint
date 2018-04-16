@@ -22,12 +22,12 @@ module type PLUGINARG = sig
   val name : string
   val short_name : string
   val details : string
-  val enable : bool
+  val enabled : bool
 end
 
 module type PLUGIN = sig
   val name : string
   val short_name : string
   val details : string
-  val enable : bool
+  val enabled : bool
 end

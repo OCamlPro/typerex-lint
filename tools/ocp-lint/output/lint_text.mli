@@ -47,6 +47,7 @@ val print_error :
    db_errors: errors raise during the run
    print summary of the db. *)
 val summary :
+  ?oc:out_channel ->
   master_config:string ->
   file_config:(Lint_utils.file_struct * ((string list) * string)) list ->
   severity:int ->

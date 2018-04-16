@@ -18,6 +18,8 @@
 (*  SOFTWARE.                                                             *)
 (**************************************************************************)
 
+open StringCompat
+
 let details =
   "Checks that we do not redefine a stdlib module."
 
@@ -26,7 +28,7 @@ module RedefineStdLib = Plugin_parsetree.Plugin.MakeLint(struct
     let version = "1"
     let short_name = "code_redefine_stdlib_module"
     let details = details
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

@@ -95,7 +95,7 @@ and core_type_desc =
            T tconstr
            (T1, ..., Tn) tconstr
          *)
-  | Ptyp_object of (string * attributes * core_type) list * closed_flag
+  | Ptyp_object of (string loc * attributes * core_type) list * closed_flag
         (* < l1:T1; ...; ln:Tn >     (flag = Closed)
            < l1:T1; ...; ln:Tn; .. > (flag = Open)
          *)
@@ -112,7 +112,7 @@ and core_type_desc =
            [< `A|`B ]        (flag = Closed; labels = Some [])
            [< `A|`B > `X `Y ](flag = Closed; labels = Some ["X";"Y"])
          *)
-  | Ptyp_poly of string list * core_type
+  | Ptyp_poly of string loc list * core_type
         (* 'a1 ... 'an. T
 
            Can only appear in the following context:
@@ -222,6 +222,8 @@ and pattern_desc =
         (* exception P *)
   | Ppat_extension of extension
         (* [%id] *)
+  | Ppat_open of Longident.t loc * pattern
+        (* M.(P) *)
 
 (* Value expressions *)
 
@@ -313,7 +315,7 @@ and expression_desc =
         (* (E :> T)        (None, T)
            (E : T0 :> T)   (Some T0, T)
          *)
-  | Pexp_send of expression * string
+  | Pexp_send of expression * string loc
         (*  E # m *)
   | Pexp_new of Longident.t loc
         (* new M.c *)
@@ -323,6 +325,8 @@ and expression_desc =
         (* {< x1 = E1; ...; Xn = En >} *)
   | Pexp_letmodule of string loc * module_expr * expression
         (* let module M = ME in E *)
+  | Pexp_letexception of extension_constructor * expression
+        (* let exception C in E *)
   | Pexp_assert of expression
         (* assert E
            Note: "assert false" is treated in a special way by the
@@ -336,7 +340,7 @@ and expression_desc =
            for methods (not values). *)
   | Pexp_object of class_structure
         (* object ... end *)
-  | Pexp_newtype of string * expression
+  | Pexp_newtype of string loc * expression
         (* fun (type t) -> E *)
   | Pexp_pack of module_expr
         (* (module ME)
@@ -344,7 +348,8 @@ and expression_desc =
            (module ME : S) is represented as
            Pexp_constraint(Pexp_pack, Ptyp_package S) *)
   | Pexp_open of override_flag * Longident.t loc * expression
-        (* let open M in E
+        (* M.(E)
+           let open M in E
            let! open M in E
         *)
   | Pexp_extension of extension
@@ -522,9 +527,9 @@ and class_type_field =
 and class_type_field_desc =
   | Pctf_inherit of class_type
         (* inherit CT *)
-  | Pctf_val of (string * mutable_flag * virtual_flag * core_type)
+  | Pctf_val of (string loc * mutable_flag * virtual_flag * core_type)
         (* val x: T *)
-  | Pctf_method  of (string * private_flag * virtual_flag * core_type)
+  | Pctf_method  of (string loc * private_flag * virtual_flag * core_type)
         (* method x: T
 
            Note: T can be a Ptyp_poly.
@@ -610,7 +615,7 @@ and class_field =
     }
 
 and class_field_desc =
-  | Pcf_inherit of override_flag * class_expr * string option
+  | Pcf_inherit of override_flag * class_expr * string loc option
         (* inherit CE
            inherit CE as x
            inherit! CE

@@ -425,10 +425,6 @@ let () =
       | Sys_error msg ->
           Some (errorf_prefixed ~loc:(in_file !input_name)
                 "I/O error: %s" msg)
-      | Warnings.Errors n ->
-          Some
-            (errorf_prefixed ~loc:(in_file !input_name)
-             "Some fatal warnings were triggered (%d occurrences)" n)
       | _ ->
           None
     )

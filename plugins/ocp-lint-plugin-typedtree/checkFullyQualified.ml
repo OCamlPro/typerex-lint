@@ -28,7 +28,7 @@ module Linter = Plugin.MakeLint(struct
     let version = "1"
     let short_name = "fully_qualified_identifiers"
     let details = "Checks that external identifiers are fully qualified."
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

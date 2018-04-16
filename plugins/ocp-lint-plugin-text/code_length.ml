@@ -33,7 +33,7 @@ module CodeLength = Plugin.MakeLint(struct
     let version = "1"
     let short_name = "code_length"
     let details = details
-    let enable = true
+    let enabled = true
   end)
 
 type warning = LongLine of (int * int)

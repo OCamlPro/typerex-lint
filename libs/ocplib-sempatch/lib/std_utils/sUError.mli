@@ -1,6 +1,6 @@
 type ('good, 'bad) t =
-  | Ok of 'good
-  | Error of 'bad
+  | IsOk of 'good
+  | IsError of 'bad
 
 val return : 'a -> ('a, 'err) t
 val fail : 'a -> ('ok, 'a) t

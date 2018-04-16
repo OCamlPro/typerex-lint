@@ -25,5 +25,5 @@ module Plugin = Lint_plugin_api.MakePlugin (struct
     let name = "Parsetree plugin"
     let short_name = "plugin_parsetree"
     let details = details
-    let enable = true
+    let enabled = true
   end)

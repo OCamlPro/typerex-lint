@@ -1,22 +1,46 @@
+(**************************************************************)
+(*                                                            *)
+(*      This file is managed by ocp-autoconf                  *)
+(*  Remove it from `manage_files` in 'ocp-autoconf.config'    *)
+(*  if you want to modify it manually (or use 'opam.trailer') *)
+(*                                                            *)
+(**************************************************************)
+
 opam-version: "1.2"
-name: "ocp-lint"
-version: "~dev"
 maintainer: "OCamlPro <typerex@ocamlpro.com>"
-authors: "OCamlPro <typerex@ocamlpro.com>"
-license: "GPL 3.0"
-homepage: "https://github.com/ocamlpro/typerex-lint"
-bug-reports: "https://github.com/ocamlpro/typerex-lint/issues"
-depends: [
-  "ocp-build" {>= "1.99.19-beta" }
-  "menhir"
-  "ocp-indent"
-  "ppx_tools"
+authors: [
+  "OCamlPro <typerex@ocamlpro.com>"
 ]
-available: ocaml-version >= "4.02"
+homepage: "http://github.com/OCamlPro/typerex-lint"
+dev-repo: "https://github.com/OCamlPro/typerex-lint.git"
+bug-reports: "https://github.com/OCamlPro/typerex-lint/issues"
 build: [
-  ["./configure" "--prefix=%{prefix}%"]
-  [make]
+  [     "./configure"
+    "--prefix"
+    "%{prefix}%"
+    "--with-ocamldir=%{prefix}%/lib"
+    "--with-metadir=%{prefix}%/lib"
+  ]
+  [ make ]
 ]
-install: [make "install"]
-remove: [make "uninstall"]
-dev-repo: "git+https://github.com/ocamlpro/typerex-lint"
+install: [
+  [ make "install" ]
+]
+remove: [
+  [ "make" "uninstall"   ]
+]
+depends: [
+     "js_of_ocaml"
+     "js_of_ocaml-camlp4"
+     "js_of_ocaml-tyxml"
+     "lwt"
+     "menhir"
+     "ocamlfind"
+     "ocp-build" {>= "1.99.20-beta" }
+     "ocp-indent"
+     "omd"
+     "ppx_tools"
+     "tyxml"
+     "yojson"
+]
+available: [ocaml-version >= "4.02.3"]

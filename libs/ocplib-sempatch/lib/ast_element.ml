@@ -2,7 +2,6 @@ type record_field = Longident.t Asttypes.loc * Parsetree.expression
 open Asttypes
 open Parsetree
 
-
 [%%create_ast_element]
 type t = Element.t
 let to_string =

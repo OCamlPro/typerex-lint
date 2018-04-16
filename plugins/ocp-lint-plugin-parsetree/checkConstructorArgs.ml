@@ -28,7 +28,7 @@ module Linter = Plugin.MakeLint(struct
     let version = "1"
     let short_name = "check_constr_args"
     let details = "Check that constructor arguments are ok."
-    let enable = true
+    let enabled = true
   end)
 
 type warning =

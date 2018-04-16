@@ -26,5 +26,5 @@ module Plugin = Lint_plugin_api.MakePlugin (struct
     let name = plugin_name
     let short_name = "plugin_parsing"
     let details = details
-    let enable = true
+    let enabled = true
   end)

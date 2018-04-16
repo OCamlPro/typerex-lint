@@ -20,12 +20,26 @@
 
 begin library "ocp-lint-output"
   files = [
-    "lint_text.ml"
+    "lint_text.ml" (pp = "ocp-pp")
   ]
   requires = [
     "compiler-libs"
     "ocp-lint-api"
     "ocp-lint-db"
     "ocp-lint-utils"
+  ]
+end
+
+begin library "ocp-lint-output-web"
+  files = [
+    "lint_web_analysis_info.ml"
+    "lint_web.ml"
+  ]
+  requires = [
+    "ocp-lint-api"
+    "ocp-lint-db"
+    "tyxml"
+    "unix"
+    "yojson"
   ]
 end

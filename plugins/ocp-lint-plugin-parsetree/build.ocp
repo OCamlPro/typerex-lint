@@ -32,6 +32,12 @@ begin library "ocp-lint-plugin-parsetree"
     "checkGoodPractices.ml";
     "checkConstructorArgs.ml";
 
+    "checkClass.ml";
+    "checkExternal.ml";
+    "checkPatternGuard.ml";
+    "checkPolymorphicVariants.ml";
+    "checkTypeDeclaration.ml"
+
     "redefine_std_lib.ml"
 
   ]

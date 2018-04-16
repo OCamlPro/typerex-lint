@@ -227,54 +227,6 @@ let exp_of_label lbl pos =
 let pat_of_label lbl pos =
   mkpat (Ppat_var (mkrhs (Longident.last lbl) pos))
 
-let check_variable vl loc v =
-  if List.mem v vl then
-    raise Syntaxerr.(Error(Variable_in_scope(loc,v)))
-
-let varify_constructors var_names t =
-  let rec loop t =
-    let desc =
-      match t.ptyp_desc with
-      | Ptyp_any -> Ptyp_any
-      | Ptyp_var x ->
-          check_variable var_names t.ptyp_loc x;
-          Ptyp_var x
-      | Ptyp_arrow (label,core_type,core_type') ->
-          Ptyp_arrow(label, loop core_type, loop core_type')
-      | Ptyp_tuple lst -> Ptyp_tuple (List.map loop lst)
-      | Ptyp_constr( { txt = Lident s }, []) when List.mem s var_names ->
-          Ptyp_var s
-      | Ptyp_constr(longident, lst) ->
-          Ptyp_constr(longident, List.map loop lst)
-      | Ptyp_object (lst, o) ->
-          Ptyp_object
-            (List.map (fun (s, attrs, t) -> (s, attrs, loop t)) lst, o)
-      | Ptyp_class (longident, lst) ->
-          Ptyp_class (longident, List.map loop lst)
-      | Ptyp_alias(core_type, string) ->
-          check_variable var_names t.ptyp_loc string;
-          Ptyp_alias(loop core_type, string)
-      | Ptyp_variant(row_field_list, flag, lbl_lst_option) ->
-          Ptyp_variant(List.map loop_row_field row_field_list,
-                       flag, lbl_lst_option)
-      | Ptyp_poly(string_lst, core_type) ->
-          List.iter (check_variable var_names t.ptyp_loc) string_lst;
-          Ptyp_poly(string_lst, loop core_type)
-      | Ptyp_package(longident,lst) ->
-          Ptyp_package(longident,List.map (fun (n,typ) -> (n,loop typ) ) lst)
-      | Ptyp_extension (s, arg) ->
-          Ptyp_extension (s, arg)
-    in
-    {t with ptyp_desc = desc}
-  and loop_row_field  =
-    function
-      | Rtag(label,attrs,flag,lst) ->
-          Rtag(label,attrs,flag,List.map loop lst)
-      | Rinherit t ->
-          Rinherit (loop t)
-  in
-  loop t
-
 let mk_newtypes newtypes exp =
   List.fold_right (fun newtype exp -> mkexp (Pexp_newtype (newtype, exp)))
     newtypes exp
@@ -282,7 +234,7 @@ let mk_newtypes newtypes exp =
 let wrap_type_annotation newtypes core_type body =
   let exp = mkexp(Pexp_constraint(body,core_type)) in
   let exp = mk_newtypes newtypes exp in
-  (exp, ghtyp(Ptyp_poly(newtypes,varify_constructors newtypes core_type)))
+  (exp, ghtyp(Ptyp_poly(newtypes, Typ.varify_constructors newtypes core_type)))
 
 let wrap_exp_attrs body (ext, attrs) =
   (* todo: keep exact location for the entire attribute *)
@@ -775,15 +727,21 @@ module_expr:
           List.fold_left
             (fun acc (n, t) -> mkmod(Pmod_functor(n, t, acc)))
             $5 $3
-        in wrap_mod_attrs modexp $2 }
-  | module_expr LPAREN module_expr RPAREN
-      { mkmod(Pmod_apply($1, $3)) }
+        in wrap_mod_attrs modexp $2 } 
+  | module_expr paren_module_expr
+      { mkmod(Pmod_apply($1, $2)) }
   | module_expr LPAREN RPAREN
       { mkmod(Pmod_apply($1, mkmod (Pmod_structure []))) }
-  | module_expr LPAREN module_expr error
-      { unclosed "(" 2 ")" 4 }
-  | LPAREN module_expr COLON module_type RPAREN
-      { mkmod(Pmod_constraint($2, $4)) }
+  | paren_module_expr
+      { $1 }
+  | module_expr attribute
+      { Mod.attr $1 $2 }
+  | extension
+      { mkmod(Pmod_extension $1) }
+;
+paren_module_expr:
+    LPAREN module_expr COLON module_type RPAREN
+      { mkmod(Pmod_constraint($2, $4)) }    
   | LPAREN module_expr COLON module_type error
       { unclosed "(" 1 ")" 5 }
   | LPAREN module_expr RPAREN
@@ -805,19 +763,14 @@ module_expr:
   | LPAREN VAL attributes expr COLONGREATER package_type RPAREN
       { mkmod ~attrs:$3
           (Pmod_unpack(
-               ghexp(Pexp_coerce($4, None, ghtyp(Ptyp_package $6))))) }
+               ghexp(Pexp_coerce($4, None, ghtyp(Ptyp_package $6))))) }    
   | LPAREN VAL attributes expr COLON error
       { unclosed "(" 1 ")" 6 }
   | LPAREN VAL attributes expr COLONGREATER error
       { unclosed "(" 1 ")" 6 }
   | LPAREN VAL attributes expr error
-      { unclosed "(" 1 ")" 5 }
-  | module_expr attribute
-      { Mod.attr $1 $2 }
-  | extension
-      { mkmod(Pmod_extension $1) }
-;
-
+      { unclosed "(" 1 ")" 5 }    
+;    
 structure:
     seq_expr post_item_attributes structure_tail
       { mark_rhs_docs 1 2;
@@ -1154,7 +1107,7 @@ class_field:
 ;
 parent_binder:
     AS LIDENT
-          { Some $2 }
+          { Some (mkrhs $2 2) }
   | /* empty */
           { None }
 ;
@@ -1247,7 +1200,7 @@ class_sig_field:
     post_item_attributes
       {
        let (p, v) = $3 in
-       mkctf (Pctf_method ($4, p, v, $6)) ~attrs:($2@$7) ~docs:(symbol_docs ())
+       mkctf (Pctf_method (mkrhs $4 4, p, v, $6)) ~attrs:($2@$7) ~docs:(symbol_docs ())
       }
   | CONSTRAINT attributes constrain_field post_item_attributes
       { mkctf (Pctf_constraint $3) ~attrs:($2@$4) ~docs:(symbol_docs ()) }
@@ -1259,11 +1212,11 @@ class_sig_field:
 ;
 value_type:
     VIRTUAL mutable_flag label COLON core_type
-      { $3, $2, Virtual, $5 }
+      { mkrhs $3 3, $2, Virtual, $5 }
   | MUTABLE virtual_flag label COLON core_type
-      { $3, Mutable, $2, $5 }
+      { mkrhs $3 3, Mutable, $2, $5 }
   | label COLON core_type
-      { $1, Immutable, Concrete, $3 }
+      { mkrhs $1 1, Immutable, Concrete, $3 }
 ;
 constrain:
         core_type EQUAL core_type          { $1, $3, symbol_rloc() }
@@ -1281,7 +1234,7 @@ class_description:
     CLASS ext_attributes virtual_flag class_type_parameters LIDENT COLON
     class_type post_item_attributes
       { let (ext, attrs) = $2 in
-        Ci.mk (mkrhs $5 5) $7 ~virt:$3 ~params:$4 ~attrs:(attrs@$8)
+        Ci.mk (mkrhs $5 5) $7 ~virt:$3 ~params:$4 ~attrs:(attrs @ $8)
             ~loc:(symbol_rloc ()) ~docs:(symbol_docs ())
       , ext }
 ;
@@ -1320,6 +1273,10 @@ seq_expr:
   | expr        %prec below_SEMI  { $1 }
   | expr SEMI                     { reloc_exp $1 }
   | expr SEMI seq_expr            { mkexp(Pexp_sequence($1, $3)) }
+  | expr SEMI PERCENT attr_id seq_expr
+      { let seq = mkexp(Pexp_sequence ($1, $5)) in
+        let payload = PStr [mkstrexp seq []] in
+        mkexp (Pexp_extension ($4, payload)) }
 ;
 labeled_simple_pattern:
     QUESTION LPAREN label_let_pattern opt_default RPAREN
@@ -1371,6 +1328,8 @@ expr:
       { expr_of_let_bindings $1 $3 }
   | LET MODULE ext_attributes UIDENT module_binding_body IN seq_expr
       { mkexp_attrs (Pexp_letmodule(mkrhs $4 4, $5, $7)) $3 }
+  | LET EXCEPTION ext_attributes let_exception_declaration IN seq_expr
+      { mkexp_attrs (Pexp_letexception($4, $6)) $3 }
   | LET OPEN override_flag ext_attributes mod_longident IN seq_expr
       { mkexp_attrs (Pexp_open($3, mkrhs $5 5, $7)) $4 }
   | FUNCTION ext_attributes opt_bar match_cases
@@ -1573,7 +1532,7 @@ simple_expr:
   | mod_longident DOT LBRACELESS field_expr_list error
       { unclosed "{<" 3 ">}" 5 }
   | simple_expr SHARP label
-      { mkexp(Pexp_send($1, $3)) }
+      { mkexp(Pexp_send($1, mkrhs $3 3)) }
   | simple_expr SHARPOP simple_expr
       { mkinfix $1 $2 $3 }
   | LPAREN MODULE ext_attributes module_expr RPAREN
@@ -1621,8 +1580,8 @@ label_ident:
     LIDENT   { ($1, mkexp(Pexp_ident(mkrhs (Lident $1) 1))) }
 ;
 lident_list:
-    LIDENT                            { [$1] }
-  | LIDENT lident_list                { $1 :: $2 }
+    LIDENT                            { [mkrhs $1 1] }
+  | LIDENT lident_list                { mkrhs $1 1 :: $2 }
 ;
 let_binding_body:
     val_ident fun_binding
@@ -1634,7 +1593,7 @@ let_binding_body:
   | val_ident COLON TYPE lident_list DOT core_type EQUAL seq_expr
       { let exp, poly = wrap_type_annotation $4 $6 $8 in
         (ghpat(Ppat_constraint(mkpatvar $1 1, poly)), exp) }
-  | pattern EQUAL seq_expr
+  | pattern_no_exn EQUAL seq_expr
       { ($1, $3) }
   | simple_pattern_not_ident COLON core_type EQUAL seq_expr
       { (ghpat(Ppat_constraint($1, $3)), $5) }
@@ -1740,37 +1699,59 @@ opt_type_constraint:
 /* Patterns */
 
 pattern:
-    simple_pattern
-      { $1 }
   | pattern AS val_ident
       { mkpat(Ppat_alias($1, mkrhs $3 3)) }
   | pattern AS error
       { expecting 3 "identifier" }
   | pattern_comma_list  %prec below_COMMA
       { mkpat(Ppat_tuple(List.rev $1)) }
-  | constr_longident pattern %prec prec_constr_appl
-      { mkpat(Ppat_construct(mkrhs $1 1, Some $2)) }
-  | name_tag pattern %prec prec_constr_appl
-      { mkpat(Ppat_variant($1, Some $2)) }
   | pattern COLONCOLON pattern
       { mkpat_cons (rhs_loc 2) (ghpat(Ppat_tuple[$1;$3])) (symbol_rloc()) }
   | pattern COLONCOLON error
       { expecting 3 "pattern" }
-  | LPAREN COLONCOLON RPAREN LPAREN pattern COMMA pattern RPAREN
-      { mkpat_cons (rhs_loc 2) (ghpat(Ppat_tuple[$5;$7])) (symbol_rloc()) }
-  | LPAREN COLONCOLON RPAREN LPAREN pattern COMMA pattern error
-      { unclosed "(" 4 ")" 8 }
   | pattern BAR pattern
       { mkpat(Ppat_or($1, $3)) }
   | pattern BAR error
       { expecting 3 "pattern" }
-  | LAZY ext_attributes simple_pattern
-      { mkpat_attrs (Ppat_lazy $3) $2}
   | EXCEPTION ext_attributes pattern %prec prec_constr_appl
       { mkpat_attrs (Ppat_exception $3) $2}
   | pattern attribute
       { Pat.attr $1 $2 }
+  | pattern_gen { $1 }					   
 ;
+pattern_no_exn:
+    pattern_no_exn AS val_ident
+      { mkpat(Ppat_alias($1, mkrhs $3 3)) }
+  | pattern_no_exn AS error
+      { expecting 3 "identifier" }
+  | pattern_no_exn_comma_list  %prec below_COMMA
+      { mkpat(Ppat_tuple(List.rev $1)) }	    
+  | pattern_no_exn COLONCOLON pattern
+      { mkpat_cons (rhs_loc 2) (ghpat(Ppat_tuple[$1;$3])) (symbol_rloc()) }
+  | pattern_no_exn COLONCOLON error
+      { expecting 3 "pattern" }
+  | pattern_no_exn BAR pattern
+      { mkpat(Ppat_or($1, $3)) }
+  | pattern_no_exn BAR error
+      { expecting 3 "pattern" }
+  | pattern_no_exn attribute
+      { Pat.attr $1 $2 }
+  | pattern_gen { $1 }
+;
+pattern_gen:
+    simple_pattern
+      { $1 }
+  | constr_longident pattern %prec prec_constr_appl
+      { mkpat(Ppat_construct(mkrhs $1 1, Some $2)) }
+  | name_tag pattern %prec prec_constr_appl
+      { mkpat(Ppat_variant($1, Some $2)) }
+  | LPAREN COLONCOLON RPAREN LPAREN pattern COMMA pattern RPAREN
+      { mkpat_cons (rhs_loc 2) (ghpat(Ppat_tuple[$5;$7])) (symbol_rloc()) }
+  | LPAREN COLONCOLON RPAREN LPAREN pattern COMMA pattern error
+      { unclosed "(" 4 ")" 8 }
+  | LAZY ext_attributes simple_pattern
+      { mkpat_attrs (Ppat_lazy $3) $2}
+;	   
 simple_pattern:
     val_ident %prec below_EQUAL
       { mkpat(Ppat_var (mkrhs $1 1)) }
@@ -1789,20 +1770,22 @@ simple_pattern_not_ident:
       { mkpat(Ppat_variant($1, None)) }
   | SHARP type_longident
       { mkpat(Ppat_type (mkrhs $2 2)) }
-  | LBRACE lbl_pattern_list RBRACE
-      { let (fields, closed) = $2 in mkpat(Ppat_record(fields, closed)) }
-  | LBRACE lbl_pattern_list error
-      { unclosed "{" 1 "}" 3 }
-  | LBRACKET pattern_semi_list opt_semi RBRACKET
-      { reloc_pat (mktailpat (rhs_loc 4) (List.rev $2)) }
-  | LBRACKET pattern_semi_list opt_semi error
-      { unclosed "[" 1 "]" 4 }
-  | LBRACKETBAR pattern_semi_list opt_semi BARRBRACKET
-      { mkpat(Ppat_array(List.rev $2)) }
-  | LBRACKETBAR BARRBRACKET
-      { mkpat(Ppat_array []) }
-  | LBRACKETBAR pattern_semi_list opt_semi error
-      { unclosed "[|" 1 "|]" 4 }
+  | simple_delimited_pattern
+      { $1 }
+  | mod_longident DOT simple_delimited_pattern
+      { mkpat @@ Ppat_open(mkrhs $1 1, $3) }
+  | mod_longident DOT LBRACKET RBRACKET
+    { mkpat @@ Ppat_open(mkrhs $1 1, mkpat @@
+               Ppat_construct ( mkrhs (Lident "[]") 4, None)) }
+  | mod_longident DOT LPAREN RPAREN
+      { mkpat @@ Ppat_open(mkrhs $1 1, mkpat @@
+                 Ppat_construct ( mkrhs (Lident "()") 4, None) ) }
+  | mod_longident DOT LPAREN pattern RPAREN
+      { mkpat @@ Ppat_open (mkrhs $1 1, $4)}
+  | mod_longident DOT LPAREN pattern error
+      {unclosed "(" 3 ")" 5  }
+  | mod_longident DOT LPAREN error
+      { expecting 4 "pattern" }          
   | LPAREN pattern RPAREN
       { reloc_pat $2 }
   | LPAREN pattern error
@@ -1825,11 +1808,31 @@ simple_pattern_not_ident:
   | extension
       { mkpat(Ppat_extension $1) }
 ;
-
+simple_delimited_pattern:
+    LBRACE lbl_pattern_list RBRACE
+      { let (fields, closed) = $2 in mkpat(Ppat_record(fields, closed)) }
+  | LBRACE lbl_pattern_list error
+      { unclosed "{" 1 "}" 3 }
+  | LBRACKET pattern_semi_list opt_semi RBRACKET
+      { reloc_pat (mktailpat (rhs_loc 4) (List.rev $2)) }
+  | LBRACKET pattern_semi_list opt_semi error
+      { unclosed "[" 1 "]" 4 }
+  | LBRACKETBAR pattern_semi_list opt_semi BARRBRACKET
+      { mkpat(Ppat_array(List.rev $2)) }
+  | LBRACKETBAR BARRBRACKET
+      { mkpat(Ppat_array []) }
+  | LBRACKETBAR pattern_semi_list opt_semi error
+      { unclosed "[|" 1 "|]" 4 }
+;
 pattern_comma_list:
     pattern_comma_list COMMA pattern            { $3 :: $1 }
   | pattern COMMA pattern                       { [$3; $1] }
   | pattern COMMA error                         { expecting 3 "pattern" }
+;
+pattern_no_exn_comma_list:
+    pattern_no_exn_comma_list COMMA pattern     { $3 :: $1 }
+  | pattern_no_exn COMMA pattern                { [$3; $1] }
+  | pattern_no_exn COMMA error                  { expecting 3 "pattern" }
 ;
 pattern_semi_list:
     pattern                                     { [$1] }
@@ -2010,6 +2013,11 @@ sig_exception_declaration:
             ~loc:(symbol_rloc()) ~docs:(symbol_docs ())
         , ext }
 ;
+let_exception_declaration:
+    constr_ident generalized_constructor_arguments attributes
+      { let args, res = $2 in
+        Te.decl (mkrhs $1 1) ~args ?res ~attrs:$3 ~loc:(symbol_rloc()) }
+;
 generalized_constructor_arguments:
     /*empty*/                     { (Pcstr_tuple [],None) }
   | OF constructor_arguments      { ($2,None) }
@@ -2145,8 +2153,8 @@ with_type_binder:
 /* Polymorphic types */
 
 typevar_list:
-        QUOTE ident                             { [$2] }
-      | typevar_list QUOTE ident                { $3 :: $1 }
+        QUOTE ident                             { [mkrhs $2 2] }
+      | typevar_list QUOTE ident                {mkrhs $3 3 :: $1 }
 ;
 poly_type:
         core_type
@@ -2299,7 +2307,7 @@ meth_list:
 ;
 field:
   label COLON poly_type_no_attr attributes
-    { ($1, add_info_attrs (symbol_info ()) $4, $3) }
+    { (mkrhs $1 1, add_info_attrs (symbol_info ()) $4, $3) }
 ;
 
 field_semi:
@@ -2309,7 +2317,7 @@ field_semi:
         | Some _ as info_before_semi -> info_before_semi
         | None -> symbol_info ()
       in
-      ($1, add_info_attrs info ($4 @ $6), $3) }
+      (mkrhs $1 1, add_info_attrs info ($4 @ $6), $3) }
 ;
 
 label:

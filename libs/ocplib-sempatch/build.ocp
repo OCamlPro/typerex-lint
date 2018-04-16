@@ -1,3 +1,4 @@
+
 comp += [ "-w" "+A-4" ]
 
 begin library "std_utils"
@@ -31,6 +32,7 @@ begin program "abc"
       "str"
       "ppx_tools.metaquot"
       "std_utils"
+      "ocplib-compat"
     ]
     comp += [ "-ppx" "%{ppx_tools_DST_DIR}%/ppx_metaquot" ]
     pp = [ "ocp-pp" ]
@@ -74,7 +76,16 @@ begin library "ocplib-sempatch"
         comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree403.mli" ]
       }
     } else {
-      comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree404.mli" ]
+        if ocaml_version < "4.05.0" then{
+            comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree404.mli" ]
+          } else {
+        if ocaml_version < "4.06.0" then{
+            comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree405.mli" ]
+          } else {
+            comp += [ "-ppx" "%{abc_DST_DIR}%/abc.asm libs/ocplib-sempatch/lib/automaton/generator/tree406.mli" ]
+          }
+
+          }
     }
     comp_requires = "abc:asm"
     ocamlyacc = "menhir"

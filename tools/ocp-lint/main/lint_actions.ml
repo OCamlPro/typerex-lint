@@ -30,7 +30,7 @@ type file_t = {
   cmt: ((Cmt_format.cmt_infos) lazy_t) option;
 }
 
-let ignored = Lint_globals.Config.create_option
+let ignored = Lint_globals.LintConfig.create_option
     ["ignore"]
     "Module to ignore during the lint."
     "Module to ignore during the lint."
@@ -38,7 +38,7 @@ let ignored = Lint_globals.Config.create_option
     (SimpleConfig.list_option SimpleConfig.string_option)
     []
 
-let db_persistence = Lint_globals.Config.create_option
+let db_persistence = Lint_globals.LintConfig.create_option
     ["db_persistence"]
     "Time before erasing cached results (in days)."
     "Time before erasing cached results (in days)."
@@ -46,7 +46,7 @@ let db_persistence = Lint_globals.Config.create_option
     SimpleConfig.int_option
     1
 
-let jobs = Lint_globals.Config.create_option
+let jobs = Lint_globals.LintConfig.create_option
     ["jobs"]
     "Number of parallel jobs"
     "Number of parallel jobs"
@@ -76,13 +76,13 @@ let filter_plugins plugins =
       let plugin_short_name = Plugin.short_name in
       let plugin_opt_names = [ plugin_short_name; "enabled" ] in
       let plugin_opt_value =
-        Lint_globals.Config.get_option_value plugin_opt_names in
+        Lint_globals.LintConfig.get_option_value plugin_opt_names in
       (* if the plugin is disable, don't try to add any linter attached to it *)
       if bool_of_string plugin_opt_value then begin
         Lint_map.iter (fun cname lint ->
             let lint_opt_names = [ plugin_short_name; cname; "enabled" ] in
             let lint_opt_value =
-              Lint_globals.Config.get_option_value lint_opt_names in
+              Lint_globals.LintConfig.get_option_value lint_opt_names in
             (* if the linter is disable, don't try to use it. *)
             if bool_of_string lint_opt_value then begin
               let old_lints =
@@ -239,36 +239,32 @@ let init_db no_db db_dir path = match db_dir with
 
 let init_config path =
   let path_t = FileGen.of_string path in
-  let config_file = Lint_globals.Config.config_file_name in
+  let config_file = Lint_globals.LintConfig.config_file_name in
   try
     let root_path_t = Lint_utils.find_root path_t [config_file] in
     let file_t = FileGen.concat root_path_t (FileGen.of_string config_file) in
-    Lint_globals.Config.init_config file_t;
+    Lint_globals.LintConfig.init_config file_t;
   with Not_found -> ()
 
 let init_config_file file =
   let file_t = FileGen.of_string file in
-  Lint_globals.Config.init_config file_t
+  Lint_globals.LintConfig.init_config file_t
 
 let list_plugins fmt =
   let open Lint_warning_decl in
   let open Lint_warning_types in
   Lint_plugin.iter_plugins (fun plugin checks ->
       let module Plugin = (val plugin : Lint_plugin_types.PLUGIN) in
-      let status = if Plugin.enable then "enable" else "disable" in
-      if Plugin.enable then
-        Format.fprintf fmt "=== %s === (\027[32m%s\027[m)\n" Plugin.name status
-      else
-        Format.fprintf fmt "=== %s === (\027[31m%s\027[m)\n" Plugin.name status;
+      let status = if Plugin.enabled then "enabled" else "disabled" in
+      let color = if Plugin.enabled then "[32m" else "[31m" in
+      Format.fprintf fmt "=== %s === (\027%s%s\027[m)\n"
+                     Plugin.name color status;
       Lint_map.iter (fun cname lint ->
           let module Linter = (val lint : Lint_types.LINT) in
-          let status = if Linter.enable then "enable" else "disable" in
-          if Linter.enable then
-            Format.fprintf fmt "  ** %s (\027[32m%s\027[m)\n%!"
-              Linter.name status
-          else
-            Format.fprintf fmt "  ** %s (\027[31m%s\027[m)\n%!"
-              Linter.name status;
+          let status = if Linter.enabled then "enabled" else "disabled" in
+          let color = if Linter.enabled then "[32m" else "[31m" in
+          Format.fprintf fmt "  ** %s (\027%s%s\027[m)\n%!"
+                         Linter.name color status;
           WarningDeclaration.iter (fun wdecl ->
               Format.fprintf fmt "      Warning %d: %S.\n%!"
                 wdecl.id wdecl.short_name)
@@ -279,7 +275,7 @@ let list_plugins fmt =
 
 let get_ignored pname cname =
   let opt =
-    Lint_globals.Config.create_option [pname; cname; "ignore"]  "" "" 0
+    Lint_globals.LintConfig.create_option [pname; cname; "ignore"]  "" "" 0
       (SimpleConfig.list_option SimpleConfig.string_option)  [] in
   !!opt
 
@@ -431,7 +427,7 @@ let run
   let temp_file = Lint_utils.save_file_struct temp_dir file_struct in
   let configs = get_config_deps config_map file_struct.name in
   let tmp_config =
-    Lint_globals.Config.load_and_save master_config configs in
+    Lint_globals.LintConfig.load_and_save master_config configs in
   let args = Array.copy Sys.argv in
   let found = ref false in
   Array.iteri (fun i arg ->
@@ -489,7 +485,7 @@ let clean_tmp_cfg tmp_configs master_cfg =
   with _ -> ()
 
 let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
-    ~perror ~gd_plugins ~ins_plugins ~master_config ~path =
+    ~perror ~output_web ~gd_plugins ~ins_plugins ~master_config ~path =
   let open Lint_parallel_engine in
   (* We filter the global ignored modules/files.  *)
   if Hashtbl.length Lint_globals.plugins = 0 then
@@ -543,7 +539,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
   done;
   FileDir.remove_all (FileGen.of_string tmp_file_dir);
   Printf.eprintf "\rRunning analyses... %d / %d" len len;
-  Printf.eprintf "\nMergin database...%!";
+  Printf.eprintf "\nMerging database...%!";
   let sources =
     List.map (fun file ->
         Lint_utils.mk_file_struct !Lint_db.DefaultDB.root file [] cmts_infos
@@ -552,7 +548,7 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
   Printf.eprintf "\n%!";
   if pwarning then
     Lint_text.print
-      Format.err_formatter
+      Format.std_formatter
       master_config
       !file_config_dep
       severity
@@ -560,8 +556,16 @@ let lint_sequential ~no_db ~db_dir ~severity ~pdetail ~pwarning
       Lint_db.DefaultDB.db;
   if perror then
     Lint_text.print_error
-      Format.err_formatter
+      Format.std_formatter
       path
+      Lint_db.DefaultDB.db_errors;
+  if output_web then
+    Lint_web.generate_web_files
+      Format.err_formatter
+      master_config
+      !file_config_dep
+      path
+      Lint_db.DefaultDB.db
       Lint_db.DefaultDB.db_errors;
   Lint_text.summary
     master_config

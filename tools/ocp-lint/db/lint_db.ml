@@ -158,28 +158,30 @@ module MakeDB (DB : DATABASE_IO) = struct
         | old_pres ->
           (* if linter already register, nothing to do *)
           (* this can happen when a linter as several mains *)
-          try
-            let old_lres = StringMap.find lname old_pres in
-            if res_version <> old_lres.res_version ||
-               res_options <> old_lres.res_options then
-              let new_pres = StringMap.add lname
-                  { res_version; res_source; res_options;
-                    res_warnings = [] }
-                  (StringMap.remove lname old_pres) in
-              let new_fres =
+          begin
+            try
+              let old_lres = StringMap.find lname old_pres in
+              if res_version <> old_lres.res_version ||
+                 res_options <> old_lres.res_options then
+                let new_pres = StringMap.add lname
+                    { res_version; res_source; res_options;
+                      res_warnings = [] }
+                    (StringMap.remove lname old_pres) in
+                let new_fres =
+                  StringMap.add
+                    pname
+                    new_pres
+                    (StringMap.remove pname old_fres) in
+                Hashtbl.replace db file (hash, new_fres)
+            with Not_found ->
+              let new_pres =
                 StringMap.add
-                  pname
-                  new_pres
-                  (StringMap.remove pname old_fres) in
+                  lname { res_version; res_source; res_options;
+                          res_warnings =  [] } old_pres in
+              let new_fres = StringMap.add
+                  pname new_pres (StringMap.remove pname old_fres) in
               Hashtbl.replace db file (hash, new_fres)
-          with Not_found ->
-            let new_pres =
-              StringMap.add
-                lname { res_version; res_source; res_options;
-                        res_warnings =  [] } old_pres in
-            let new_fres = StringMap.add
-                pname new_pres (StringMap.remove pname old_fres) in
-            Hashtbl.replace db file (hash, new_fres)
+          end
       end
 
   let add_error file error =

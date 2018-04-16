@@ -21,7 +21,6 @@
 open StringCompat (* for StringMap *)
 
 type action =
-  | ActionNone
   | ActionList
   | ActionInit
   | ActionPrint of string
@@ -29,10 +28,10 @@ type action =
   | ActionLoadDir of string
   | ActionLoadFile of string
 
-let action = ref ActionNone
+let action = ref None
 let exit_status = ref 0
 let output_text = ref None
-let default_dir = "."
+let current_dir = "."
 let print_only_new = ref false
 let no_db = ref false
 let db_dir = ref None
@@ -44,6 +43,7 @@ let installed_plugins = ref []
 let pwarning = ref false
 let perror = ref false
 let pall = ref false
+let output_web = ref false
 
 module ArgAlign = struct
   open Arg
@@ -131,11 +131,15 @@ module ArgAlign = struct
 
 end
 
-let set_action new_action =
-  if !action <> ActionNone then
-    raise @@ Arg.Bad
-      "Options --path or --list-warnings cannot be used together";
-  action := new_action
+let set_action action_name new_action =
+  match !action with
+  | None -> action := Some (action_name, new_action)
+  | Some (old_action_name, _) ->
+     let msg =
+       Printf.sprintf "Options %s or %s cannot be used together"
+                      old_action_name action_name
+     in
+     raise (Arg.Bad msg)
 
 let usage_msg =
   let name = Filename.basename Sys.argv.(0) in
@@ -171,7 +175,7 @@ let add_simple_args () =
   List.iter (function (key,_,_) as new_arg ->
       if not ( StringMap.mem key !args_map ) then
         args_map := StringMap.add key new_arg !args_map
-    ) (Lint_globals.Config.simple_args ());
+    ) (Lint_globals.LintConfig.simple_args ());
   dynamic_args := List.map snd (StringMap.to_list !args_map);
   set_spec ()
 
@@ -180,33 +184,34 @@ let () =
     "", Arg.Unit (fun () -> ()),
     " \nKernel arguments:\n";
 
-    "--init", Arg.Unit (fun dir -> set_action ActionInit),
+    "--init", Arg.Unit (fun dir -> set_action "--init" ActionInit),
     " Initialise a project";
 
     "--path", Arg.String (fun dir ->
         if !config_file <> ""
         then Lint_actions.init_config_file !config_file
         else Lint_actions.init_config dir;
-        set_action (ActionLoadDir dir)),
+        set_action "--path" (ActionLoadDir dir)),
     "DIR   Give a project dir path";
 
     "--file", Arg.String (fun file ->
         if !config_file <> ""
         then Lint_actions.init_config_file !config_file
         else Lint_actions.init_config (Filename.dirname file);
-        set_action (ActionLoadFile file)),
+        set_action "--file" (ActionLoadFile file)),
     "FILE   Give a file to lint";
 
     "--db-dir", Arg.String (fun dir -> db_dir := Some dir),
     "DIR   Give database directory";
 
-    "--print-db", Arg.String (fun dir -> set_action (ActionPrint dir)),
+    "--print-db", Arg.String (fun dir ->
+                      set_action "--print-db" (ActionPrint dir)),
     "DIR   Give the path to a _olint dir to print the db";
 
     "--output-txt", Arg.String (fun file -> output_text := Some file),
     "FILE   Output results in a text file.";
 
-    "--list", Arg.Unit (fun () -> set_action ActionList),
+    "--list", Arg.Unit (fun () -> set_action "--list" ActionList),
     " List of every plugins and linters.";
 
     "--warn-error", Arg.Unit (fun () -> exit_status := 1),
@@ -228,7 +233,7 @@ let () =
       ),
     "PLUGINS Load dynamically plugins installed in ocp-lint-plugins dir.";
 
-    "--save-config", Arg.Unit (fun () -> set_action ActionSave),
+    "--save-config", Arg.Unit (fun () -> set_action "--save-config" ActionSave),
     " Save ocp-lint default config file.";
 
     "--load-config", Arg.String (fun file -> config_file := file),
@@ -255,6 +260,9 @@ let () =
     "--perror", Arg.Set perror,
     " Show errors";
 
+    "--output-web", Arg.Set output_web,
+    " Generate web output";
+
     "", Arg.Unit (fun () -> ()),
     " \n\nPlugins arguments:\n";
   ]
@@ -266,7 +274,7 @@ let start_lint_file file =
 let start_lint dir =
   let ins_plugins = Lint_actions.load_installed_plugins () in
   let master_config = Filename.temp_file ".ocplint" "" in
-  Lint_globals.Config.save_master master_config;
+  Lint_globals.LintConfig.save_master master_config;
   Lint_actions.lint_sequential
     !no_db
     !db_dir
@@ -274,6 +282,7 @@ let start_lint dir =
     !pall
     !pwarning
     !perror
+    !output_web
     !good_plugins
     ins_plugins
     master_config
@@ -281,10 +290,16 @@ let start_lint dir =
   if Lint_db.DefaultDB.has_warning () then exit !exit_status
 
 let main () =
-  (* Getting all options declared in all registered plugins. *)
+   (* init plugin system with existing linked modules *)
   Lint_init_dynload.init ();
-  Lint_actions.init_config default_dir;
+
+  (* Find the config file `.ocplint` in any ancestor directory *)
+  Lint_actions.init_config current_dir;
+
+  (* Add arguments coming from configuration file options *)
   add_simple_args ();
+
+  (* Parse arguments *)
   Arg.parse_dynamic specs
     (fun cmd ->
        Printf.printf "Error cmd : %S\n%!"
@@ -294,23 +309,27 @@ let main () =
     usage_msg;
 
   match !action with
-  | ActionLoadDir dir ->
-    start_lint dir;
-    exit 0 (* No warning, we can exit successfully *)
-  | ActionLoadFile file ->
-    start_lint_file file;
-    exit 0 (* No warning, we can exit successfully *)
-  | ActionList ->
-    Lint_actions.list_plugins Format.std_formatter;
+  | None ->
+    start_lint current_dir;
     exit 0
-  | ActionPrint dir ->
-    Lint_actions.print_db dir
-  | ActionInit ->
-    Lint_globals.Config.save ();
-    Lint_actions.init_olint_dir ()
-  | ActionSave ->
-    Lint_globals.Config.save ();
-    exit 0
-  | ActionNone ->
-    start_lint default_dir;
-    exit 0
+  | Some (_action_name, action) ->
+     match action with
+     | ActionLoadDir dir ->
+        start_lint dir;
+        exit 0 (* No warning, we can exit successfully *)
+     | ActionLoadFile file ->
+        start_lint_file file;
+        exit 0 (* No warning, we can exit successfully *)
+     | ActionList ->
+        Lint_actions.list_plugins Format.std_formatter;
+        exit 0
+     | ActionPrint dir ->
+        Lint_actions.print_db dir
+     | ActionInit ->
+        Lint_globals.LintConfig.save ();
+        Lint_actions.init_olint_dir ();
+        Printf.eprintf "Config saved in .ocplint\n%!";
+        Printf.eprintf "Database directory _olint/ created\n%!";
+     | ActionSave ->
+        Lint_globals.LintConfig.save ();
+        exit 0

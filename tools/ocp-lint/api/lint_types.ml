@@ -23,7 +23,7 @@ module type LINTARG = sig
   val version : string
   val short_name : string
   val details : string
-  val enable : bool
+  val enabled : bool
 end
 
 module type LINTPATCHARG = sig
@@ -36,7 +36,7 @@ module type LINT = sig
   val version : string
   val short_name : string
   val details : string
-  val enable : bool
+  val enabled : bool
   val inputs : Lint_input.input list
   val wdecls : Lint_warning_decl.WarningDeclaration.t
 end

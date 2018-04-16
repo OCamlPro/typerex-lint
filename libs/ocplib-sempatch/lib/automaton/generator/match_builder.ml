@@ -1,3 +1,4 @@
+open StringCompat
 module C = Common
 module H = Ast_helper
 module L = Location

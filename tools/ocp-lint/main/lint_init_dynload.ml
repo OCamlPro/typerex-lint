@@ -21,18 +21,19 @@
 
 let init () =
   (* Core modules *)
-  Findlib.record_package Findlib.Record_core "findlib";
-  Findlib.record_package Findlib.Record_core "dynlink";
-  Findlib.record_package Findlib.Record_core "findlib.dynload";
-  Findlib.record_package Findlib.Record_core "compiler-libs.common";
-  Findlib.record_package Findlib.Record_core "unix";
-  Findlib.record_package Findlib.Record_core "str";
-  Findlib.record_package Findlib.Record_core "ocplib-unix";
-  Findlib.record_package Findlib.Record_core "ocp-lint-output";
-  Findlib.record_package Findlib.Record_core "ocp-lint-config";
-  Findlib.record_package Findlib.Record_core "ocp-lint-db";
-  Findlib.record_package Findlib.Record_core "ocp-lint-init";
-  Findlib.record_package Findlib.Record_core "ocp-lint-utils";
+  List.iter (Findlib.record_package Findlib.Record_core)
+            [ "findlib";
+              "dynlink";
+              "findlib.dynload";
+              "compiler-libs.common";
+              "unix";
+              "str";
+              "ocplib-unix";
+              "ocp-lint-output";
+              "ocp-lint-config";
+              "ocp-lint-db";
+              "ocp-lint-init";
+              "ocp-lint-utils"];
 
 #if OCAML_VERSION >= "4.04.0"
   (match Sys.backend_type with

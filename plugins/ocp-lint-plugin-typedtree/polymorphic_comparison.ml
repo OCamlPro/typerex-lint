@@ -25,10 +25,10 @@ module Plugin = Plugin_typedtree.Plugin
 
 module Linter = Plugin.MakeLint(struct
     let name = "Polymorphic function"
-    let version = "1"
+    let version = "1.1"
     let short_name = "polymorphic_function"
     let details = "Detects all polymorphic functions."
-    let enable = true
+    let enabled = true
   end)
 
 type warning = Poly of (string * string)
@@ -125,27 +125,27 @@ let simple_paths = [
   Predef.path_int64;
 ]
 
-let rec simple_function ty =
+let rec simple_type ty =
   let open Types in
   match ty.desc with
-  | Tarrow (_, ty1, ty2, _) -> simple_type ty1 && simple_function ty2
-  | Tlink ty -> simple_function ty
-  | _ -> simple_type ty
-
-and simple_type ty =
-  let open Types in
-  match ty.desc with
+  | Tarrow (_, ty1, ty2, _) -> simple_type ty1 && simple_type ty2
   | Tvar _ -> false
-  | Tarrow (_, ty1, ty2, _) -> false
   | Ttuple list -> List.for_all simple_type list
   | Tconstr (path, list, _) ->
-    simple_path path && List.for_all simple_type list
+     (* simple_path path && *) List.for_all simple_type list
   | Tlink ty -> simple_type ty
-  | _ -> false
+  | Tnil
+    | Tobject (_, _)
+    | Tfield (_, _, _, _)
+    | Tsubst _
+    | Tvariant _
+    | Tunivar _
+    | Tpoly (_, _)
+    | Tpackage (_, _, _) -> false
 
 and simple_path path = List.mem path simple_paths
 
-let simple_function name ty = simple_function ty
+let simple_function name ty = simple_type ty
 
 let new_occurrence f ty loc =
   Printtyp.reset ();
@@ -167,10 +167,7 @@ let iter =
      | Texp_apply ({ exp_desc = Texp_ident (path, lid, vdesc);
                      exp_loc = loc } as f, args) ->
        let name = Path.name path in
-       let modname =
-         match Longident.flatten lid.txt with
-         | modname :: _ -> modname
-         | _ -> "" in
+       let modname = Ident.name (Path.head path) in
        if List.mem name usual_suspects || not (List.mem modname stdlib) then
          new_occurrence name f.exp_type loc
      | _ -> ()

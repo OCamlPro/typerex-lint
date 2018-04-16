@@ -25,5 +25,5 @@ module Plugin = Lint_plugin_api.MakePlugin (struct
     let name = "Indentation of code plugin"
     let short_name = "plugin_indent"
     let details = details
-    let enable = true
+    let enabled = true
   end)
