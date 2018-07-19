@@ -32,6 +32,12 @@ begin library "ocp-lint-plugin-typedtree"
     "checkInheritance.ml"
     "checkModuleUtilization.ml" (pp = "ocp-pp")
     "polymorphic_comparison.ml"
+    "must_a_int.ml";
+    "check_order_args.ml";
+    "mutable_ref.ml";
+    "lengthy_tuples.ml";
+
+
   ]
   requires = [
     "ocp-lint-config"
